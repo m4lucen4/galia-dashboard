@@ -31,8 +31,6 @@ export const Projects = () => {
     addError: projectAddRequest.messages,
   });
 
-  console.log("proyecto", project);
-
   useEffect(() => {
     fetchProjectsData();
   }, [fetchProjectsData]);

@@ -67,24 +67,15 @@ export const Users = () => {
       dispatch(updateUser(updateData))
         .unwrap()
         .then(() => {
-          // Cuando la actualización sea exitosa, refrescamos la lista de usuarios
           dispatch(fetchUsers());
           setDrawerOpen(false);
-        })
-        .catch((error) => {
-          console.error("Error al actualizar el usuario:", error);
-          // El mensaje de error se mostrará a través del estado de Redux
         });
     } else {
-      // Modo creación - usamos la acción addUser existente
       dispatch(addUser(formData))
         .unwrap()
         .then(() => {
           dispatch(fetchUsers());
           setDrawerOpen(false);
-        })
-        .catch((error) => {
-          console.error("Error al crear el usuario:", error);
         });
     }
   };

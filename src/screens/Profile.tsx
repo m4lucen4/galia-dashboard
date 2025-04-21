@@ -21,7 +21,6 @@ export const Profile = () => {
   const { changePasswordRequest } = useAppSelector(
     (state: RootState) => state.auth
   );
-  console.log("userUpdateRequest", userUpdateRequest);
   const dispatch = useAppDispatch();
   const [passwordError, setPasswordError] = useState("");
   const [showPasswordAlert, setShowPasswordAlert] = useState(false);
@@ -124,9 +123,6 @@ export const Profile = () => {
           dispatch(fetchUserByUid(user.uid));
         }
         setIsEditing(false);
-      })
-      .catch((error) => {
-        console.error("Error al actualizar el perfil:", error);
       });
   };
 
