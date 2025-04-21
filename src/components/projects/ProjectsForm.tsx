@@ -59,7 +59,6 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
 
       setPreviewUrls(newPreviewUrls);
 
-      // Limpieza al desmontar
       return () => {
         newPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
       };
@@ -67,7 +66,9 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   }, [selectedImages]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value, type } = e.target as HTMLInputElement;
 
@@ -129,7 +130,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="col-span-2">
         <InputField
           id="title"
           label="Project Title"
@@ -141,7 +142,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
         <InputField
           id="description"
           label="Description"
-          type="text"
+          type="textarea"
           value={formData.description}
           onChange={handleChange}
           required

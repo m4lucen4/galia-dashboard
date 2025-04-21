@@ -5,9 +5,19 @@ interface InputFieldProps {
   id: string;
   placeholder?: string;
   disabled?: boolean;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange?: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => void;
   required?: boolean;
-  type: "text" | "email" | "checkbox" | "password" | "tel" | "number" | "url";
+  type:
+    | "text"
+    | "email"
+    | "checkbox"
+    | "password"
+    | "tel"
+    | "number"
+    | "url"
+    | "textarea";
   value: string;
   error?: string;
 }
@@ -23,22 +33,39 @@ export const InputField: React.FC<InputFieldProps> = ({
   value,
   error,
 }) => {
+  const baseClassName =
+    "block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-gray-800 sm:text-sm/6";
+
   return (
     <div>
       <label className="text-base text-sm text-black" htmlFor={id}>
         {label}
       </label>
-      <input
-        id={id}
-        name={id}
-        disabled={disabled}
-        placeholder={placeholder}
-        onChange={onChange}
-        required={required}
-        type={type}
-        value={value}
-        className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-gray-800 sm:text-sm/6"
-      />
+      {type === "textarea" ? (
+        <textarea
+          id={id}
+          name={id}
+          disabled={disabled}
+          placeholder={placeholder}
+          onChange={onChange as React.ChangeEventHandler<HTMLTextAreaElement>}
+          required={required}
+          value={value}
+          className={`${baseClassName} min-h-[6em]`}
+          rows={6}
+        />
+      ) : (
+        <input
+          id={id}
+          name={id}
+          disabled={disabled}
+          placeholder={placeholder}
+          onChange={onChange as React.ChangeEventHandler<HTMLInputElement>}
+          required={required}
+          type={type}
+          value={value}
+          className={baseClassName}
+        />
+      )}
       {error && (
         <p className="mt-2 text-sm text-red-600" id={`${id}-error`}>
           {error}

@@ -13,15 +13,39 @@ export const addProject = createAsyncThunk(
   "projects/addProject",
   async (projectData: CreateProjectProps, { rejectWithValue }) => {
     try {
+      const { data: newProject, error } = await supabase
+        .from("projects")
+        .insert({
+          title: projectData.title,
+          state: projectData.state,
+          description: projectData.description,
+          keywords: projectData.keywords,
+          user: projectData.user,
+          weblink: projectData.weblink,
+          image_data: [],
+        })
+        .select()
+        .single();
+
+      if (error) {
+        return rejectWithValue({
+          message: `Error while creating project: ${error.message}`,
+          status: error.code,
+        });
+      }
+
       const imageData: ProjectImageData[] = [];
 
-      if (projectData.images && projectData.images.length > 0) {
-        const tempId = Date.now().toString();
+      if (
+        projectData.images &&
+        projectData.images.length > 0 &&
+        newProject.id
+      ) {
         const imagesToUpload = projectData.images.slice(0, 15);
 
         for (const [index, image] of imagesToUpload.entries()) {
           const fileExt = image.name.split(".").pop();
-          const fileName = `temp/${tempId}/${index}.${fileExt}`;
+          const fileName = `${newProject.id}/${index}.${fileExt}`;
 
           const { error: uploadError } = await supabase.storage
             .from("projects-images")
@@ -48,27 +72,19 @@ export const addProject = createAsyncThunk(
             });
           }
         }
-      }
 
-      const { data: newProject, error } = await supabase
-        .from("projects")
-        .insert({
-          title: projectData.title,
-          state: projectData.state,
-          description: projectData.description,
-          keywords: projectData.keywords,
-          user: projectData.user,
-          weblink: projectData.weblink,
-          image_data: imageData.length > 0 ? imageData : [],
-        })
-        .select()
-        .single();
+        if (imageData.length > 0) {
+          const { error: updateError } = await supabase
+            .from("projects")
+            .update({ image_data: imageData })
+            .eq("id", newProject.id);
 
-      if (error) {
-        return rejectWithValue({
-          message: `Error while creating project: ${error.message}`,
-          status: error.code,
-        });
+          if (updateError) {
+            console.error("Error updating project with images:", updateError);
+          } else {
+            newProject.image_data = imageData;
+          }
+        }
       }
 
       return {
