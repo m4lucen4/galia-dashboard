@@ -76,6 +76,7 @@ const authSlice = createSlice({
             email: action.payload.user.email || "",
             created_at: action.payload.user.created_at || "",
             last_sign_in_at: action.payload.user.last_sign_in_at || "",
+            role: action.payload.user.user_metadata?.role || "",
           };
         }
         state.token = action.payload.session?.access_token;
@@ -109,6 +110,7 @@ const authSlice = createSlice({
             email: action.payload.user.email || "",
             created_at: action.payload.user.created_at || "",
             last_sign_in_at: action.payload.user.last_sign_in_at || "",
+            role: action.payload.user.user_metadata?.role || "",
           };
           state.token = action.payload.session?.access_token;
           state.authenticated = true;

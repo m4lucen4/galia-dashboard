@@ -3,6 +3,8 @@ import {
   addProject,
   fetchProjects,
   fetchProjectById,
+  updateProject,
+  fetchProjectsByUserId,
 } from "../actions/ProjectActions";
 import { ProjectDataProps, IRequest, SupabaseError } from "../../types";
 
@@ -10,14 +12,21 @@ interface ProjectState {
   project: ProjectDataProps | null;
   projects: ProjectDataProps[];
   projectAddRequest: IRequest;
+  projectUpdateRequest: IRequest;
   projectsFetchRequest: IRequest;
   projectFetchByIdRequest: IRequest;
+  projectFetchByUserIdRequest: IRequest;
 }
 
 const initialState: ProjectState = {
   project: null,
   projects: [],
   projectAddRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
+  projectUpdateRequest: {
     inProgress: false,
     messages: "",
     ok: false,
@@ -32,6 +41,11 @@ const initialState: ProjectState = {
     messages: "",
     ok: false,
   },
+  projectFetchByUserIdRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
 };
 
 const projectSlice = createSlice({
@@ -42,6 +56,9 @@ const projectSlice = createSlice({
       state.projectAddRequest = initialState.projectAddRequest;
       state.projectsFetchRequest = initialState.projectsFetchRequest;
       state.projectFetchByIdRequest = initialState.projectFetchByIdRequest;
+    },
+    clearSelectedProject: (state) => {
+      state.project = null;
     },
   },
   extraReducers: (builder) => {
@@ -132,9 +149,68 @@ const projectSlice = createSlice({
           ok: false,
         };
       });
+    builder
+      .addCase(updateProject.pending, (state) => {
+        state.projectUpdateRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(updateProject.fulfilled, (state, action) => {
+        state.project = action.payload.project;
+        state.projectUpdateRequest = {
+          inProgress: false,
+          messages: "",
+          ok: true,
+        };
+      })
+      .addCase(updateProject.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage =
+          typeof errorPayload === "string"
+            ? errorPayload
+            : errorPayload?.message || "Error desconocido";
+
+        state.projectUpdateRequest = {
+          inProgress: false,
+          messages: errorMessage,
+          ok: false,
+        };
+      });
+    builder
+      .addCase(fetchProjectsByUserId.pending, (state) => {
+        state.projectFetchByUserIdRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(fetchProjectsByUserId.fulfilled, (state, action) => {
+        state.projects = action.payload.projects;
+        state.projectFetchByUserIdRequest = {
+          inProgress: false,
+          messages: "",
+          ok: true,
+        };
+      })
+      .addCase(fetchProjectsByUserId.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage =
+          typeof errorPayload === "string"
+            ? errorPayload
+            : errorPayload?.message || "Error desconocido";
+
+        state.projectFetchByUserIdRequest = {
+          inProgress: false,
+          messages: errorMessage,
+          ok: false,
+        };
+      });
   },
 });
 
-export const { clearProjectErrors } = projectSlice.actions;
+export const { clearProjectErrors, clearSelectedProject } =
+  projectSlice.actions;
 
 export default projectSlice.reducer;

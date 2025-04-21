@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAppSelector, useAppDispatch } from "../redux/hooks";
 import { RootState } from "../redux/store";
-import {
-  fetchUserByUid,
-  updateUser,
-  UpdateUserProps,
-} from "../redux/actions/UserActions";
 import { Drawer } from "../components/shared/ui/Drawer";
 import { Alert } from "../components/shared/ui/Alert";
 import { Button } from "../components/shared/ui/Button";
@@ -14,30 +9,33 @@ import { ProjectsForm } from "../components/projects/ProjectsForm";
 import {
   addProject,
   CreateProjectProps,
-  fetchProjects,
+  updateProject,
 } from "../redux/actions/ProjectActions";
-import { clearProjectErrors } from "../redux/slices/ProjectSlice";
+import {
+  clearProjectErrors,
+  clearSelectedProject,
+} from "../redux/slices/ProjectSlice";
 import { ProjectsTable } from "../components/projects/ProjectsTable";
+import { useProjectsData } from "../hooks/useProjectsData";
 
 export const Projects = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const dispatch = useAppDispatch();
   const user = useAppSelector((state: RootState) => state.auth.user);
-  const { userData } = useAppSelector((state: RootState) => state.user);
   const { project, projectAddRequest, projects, projectsFetchRequest } =
     useAppSelector((state: RootState) => state.project);
 
+  const fetchProjectsData = useProjectsData(user);
   const errorMessage = errorMessages({
     addError: projectAddRequest.messages,
   });
 
+  console.log("proyecto", project);
+
   useEffect(() => {
-    dispatch(fetchProjects());
-    if (user?.uid) {
-      dispatch(fetchUserByUid(user.uid));
-    }
-  }, [user, dispatch]);
+    fetchProjectsData();
+  }, [fetchProjectsData]);
 
   const handleOpenDrawer = () => {
     setIsEditMode(false);
@@ -45,38 +43,30 @@ export const Projects = () => {
   };
 
   const handleEditProject = () => {
+    dispatch(clearSelectedProject());
     setIsEditMode(true);
     setDrawerOpen(true);
   };
 
   const handleProjectSubmit = (formData: CreateProjectProps) => {
-    if (isEditMode && project && userData) {
-      const updateProject: UpdateUserProps = {
+    if (isEditMode && project) {
+      const updateData = {
+        ...formData,
         id: project.id,
-        uid: userData.uid,
       };
 
-      dispatch(updateUser(updateProject))
+      dispatch(updateProject(updateData))
         .unwrap()
         .then(() => {
-          // Cuando la actualización sea exitosa, refrescamos la lista de usuarios
-          dispatch(fetchProjects());
+          fetchProjectsData();
           setDrawerOpen(false);
-        })
-        .catch((error) => {
-          console.error("Error al actualizar el usuario:", error);
-          // El mensaje de error se mostrará a través del estado de Redux
         });
     } else {
-      // Modo creación - usamos la acción addUser existente
       dispatch(addProject(formData))
         .unwrap()
         .then(() => {
-          dispatch(fetchProjects());
+          fetchProjectsData();
           setDrawerOpen(false);
-        })
-        .catch((error) => {
-          console.error("Error al crear el usuario:", error);
         });
     }
   };
@@ -91,10 +81,12 @@ export const Projects = () => {
       description: project.description,
       keywords: project.keywords,
       user: project.user,
+      weblink: project.weblink,
+      image_data: project.image_data,
     };
   };
 
-  if (!userData) {
+  if (!user) {
     return;
   }
 
@@ -118,7 +110,7 @@ export const Projects = () => {
           onSubmit={handleProjectSubmit}
           loading={projectAddRequest.inProgress}
           isEditMode={isEditMode}
-          userData={userData}
+          user={user}
         />
       </Drawer>
       <ProjectsTable

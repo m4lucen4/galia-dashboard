@@ -13,6 +13,7 @@ export type UserProps = {
   name: string;
   created_at: string;
   last_sign_in_at: string;
+  role: string;
 };
 
 export type UserDataProps = {
@@ -30,6 +31,21 @@ export type UserDataProps = {
   role: string;
 };
 
+export type ProjectImageData = {
+  url: string;
+  status: "pending" | "processing" | "processed" | "failed";
+  processingId?: string;
+  processingResult?: {
+    outputUrl?: string;
+    metadata?: string;
+    timestamps: {
+      queued: string;
+      started?: string;
+      completed?: string;
+    };
+  };
+};
+
 export type ProjectDataProps = {
   id: string;
   created_at?: string;
@@ -40,6 +56,7 @@ export type ProjectDataProps = {
   description: string;
   keywords: string;
   weblink?: string;
+  image_data?: ProjectImageData[];
 };
 
 export type IRequest = {

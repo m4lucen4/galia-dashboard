@@ -44,7 +44,19 @@ export const ProjectsTable = ({
     }),
     columnHelper.accessor("state", {
       header: "State",
-      cell: (info) => info.getValue() || "-",
+      cell: (info) => {
+        const state = info.getValue();
+        if (!state) return "-";
+
+        const stateFormatMap: Record<string, string> = {
+          draft: "Draft",
+          inProgress: "In progress",
+          preview: "Preview",
+          launched: "Launched",
+        };
+
+        return stateFormatMap[state] || state;
+      },
     }),
     columnHelper.accessor("keywords", {
       header: "Keywords",
