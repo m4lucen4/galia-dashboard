@@ -26,9 +26,8 @@ export const fetchUsers = createAsyncThunk(
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error al recuperar usuarios:", error);
         return rejectWithValue({
-          message: `Error al obtener la lista de usuarios: ${error.message}`,
+          message: `Error getting users list: ${error.message}`,
           status: error.code,
         });
       }
@@ -36,21 +35,18 @@ export const fetchUsers = createAsyncThunk(
       if (!users || users.length === 0) {
         return {
           users: [],
-          message: "No se encontraron usuarios",
+          message: "Do not match any users",
         };
       }
 
       return {
         users: users,
-        message: `Se encontraron ${users.length} usuarios`,
+        message: `Found ${users.length} users`,
       };
     } catch (error: unknown) {
-      console.error("Error en fetchUsers:", error);
       const appError: SupabaseError = {
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al recuperar los usuarios",
+          error instanceof Error ? error.message : "Error retrieving users",
         status: 500,
       };
       return rejectWithValue(appError);
@@ -69,9 +65,8 @@ export const fetchUserByUid = createAsyncThunk(
         .single();
 
       if (error) {
-        console.error("Error al recuperar usuario por UID:", error);
         return rejectWithValue({
-          message: `Error al obtener los datos del usuario: ${error.message}`,
+          message: `Error getting user data: ${error.message}`,
           status: error.code,
         });
       }
@@ -108,6 +103,11 @@ export const addUser = createAsyncThunk(
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
+        options: {
+          data: {
+            role: userData.role,
+          },
+        },
       });
 
       if (authError) {
@@ -182,7 +182,6 @@ export const updateUser = createAsyncThunk(
   "users/updateUser",
   async (userData: UpdateUserProps, { rejectWithValue }) => {
     try {
-      // 1. Create an object with only the provided fields to update in userData
       const updateData: Partial<
         Omit<UserDataProps, "id" | "created_at" | "uid">
       > = {
@@ -199,7 +198,6 @@ export const updateUser = createAsyncThunk(
       if (userData.vat !== undefined) updateData.vat = userData.vat;
       if (userData.role !== undefined) updateData.role = userData.role;
 
-      // 2. Update data in userData table
       const { error: dbError } = await supabase
         .from("userData")
         .update(updateData)
@@ -207,12 +205,11 @@ export const updateUser = createAsyncThunk(
 
       if (dbError) {
         return rejectWithValue({
-          message: `Error actualizando datos en la base de datos: ${dbError.message}`,
+          message: `Error updating data in database: ${dbError.message}`,
           status: dbError.code,
         });
       }
 
-      // 3. Obtener el registro actualizado
       const { data: updatedUser, error: fetchError } = await supabase
         .from("userData")
         .select("*")
@@ -221,21 +218,19 @@ export const updateUser = createAsyncThunk(
 
       if (fetchError) {
         return rejectWithValue({
-          message: `Error al recuperar los datos actualizados: ${fetchError.message}`,
+          message: `Error retrieving updated data: ${fetchError.message}`,
           status: fetchError.code,
         });
       }
 
       return {
         user: updatedUser,
-        message: "Usuario actualizado correctamente en la base de datos",
+        message: "User updated successfully",
       };
     } catch (error: unknown) {
       const appError: SupabaseError = {
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al actualizar el usuario",
+          error instanceof Error ? error.message : "Error updating the user",
         status: 500,
       };
       return rejectWithValue(appError);
@@ -249,20 +244,17 @@ export const updateProfile = createAsyncThunk(
     try {
       let authUpdateSuccess = true;
 
-      // 1. Si se proporciona una nueva contraseña, actualizarla en Authentication
       if (userData.password && userData.password.trim() !== "") {
         const { error: authError } = await supabase.auth.updateUser({
           password: userData.password,
         });
 
         if (authError) {
-          console.error("Error al actualizar la contraseña:", authError);
+          console.error("Error updating password:", authError);
           authUpdateSuccess = false;
-          // No rechazamos aquí porque aún podemos actualizar otros datos
         }
       }
 
-      // 3. Crear un objeto con solo los campos proporcionados para actualizar en userData
       const updateData: Partial<
         Omit<UserDataProps, "id" | "created_at" | "uid">
       > = {
@@ -279,7 +271,6 @@ export const updateProfile = createAsyncThunk(
       if (userData.vat !== undefined) updateData.vat = userData.vat;
       if (userData.role !== undefined) updateData.role = userData.role;
 
-      // 4. Actualizar datos en la tabla userData
       const { error: dbError } = await supabase
         .from("userData")
         .update(updateData)
@@ -287,12 +278,11 @@ export const updateProfile = createAsyncThunk(
 
       if (dbError) {
         return rejectWithValue({
-          message: `Error actualizando datos en la base de datos: ${dbError.message}`,
+          message: `Error updating data in database: ${dbError.message}`,
           status: dbError.code,
         });
       }
 
-      // 5. Obtener el registro actualizado
       const { data: updatedUser, error: fetchError } = await supabase
         .from("userData")
         .select("*")
@@ -301,7 +291,7 @@ export const updateProfile = createAsyncThunk(
 
       if (fetchError) {
         return rejectWithValue({
-          message: `Error al recuperar los datos actualizados: ${fetchError.message}`,
+          message: `Error retrieving updated data: ${fetchError.message}`,
           status: fetchError.code,
         });
       }
@@ -309,16 +299,15 @@ export const updateProfile = createAsyncThunk(
       return {
         user: updatedUser,
         message: authUpdateSuccess
-          ? "Usuario actualizado correctamente"
-          : "Usuario actualizado con errores en la autenticación",
+          ? "User updated successfully"
+          : "User updated with errors in authentication",
       };
     } catch (error: unknown) {
-      console.error("Error en updateUser:", error);
       const appError: SupabaseError = {
         message:
           error instanceof Error
             ? error.message
-            : "Error al actualizar el usuario",
+            : "Error when updating the user",
         status: 500,
       };
       return rejectWithValue(appError);
