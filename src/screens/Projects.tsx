@@ -10,6 +10,7 @@ import {
   addProject,
   CreateProjectProps,
   updateProject,
+  updateProjectState,
 } from "../redux/actions/ProjectActions";
 import {
   clearProjectErrors,
@@ -25,6 +26,10 @@ export const Projects = () => {
   const user = useAppSelector((state: RootState) => state.auth.user);
   const { project, projectAddRequest, projects, projectsFetchRequest } =
     useAppSelector((state: RootState) => state.project);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    null
+  );
+  const [showLaunchModal, setShowLaunchModal] = useState(false);
 
   const fetchProjectsData = useProjectsData(user);
   const errorMessage = errorMessages({
@@ -65,6 +70,22 @@ export const Projects = () => {
         .then(() => {
           fetchProjectsData();
           setDrawerOpen(false);
+        });
+    }
+  };
+
+  const handleLaunchProject = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    setShowLaunchModal(true);
+  };
+
+  const handleConfirmLaunch = () => {
+    if (selectedProjectId) {
+      dispatch(updateProjectState(selectedProjectId))
+        .unwrap()
+        .then(() => {
+          fetchProjectsData();
+          setShowLaunchModal(false);
         });
     }
   };
@@ -115,12 +136,21 @@ export const Projects = () => {
         projects={projects}
         isLoading={projectsFetchRequest.inProgress}
         onEditProject={handleEditProject}
+        onLaunchProject={handleLaunchProject}
       />
       {errorMessage && (
         <Alert
           title="Error"
           description={errorMessage}
           onAccept={() => dispatch(clearProjectErrors())}
+        />
+      )}
+      {showLaunchModal && (
+        <Alert
+          title="Shall we start working?"
+          description="Your project will be launched to generate a preliminary version, in a few minutes it will be available in Project Preview"
+          onAccept={handleConfirmLaunch}
+          onCancel={() => setShowLaunchModal(false)}
         />
       )}
     </div>

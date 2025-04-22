@@ -311,3 +311,55 @@ export const fetchProjectsByUserId = createAsyncThunk(
     }
   }
 );
+
+export const updateProjectState = createAsyncThunk(
+  "projects/updateProjectState",
+  async (projectId: string, { rejectWithValue }) => {
+    try {
+      const webhookUrl = `${
+        import.meta.env.VITE_N8N_POST_SUPABASE_URL
+      }?id=${projectId}`;
+
+      const webhookResponse = await fetch(webhookUrl, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      if (!webhookResponse.ok) {
+        throw new Error(`Error calling webhook: ${webhookResponse.statusText}`);
+      }
+      const { data: updatedProject, error } = await supabase
+        .from("projects")
+        .update({
+          updated_at: new Date().toISOString(),
+          state: "preview",
+        })
+        .eq("id", projectId)
+        .select()
+        .single();
+
+      if (error) {
+        return rejectWithValue({
+          message: `Error updating project state: ${error.message}`,
+          status: error.code,
+        });
+      }
+
+      return {
+        project: updatedProject,
+        message: "Project state updated to preview",
+      };
+    } catch (error: unknown) {
+      const appError: SupabaseError = {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error updating project state",
+        status: 500,
+      };
+      return rejectWithValue(appError);
+    }
+  }
+);

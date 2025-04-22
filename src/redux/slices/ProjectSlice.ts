@@ -5,6 +5,7 @@ import {
   fetchProjectById,
   updateProject,
   fetchProjectsByUserId,
+  updateProjectState,
 } from "../actions/ProjectActions";
 import { ProjectDataProps, IRequest, SupabaseError } from "../../types";
 
@@ -16,6 +17,7 @@ interface ProjectState {
   projectsFetchRequest: IRequest;
   projectFetchByIdRequest: IRequest;
   projectFetchByUserIdRequest: IRequest;
+  updateProjectStateRequest: IRequest;
 }
 
 const initialState: ProjectState = {
@@ -46,10 +48,15 @@ const initialState: ProjectState = {
     messages: "",
     ok: false,
   },
+  updateProjectStateRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
 };
 
 const projectSlice = createSlice({
-  name: "user",
+  name: "project",
   initialState,
   reducers: {
     clearProjectErrors: (state) => {
@@ -202,6 +209,38 @@ const projectSlice = createSlice({
             : errorPayload?.message || "Error desconocido";
 
         state.projectFetchByUserIdRequest = {
+          inProgress: false,
+          messages: errorMessage,
+          ok: false,
+        };
+      });
+    builder
+      .addCase(updateProjectState.pending, (state) => {
+        state.updateProjectStateRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(updateProjectState.fulfilled, (state, action) => {
+        const updatedProject = action.payload.project;
+        state.projects = state.projects.map((project) =>
+          project.id === updatedProject.id ? updatedProject : project
+        );
+        state.updateProjectStateRequest = {
+          inProgress: false,
+          messages: "",
+          ok: true,
+        };
+      })
+      .addCase(updateProjectState.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage =
+          typeof errorPayload === "string"
+            ? errorPayload
+            : errorPayload?.message || "Error desconocido";
+
+        state.updateProjectStateRequest = {
           inProgress: false,
           messages: errorMessage,
           ok: false,

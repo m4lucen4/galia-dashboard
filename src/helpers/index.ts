@@ -52,3 +52,54 @@ export const errorMessages = (
 
   return firstError || null;
 };
+
+/**
+ * Format a date from ISO format to DD-MM-YYYY
+ * @param dateString - Date in ISO format (e.g. 2025-04-22T19:36:46.394739+00:00)
+ * @returns Date formatted as DD-MM-YYYY
+ */
+export const formatDateToDDMMYYYY = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+
+    return `${day}-${month}-${year}`;
+  } catch (error) {
+    console.error("Error format date:", error);
+    return dateString;
+  }
+};
+
+/**
+ * Format a date according to a custom format
+ * @param dateString - Date in ISO format
+ * @param format - Desired format ('dd-mm-yyyy', 'mm-dd-yyyy', etc.)
+ * @returns Date formatted according to the specified format
+ */
+export const formatDate = (
+  dateString: string,
+  format: string = "dd-mm-yyyy"
+): string => {
+  try {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+
+    switch (format.toLowerCase()) {
+      case "dd-mm-yyyy":
+        return `${day}-${month}-${year}`;
+      case "mm-dd-yyyy":
+        return `${month}-${day}-${year}`;
+      case "yyyy-mm-dd":
+        return `${year}-${month}-${day}`;
+      default:
+        return `${day}-${month}-${year}`;
+    }
+  } catch (error) {
+    console.error("Error when format date:", error);
+    return dateString;
+  }
+};

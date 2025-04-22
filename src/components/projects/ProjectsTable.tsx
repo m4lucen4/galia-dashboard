@@ -17,12 +17,14 @@ type ProjectsTableProps = {
   projects: ProjectDataProps[];
   isLoading: boolean;
   onEditProject: () => void;
+  onLaunchProject: (projectId: string) => void;
 };
 
 export const ProjectsTable = ({
   projects,
   isLoading,
   onEditProject,
+  onLaunchProject,
 }: ProjectsTableProps) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const dispatch = useAppDispatch();
@@ -50,8 +52,8 @@ export const ProjectsTable = ({
 
         const stateFormatMap: Record<string, string> = {
           draft: "Draft",
-          inProgress: "In progress",
           preview: "Preview",
+          inProgress: "In progress",
           launched: "Launched",
         };
 
@@ -65,14 +67,29 @@ export const ProjectsTable = ({
     columnHelper.display({
       id: "actions",
       header: "Actions",
-      cell: (props) => (
-        <div className="flex space-x-2">
-          <Button
-            title="Edit"
-            onClick={() => handleEditClick(props.row.original)}
-          />
-        </div>
-      ),
+      cell: (props) => {
+        if (props.row.original.state !== "draft") {
+          return (
+            <span className="text-gray-400 italic text-sm">
+              No actions available
+            </span>
+          );
+        }
+
+        return (
+          <div className="flex space-x-2">
+            <Button
+              title="Edit"
+              secondary
+              onClick={() => handleEditClick(props.row.original)}
+            />
+            <Button
+              title="Launch"
+              onClick={() => onLaunchProject(props.row.original.id)}
+            />
+          </div>
+        );
+      },
     }),
   ];
 

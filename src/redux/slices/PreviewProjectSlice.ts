@@ -1,0 +1,132 @@
+import { createSlice } from "@reduxjs/toolkit";
+import { PreviewProjectDataProps, IRequest, SupabaseError } from "../../types";
+import {
+  fetchPreviewProjectById,
+  fetchPreviewProjects,
+  fetchPreviewProjectsByUserId,
+} from "../actions/PreviewProjectActions";
+
+interface ProjectState {
+  project: PreviewProjectDataProps | null;
+  projects: PreviewProjectDataProps[];
+  previewProjectsFetchRequest: IRequest;
+  previewProjectFetchByIdRequest: IRequest;
+  previewProjectFetchByUserIdRequest: IRequest;
+}
+
+const initialState: ProjectState = {
+  project: null,
+  projects: [],
+  previewProjectsFetchRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
+  previewProjectFetchByIdRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
+  previewProjectFetchByUserIdRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
+};
+
+const previewProjectSlice = createSlice({
+  name: "previewProject",
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchPreviewProjects.pending, (state) => {
+        state.previewProjectsFetchRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(fetchPreviewProjects.fulfilled, (state, action) => {
+        state.projects = action.payload.projects;
+        state.previewProjectsFetchRequest = {
+          inProgress: false,
+          messages: "",
+          ok: true,
+        };
+      })
+      .addCase(fetchPreviewProjects.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage =
+          typeof errorPayload === "string"
+            ? errorPayload
+            : errorPayload?.message || "Error desconocido";
+
+        state.previewProjectsFetchRequest = {
+          inProgress: false,
+          messages: errorMessage,
+          ok: false,
+        };
+      });
+    builder
+      .addCase(fetchPreviewProjectById.pending, (state) => {
+        state.previewProjectFetchByIdRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(fetchPreviewProjectById.fulfilled, (state, action) => {
+        state.project = action.payload.project;
+        state.previewProjectFetchByIdRequest = {
+          inProgress: false,
+          messages: "",
+          ok: true,
+        };
+      })
+      .addCase(fetchPreviewProjectById.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage =
+          typeof errorPayload === "string"
+            ? errorPayload
+            : errorPayload?.message || "Error desconocido";
+
+        state.previewProjectFetchByIdRequest = {
+          inProgress: false,
+          messages: errorMessage,
+          ok: false,
+        };
+      });
+    builder
+      .addCase(fetchPreviewProjectsByUserId.pending, (state) => {
+        state.previewProjectFetchByUserIdRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(fetchPreviewProjectsByUserId.fulfilled, (state, action) => {
+        state.projects = action.payload.projects;
+        state.previewProjectFetchByUserIdRequest = {
+          inProgress: false,
+          messages: "",
+          ok: true,
+        };
+      })
+      .addCase(fetchPreviewProjectsByUserId.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage =
+          typeof errorPayload === "string"
+            ? errorPayload
+            : errorPayload?.message || "Error desconocido";
+
+        state.previewProjectFetchByUserIdRequest = {
+          inProgress: false,
+          messages: errorMessage,
+          ok: false,
+        };
+      });
+  },
+});
+
+export default previewProjectSlice.reducer;

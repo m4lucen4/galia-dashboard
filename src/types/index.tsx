@@ -59,6 +59,18 @@ export type ProjectDataProps = {
   image_data?: ProjectImageData[];
 };
 
+export type PreviewProjectDataProps = {
+  id: string;
+  created_at?: string;
+  updated_at?: string;
+  user: string;
+  title: string;
+  state: string;
+  description_rich: string;
+  weblink?: string;
+  image_data?: ProjectImageData[];
+};
+
 export type IRequest = {
   inProgress: boolean;
   messages: string;
