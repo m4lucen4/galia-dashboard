@@ -102,6 +102,7 @@ export const ProjectsTable = ({
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    columnResizeMode: "onChange",
   });
 
   if (isLoading) {
@@ -117,9 +118,9 @@ export const ProjectsTable = ({
   }
 
   return (
-    <div className="bg-white my-6 overflow-hidden">
+    <div className="bg-white my-6 overflow-hidden rounded-lg shadow">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full divide-y divide-gray-200 table-fixed">
           <thead className="bg-gray-50">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
@@ -128,6 +129,7 @@ export const ProjectsTable = ({
                     key={header.id}
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer bg-gray-100"
                     onClick={header.column.getToggleSortingHandler()}
+                    style={{ width: `${header.column.getSize()}px` }}
                   >
                     <div className="flex items-center">
                       {flexRender(
@@ -146,9 +148,13 @@ export const ProjectsTable = ({
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id}>
+              <tr key={row.id} className="hover:bg-gray-50">
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                  <td
+                    key={cell.id}
+                    className="px-6 py-4"
+                    style={{ width: `${cell.column.getSize()}px` }}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}

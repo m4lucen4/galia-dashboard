@@ -42,10 +42,6 @@ export const UsersTable = ({
     columnHelper.accessor("email", {
       header: "Email",
     }),
-    columnHelper.accessor("phone", {
-      header: "Phone",
-      cell: (info) => info.getValue() || "-",
-    }),
     columnHelper.accessor("company", {
       header: "Company",
       cell: (info) => info.getValue() || "-",

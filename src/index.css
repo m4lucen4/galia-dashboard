@@ -1,1 +1,17 @@
 @import "tailwindcss";
+
+@layer base {
+  html {
+    font-family: "Roboto Mono", monospace;
+  }
+  body {
+    background-color: #fafafa; /* Un gris muy claro */
+    /* Alternativas:
+       #f5f5f5 - Gris más claro
+       #f0f0f0 - Gris claro
+       #f8f9fa - Gris azulado suave
+       #fafafa - Casi blanco
+       #efefef - Gris neutro suave
+    */
+  }
+}

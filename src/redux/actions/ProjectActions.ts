@@ -24,6 +24,7 @@ export const addProject = createAsyncThunk(
           weblink: projectData.weblink,
           image_data: [],
           publications: projectData.publications,
+          googleMaps: projectData.googleMaps,
         })
         .select()
         .single();
@@ -164,6 +165,7 @@ export const updateProject = createAsyncThunk(
           weblink: projectData.weblink,
           image_data: imageData,
           publications: projectData.publications,
+          googleMaps: projectData.googleMaps,
         })
         .eq("id", projectData.id)
         .select()

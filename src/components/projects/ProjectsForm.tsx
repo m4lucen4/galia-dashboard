@@ -29,6 +29,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
     weblink: "",
     image_data: [],
     publications: 1,
+    googleMaps: "",
   };
 
   const [formData, setFormData] = useState<CreateProjectProps>(
@@ -132,40 +133,47 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   return (
     <form onSubmit={handleSubmit}>
       <div className="col-span-2">
-        <InputField
-          id="title"
-          label="Project Title"
-          placeholder="Enter project title"
-          type="text"
-          value={formData.title}
-          onChange={handleChange}
-          required
-        />
-        <InputField
-          id="description"
-          label="Description"
-          type="textarea"
-          value={formData.description}
-          onChange={handleChange}
-          required
-        />
-        <KeywordInput
-          id="keywords"
-          label="Keywords"
-          value={formData.keywords}
-          onChange={(value) => setFormData({ ...formData, keywords: value })}
-          required
-        />
-        <InputField
-          id="weblink"
-          label="Web Link"
-          placeholder="https://example.com"
-          type="url"
-          value={formData.weblink || ""}
-          onChange={handleChange}
-        />
-
-        <div className="col-span-2">
+        <div className="mb-2">
+          <InputField
+            id="title"
+            label="Project Title"
+            placeholder="Enter project title"
+            type="text"
+            value={formData.title}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="mb-2">
+          <InputField
+            id="description"
+            label="Description"
+            type="textarea"
+            value={formData.description}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="mb-2">
+          <KeywordInput
+            id="keywords"
+            label="Keywords"
+            value={formData.keywords}
+            onChange={(value) => setFormData({ ...formData, keywords: value })}
+            required
+          />
+        </div>
+        <div className="mb-2">
+          <InputField
+            id="weblink"
+            label="Web Link"
+            placeholder="https://example.com"
+            type="url"
+            value={formData.weblink || ""}
+            onChange={handleChange}
+          />
+        </div>
+        <div className="col-span-2 mb-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Project Images ({totalImagesCount}/15)
           </label>
@@ -286,6 +294,15 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               ))}
             </div>
           </div>
+
+          <InputField
+            id="googleMaps"
+            label="Google Maps Link"
+            placeholder="Introduce your project location, google maps link complete"
+            type="url"
+            value={formData.weblink || ""}
+            onChange={handleChange}
+          />
         </div>
       </div>
 
