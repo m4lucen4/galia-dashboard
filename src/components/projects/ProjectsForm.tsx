@@ -28,6 +28,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
     keywords: "",
     weblink: "",
     image_data: [],
+    publications: 1,
   };
 
   const [formData, setFormData] = useState<CreateProjectProps>(
@@ -134,6 +135,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
         <InputField
           id="title"
           label="Project Title"
+          placeholder="Enter project title"
           type="text"
           value={formData.title}
           onChange={handleChange}
@@ -154,25 +156,6 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
           onChange={(value) => setFormData({ ...formData, keywords: value })}
           required
         />
-        <div>
-          <label
-            htmlFor="state"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            State
-          </label>
-          <select
-            id="state"
-            name="state"
-            value={formData.state}
-            onChange={handleChange}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={user?.role !== "admin"}
-          >
-            <option value="draft">Draft</option>
-          </select>
-        </div>
         <InputField
           id="weblink"
           label="Web Link"
@@ -279,6 +262,30 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               </div>
             </>
           )}
+
+          <div className="my-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              How many publications do you want to create?
+            </label>
+            <div className="flex space-x-1">
+              {[1, 2, 3, 4].map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() =>
+                    setFormData({ ...formData, publications: value })
+                  }
+                  className={`flex-1 py-2 rounded-md transition-colors ${
+                    formData.publications === value
+                      ? "bg-black text-white font-medium"
+                      : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                  }`}
+                >
+                  {value}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

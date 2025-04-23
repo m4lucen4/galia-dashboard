@@ -102,6 +102,7 @@ export const Projects = () => {
       user: project.user,
       weblink: project.weblink,
       image_data: project.image_data,
+      publications: project.publications,
     };
   };
 
