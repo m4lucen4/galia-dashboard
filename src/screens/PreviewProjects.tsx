@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { RootState } from "../redux/store";
 import { usePreviewProjectsData } from "../hooks/usePreviewProjectsData";
-import { DocumentTextIcon } from "@heroicons/react/24/outline";
+import {
+  DocumentTextIcon,
+  EllipsisVerticalIcon,
+} from "@heroicons/react/24/outline";
 import { PreviewProjectDataProps } from "../types";
 import { Drawer } from "../components/shared/ui/Drawer";
 import InstagramPost from "../components/previewProjects/InstagramPost";
@@ -18,11 +21,32 @@ export const PreviewProjects = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [seeInstagram, setSeeInstagram] = useState(false);
   const [seeLinkedln, setSeeLinkedln] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const user = useAppSelector((state: RootState) => state.auth.user);
   const { userData } = useAppSelector((state: RootState) => state.user);
   const { projects, project } = useAppSelector(
     (state: RootState) => state.previewProject
   );
+
+  const handleToggleMenu = (projectId: string) => {
+    if (openMenuId === projectId) {
+      setOpenMenuId(null);
+    } else {
+      setOpenMenuId(projectId);
+    }
+  };
+
+  const handleEditPhotos = (project: PreviewProjectDataProps) => {
+    // Implementar la lógica para editar fotos
+    console.log("Edit photos for project:", project.id);
+    setOpenMenuId(null);
+  };
+
+  const handleEditContent = (project: PreviewProjectDataProps) => {
+    // Implementar la lógica para editar contenido
+    console.log("Edit content for project:", project.id);
+    setOpenMenuId(null);
+  };
 
   const fetchPreviewProjectsData = usePreviewProjectsData(user);
 
@@ -113,9 +137,41 @@ export const PreviewProjects = () => {
               )}
 
               <div className="p-5">
-                <h4 className="font-semibold text-lg text-gray-800 mb-2 line-clamp-2">
-                  {project.id} - {project.title}
-                </h4>
+                <div className="flex justify-between items-start">
+                  <h4 className="font-semibold text-lg text-gray-800 mb-2 line-clamp-2 flex-1">
+                    {project.id} - {project.title}
+                  </h4>
+                  <div className="relative">
+                    <button
+                      className="p-1 rounded-full hover:bg-gray-100"
+                      onClick={() => handleToggleMenu(project.id)}
+                    >
+                      <EllipsisVerticalIcon className="h-5 w-5 text-gray-500" />
+                    </button>
+                    {openMenuId === project.id && (
+                      <div className="absolute right-0 top-full mt-1 w-40 bg-white shadow-lg rounded-md border border-gray-100 z-10">
+                        <ul className="py-1">
+                          <li>
+                            <button
+                              onClick={() => handleEditPhotos(project)}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              Edit photos
+                            </button>
+                          </li>
+                          <li>
+                            <button
+                              onClick={() => handleEditContent(project)}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              Edit content
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <div className="flex items-center space-x-2 mb-3">
                   <span className="text-sm text-gray-500">
                     Created at:{" "}
