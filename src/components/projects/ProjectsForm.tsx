@@ -30,11 +30,14 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
     image_data: [],
     publications: 1,
     googleMaps: "",
+    promoter: "",
+    collaborators: "",
   };
 
   const [formData, setFormData] = useState<CreateProjectProps>(
     initialData || defaultFormData
   );
+  console.log("formData", formData);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<ProjectImageData[]>([]);
@@ -42,6 +45,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
 
   useEffect(() => {
     if (initialData) {
+      console.log("initialData recibido:", initialData);
       setFormData(initialData);
 
       if (initialData.image_data && initialData.image_data.length > 0) {
@@ -166,7 +170,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
         <div className="mb-2">
           <InputField
             id="weblink"
-            label="Web Link"
+            label="Web Link (optional)"
             placeholder="https://example.com"
             type="url"
             value={formData.weblink || ""}
@@ -294,15 +298,36 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               ))}
             </div>
           </div>
-
-          <InputField
-            id="googleMaps"
-            label="Google Maps Link"
-            placeholder="Introduce your project location, google maps link complete"
-            type="url"
-            value={formData.weblink || ""}
-            onChange={handleChange}
-          />
+          <div className="mb-2">
+            <InputField
+              id="googleMaps"
+              label="Google Maps Link (optional)"
+              placeholder="Introduce your project location, google maps link complete"
+              type="url"
+              value={formData.googleMaps || ""}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="mb-2">
+            <InputField
+              id="promoter"
+              label="Promoter (optional)"
+              placeholder="Promoter name"
+              type="text"
+              value={formData.promoter || ""}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="mb-2">
+            <InputField
+              id="collaborators"
+              label="Collaborators (optional)"
+              placeholder="Collaborators names"
+              type="text"
+              value={formData.collaborators || ""}
+              onChange={handleChange}
+            />
+          </div>
         </div>
       </div>
 

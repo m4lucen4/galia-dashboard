@@ -103,6 +103,9 @@ export const Projects = () => {
       weblink: project.weblink,
       image_data: project.image_data,
       publications: project.publications,
+      googleMaps: project.googleMaps,
+      promoter: project.promoter,
+      collaborators: project.collaborators,
     };
   };
 

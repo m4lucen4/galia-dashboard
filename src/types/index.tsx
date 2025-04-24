@@ -59,6 +59,8 @@ export type ProjectDataProps = {
   image_data?: ProjectImageData[];
   publications?: number;
   googleMaps?: string;
+  promoter?: string;
+  collaborators?: string;
 };
 
 export type SocialNetworksCheck = {

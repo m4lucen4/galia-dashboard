@@ -25,6 +25,8 @@ export const addProject = createAsyncThunk(
           image_data: [],
           publications: projectData.publications,
           googleMaps: projectData.googleMaps,
+          promoter: projectData.promoter,
+          collaborators: projectData.collaborators,
         })
         .select()
         .single();
@@ -166,6 +168,8 @@ export const updateProject = createAsyncThunk(
           image_data: imageData,
           publications: projectData.publications,
           googleMaps: projectData.googleMaps,
+          promoter: projectData.promoter,
+          collaborators: projectData.collaborators,
         })
         .eq("id", projectData.id)
         .select()
@@ -309,6 +313,52 @@ export const fetchProjectsByUserId = createAsyncThunk(
           error instanceof Error
             ? error.message
             : "Error retrieving user's projects",
+        status: 500,
+      };
+      return rejectWithValue(appError);
+    }
+  }
+);
+
+export const fetchProjectsWithGoogleMaps = createAsyncThunk(
+  "projects/fetchProjectsWithGoogleMaps",
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data: projects, error } = await supabase
+        .from("projects")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        return rejectWithValue({
+          message: `Error getting projects list: ${error.message}`,
+          status: error.code,
+        });
+      }
+
+      if (!projects || projects.length === 0) {
+        return {
+          projects: [],
+          message: "Don't have any projects yet",
+        };
+      }
+
+      const projectsWithGoogleMaps = projects.filter(
+        (project) =>
+          project.googleMaps && Object.keys(project.googleMaps).length > 0
+      );
+
+      return {
+        projects: projectsWithGoogleMaps,
+        message: `${projectsWithGoogleMaps.length} projects with Google Maps data found`,
+      };
+    } catch (error: unknown) {
+      console.error("Error in fetchProjectsWithGoogleMaps:", error);
+      const appError: SupabaseError = {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error retrieving projects with Google Maps data",
         status: 500,
       };
       return rejectWithValue(appError);

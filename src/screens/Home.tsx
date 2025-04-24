@@ -3,6 +3,14 @@ import { RootState } from "../redux/store";
 
 export const Home = () => {
   const user = useAppSelector((state: RootState) => state.auth.user);
-  console.log(user);
-  return <div>Este es el home</div>;
+  return (
+    <div className="container mx-auto p-4">
+      <h3 className="text-base/7 font-semibold text-gray-900">Home</h3>
+      <div className="flex justify-between items-center mb-4">
+        <p className="mt-1 max-w-2xl text-sm/6 text-gray-500">
+          Hi, {user?.email}!
+        </p>
+      </div>
+    </div>
+  );
 };
