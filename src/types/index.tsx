@@ -61,6 +61,11 @@ export type ProjectDataProps = {
   googleMaps?: string;
 };
 
+export type SocialNetworksCheck = {
+  linkedln?: boolean;
+  instagram?: boolean;
+};
+
 export type PreviewProjectDataProps = {
   id: string;
   created_at?: string;
@@ -71,6 +76,14 @@ export type PreviewProjectDataProps = {
   description_rich: string;
   weblink?: string;
   image_data?: ProjectImageData[];
+  publishDate?: string;
+  checkSocialNetworks?: SocialNetworksCheck;
+};
+
+export type UpdateProjectPublishingProps = {
+  projectId: string;
+  publishDate?: string;
+  checkSocialNetworks?: SocialNetworksCheck;
 };
 
 export type IRequest = {

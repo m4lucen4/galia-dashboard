@@ -10,14 +10,12 @@ export const validateLoginForm = (
 ): Partial<LoginProps> => {
   const errors: Partial<LoginProps> = {};
 
-  // Validación del email
   if (!formData.email) {
     errors.email = "El email es requerido";
   } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
     errors.email = "Email inválido";
   }
 
-  // Validación de la contraseña
   if (!formData.password) {
     errors.password = "La contraseña es requerida";
   } else if (formData.password.length < 6) {
@@ -102,4 +100,32 @@ export const formatDate = (
     console.error("Error when format date:", error);
     return dateString;
   }
+};
+
+/**
+ * Format a date from ISO format to DD-MM-YYYY
+ * @param dateString - Date in ISO format (e.g. 2025-04-22T19:36:46.394739+00:00)
+ * @returns Date formatted as DD-MM-YYYY
+ */
+export const isDateInPast = (dateString: string | undefined): boolean => {
+  if (!dateString) return false;
+
+  const publishDate = new Date(dateString);
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+  publishDate.setHours(0, 0, 0, 0);
+
+  return publishDate < today;
+};
+
+/**
+ * Truncate a string to a specified length and add ellipsis if necessary
+ * @param text - The text to truncate
+ * @param maxLength - The maximum length of the text
+ * @returns The truncated text with ellipsis if it was truncated
+ */
+export const truncateText = (text: string, maxLength: number): string => {
+  if (text.length <= maxLength) return text;
+  return `${text.substring(0, maxLength)}...`;
 };

@@ -6,22 +6,35 @@ import {
   DocumentTextIcon,
   EllipsisVerticalIcon,
 } from "@heroicons/react/24/outline";
-import { PreviewProjectDataProps } from "../types";
+import { PreviewProjectDataProps, SocialNetworksCheck } from "../types";
 import { Drawer } from "../components/shared/ui/Drawer";
 import InstagramPost from "../components/previewProjects/InstagramPost";
-import { fetchPreviewProjectById } from "../redux/actions/PreviewProjectActions";
+import {
+  fetchPreviewProjectById,
+  updateProjectPublishing,
+} from "../redux/actions/PreviewProjectActions";
 import LinkedInPost from "../components/previewProjects/LinkedinPost";
 import { Button } from "../components/shared/ui/Button";
 import { InstagramIcon, LinkedInIcon } from "../components/icons";
-import { formatDateToDDMMYYYY } from "../helpers";
+import { formatDateToDDMMYYYY, isDateInPast, truncateText } from "../helpers";
 import { fetchUserByUid } from "../redux/actions/UserActions";
+import { Alert } from "../components/shared/ui/Alert";
+import { ConfigPublish } from "../components/previewProjects/ConfigPublish";
 
 export const PreviewProjects = () => {
   const dispatch = useAppDispatch();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [seeInstagram, setSeeInstagram] = useState(false);
   const [seeLinkedln, setSeeLinkedln] = useState(false);
+  const [seePublishConfig, setSeePublishConfig] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] =
+    useState<PreviewProjectDataProps | null>(null);
+  const [publishDate, setPublishDate] = useState<string>("");
+  const [socialNetworks, setSocialNetworks] = useState<SocialNetworksCheck>({
+    instagram: false,
+    linkedln: false,
+  });
   const user = useAppSelector((state: RootState) => state.auth.user);
   const { userData } = useAppSelector((state: RootState) => state.user);
   const { projects, project } = useAppSelector(
@@ -72,6 +85,48 @@ export const PreviewProjects = () => {
     if (seeInstagram) return "Preview Instagram";
     if (seeLinkedln) return "Preview LinkedIn";
     return "Preview Project";
+  };
+
+  const handleOpenPublishConfig = (project: PreviewProjectDataProps) => {
+    setSelectedProject(project);
+
+    if (project.publishDate) {
+      const dateOnly = project.publishDate.split("T")[0];
+      setPublishDate(dateOnly);
+    } else {
+      setPublishDate("");
+    }
+
+    setSocialNetworks({
+      instagram: project.checkSocialNetworks?.instagram || false,
+      linkedln: project.checkSocialNetworks?.linkedln || false,
+    });
+
+    setSeePublishConfig(true);
+  };
+
+  const handleSocialNetworkChange = (network: "instagram" | "linkedln") => {
+    setSocialNetworks((prev) => ({
+      ...prev,
+      [network]: !prev[network],
+    }));
+  };
+
+  const handlePublishProject = () => {
+    if (selectedProject) {
+      dispatch(
+        updateProjectPublishing({
+          projectId: selectedProject.id,
+          publishDate,
+          checkSocialNetworks: socialNetworks,
+        })
+      )
+        .unwrap()
+        .then(() => {
+          setSeePublishConfig(false);
+          fetchPreviewProjectsData();
+        });
+    }
   };
 
   useEffect(() => {
@@ -139,7 +194,7 @@ export const PreviewProjects = () => {
               <div className="p-5">
                 <div className="flex justify-between items-start">
                   <h4 className="font-semibold text-lg text-gray-800 mb-2 line-clamp-2 flex-1">
-                    {project.id} - {project.title}
+                    {project.id} - {truncateText(project.title, 20)}
                   </h4>
                   <div className="relative">
                     <button
@@ -186,8 +241,12 @@ export const PreviewProjects = () => {
                 </div>
               </div>
 
-              <div className="p-5 pt-0 flex gap-3 items-center justify-end border-t border-gray-100 mt-2">
-                <Button title="Publish" />
+              <div className="p-5 pt-0 flex gap-3 items-center justify-end mt-2">
+                <Button
+                  title="Publish"
+                  disabled={isDateInPast(project.publishDate)}
+                  onClick={() => handleOpenPublishConfig(project)}
+                />
                 <Button
                   icon={<InstagramIcon />}
                   secondary
@@ -199,9 +258,33 @@ export const PreviewProjects = () => {
                   onClick={() => handleOpenLinkedln(project)}
                 />
               </div>
+              {project.publishDate && (
+                <div className="px-5 pb-4 mt-1">
+                  <p className="text-xs text-gray-500 italic pt-2">
+                    {isDateInPast(project.publishDate)
+                      ? "This project has a past publication date"
+                      : "You can modify the publication data until the day before the scheduled date"}
+                  </p>
+                </div>
+              )}
             </div>
           ))}
       </div>
+      {seePublishConfig && (
+        <Alert
+          title="Configure your publication"
+          description="Select the date and social network where you want to publish"
+          onAccept={handlePublishProject}
+          onCancel={() => setSeePublishConfig(false)}
+        >
+          <ConfigPublish
+            publishDate={publishDate}
+            socialNetworks={socialNetworks}
+            onDateChange={(newDate) => setPublishDate(newDate)}
+            onSocialNetworkChange={handleSocialNetworkChange}
+          />
+        </Alert>
+      )}
     </div>
   );
 };

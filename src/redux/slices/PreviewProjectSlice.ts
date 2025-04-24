@@ -4,6 +4,7 @@ import {
   fetchPreviewProjectById,
   fetchPreviewProjects,
   fetchPreviewProjectsByUserId,
+  updateProjectPublishing,
 } from "../actions/PreviewProjectActions";
 
 interface ProjectState {
@@ -12,6 +13,7 @@ interface ProjectState {
   previewProjectsFetchRequest: IRequest;
   previewProjectFetchByIdRequest: IRequest;
   previewProjectFetchByUserIdRequest: IRequest;
+  previewProjectUpdatePublishingRequest: IRequest;
 }
 
 const initialState: ProjectState = {
@@ -28,6 +30,11 @@ const initialState: ProjectState = {
     ok: false,
   },
   previewProjectFetchByUserIdRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
+  previewProjectUpdatePublishingRequest: {
     inProgress: false,
     messages: "",
     ok: false,
@@ -121,6 +128,44 @@ const previewProjectSlice = createSlice({
             : errorPayload?.message || "Error desconocido";
 
         state.previewProjectFetchByUserIdRequest = {
+          inProgress: false,
+          messages: errorMessage,
+          ok: false,
+        };
+      });
+    builder
+      .addCase(updateProjectPublishing.pending, (state) => {
+        state.previewProjectUpdatePublishingRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(updateProjectPublishing.fulfilled, (state, action) => {
+        const { projectId, publishDate, checkSocialNetworks } =
+          action.payload.project;
+        const projectIndex = state.projects.findIndex(
+          (project) => project.id === projectId
+        );
+        if (projectIndex !== -1) {
+          state.projects[projectIndex].publishDate = publishDate;
+          state.projects[projectIndex].checkSocialNetworks =
+            checkSocialNetworks;
+        }
+        state.previewProjectUpdatePublishingRequest = {
+          inProgress: false,
+          messages: "",
+          ok: true,
+        };
+      })
+      .addCase(updateProjectPublishing.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage =
+          typeof errorPayload === "string"
+            ? errorPayload
+            : errorPayload?.message || "Error desconocido";
+
+        state.previewProjectUpdatePublishingRequest = {
           inProgress: false,
           messages: errorMessage,
           ok: false,

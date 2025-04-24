@@ -1,5 +1,10 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { PreviewProjectDataProps, SupabaseError } from "../../types";
+import {
+  PreviewProjectDataProps,
+  SocialNetworksCheck,
+  SupabaseError,
+  UpdateProjectPublishingProps,
+} from "../../types";
 import { supabase } from "../../helpers/supabase";
 
 export type CreateProjectProps = Omit<
@@ -123,6 +128,56 @@ export const fetchPreviewProjectsByUserId = createAsyncThunk(
           error instanceof Error
             ? error.message
             : "Error retrieving user's projects",
+        status: 500,
+      };
+      return rejectWithValue(appError);
+    }
+  }
+);
+
+export const updateProjectPublishing = createAsyncThunk(
+  "projectsPreview/updateProjectPublishing",
+  async (data: UpdateProjectPublishingProps, { rejectWithValue }) => {
+    try {
+      const { projectId, publishDate, checkSocialNetworks } = data;
+
+      const updateData: {
+        publishDate?: string;
+        checkSocialNetworks?: SocialNetworksCheck;
+      } = {};
+
+      if (publishDate !== undefined) {
+        updateData.publishDate = publishDate;
+      }
+
+      if (checkSocialNetworks !== undefined) {
+        updateData.checkSocialNetworks = checkSocialNetworks;
+      }
+
+      const { data: updatedProject, error } = await supabase
+        .from("projectsPreview")
+        .update(updateData)
+        .eq("id", projectId)
+        .select()
+        .single();
+
+      if (error) {
+        return rejectWithValue({
+          message: `Error updating project publishing info: ${error.message}`,
+          status: error.code,
+        });
+      }
+
+      return {
+        project: updatedProject,
+        message: "Project publishing info updated successfully",
+      };
+    } catch (error: unknown) {
+      const appError: SupabaseError = {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error updating project publishing info",
         status: 500,
       };
       return rejectWithValue(appError);

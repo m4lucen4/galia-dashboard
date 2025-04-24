@@ -17,7 +17,8 @@ interface InputFieldProps {
     | "tel"
     | "number"
     | "url"
-    | "textarea";
+    | "textarea"
+    | "date";
   value: string;
   error?: string;
 }
