@@ -69,14 +69,14 @@ export default function Navbar() {
             </DisclosureButton>
           </div>
           <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
-            <div className="flex shrink-0 items-center">
+            {/* <div className="flex shrink-0 items-center">
               <img
                 alt="Your Company"
                 src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500"
                 className="h-8 w-auto"
               />
-            </div>
-            <div className="hidden sm:ml-6 sm:block">
+            </div> */}
+            <div className="hidden  sm:block">
               <div className="flex space-x-4">
                 {navigation.map((item) => (
                   <Link

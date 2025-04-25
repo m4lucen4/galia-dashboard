@@ -1,19 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { fetchProjectsWithGoogleMaps } from "../redux/actions/ProjectActions";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { RootState } from "../redux/store";
-import { MapContainer, TileLayer } from "react-leaflet";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 import { LoadingSpinner } from "../components/shared/ui/LoadingSpinner";
-import { Coordinates } from "../types";
+import { Coordinates, ProjectDataProps } from "../types";
 import { extractCoordinates } from "../helpers";
 import { Button } from "../components/shared/ui/Button";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { ProjectMarker } from "../components/iaca/ProjectMarker";
+import { ProjectDetail } from "../components/iaca/ProjectDetail";
+import { ProjectsGallery } from "../components/iaca/ProjectsGallery";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 interface IconDefaultPrototype extends L.Icon.Default {
   _getIconUrl?: () => string;
+}
+
+function MapCenterUpdater({ center }: { center: Coordinates }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView([center.lat, center.lng], map.getZoom());
+  }, [center, map]);
+  return null;
 }
 
 delete (L.Icon.Default.prototype as IconDefaultPrototype)._getIconUrl;
@@ -27,10 +38,13 @@ L.Icon.Default.mergeOptions({
 export const Iaca = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const mapRef = useRef(null);
   const [mapCenter, setMapCenter] = useState<Coordinates>({
     lat: 37.5443,
     lng: -4.7278,
   });
+  const [selectedProject, setSelectedProject] =
+    useState<ProjectDataProps | null>(null);
 
   const { projectFetchWithGoogleMapsRequest, projects } = useAppSelector(
     (state: RootState) => state.project
@@ -43,6 +57,25 @@ export const Iaca = () => {
     } else {
       navigate("/login");
     }
+  };
+
+  const handleSelectProject = (project: ProjectDataProps) => {
+    setSelectedProject(project);
+
+    if (project.googleMaps) {
+      const coords = extractCoordinates(project.googleMaps);
+      if (coords) {
+        setMapCenter(coords);
+        const mapElement = document.getElementById("project-map-container");
+        if (mapElement) {
+          mapElement.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+    }
+  };
+
+  const handleCloseProjectDetail = () => {
+    setSelectedProject(null);
   };
 
   useEffect(() => {
@@ -91,24 +124,62 @@ export const Iaca = () => {
         </div>
       </div>
 
-      <div className="mt-6 h-[600px] w-full rounded-lg shadow-md overflow-hidden">
-        {projects && projects.length > 0 && (
-          <MapContainer
-            center={[mapCenter.lat, mapCenter.lng]}
-            zoom={8}
-            className="h-full w-full"
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
+      <div
+        id="project-map-container"
+        className="mt-6 flex flex-col lg:flex-row h-[600px] w-full"
+      >
+        <div
+          className={`${
+            selectedProject ? "lg:w-1/2" : "w-full"
+          } h-full rounded-lg shadow-md overflow-hidden transition-all duration-300`}
+        >
+          {projects && projects.length > 0 && (
+            <MapContainer
+              center={[mapCenter.lat, mapCenter.lng]}
+              zoom={8}
+              className="h-full w-full"
+              ref={mapRef}
+            >
+              <MapCenterUpdater center={mapCenter} />
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
 
-            {projects.map((project) => (
-              <ProjectMarker key={project.id} project={project} />
-            ))}
-          </MapContainer>
+              {projects.map((project) => (
+                <ProjectMarker
+                  key={project.id}
+                  project={project}
+                  onSelect={() => handleSelectProject(project)}
+                  isSelected={selectedProject?.id === project.id}
+                />
+              ))}
+            </MapContainer>
+          )}
+        </div>
+
+        {selectedProject && (
+          <div className="lg:w-1/2 h-full bg-white rounded-lg shadow-md overflow-auto">
+            <div className="p-4 relative">
+              <button
+                onClick={handleCloseProjectDetail}
+                className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-100"
+                aria-label="Cerrar detalles"
+              >
+                <XMarkIcon className="h-6 w-6 text-gray-500" />
+              </button>
+              <ProjectDetail project={selectedProject} />
+            </div>
+          </div>
         )}
       </div>
+
+      {projects && projects.length > 0 && (
+        <ProjectsGallery
+          projects={projects}
+          onSelectProject={handleSelectProject}
+        />
+      )}
     </div>
   );
 };
