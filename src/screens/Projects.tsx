@@ -106,6 +106,7 @@ export const Projects = () => {
       googleMaps: project.googleMaps,
       promoter: project.promoter,
       collaborators: project.collaborators,
+      authors: project.authors,
     };
   };
 

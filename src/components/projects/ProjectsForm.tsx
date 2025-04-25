@@ -32,12 +32,12 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
     googleMaps: "",
     promoter: "",
     collaborators: "",
+    authors: "",
   };
 
   const [formData, setFormData] = useState<CreateProjectProps>(
     initialData || defaultFormData
   );
-  console.log("formData", formData);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<ProjectImageData[]>([]);
@@ -45,7 +45,6 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
 
   useEffect(() => {
     if (initialData) {
-      console.log("initialData recibido:", initialData);
       setFormData(initialData);
 
       if (initialData.image_data && initialData.image_data.length > 0) {
@@ -305,6 +304,16 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               placeholder="Introduce your project location, google maps link complete"
               type="url"
               value={formData.googleMaps || ""}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="mb-2">
+            <InputField
+              id="authors"
+              label="Authors (optional)"
+              placeholder="Authors name"
+              type="text"
+              value={formData.authors || ""}
               onChange={handleChange}
             />
           </div>

@@ -16,7 +16,7 @@ export const PublicRoute = ({ children }: PublicRouteProps) => {
     dispatch(checkAuthState());
   }, [dispatch]);
 
-  if (authenticated) {
+  if (authenticated && location.pathname !== "/iaca") {
     return <Navigate to="/home" replace />;
   }
 

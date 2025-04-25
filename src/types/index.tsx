@@ -61,6 +61,7 @@ export type ProjectDataProps = {
   googleMaps?: string;
   promoter?: string;
   collaborators?: string;
+  authors?: string;
 };
 
 export type SocialNetworksCheck = {
@@ -97,4 +98,9 @@ export type IRequest = {
 export type SupabaseError = {
   message: string;
   status?: number;
+};
+
+export type Coordinates = {
+  lat: number;
+  lng: number;
 };

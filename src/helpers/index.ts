@@ -1,4 +1,4 @@
-import { LoginProps } from "../types";
+import { Coordinates, LoginProps } from "../types";
 
 /**
  * Valida el formulario de inicio de sesión
@@ -128,4 +128,29 @@ export const isDateInPast = (dateString: string | undefined): boolean => {
 export const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text;
   return `${text.substring(0, maxLength)}...`;
+};
+
+/**
+ * Extract coordinates from a Google Maps URL
+ * @param url - The Google Maps URL
+ * @returns An object with latitude and longitude or null if not found
+ */
+export const extractCoordinates = (url: string): Coordinates | null => {
+  try {
+    if (!url) return null;
+
+    const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
+    const match = url.match(regex);
+
+    if (match && match.length >= 3) {
+      return {
+        lat: parseFloat(match[1]),
+        lng: parseFloat(match[2]),
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error("Error extracting coordinates:", error);
+    return null;
+  }
 };

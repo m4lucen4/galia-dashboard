@@ -11,11 +11,13 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { PublicRoute } from "./PublicRoute";
 import { PasswordResetRoute } from "./PasswordResetRoute";
 import { PreviewProjects } from "../screens/PreviewProjects";
+import { Iaca } from "../screens/Iaca";
 
 export const AppRoutes = () => (
   <Routes>
     <Route element={<PublicRoute />}>
       <Route path="/login" element={<LoginScreen />} />
+      <Route path="/iaca" element={<Iaca />} />
     </Route>
     <Route element={<ProtectedRoute />}>
       <Route path="/home" element={<Home />} />

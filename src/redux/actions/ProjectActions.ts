@@ -27,6 +27,7 @@ export const addProject = createAsyncThunk(
           googleMaps: projectData.googleMaps,
           promoter: projectData.promoter,
           collaborators: projectData.collaborators,
+          authors: projectData.authors,
         })
         .select()
         .single();
@@ -170,6 +171,7 @@ export const updateProject = createAsyncThunk(
           googleMaps: projectData.googleMaps,
           promoter: projectData.promoter,
           collaborators: projectData.collaborators,
+          authors: projectData.authors,
         })
         .eq("id", projectData.id)
         .select()
