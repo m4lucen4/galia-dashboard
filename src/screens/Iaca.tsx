@@ -126,7 +126,7 @@ export const Iaca = () => {
 
       <div
         id="project-map-container"
-        className="mt-6 flex flex-col lg:flex-row h-[600px] w-full"
+        className="mt-6 flex flex-col lg:flex-row h-[500px] w-full"
       >
         <div
           className={`${
