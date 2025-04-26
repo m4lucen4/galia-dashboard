@@ -1,8 +1,10 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import {
   PreviewProjectDataProps,
+  ProjectImageData,
   SocialNetworksCheck,
   SupabaseError,
+  UpdatePreviewProjectProps,
   UpdateProjectPublishingProps,
 } from "../../types";
 import { supabase } from "../../helpers/supabase";
@@ -178,6 +180,54 @@ export const updateProjectPublishing = createAsyncThunk(
           error instanceof Error
             ? error.message
             : "Error updating project publishing info",
+        status: 500,
+      };
+      return rejectWithValue(appError);
+    }
+  }
+);
+
+export const updatePreviewProject = createAsyncThunk(
+  "projectsPreview/updateProject",
+  async (data: UpdatePreviewProjectProps, { rejectWithValue }) => {
+    try {
+      const { projectId, description_rich, image_data } = data;
+
+      const updateData: {
+        description_rich?: string;
+        image_data?: Array<ProjectImageData>;
+      } = {};
+
+      if (description_rich !== undefined) {
+        updateData.description_rich = description_rich;
+      }
+
+      if (image_data !== undefined) {
+        updateData.image_data = image_data;
+      }
+
+      const { data: updatedProject, error } = await supabase
+        .from("projectsPreview")
+        .update(updateData)
+        .eq("id", projectId)
+        .select()
+        .single();
+
+      if (error) {
+        return rejectWithValue({
+          message: `Error updating project: ${error.message}`,
+          status: error.code,
+        });
+      }
+
+      return {
+        project: updatedProject,
+        message: "Project updated successfully",
+      };
+    } catch (error: unknown) {
+      const appError: SupabaseError = {
+        message:
+          error instanceof Error ? error.message : "Error updating project",
         status: 500,
       };
       return rejectWithValue(appError);

@@ -6,6 +6,7 @@ import {
   fetchPreviewProjectsByUserId,
   updateProjectPublishing,
   deletePreviewProject,
+  updatePreviewProject,
 } from "../actions/PreviewProjectActions";
 
 interface ProjectState {
@@ -16,6 +17,7 @@ interface ProjectState {
   previewProjectFetchByUserIdRequest: IRequest;
   previewProjectUpdatePublishingRequest: IRequest;
   previewProjectDeleteRequest: IRequest;
+  previewProjectUpdateRequest: IRequest;
 }
 
 const initialState: ProjectState = {
@@ -42,6 +44,11 @@ const initialState: ProjectState = {
     ok: false,
   },
   previewProjectDeleteRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
+  previewProjectUpdateRequest: {
     inProgress: false,
     messages: "",
     ok: false,
@@ -205,6 +212,43 @@ const previewProjectSlice = createSlice({
             : errorPayload?.message || "Error desconocido";
 
         state.previewProjectDeleteRequest = {
+          inProgress: false,
+          messages: errorMessage,
+          ok: false,
+        };
+      });
+    builder
+      .addCase(updatePreviewProject.pending, (state) => {
+        state.previewProjectUpdateRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(updatePreviewProject.fulfilled, (state, action) => {
+        const { projectId, description_rich, image_data } =
+          action.payload.project;
+        const projectIndex = state.projects.findIndex(
+          (project) => project.id === projectId
+        );
+        if (projectIndex !== -1) {
+          state.projects[projectIndex].description_rich = description_rich;
+          state.projects[projectIndex].image_data = image_data;
+        }
+        state.previewProjectUpdateRequest = {
+          inProgress: false,
+          messages: "",
+          ok: true,
+        };
+      })
+      .addCase(updatePreviewProject.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage =
+          typeof errorPayload === "string"
+            ? errorPayload
+            : errorPayload?.message || "Error desconocido";
+
+        state.previewProjectUpdateRequest = {
           inProgress: false,
           messages: errorMessage,
           ok: false,

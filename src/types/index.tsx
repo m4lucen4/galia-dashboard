@@ -33,7 +33,7 @@ export type UserDataProps = {
 
 export type ProjectImageData = {
   url: string;
-  status: "pending" | "processing" | "processed" | "failed";
+  status: "pending" | "processing" | "processed" | "failed" | "not_selected";
   processingId?: string;
   processingResult?: {
     outputUrl?: string;
@@ -87,6 +87,24 @@ export type UpdateProjectPublishingProps = {
   projectId: string;
   publishDate?: string;
   checkSocialNetworks?: SocialNetworksCheck;
+};
+
+export type UpdatePreviewProjectProps = {
+  projectId: string | number;
+  description_rich?: string;
+  image_data?: Array<{
+    url: string;
+    status: "pending" | "processing" | "processed" | "failed" | "not_selected";
+    processingResult?: {
+      timestamps: {
+        queued: string;
+        started?: string;
+        completed?: string;
+      };
+      outputUrl?: string;
+      metadata?: string;
+    };
+  }>;
 };
 
 export type IRequest = {
