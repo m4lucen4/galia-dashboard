@@ -91,17 +91,26 @@ export const CardsList: React.FC<CardsListProps> = ({
                   )}
                 </div>
               </div>
-              <div className="flex items-center space-x-2 mb-3">
-                <span className="text-sm text-gray-500">
-                  Created at:{" "}
-                  {project.created_at
-                    ? formatDateToDDMMYYYY(project.created_at)
-                    : "N/A"}
-                </span>
-                <span className="h-1 w-1 rounded-full bg-gray-300"></span>
-                <span className="px-2.5 py-0.5 text-xs rounded-full bg-gray-100 text-black">
-                  {project.state}
-                </span>
+              <div className="mb-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex flex-col">
+                    <span className="text-sm text-gray-500">
+                      Created at:{" "}
+                      {project.created_at
+                        ? formatDateToDDMMYYYY(project.created_at)
+                        : "N/A"}
+                    </span>
+                    {project.publishDate && (
+                      <span className="text-sm text-gray-500">
+                        Publish date:{" "}
+                        {formatDateToDDMMYYYY(project.publishDate)}
+                      </span>
+                    )}
+                  </div>
+                  <span className="px-2.5 py-0.5 text-xs rounded-full bg-gray-100 text-black">
+                    {project.state}
+                  </span>
+                </div>
               </div>
             </div>
 
