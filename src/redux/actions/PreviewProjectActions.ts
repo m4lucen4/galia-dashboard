@@ -184,3 +184,37 @@ export const updateProjectPublishing = createAsyncThunk(
     }
   }
 );
+
+export const deletePreviewProject = createAsyncThunk(
+  "projectsPreview/deleteProject",
+  async (projectId: string, { rejectWithValue }) => {
+    try {
+      const { error } = await supabase
+        .from("projectsPreview")
+        .delete()
+        .eq("id", projectId);
+
+      if (error) {
+        return rejectWithValue({
+          message: `Error eliminando el proyecto: ${error.message}`,
+          status: error.code,
+        });
+      }
+
+      return {
+        projectId,
+        message: "Proyecto eliminado correctamente",
+      };
+    } catch (error: unknown) {
+      console.error("Error en deletePreviewProject:", error);
+      const appError: SupabaseError = {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error al eliminar el proyecto",
+        status: 500,
+      };
+      return rejectWithValue(appError);
+    }
+  }
+);

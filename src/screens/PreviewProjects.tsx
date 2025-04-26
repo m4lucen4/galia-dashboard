@@ -12,6 +12,7 @@ import InstagramPost from "../components/previewProjects/InstagramPost";
 import {
   fetchPreviewProjectById,
   updateProjectPublishing,
+  deletePreviewProject,
 } from "../redux/actions/PreviewProjectActions";
 import LinkedInPost from "../components/previewProjects/LinkedinPost";
 import { Button } from "../components/shared/ui/Button";
@@ -26,6 +27,7 @@ export const PreviewProjects = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [seeInstagram, setSeeInstagram] = useState(false);
   const [seeLinkedln, setSeeLinkedln] = useState(false);
+  const [deleteProject, setDeleteProject] = useState(false);
   const [seePublishConfig, setSeePublishConfig] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] =
@@ -49,16 +51,27 @@ export const PreviewProjects = () => {
     }
   };
 
-  const handleEditPhotos = (project: PreviewProjectDataProps) => {
+  const handleEditPreview = (project: PreviewProjectDataProps) => {
     // Implementar la lógica para editar fotos
     console.log("Edit photos for project:", project.id);
     setOpenMenuId(null);
   };
 
-  const handleEditContent = (project: PreviewProjectDataProps) => {
-    // Implementar la lógica para editar contenido
-    console.log("Edit content for project:", project.id);
+  const handleDeletePreview = (project: PreviewProjectDataProps) => {
+    setSelectedProject(project);
+    setDeleteProject(true);
     setOpenMenuId(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedProject) {
+      dispatch(deletePreviewProject(selectedProject.id))
+        .unwrap()
+        .then(() => {
+          setDeleteProject(false);
+          fetchPreviewProjectsData();
+        });
+    }
   };
 
   const fetchPreviewProjectsData = usePreviewProjectsData(user);
@@ -208,18 +221,18 @@ export const PreviewProjects = () => {
                         <ul className="py-1">
                           <li>
                             <button
-                              onClick={() => handleEditPhotos(project)}
+                              onClick={() => handleEditPreview(project)}
                               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             >
-                              Edit photos
+                              Edit project preview
                             </button>
                           </li>
                           <li>
                             <button
-                              onClick={() => handleEditContent(project)}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              onClick={() => handleDeletePreview(project)}
+                              className="w-full text-left px-4 py-2 text-sm text-red-800 hover:bg-gray-100"
                             >
-                              Edit content
+                              Delete project preview
                             </button>
                           </li>
                         </ul>
@@ -284,6 +297,14 @@ export const PreviewProjects = () => {
             onSocialNetworkChange={handleSocialNetworkChange}
           />
         </Alert>
+      )}
+      {deleteProject && (
+        <Alert
+          title="Do you want to delete the project?"
+          description="Are you sure you want to delete this project? This action cannot be undone."
+          onAccept={handleConfirmDelete}
+          onCancel={() => setDeleteProject(false)}
+        />
       )}
     </div>
   );

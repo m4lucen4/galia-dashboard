@@ -5,6 +5,7 @@ import {
   fetchPreviewProjects,
   fetchPreviewProjectsByUserId,
   updateProjectPublishing,
+  deletePreviewProject,
 } from "../actions/PreviewProjectActions";
 
 interface ProjectState {
@@ -14,6 +15,7 @@ interface ProjectState {
   previewProjectFetchByIdRequest: IRequest;
   previewProjectFetchByUserIdRequest: IRequest;
   previewProjectUpdatePublishingRequest: IRequest;
+  previewProjectDeleteRequest: IRequest;
 }
 
 const initialState: ProjectState = {
@@ -35,6 +37,11 @@ const initialState: ProjectState = {
     ok: false,
   },
   previewProjectUpdatePublishingRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
+  previewProjectDeleteRequest: {
     inProgress: false,
     messages: "",
     ok: false,
@@ -166,6 +173,38 @@ const previewProjectSlice = createSlice({
             : errorPayload?.message || "Error desconocido";
 
         state.previewProjectUpdatePublishingRequest = {
+          inProgress: false,
+          messages: errorMessage,
+          ok: false,
+        };
+      });
+    builder
+      .addCase(deletePreviewProject.pending, (state) => {
+        state.previewProjectDeleteRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(deletePreviewProject.fulfilled, (state, action) => {
+        const { projectId } = action.payload;
+        state.projects = state.projects.filter(
+          (project) => project.id !== projectId
+        );
+        state.previewProjectDeleteRequest = {
+          inProgress: false,
+          messages: "",
+          ok: true,
+        };
+      })
+      .addCase(deletePreviewProject.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage =
+          typeof errorPayload === "string"
+            ? errorPayload
+            : errorPayload?.message || "Error desconocido";
+
+        state.previewProjectDeleteRequest = {
           inProgress: false,
           messages: errorMessage,
           ok: false,
