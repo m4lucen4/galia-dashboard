@@ -8,8 +8,12 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-import { PreviewProjectDataProps, UserDataProps } from "../../types";
-import { useState } from "react";
+import {
+  PreviewProjectDataProps,
+  UserDataProps,
+  ProjectImageData,
+} from "../../types";
+import { useState, useEffect } from "react";
 
 interface IProjectLinkedlnPostProps {
   project: PreviewProjectDataProps;
@@ -21,23 +25,34 @@ export default function LinkedInPost({
   user,
 }: IProjectLinkedlnPostProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const images = project?.image_data || [];
+  const [pendingImages, setPendingImages] = useState<ProjectImageData[]>([]);
+
+  useEffect(() => {
+    if (project?.image_data) {
+      const filteredImages = project.image_data.filter(
+        (image) => image.status === "pending"
+      );
+      setPendingImages(filteredImages);
+    }
+  }, [project]);
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    setCurrentImageIndex((prev) => (prev + 1) % pendingImages.length);
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+    setCurrentImageIndex(
+      (prev) => (prev - 1 + pendingImages.length) % pendingImages.length
+    );
   };
+
   return (
     <div className="max-w-md mx-auto bg-white border border-gray-200 rounded-lg shadow-sm">
-      {/* Header con información del usuario */}
       <div className="flex items-start p-3">
         <div className="mr-2">
           <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-200">
             <img
-              src={project?.image_data?.[0]?.url}
+              src={pendingImages[0]?.url || "https://via.placeholder.com/48"}
               alt="@usuario"
               className="w-full h-full object-cover"
             />
@@ -72,46 +87,37 @@ export default function LinkedInPost({
         </div>
       </div>
 
-      {/* Contenido del post */}
       <div className="px-3 pb-2">
         <p className="text-sm text-gray-800 mb-3 whitespace-pre-wrap">
           {project?.description_rich}
         </p>
       </div>
 
-      {/* Imagen del post */}
-
       <div className="relative mb-2">
-        {/* Solo mostrar controles si hay más de una imagen */}
-        {images.length > 0 && (
+        {pendingImages.length > 0 && (
           <div className="relative">
             <img
-              src={images[currentImageIndex]?.url}
+              src={pendingImages[currentImageIndex]?.url}
               alt={`Imagen ${currentImageIndex + 1} de la publicación`}
               className="w-full object-cover"
             />
 
-            {/* Controles del carrusel - mostrar solo si hay más de una imagen */}
-            {images.length > 1 && (
+            {pendingImages.length > 1 && (
               <>
-                {/* Botón anterior */}
                 <button
                   className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/60 rounded-full p-1 hover:bg-white/80"
                   onClick={prevImage}
                 >
                   <ChevronLeftIcon className="h-5 w-5 text-gray-700" />
                 </button>
-
-                {/* Botón siguiente */}
                 <button
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/60 rounded-full p-1 hover:bg-white/80"
                   onClick={nextImage}
                 >
                   <ChevronRightIcon className="h-5 w-5 text-gray-700" />
                 </button>
-                {/* Indicadores de posición */}
                 <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
-                  {images.map((_, index) => (
+                  {pendingImages.map((_, index) => (
                     <span
                       key={index}
                       className={`w-2 h-2 rounded-full ${
@@ -129,7 +135,6 @@ export default function LinkedInPost({
         )}
       </div>
 
-      {/* Estadísticas de interacción */}
       <div className="px-3 py-1 flex justify-between text-xs text-gray-500 border-t border-gray-100">
         <div className="flex items-center">
           <div className="flex -space-x-1 mr-1">
@@ -149,7 +154,6 @@ export default function LinkedInPost({
         </div>
       </div>
 
-      {/* Botones de acción */}
       <div className="px-1 py-1 flex justify-between border-t border-gray-200">
         <button className="flex items-center justify-center gap-1 py-2 px-1 rounded hover:bg-gray-100 flex-1">
           <HandThumbUpIcon className="h-5 w-5 text-gray-600" />
@@ -169,7 +173,6 @@ export default function LinkedInPost({
         </button>
       </div>
 
-      {/* Sección de comentarios */}
       <div className="px-3 py-2 border-t border-gray-200">
         <div className="flex items-start gap-2 mb-3">
           <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-200 flex-shrink-0">

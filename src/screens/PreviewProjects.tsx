@@ -15,12 +15,14 @@ import { fetchUserByUid } from "../redux/actions/UserActions";
 import { Alert } from "../components/shared/ui/Alert";
 import { ConfigPublish } from "../components/previewProjects/ConfigPublish";
 import { CardsList } from "../components/previewProjects/CardsList";
+import { PreviewProjectForm } from "../components/previewProjects/PreviewProjectForm";
 
 export const PreviewProjects = () => {
   const dispatch = useAppDispatch();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [seeInstagram, setSeeInstagram] = useState(false);
   const [seeLinkedln, setSeeLinkedln] = useState(false);
+  const [seeEditPreview, setEditSeePreview] = useState(false);
   const [deleteProject, setDeleteProject] = useState(false);
   const [seePublishConfig, setSeePublishConfig] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -33,7 +35,7 @@ export const PreviewProjects = () => {
   });
   const user = useAppSelector((state: RootState) => state.auth.user);
   const { userData } = useAppSelector((state: RootState) => state.user);
-  const { projects, project } = useAppSelector(
+  const { projects, project, previewProjectUpdateRequest } = useAppSelector(
     (state: RootState) => state.previewProject
   );
 
@@ -46,8 +48,9 @@ export const PreviewProjects = () => {
   };
 
   const handleEditPreview = (project: PreviewProjectDataProps) => {
-    // Implementar la lógica para editar fotos
-    console.log("Edit photos for project:", project.id);
+    dispatch(fetchPreviewProjectById(project.id));
+    setEditSeePreview(true);
+    setDrawerOpen(true);
     setOpenMenuId(null);
   };
 
@@ -85,12 +88,20 @@ export const PreviewProjects = () => {
   const handleCloseDrawer = () => {
     setSeeInstagram(false);
     setSeeLinkedln(false);
+    setEditSeePreview(false);
     setDrawerOpen(false);
+  };
+
+  const handleSavePreviewProject = () => {
+    setEditSeePreview(false);
+    setDrawerOpen(false);
+    fetchPreviewProjectsData();
   };
 
   const getDrawerTitle = () => {
     if (seeInstagram) return "Preview Instagram";
     if (seeLinkedln) return "Preview LinkedIn";
+    if (seeEditPreview) return "Edit Preview Project";
     return "Preview Project";
   };
 
@@ -170,6 +181,13 @@ export const PreviewProjects = () => {
         )}
         {seeLinkedln && project && userData && (
           <LinkedInPost project={project} user={userData} />
+        )}
+        {seeEditPreview && project && (
+          <PreviewProjectForm
+            project={project}
+            onSave={handleSavePreviewProject}
+            loading={previewProjectUpdateRequest.inProgress}
+          />
         )}
       </Drawer>
 

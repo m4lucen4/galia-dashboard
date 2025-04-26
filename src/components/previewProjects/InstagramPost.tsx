@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   HeartIcon,
   ChatBubbleLeftIcon,
@@ -8,7 +8,11 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-import { PreviewProjectDataProps, UserDataProps } from "../../types";
+import {
+  PreviewProjectDataProps,
+  UserDataProps,
+  ProjectImageData,
+} from "../../types";
 
 interface IProjectInstagramPostProps {
   project: PreviewProjectDataProps;
@@ -20,24 +24,29 @@ export default function InstagramPost({
   user,
 }: IProjectInstagramPostProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [pendingImages, setPendingImages] = useState<ProjectImageData[]>([]);
 
-  const hasMultipleImages =
-    project?.image_data && project.image_data.length > 1;
+  useEffect(() => {
+    if (project?.image_data) {
+      const filteredImages = project.image_data.filter(
+        (image) => image.status === "pending"
+      );
+      setPendingImages(filteredImages);
+    }
+  }, [project]);
+
+  const hasMultipleImages = pendingImages.length > 1;
 
   const goToNextImage = () => {
-    if (project?.image_data) {
-      setCurrentImageIndex((prevIndex) =>
-        prevIndex === (project.image_data?.length ?? 0) - 1 ? 0 : prevIndex + 1
-      );
-    }
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === pendingImages.length - 1 ? 0 : prevIndex + 1
+    );
   };
 
   const goToPreviousImage = () => {
-    if (project?.image_data) {
-      setCurrentImageIndex((prevIndex) =>
-        prevIndex === 0 ? (project.image_data?.length ?? 0) - 1 : prevIndex - 1
-      );
-    }
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === 0 ? pendingImages.length - 1 : prevIndex - 1
+    );
   };
 
   return (
@@ -47,7 +56,7 @@ export default function InstagramPost({
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-200">
             <img
-              src={project?.image_data?.[0]?.url}
+              src={pendingImages[0]?.url || "https://via.placeholder.com/50"}
               alt="@usuario"
               className="w-full h-full object-cover"
             />
@@ -65,55 +74,47 @@ export default function InstagramPost({
       </div>
 
       <div className="aspect-square relative">
-        {project?.image_data && project.image_data.length > 0 ? (
-          <div className="w-full h-full relative">
-            <img
-              src={
-                project.image_data[currentImageIndex]?.url ||
-                "https://via.placeholder.com/500"
-              }
-              alt={`Imagen ${currentImageIndex + 1} de ${project.title}`}
-              className="w-full h-full object-cover"
-            />
-
-            {hasMultipleImages && (
-              <>
-                <button
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 rounded-full p-1 hover:bg-white/90 transition-colors shadow-md"
-                  onClick={goToPreviousImage}
-                >
-                  <ChevronLeftIcon className="h-5 w-5 text-gray-800" />
-                </button>
-                <button
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 rounded-full p-1 hover:bg-white/90 transition-colors shadow-md"
-                  onClick={goToNextImage}
-                >
-                  <ChevronRightIcon className="h-5 w-5 text-gray-800" />
-                </button>
-
-                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
-                  {project.image_data.map((_, index) => (
-                    <div
-                      key={index}
-                      className={`h-1.5 rounded-full transition-all ${
-                        index === currentImageIndex
-                          ? "w-6 bg-gray-500"
-                          : "w-1.5 bg-white/70"
-                      }`}
-                      onClick={() => setCurrentImageIndex(index)}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        ) : (
+        <div className="w-full h-full relative">
           <img
-            src="https://via.placeholder.com/500"
-            alt="Publicación de Instagram"
+            src={
+              pendingImages[currentImageIndex]?.url ||
+              "https://via.placeholder.com/500"
+            }
+            alt={`Imagen ${currentImageIndex + 1} de ${project.title}`}
             className="w-full h-full object-cover"
           />
-        )}
+
+          {hasMultipleImages && (
+            <>
+              <button
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 rounded-full p-1 hover:bg-white/90 transition-colors shadow-md"
+                onClick={goToPreviousImage}
+              >
+                <ChevronLeftIcon className="h-5 w-5 text-gray-800" />
+              </button>
+              <button
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 rounded-full p-1 hover:bg-white/90 transition-colors shadow-md"
+                onClick={goToNextImage}
+              >
+                <ChevronRightIcon className="h-5 w-5 text-gray-800" />
+              </button>
+
+              <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                {pendingImages.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`h-1.5 rounded-full transition-all ${
+                      index === currentImageIndex
+                        ? "w-6 bg-gray-500"
+                        : "w-1.5 bg-white/70"
+                    }`}
+                    onClick={() => setCurrentImageIndex(index)}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="p-3">
