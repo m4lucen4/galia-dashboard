@@ -35,7 +35,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
 });
 
-export const Iaca = () => {
+export const ProjectsMap = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const mapRef = useRef(null);
@@ -112,10 +112,13 @@ export const Iaca = () => {
   return (
     <div>
       <div className="container mx-auto p-4">
-        <h3 className="text-base/7 font-semibold text-gray-900">IACA</h3>
+        <h3 className="text-base/7 font-semibold text-gray-900">
+          Projects Map
+        </h3>
         <div className="flex justify-between items-center">
           <p className="mt-1 max-w-2xl text-sm/6 text-gray-500">
-            Inteligencia Artificial para la Comunicación de Arquitectura
+            Explore the projects on the map. Click on a marker to see more
+            details.
           </p>
           <Button
             title={authenticated ? "Go to dash" : "Go to Login"}
