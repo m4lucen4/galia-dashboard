@@ -21,6 +21,8 @@ interface InputFieldProps {
     | "date";
   value: string;
   error?: string;
+  min?: string;
+  helperText?: string;
 }
 
 export const InputField: React.FC<InputFieldProps> = ({
@@ -33,6 +35,8 @@ export const InputField: React.FC<InputFieldProps> = ({
   type,
   value,
   error,
+  min,
+  helperText,
 }) => {
   const baseClassName =
     "block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-gray-800 sm:text-sm/6";
@@ -65,11 +69,20 @@ export const InputField: React.FC<InputFieldProps> = ({
           type={type}
           value={value}
           className={baseClassName}
+          min={min}
         />
       )}
       {error && (
         <p className="mt-2 text-sm text-red-600" id={`${id}-error`}>
           {error}
+        </p>
+      )}
+      {helperText && !error && (
+        <p
+          className="mt-2 text-xs text-gray-500 italic"
+          id={`${id}-helper-text`}
+        >
+          {helperText}
         </p>
       )}
     </div>
