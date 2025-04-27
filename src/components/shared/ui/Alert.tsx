@@ -18,6 +18,7 @@ interface AlertProps {
   children?: React.ReactNode;
   icon?: React.ElementType;
   iconClassName?: string;
+  disabledConfirmButton?: boolean;
 }
 
 export const Alert: React.FC<AlertProps> = ({
@@ -28,6 +29,7 @@ export const Alert: React.FC<AlertProps> = ({
   children,
   icon: Icon = ExclamationTriangleIcon,
   iconClassName = "size-6 text-white",
+  disabledConfirmButton = false,
 }) => {
   const [open, setOpen] = useState(true);
 
@@ -84,7 +86,12 @@ export const Alert: React.FC<AlertProps> = ({
               {onCancel && (
                 <Button title="Cancel" secondary onClick={handleCancel} />
               )}
-              <Button title="Confirm" onClick={handleAccept} />
+
+              <Button
+                title="Confirm"
+                disabled={disabledConfirmButton}
+                onClick={handleAccept}
+              />
             </div>
           </DialogPanel>
         </div>

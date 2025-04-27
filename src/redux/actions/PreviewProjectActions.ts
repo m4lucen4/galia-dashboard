@@ -144,12 +144,12 @@ export const updateProjectPublishing = createAsyncThunk(
       const { projectId, publishDate, checkSocialNetworks } = data;
 
       const updateData: {
-        publishDate?: string;
+        publishDate?: string | null;
         checkSocialNetworks?: SocialNetworksCheck;
       } = {};
 
       if (publishDate !== undefined) {
-        updateData.publishDate = publishDate;
+        updateData.publishDate = publishDate === "" ? null : publishDate;
       }
 
       if (checkSocialNetworks !== undefined) {

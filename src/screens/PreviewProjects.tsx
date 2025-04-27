@@ -16,6 +16,7 @@ import { Alert } from "../components/shared/ui/Alert";
 import { ConfigPublish } from "../components/previewProjects/ConfigPublish";
 import { CardsList } from "../components/previewProjects/CardsList";
 import { PreviewProjectForm } from "../components/previewProjects/PreviewProjectForm";
+import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 
 export const PreviewProjects = () => {
   const dispatch = useAppDispatch();
@@ -205,8 +206,14 @@ export const PreviewProjects = () => {
         <Alert
           title="Configure your publication"
           description="Select the date and social network where you want to publish"
+          icon={CalendarDaysIcon}
           onAccept={handlePublishProject}
           onCancel={() => setSeePublishConfig(false)}
+          disabledConfirmButton={
+            !socialNetworks.instagram &&
+            !socialNetworks.linkedln &&
+            !!publishDate
+          }
         >
           <ConfigPublish
             publishDate={publishDate}
