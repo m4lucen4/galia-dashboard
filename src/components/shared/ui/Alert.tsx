@@ -16,6 +16,8 @@ interface AlertProps {
   onAccept?: () => void;
   onCancel?: () => void;
   children?: React.ReactNode;
+  icon?: React.ElementType;
+  iconClassName?: string;
 }
 
 export const Alert: React.FC<AlertProps> = ({
@@ -24,6 +26,8 @@ export const Alert: React.FC<AlertProps> = ({
   onAccept,
   onCancel,
   children,
+  icon: Icon = ExclamationTriangleIcon,
+  iconClassName = "size-6 text-white",
 }) => {
   const [open, setOpen] = useState(true);
 
@@ -60,10 +64,7 @@ export const Alert: React.FC<AlertProps> = ({
             <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
               <div className="sm:flex sm:items-start">
                 <div className="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-gray-800 sm:mx-0 sm:size-10">
-                  <ExclamationTriangleIcon
-                    aria-hidden="true"
-                    className="size-6 text-white"
-                  />
+                  <Icon aria-hidden="true" className={iconClassName} />
                 </div>
                 <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                   <DialogTitle

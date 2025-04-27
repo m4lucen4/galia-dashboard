@@ -3,27 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
 import { InputField } from "../components/shared/ui/InputField";
-import { Button } from "../components/shared/ui/Button";
 
-import { LoginProps } from "../types";
-import { Card } from "../components/shared/ui/Card";
-
-import {
-  checkAuthState,
-  login,
-  resetPassword,
-} from "../redux/actions/AuthActions";
+import { checkAuthState, resetPassword } from "../redux/actions/AuthActions";
 import { RootState, AppDispatch } from "../redux/store";
-import { isFormValid, validateLoginForm } from "../helpers";
 import { Alert } from "../components/shared/ui/Alert";
 import { clearLoginErrors } from "../redux/slices/AuthSlice";
+import { LoginForm } from "../components/login/LoginForm";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 
 export const LoginScreen = () => {
-  const [formData, setFormData] = useState<LoginProps>({
-    email: "",
-    password: "",
-  });
-  const [errors, setErrors] = useState<Partial<LoginProps>>({});
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState("");
   const [recoveryEmailSent, setRecoveryEmailSent] = useState(false);
@@ -48,31 +36,6 @@ export const LoginScreen = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authenticated]);
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-
-    if (errors[name as keyof LoginProps]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Usamos nuestras funciones helper
-    const newErrors = validateLoginForm(formData);
-    setErrors(newErrors);
-
-    if (isFormValid(newErrors)) {
-      await dispatch(login(formData));
-    }
-  };
 
   const handleShowRecoveryModal = () => {
     setShowRecoveryModal(true);
@@ -103,40 +66,10 @@ export const LoginScreen = () => {
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <Card title="Login" subtitle="Enter your credentials">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <InputField
-              label="Email"
-              id="email"
-              onChange={handleChange}
-              required
-              type="email"
-              value={formData.email}
-            />
-            <InputField
-              label="Password"
-              id="password"
-              onChange={handleChange}
-              required
-              type="password"
-              value={formData.password}
-            />
-            <div className="flex row items-center justify-between">
-              <Button
-                title="Login"
-                disabled={loginRequest.inProgress}
-                type="submit"
-              />
-              <span
-                className="text-sm cursor-pointer"
-                onClick={handleShowRecoveryModal}
-              >
-                Recovery password
-              </span>
-            </div>
-          </form>
-        </Card>
-        {/* Este es el Alert para avisar que hay un problema con el login */}
+        <LoginForm
+          loginRequest={loginRequest}
+          onForgotPassword={handleShowRecoveryModal}
+        />
         {loginRequest.messages && loginRequest.messages.length > 0 && (
           <Alert
             title={loginRequest.messages}
@@ -146,11 +79,11 @@ export const LoginScreen = () => {
             }}
           />
         )}
-        {/* Este es el Alert para iniciar el proceso de recuperación de contraseña */}
         {showRecoveryModal && (
           <Alert
             title="Recovery password"
             description="Enter your email to receive a password reset link"
+            icon={InformationCircleIcon}
             onAccept={
               recoveryEmailSent
                 ? handleCancelShowRecoveryModal

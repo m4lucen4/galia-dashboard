@@ -12,6 +12,7 @@ import { Alert } from "../components/shared/ui/Alert";
 import { clearErrors } from "../redux/slices/UserSlice";
 import { InputField } from "../components/shared/ui/InputField";
 import { LoadingSpinner } from "../components/shared/ui/LoadingSpinner";
+import { LockClosedIcon } from "@heroicons/react/24/outline";
 
 export const Profile = () => {
   const user = useAppSelector((state: RootState) => state.auth.user);
@@ -155,7 +156,6 @@ export const Profile = () => {
     }
   };
 
-  // Función para abrir el modal de cambio de contraseña e iniciar el proceso
   const handleChangePassword = () => {
     setNewPassword("");
     setRepeatPassword("");
@@ -163,7 +163,6 @@ export const Profile = () => {
     setShowPasswordAlert(true);
   };
 
-  // Función para cerrar el modal de cambio de contraseña cancelando el proceso
   const handlePasswordAlertCancel = () => {
     setShowPasswordAlert(false);
   };
@@ -324,7 +323,6 @@ export const Profile = () => {
           </form>
         </div>
       )}
-      {/* Alert de aviso cuando ha sucedido un error durante la actualización de los datos del usuario */}
       {userUpdateRequest?.messages && (
         <Alert
           title="Error"
@@ -332,11 +330,11 @@ export const Profile = () => {
           onAccept={() => dispatch(clearErrors())}
         />
       )}
-      {/* Alert para iniciar el proceso de cambio de contraseña */}
       {showPasswordAlert && (
         <Alert
           title="Do you want to change your password?"
           description="Please enter your new password."
+          icon={LockClosedIcon}
           onAccept={handlePasswordAlertAccept}
           onCancel={handlePasswordAlertCancel}
         >
