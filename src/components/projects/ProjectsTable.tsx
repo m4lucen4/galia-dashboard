@@ -18,6 +18,7 @@ type ProjectsTableProps = {
   isLoading: boolean;
   onEditProject: () => void;
   onLaunchProject: (projectId: string) => void;
+  onRecoveryProject: (projectId: string) => void;
 };
 
 export const ProjectsTable = ({
@@ -25,6 +26,7 @@ export const ProjectsTable = ({
   isLoading,
   onEditProject,
   onLaunchProject,
+  onRecoveryProject,
 }: ProjectsTableProps) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const dispatch = useAppDispatch();
@@ -70,9 +72,12 @@ export const ProjectsTable = ({
       cell: (props) => {
         if (props.row.original.state !== "draft") {
           return (
-            <span className="text-gray-400 italic text-sm">
-              No actions available
-            </span>
+            <div className="flex space-x-2">
+              <Button
+                title="Recovery"
+                onClick={() => onRecoveryProject(props.row.original.id)}
+              />
+            </div>
           );
         }
 

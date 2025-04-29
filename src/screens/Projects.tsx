@@ -10,7 +10,8 @@ import {
   addProject,
   CreateProjectProps,
   updateProject,
-  updateProjectState,
+  updateProjectPreview,
+  updateProjectDraft,
 } from "../redux/actions/ProjectActions";
 import {
   clearProjectErrors,
@@ -30,6 +31,7 @@ export const Projects = () => {
     null
   );
   const [showLaunchModal, setShowLaunchModal] = useState(false);
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
 
   const fetchProjectsData = useProjectsData(user);
   const errorMessage = errorMessages({
@@ -79,13 +81,29 @@ export const Projects = () => {
     setShowLaunchModal(true);
   };
 
+  const handleRecoveyProject = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    setShowRecoveryModal(true);
+  };
+
   const handleConfirmLaunch = () => {
     if (selectedProjectId) {
-      dispatch(updateProjectState(selectedProjectId))
+      dispatch(updateProjectPreview(selectedProjectId))
         .unwrap()
         .then(() => {
           fetchProjectsData();
           setShowLaunchModal(false);
+        });
+    }
+  };
+
+  const handleConfirmRecovery = () => {
+    if (selectedProjectId) {
+      dispatch(updateProjectDraft(selectedProjectId))
+        .unwrap()
+        .then(() => {
+          fetchProjectsData();
+          setShowRecoveryModal(false);
         });
     }
   };
@@ -142,6 +160,7 @@ export const Projects = () => {
         isLoading={projectsFetchRequest.inProgress}
         onEditProject={handleEditProject}
         onLaunchProject={handleLaunchProject}
+        onRecoveryProject={handleRecoveyProject}
       />
       {errorMessage && (
         <Alert
@@ -156,6 +175,14 @@ export const Projects = () => {
           description="Your project will be launched to generate a preliminary version, in a few minutes it will be available in Project Preview"
           onAccept={handleConfirmLaunch}
           onCancel={() => setShowLaunchModal(false)}
+        />
+      )}
+      {showRecoveryModal && (
+        <Alert
+          title="Do you want to recover the project?"
+          description="The project will be restored to draft version"
+          onAccept={handleConfirmRecovery}
+          onCancel={() => setShowRecoveryModal(false)}
         />
       )}
     </div>

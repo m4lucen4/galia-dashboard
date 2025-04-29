@@ -103,11 +103,6 @@ export const addUser = createAsyncThunk(
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
-        options: {
-          data: {
-            role: userData.role,
-          },
-        },
       });
 
       if (authError) {

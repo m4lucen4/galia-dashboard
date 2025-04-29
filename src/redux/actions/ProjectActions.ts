@@ -368,8 +368,8 @@ export const fetchProjectsWithGoogleMaps = createAsyncThunk(
   }
 );
 
-export const updateProjectState = createAsyncThunk(
-  "projects/updateProjectState",
+export const updateProjectPreview = createAsyncThunk(
+  "projects/updateProjectPreview",
   async (projectId: string, { rejectWithValue }) => {
     try {
       const webhookUrl = `${
@@ -406,6 +406,44 @@ export const updateProjectState = createAsyncThunk(
       return {
         project: updatedProject,
         message: "Project state updated to preview",
+      };
+    } catch (error: unknown) {
+      const appError: SupabaseError = {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error updating project state",
+        status: 500,
+      };
+      return rejectWithValue(appError);
+    }
+  }
+);
+
+export const updateProjectDraft = createAsyncThunk(
+  "projects/updateProjectDraft",
+  async (projectId: string, { rejectWithValue }) => {
+    try {
+      const { data: updatedProject, error } = await supabase
+        .from("projects")
+        .update({
+          updated_at: new Date().toISOString(),
+          state: "draft",
+        })
+        .eq("id", projectId)
+        .select()
+        .single();
+
+      if (error) {
+        return rejectWithValue({
+          message: `Error updating project state: ${error.message}`,
+          status: error.code,
+        });
+      }
+
+      return {
+        project: updatedProject,
+        message: "Project state updated to draft",
       };
     } catch (error: unknown) {
       const appError: SupabaseError = {

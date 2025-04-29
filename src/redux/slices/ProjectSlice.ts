@@ -6,7 +6,8 @@ import {
   updateProject,
   fetchProjectsByUserId,
   fetchProjectsWithGoogleMaps,
-  updateProjectState,
+  updateProjectPreview,
+  updateProjectDraft,
 } from "../actions/ProjectActions";
 import { ProjectDataProps, IRequest, SupabaseError } from "../../types";
 
@@ -222,14 +223,14 @@ const projectSlice = createSlice({
         };
       });
     builder
-      .addCase(updateProjectState.pending, (state) => {
+      .addCase(updateProjectPreview.pending, (state) => {
         state.updateProjectStateRequest = {
           inProgress: true,
           messages: "",
           ok: false,
         };
       })
-      .addCase(updateProjectState.fulfilled, (state, action) => {
+      .addCase(updateProjectPreview.fulfilled, (state, action) => {
         const updatedProject = action.payload.project;
         state.projects = state.projects.map((project) =>
           project.id === updatedProject.id ? updatedProject : project
@@ -240,7 +241,39 @@ const projectSlice = createSlice({
           ok: true,
         };
       })
-      .addCase(updateProjectState.rejected, (state, action) => {
+      .addCase(updateProjectPreview.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage =
+          typeof errorPayload === "string"
+            ? errorPayload
+            : errorPayload?.message || "Error desconocido";
+
+        state.updateProjectStateRequest = {
+          inProgress: false,
+          messages: errorMessage,
+          ok: false,
+        };
+      });
+    builder
+      .addCase(updateProjectDraft.pending, (state) => {
+        state.updateProjectStateRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(updateProjectDraft.fulfilled, (state, action) => {
+        const updatedProject = action.payload.project;
+        state.projects = state.projects.map((project) =>
+          project.id === updatedProject.id ? updatedProject : project
+        );
+        state.updateProjectStateRequest = {
+          inProgress: false,
+          messages: "",
+          ok: true,
+        };
+      })
+      .addCase(updateProjectDraft.rejected, (state, action) => {
         const errorPayload = action.payload as SupabaseError | string;
         const errorMessage =
           typeof errorPayload === "string"
