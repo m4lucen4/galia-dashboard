@@ -372,9 +372,7 @@ export const updateProjectPreview = createAsyncThunk(
   "projects/updateProjectPreview",
   async (projectId: string, { rejectWithValue }) => {
     try {
-      const webhookUrl = `${
-        import.meta.env.VITE_N8N_POST_SUPABASE_URL
-      }?id=${projectId}`;
+      const webhookUrl = `/api/n8n-trigger?id=${projectId}`;
 
       const webhookResponse = await fetch(webhookUrl, {
         method: "GET",
