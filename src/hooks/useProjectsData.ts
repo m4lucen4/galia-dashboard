@@ -4,14 +4,14 @@ import {
   fetchProjects,
   fetchProjectsByUserId,
 } from "../redux/actions/ProjectActions";
-import { UserProps } from "../types";
+import { UserDataProps } from "../types";
 
 /**
  * Custom hook to load projects based on user role
  * @param user Current application user
  * @returns Function to load projects
  */
-export const useProjectsData = (user: UserProps | null | undefined) => {
+export const useProjectsData = (user: UserDataProps | null | undefined) => {
   const dispatch = useAppDispatch();
 
   const fetchProjectsData = useCallback(() => {

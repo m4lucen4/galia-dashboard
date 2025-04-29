@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { InputField } from "../shared/ui/InputField";
 import { Button } from "../shared/ui/Button";
-import { ProjectDataProps, ProjectImageData, UserProps } from "../../types";
+import { ProjectDataProps, ProjectImageData, UserDataProps } from "../../types";
 import { CreateProjectProps } from "../../redux/actions/ProjectActions";
 import { KeywordInput } from "../shared/ui/KeywordInput";
 
@@ -10,7 +10,7 @@ interface ProjectsFormProps {
   onSubmit: (project: CreateProjectProps) => void;
   loading: boolean;
   isEditMode?: boolean;
-  user: UserProps;
+  user: UserDataProps;
 }
 
 export const ProjectsForm: React.FC<ProjectsFormProps> = ({
