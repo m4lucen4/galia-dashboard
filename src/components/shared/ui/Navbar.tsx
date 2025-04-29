@@ -10,18 +10,18 @@ import {
 } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useDispatch } from "react-redux";
-import { AppDispatch } from "../../../redux/store";
+import { AppDispatch, RootState } from "../../../redux/store";
 import { logout } from "../../../redux/actions/AuthActions";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Alert } from "./Alert";
+import { useAppSelector } from "../../../redux/hooks";
 
 const navigation = [
   { name: "Home", href: "/home", current: false },
-  { name: "Users", href: "/users", current: false },
+  { name: "Users", href: "/users", current: false, adminOnly: true },
   { name: "Projects", href: "/projects", current: false },
   { name: "Preview", href: "/preview-projects", current: false },
   { name: "Projects Map", href: "/projects-map", current: false },
-  { name: "Calendar", href: "/calendar", current: false },
 ];
 
 function classNames(
@@ -31,6 +31,7 @@ function classNames(
 }
 
 export default function Navbar() {
+  const userData = useAppSelector((state: RootState) => state.auth.user);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
@@ -48,6 +49,10 @@ export default function Navbar() {
     await dispatch(logout()).unwrap();
     navigate("/login");
   };
+
+  const filteredNavigation = navigation.filter(
+    (item) => !item.adminOnly || userData?.role === "admin"
+  );
 
   return (
     <Disclosure as="nav" className="bg-black">
@@ -78,7 +83,7 @@ export default function Navbar() {
             </div> */}
             <div className="hidden  sm:block">
               <div className="flex space-x-4">
-                {navigation.map((item) => (
+                {filteredNavigation.map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}
@@ -154,7 +159,7 @@ export default function Navbar() {
 
       <DisclosurePanel className="sm:hidden">
         <div className="space-y-1 px-2 pt-2 pb-3">
-          {navigation.map((item) => (
+          {filteredNavigation.map((item) => (
             <DisclosureButton
               key={item.name}
               as={Link}

@@ -7,12 +7,12 @@ import {
   changePassword,
 } from "../actions/AuthActions";
 
-import { UserProps, IRequest } from "../../types";
+import { IRequest, UserDataProps } from "../../types";
 
 interface AuthState {
   authenticated: boolean;
   token: string | null;
-  user: UserProps | null;
+  user: UserDataProps | null;
   loginRequest: IRequest;
   checkAuthRequest: IRequest;
   logoutRequest: IRequest;
@@ -71,12 +71,18 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         if (action.payload.user) {
           state.user = {
+            id: action.payload.user.id,
             uid: action.payload.user.id,
-            name: action.payload.user.user_metadata?.name || "",
-            email: action.payload.user.email || "",
-            created_at: action.payload.user.created_at || "",
-            last_sign_in_at: action.payload.user.last_sign_in_at || "",
-            role: action.payload.user.user_metadata?.role || "",
+            first_name: action.payload.userData?.first_name || "",
+            last_name: action.payload.userData?.last_name || "",
+            email: action.payload.userData?.email || "",
+            created_at: action.payload.userData?.created_at || "",
+            active: action.payload.userData?.active || false,
+            phone: action.payload.userData?.phone || "",
+            company: action.payload.userData?.company || "",
+            vat: action.payload.userData?.vat || "",
+            role: action.payload.userData?.role || "",
+            updated_at: action.payload.userData?.updated_at || "",
           };
         }
         state.token = action.payload.session?.access_token;
@@ -105,12 +111,18 @@ const authSlice = createSlice({
       .addCase(checkAuthState.fulfilled, (state, action) => {
         if (action.payload?.user) {
           state.user = {
+            id: action.payload.user.id,
             uid: action.payload.user.id,
-            name: action.payload.user.user_metadata?.name || "",
-            email: action.payload.user.email || "",
-            created_at: action.payload.user.created_at || "",
-            last_sign_in_at: action.payload.user.last_sign_in_at || "",
-            role: action.payload.user.user_metadata?.role || "",
+            first_name: action.payload.userData?.first_name || "",
+            last_name: action.payload.userData?.last_name || "",
+            email: action.payload.userData?.email || "",
+            created_at: action.payload.userData?.created_at || "",
+            active: action.payload.userData?.active || false,
+            phone: action.payload.userData?.phone || "",
+            company: action.payload.userData?.company || "",
+            vat: action.payload.userData?.vat || "",
+            role: action.payload.userData?.role || "",
+            updated_at: action.payload.userData?.updated_at || "",
           };
           state.token = action.payload.session?.access_token;
           state.authenticated = true;

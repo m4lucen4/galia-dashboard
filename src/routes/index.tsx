@@ -12,6 +12,7 @@ import { PublicRoute } from "./PublicRoute";
 import { PasswordResetRoute } from "./PasswordResetRoute";
 import { PreviewProjects } from "../screens/PreviewProjects";
 import { ProjectsMap } from "../screens/ProjectsMap";
+import { AdminRoute } from "./AdminRoute";
 
 export const AppRoutes = () => (
   <Routes>
@@ -23,9 +24,11 @@ export const AppRoutes = () => (
       <Route path="/home" element={<Home />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/settings" element={<Settings />} />
-      <Route path="/users" element={<Users />} />
       <Route path="/projects" element={<Projects />} />
       <Route path="/preview-projects" element={<PreviewProjects />} />
+    </Route>
+    <Route element={<AdminRoute />}>
+      <Route path="/users" element={<Users />} />
     </Route>
     <Route element={<PasswordResetRoute />}>
       <Route path="/reset-password" element={<RecoveryPasswordScreen />} />

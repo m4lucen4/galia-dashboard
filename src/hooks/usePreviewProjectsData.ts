@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useAppDispatch } from "../redux/hooks";
-import { UserProps } from "../types";
+import { UserDataProps } from "../types";
 import {
   fetchPreviewProjects,
   fetchPreviewProjectsByUserId,
@@ -11,7 +11,9 @@ import {
  * @param user Current application user
  * @returns Function to load preview projects
  */
-export const usePreviewProjectsData = (user: UserProps | null | undefined) => {
+export const usePreviewProjectsData = (
+  user: UserDataProps | null | undefined
+) => {
   const dispatch = useAppDispatch();
 
   const fetchPreviewProjectsData = useCallback(() => {

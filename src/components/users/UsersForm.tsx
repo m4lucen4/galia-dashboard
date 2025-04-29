@@ -153,6 +153,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="customer">Customer</option>
+            <option value="customer">Publisher</option>
             <option value="admin">Administrator</option>
           </select>
         </div>

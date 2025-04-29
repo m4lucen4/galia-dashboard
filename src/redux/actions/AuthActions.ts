@@ -19,14 +19,33 @@ export const login = createAsyncThunk(
         return rejectWithValue(error.message);
       }
 
+      if (!data.user) {
+        return rejectWithValue("Dont match any user");
+      }
+
+      const { data: userData, error: userError } = await supabase
+        .from("userData")
+        .select("*")
+        .eq("uid", data.user.id)
+        .single();
+
+      if (userError) {
+        console.error("Error retrieving additional user data:", userError);
+
+        return {
+          user: data.user,
+          session: data.session,
+          userData: null,
+        };
+      }
       return {
         user: data.user,
         session: data.session,
+        userData: userData,
       };
     } catch (error: unknown) {
       const appError: AppError = {
-        message:
-          error instanceof Error ? error.message : "Error al iniciar sesión",
+        message: error instanceof Error ? error.message : "Error signing in",
       };
       return rejectWithValue(appError.message);
     }
@@ -47,16 +66,32 @@ export const checkAuthState = createAsyncThunk(
         return rejectWithValue("No hay sesión activa");
       }
 
+      const { data: userData, error: userError } = await supabase
+        .from("userData")
+        .select("*")
+        .eq("uid", data.session.user.id)
+        .single();
+
+      if (userError) {
+        console.error("Error al obtener datos adicionales:", userError);
+        return {
+          user: data.session.user,
+          session: data.session,
+          userData: null,
+        };
+      }
+
       return {
         user: data.session.user,
         session: data.session,
+        userData: userData,
       };
     } catch (error: unknown) {
       const appError: AppError = {
         message:
           error instanceof Error
             ? error.message
-            : "Error al verificar la sesión",
+            : "Error verificando estado de sesión",
       };
       return rejectWithValue(appError.message);
     }
@@ -76,8 +111,7 @@ export const logout = createAsyncThunk(
       return null;
     } catch (error: unknown) {
       const appError: AppError = {
-        message:
-          error instanceof Error ? error.message : "Error al cerrar sesión",
+        message: error instanceof Error ? error.message : "Error close session",
       };
       return rejectWithValue(appError.message);
     }
