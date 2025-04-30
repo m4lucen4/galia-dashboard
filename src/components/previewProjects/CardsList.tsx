@@ -44,7 +44,11 @@ export const CardsList: React.FC<CardsListProps> = ({
             {project.image_data && project.image_data.length > 0 ? (
               <div className="w-full h-48 overflow-hidden">
                 <img
-                  src={project.image_data[0].url}
+                  src={
+                    project.image_data.find(
+                      (image) => image.status !== "not_selected"
+                    )?.url || project.image_data[0].url
+                  }
                   alt={project.title}
                   className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                 />
