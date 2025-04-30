@@ -10,7 +10,7 @@ import { Alert } from "../components/shared/ui/Alert";
 import { clearLoginErrors } from "../redux/slices/AuthSlice";
 import { LoginForm } from "../components/login/LoginForm";
 
-import logoImage from "../assets/logo.webp";
+import logoImage from "../assets/mocklab-grey.webp";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 
 export const LoginScreen = () => {

@@ -25,7 +25,6 @@ export const KeywordInput: React.FC<KeywordInputProps> = ({
   const [keywords, setKeywords] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Inicializar keywords desde el valor recibido
   useEffect(() => {
     if (value && keywords.length === 0) {
       setKeywords(value.split(",").filter((k) => k.trim() !== ""));
@@ -50,7 +49,7 @@ export const KeywordInput: React.FC<KeywordInputProps> = ({
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" || e.key === " ") {
+    if (e.key === "Enter") {
       e.preventDefault();
       addKeyword(inputValue);
     } else if (
@@ -127,8 +126,8 @@ export const KeywordInput: React.FC<KeywordInputProps> = ({
       )}
       {required && keywords.length === 0 && (
         <p className="mt-1 text-xs text-gray-500">
-          Click space or enter to add keywords. Press backspace to remove the
-          last
+          Press enter to add keywords. Press backspace to remove the last
+          keyword.
         </p>
       )}
     </div>

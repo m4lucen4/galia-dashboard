@@ -116,7 +116,7 @@ export const isDateInPast = (dateString: string | undefined): boolean => {
   today.setHours(0, 0, 0, 0);
   publishDate.setHours(0, 0, 0, 0);
 
-  return publishDate < today;
+  return publishDate <= today;
 };
 
 /**

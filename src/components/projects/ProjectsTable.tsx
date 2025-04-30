@@ -84,13 +84,13 @@ export const ProjectsTable = ({
         return (
           <div className="flex space-x-2">
             <Button
+              title="Launch"
+              onClick={() => onLaunchProject(props.row.original.id)}
+            />
+            <Button
               title="Edit"
               secondary
               onClick={() => handleEditClick(props.row.original)}
-            />
-            <Button
-              title="Launch"
-              onClick={() => onLaunchProject(props.row.original.id)}
             />
           </div>
         );

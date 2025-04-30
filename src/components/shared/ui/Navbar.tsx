@@ -16,7 +16,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Alert } from "./Alert";
 import { useAppSelector } from "../../../redux/hooks";
 
-import logoImage from "../../../assets/logo-blanco.webp";
+import logoImage from "../../../assets/mocklab-bw.png";
 
 const navigation = [
   { name: "Home", href: "/home", current: false },
