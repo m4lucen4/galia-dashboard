@@ -384,8 +384,12 @@ export const updateProjectPreview = createAsyncThunk(
       });
 
       if (!webhookResponse.ok) {
-        throw new Error(`Error calling webhook: ${webhookResponse.statusText}`);
+        return rejectWithValue({
+          message: "Error calling webhook",
+          status: webhookResponse.status,
+        });
       }
+
       const { data: updatedProject, error } = await supabase
         .from("projects")
         .update({
