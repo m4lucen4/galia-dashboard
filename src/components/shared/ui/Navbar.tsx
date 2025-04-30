@@ -16,6 +16,8 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Alert } from "./Alert";
 import { useAppSelector } from "../../../redux/hooks";
 
+import logoImage from "../../../assets/logo-blanco.webp";
+
 const navigation = [
   { name: "Home", href: "/home", current: false },
   { name: "Users", href: "/users", current: false, adminOnly: true },
@@ -74,13 +76,9 @@ export default function Navbar() {
             </DisclosureButton>
           </div>
           <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
-            {/* <div className="flex shrink-0 items-center">
-              <img
-                alt="Your Company"
-                src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500"
-                className="h-8 w-auto"
-              />
-            </div> */}
+            <div className="flex shrink-0 items-center justify-center mr-16">
+              <img src={logoImage} alt="Logo" className="h-8 w-auto" />
+            </div>
             <div className="hidden  sm:block">
               <div className="flex space-x-4">
                 {filteredNavigation.map((item) => (
