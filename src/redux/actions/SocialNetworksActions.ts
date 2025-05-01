@@ -15,7 +15,7 @@ export const initiateLinkedInAuth = createAsyncThunk(
       const state = Math.random().toString(36).substring(2, 15);
 
       // Save the state in localStorage
-      localStorage.setItem("linkedin_auth_state", state);
+      localStorage.setItem("linkedln_auth_state", state);
 
       // Build the LinkedIn authorization URL
       const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${encodeURIComponent(
@@ -41,13 +41,13 @@ export const processLinkedInCallback = createAsyncThunk(
   ) => {
     try {
       // Verify the state parameter to prevent CSRF attacks
-      const savedState = localStorage.getItem("linkedin_auth_state");
+      const savedState = localStorage.getItem("linkedln_auth_state");
       if (state !== savedState) {
         return rejectWithValue("State mismatch. Possible CSRF attack.");
       }
 
       // Clean up the state from localStorage
-      localStorage.removeItem("linkedin_auth_state");
+      localStorage.removeItem("linkedln_auth_state");
 
       // Call the serverless function to exchange the code for an access token
       const { data, error } = await supabase.functions.invoke(
@@ -71,7 +71,7 @@ export const processLinkedInCallback = createAsyncThunk(
       }
 
       // Create the LinkedIn data object
-      const linkedin_data = {
+      const linkedln_data = {
         linkedin_person_id: person_id,
         access_token,
         refresh_token,
@@ -87,7 +87,7 @@ export const processLinkedInCallback = createAsyncThunk(
       const { error: updateError } = await supabase
         .from("userData")
         .update({
-          linkedin_data,
+          linkedln_data,
         })
         .eq("id", userId);
 
@@ -120,22 +120,22 @@ export const disconnectLinkedIn = createAsyncThunk(
       // Get the current LinkedIn data
       const { data: user, error: fetchError } = await supabase
         .from("userData")
-        .select("linkedin_data")
+        .select("linkedln_data")
         .eq("id", userId)
         .single();
 
       if (fetchError) throw new Error(fetchError.message);
 
       // Modificamos solo el campo is_connected
-      const updatedLinkedInData = user.linkedin_data
-        ? { ...user.linkedin_data, is_connected: false }
+      const updatedLinkedInData = user.linkedln_data
+        ? { ...user.linkedln_data, is_connected: false }
         : null;
 
       // Update the user_linkedin_connections table
       const { error } = await supabase
         .from("userData")
         .update({
-          linkedin_data: updatedLinkedInData,
+          linkedln_data: updatedLinkedInData,
         })
         .eq("id", userId);
 
@@ -159,20 +159,20 @@ export const checkLinkedInConnection = createAsyncThunk(
 
       const { data, error } = await supabase
         .from("userData")
-        .select("linkedin_data")
+        .select("linkedln_data")
         .eq("id", authData.user.id)
         .single();
 
       if (error) throw new Error(error.message);
 
       // 2. Verifying if the user has LinkedIn data
-      if (!data || !data.linkedin_data || !data.linkedin_data.is_connected) {
+      if (!data || !data.linkedln_data || !data.linkedln_data.is_connected) {
         return { isConnected: false };
       }
 
       // 3. Verifying if the token is expired
       const tokenExpired =
-        new Date(data.linkedin_data.token_expires_at) < new Date();
+        new Date(data.linkedln_data.token_expires_at) < new Date();
 
       if (tokenExpired) {
         return { isConnected: false };
@@ -182,7 +182,7 @@ export const checkLinkedInConnection = createAsyncThunk(
       try {
         const linkedInResponse = await fetch("https://api.linkedin.com/v2/me", {
           headers: {
-            Authorization: `Bearer ${data.linkedin_data.access_token}`,
+            Authorization: `Bearer ${data.linkedln_data.access_token}`,
           },
         });
 
@@ -196,7 +196,7 @@ export const checkLinkedInConnection = createAsyncThunk(
             .from("userData")
             .update({
               linkedin_data: {
-                ...data.linkedin_data,
+                ...data.linkedln_data,
                 is_connected: false,
               },
             })
@@ -207,18 +207,18 @@ export const checkLinkedInConnection = createAsyncThunk(
 
         return {
           isConnected: true,
-          personId: data.linkedin_data.linkedin_person_id,
-          userName: data.linkedin_data.user_name,
-          expiresAt: data.linkedin_data.token_expires_at,
+          personId: data.linkedln_data.linkedin_person_id,
+          userName: data.linkedln_data.user_name,
+          expiresAt: data.linkedln_data.token_expires_at,
         };
       } catch (apiError) {
         console.error("Error validating LinkedIn token:", apiError);
 
         return {
           isConnected: true,
-          personId: data.linkedin_data.linkedin_person_id,
-          userName: data.linkedin_data.user_name,
-          expiresAt: data.linkedin_data.token_expires_at,
+          personId: data.linkedln_data.linkedin_person_id,
+          userName: data.linkedln_data.user_name,
+          expiresAt: data.linkedln_data.token_expires_at,
           warning: "Connection could not be verified due to network issues",
         };
       }

@@ -91,6 +91,7 @@ export const Settings = () => {
             {/* LinkedIn */}
             <div className="flex flex-col items-center">
               <div className="relative">
+                {/* Icono de LinkedIn y su estado */}
                 <div
                   className={`p-4 rounded-full ${
                     linkedin.isConnected ? "bg-blue-50" : "bg-gray-100"
@@ -165,7 +166,7 @@ export const Settings = () => {
                     Connected as {linkedin.userName}
                   </span>
                 ) : (
-                  "Not connected"
+                  <span className="text-red-500">Not Connected</span>
                 )}
               </p>
               {linkedin.isConnected && linkedin.expiresAt && (
