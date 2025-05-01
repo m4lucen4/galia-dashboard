@@ -89,7 +89,7 @@ export const processLinkedInCallback = createAsyncThunk(
         .update({
           linkedln_data,
         })
-        .eq("id", userId);
+        .eq("uid", userId);
 
       if (updateError) throw new Error(updateError.message);
 
@@ -121,7 +121,7 @@ export const disconnectLinkedIn = createAsyncThunk(
       const { data: user, error: fetchError } = await supabase
         .from("userData")
         .select("linkedln_data")
-        .eq("id", userId)
+        .eq("uid", userId)
         .single();
 
       if (fetchError) throw new Error(fetchError.message);
@@ -137,7 +137,7 @@ export const disconnectLinkedIn = createAsyncThunk(
         .update({
           linkedln_data: updatedLinkedInData,
         })
-        .eq("id", userId);
+        .eq("uid", userId);
 
       if (error) throw new Error(error.message);
 
@@ -160,7 +160,7 @@ export const checkLinkedInConnection = createAsyncThunk(
       const { data, error } = await supabase
         .from("userData")
         .select("linkedln_data")
-        .eq("id", authData.user.id)
+        .eq("uid", authData.user.id)
         .single();
 
       if (error) throw new Error(error.message);
