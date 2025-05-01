@@ -1,9 +1,20 @@
 import { Card } from "../components/shared/ui/Card";
 import { InstagramIcon, LinkedInIcon } from "../components/icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Switch } from "../components/shared/ui/Switch";
+import { CardPreferences } from "../components/settings/CardPreferences";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import {
+  checkLinkedInConnection,
+  initiateLinkedInAuth,
+  disconnectLinkedIn,
+} from "../redux/actions/SocialNetworksActions";
 
 export const Settings = () => {
+  const dispatch = useAppDispatch();
+  const { linkedin, checkLinkedInRequest, disconnectLinkedInRequest } =
+    useAppSelector((state) => state.socialNetworks);
+
   const [socialNetworks, setSocialNetworks] = useState({
     instagram: false,
     linkedin: false,
@@ -11,11 +22,25 @@ export const Settings = () => {
     facebook: false,
   });
 
+  useEffect(() => {
+    dispatch(checkLinkedInConnection());
+  }, [dispatch]);
+
   const handleToggleSocialNetwork = (network: keyof typeof socialNetworks) => {
     setSocialNetworks((prev) => ({
       ...prev,
       [network]: !prev[network],
     }));
+  };
+
+  const handleConnectLinkedIn = () => {
+    dispatch(initiateLinkedInAuth());
+  };
+
+  const handleDisconnectLinkedIn = () => {
+    if (confirm("Are you sure you want to disconnect your LinkedIn account?")) {
+      dispatch(disconnectLinkedIn());
+    }
   };
 
   return (
@@ -68,143 +93,91 @@ export const Settings = () => {
               <div className="relative">
                 <div
                   className={`p-4 rounded-full ${
-                    socialNetworks.linkedin ? "bg-blue-50" : "bg-gray-100"
+                    linkedin.isConnected ? "bg-blue-50" : "bg-gray-100"
                   }`}
                 >
                   <LinkedInIcon
                     className={`w-8 h-8 ${
-                      socialNetworks.linkedin
-                        ? "text-blue-600"
-                        : "text-gray-500"
+                      linkedin.isConnected ? "text-blue-600" : "text-gray-500"
                     }`}
                   />
                 </div>
-                <Switch
-                  checked={socialNetworks.linkedin}
-                  onChange={() => handleToggleSocialNetwork("linkedin")}
-                  className="absolute -bottom-2 -right-2"
-                />
+
+                {checkLinkedInRequest.inProgress ? (
+                  <div className="absolute -bottom-2 -right-2 bg-gray-300 rounded-full p-1 w-6 h-6 flex items-center justify-center">
+                    <div className="animate-spin h-3 w-3 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+                  </div>
+                ) : linkedin.isConnected ? (
+                  <button
+                    onClick={handleDisconnectLinkedIn}
+                    disabled={disconnectLinkedInRequest.inProgress}
+                    className={`absolute -bottom-2 -right-2 ${
+                      disconnectLinkedInRequest.inProgress
+                        ? "bg-gray-400"
+                        : "bg-red-500 hover:bg-red-600"
+                    } text-white rounded-full p-1`}
+                    title="Disconnect LinkedIn"
+                  >
+                    {disconnectLinkedInRequest.inProgress ? (
+                      <div className="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent"></div>
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleConnectLinkedIn}
+                    className="absolute -bottom-2 -right-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1"
+                    title="Connect with LinkedIn"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                )}
               </div>
               <p className="mt-3 text-sm font-medium text-gray-900">LinkedIn</p>
               <p className="text-xs text-gray-500">
-                {socialNetworks.linkedin ? "Connected" : "Not connected"}
+                {checkLinkedInRequest.inProgress ? (
+                  <span className="text-gray-400">Checking connection...</span>
+                ) : linkedin.isConnected ? (
+                  <span className="text-green-500">
+                    Connected as {linkedin.userName}
+                  </span>
+                ) : (
+                  "Not connected"
+                )}
               </p>
-            </div>
-
-            {/* Twitter */}
-            <div className="flex flex-col items-center">
-              <div className="relative">
-                <div
-                  className={`p-4 rounded-full ${
-                    socialNetworks.twitter ? "bg-blue-50" : "bg-gray-100"
-                  }`}
-                >
-                  <svg
-                    className={`w-8 h-8 ${
-                      socialNetworks.twitter ? "text-blue-400" : "text-gray-500"
-                    }`}
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.061a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.937 4.937 0 004.604 3.417 9.868 9.868 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.054 0 13.999-7.496 13.999-13.986 0-.209 0-.42-.015-.63a9.936 9.936 0 002.46-2.548l-.047-.02z" />
-                  </svg>
-                </div>
-                <Switch
-                  checked={socialNetworks.twitter}
-                  disabled
-                  onChange={() => handleToggleSocialNetwork("twitter")}
-                  className="absolute -bottom-2 -right-2"
-                />
-              </div>
-              <p className="mt-3 text-sm font-medium text-gray-900">Twitter</p>
-              <p className="text-xs text-gray-500">Coming soon...</p>
-            </div>
-
-            {/* Facebook */}
-            <div className="flex flex-col items-center">
-              <div className="relative">
-                <div
-                  className={`p-4 rounded-full ${
-                    socialNetworks.facebook ? "bg-blue-50" : "bg-gray-100"
-                  }`}
-                >
-                  <svg
-                    className={`w-8 h-8 ${
-                      socialNetworks.facebook
-                        ? "text-blue-600"
-                        : "text-gray-500"
-                    }`}
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                  </svg>
-                </div>
-                <Switch
-                  disabled
-                  checked={socialNetworks.facebook}
-                  onChange={() => handleToggleSocialNetwork("facebook")}
-                  className="absolute -bottom-2 -right-2"
-                />
-              </div>
-              <p className="mt-3 text-sm font-medium text-gray-900">Facebook</p>
-              <p className="text-xs text-gray-500">Coming soon...</p>
-            </div>
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
-            >
-              Save preferences
-            </button>
-          </div>
-        </Card>
-
-        <Card
-          title="Notification Settings"
-          subtitle="Manage how you receive notifications"
-        >
-          {/* Contenido de notificaciones aquí */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-sm font-medium text-gray-900">
-                  Email notifications
-                </h4>
-                <p className="text-xs text-gray-500">
-                  Receive emails about your account activity
+              {linkedin.isConnected && linkedin.expiresAt && (
+                <p className="text-xs text-gray-400 mt-1">
+                  Valid until{" "}
+                  {new Date(linkedin.expiresAt).toLocaleDateString()}
                 </p>
-              </div>
-              <Switch checked={true} onChange={() => {}} />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-sm font-medium text-gray-900">
-                  Project updates
-                </h4>
-                <p className="text-xs text-gray-500">
-                  Get notified when your projects are published
-                </p>
-              </div>
-              <Switch checked={true} onChange={() => {}} />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-sm font-medium text-gray-900">
-                  Marketing emails
-                </h4>
-                <p className="text-xs text-gray-500">
-                  Receive tips and product updates
-                </p>
-              </div>
-              <Switch checked={false} onChange={() => {}} />
+              )}
             </div>
           </div>
         </Card>
+        <CardPreferences />
       </div>
     </div>
   );

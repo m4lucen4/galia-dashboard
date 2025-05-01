@@ -122,3 +122,11 @@ export type Coordinates = {
   lat: number;
   lng: number;
 };
+
+export type LinkedInData = {
+  isConnected: boolean;
+  personId?: string;
+  userName?: string;
+  expiresAt?: string;
+  warning?: string;
+};

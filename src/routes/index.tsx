@@ -13,6 +13,7 @@ import { PasswordResetRoute } from "./PasswordResetRoute";
 import { PreviewProjects } from "../screens/PreviewProjects";
 import { ProjectsMap } from "../screens/ProjectsMap";
 import { AdminRoute } from "./AdminRoute";
+import { LinkedInCallback } from "../screens/LinkedInCallback";
 
 export const AppRoutes = () => (
   <Routes>
@@ -26,6 +27,7 @@ export const AppRoutes = () => (
       <Route path="/settings" element={<Settings />} />
       <Route path="/projects" element={<Projects />} />
       <Route path="/preview-projects" element={<PreviewProjects />} />
+      <Route path="/auth/linkedin/callback" element={<LinkedInCallback />} />
     </Route>
     <Route element={<AdminRoute />}>
       <Route path="/users" element={<Users />} />

@@ -3,6 +3,7 @@ import authReducer from "./slices/AuthSlice";
 import userReducer from "./slices/UserSlice";
 import projectReducer from "./slices/ProjectSlice";
 import previewProjectReducer from "./slices/PreviewProjectSlice";
+import socialNetworksReducer from "./slices/SocialNetworksSlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     user: userReducer,
     project: projectReducer,
     previewProject: previewProjectReducer,
+    socialNetworks: socialNetworksReducer,
   },
 });
 
