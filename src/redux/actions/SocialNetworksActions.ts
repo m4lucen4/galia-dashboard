@@ -5,7 +5,7 @@ const LINKEDIN_CLIENT_ID = import.meta.env.VITE_LINKEDIN_CLIENT_ID;
 const LINKEDIN_REDIRECT_URI =
   import.meta.env.VITE_LINKEDIN_REDIRECT_URI ||
   `${window.location.origin}/auth/linkedin/callback`;
-const LINKEDIN_SCOPE = "r_liteprofile w_member_social";
+const LINKEDIN_SCOPE = "w_member_social";
 
 export const initiateLinkedInAuth = createAsyncThunk(
   "socialNetworks/initiateLinkedInAuth",
