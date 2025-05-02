@@ -5,7 +5,7 @@ const LINKEDIN_CLIENT_ID = import.meta.env.VITE_LINKEDIN_CLIENT_ID;
 const LINKEDIN_REDIRECT_URI =
   import.meta.env.VITE_LINKEDIN_REDIRECT_URI ||
   `${window.location.origin}/auth/linkedin/callback`;
-const LINKEDIN_SCOPE = "w_member_social";
+const LINKEDIN_SCOPE = "openid profile w_member_social email";
 
 export const initiateLinkedInAuth = createAsyncThunk(
   "socialNetworks/initiateLinkedInAuth",
@@ -57,10 +57,34 @@ export const processLinkedInCallback = createAsyncThunk(
         }
       );
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || "Error calling edge function");
+      }
 
-      const { access_token, refresh_token, expires_in, person_id, user_name } =
-        data;
+      if (!data) {
+        throw new Error("No data received from edge function");
+      }
+
+      console.log("LinkedIn API response:", data);
+
+      // Extract the access token and other data from the response
+      const {
+        access_token,
+        refresh_token,
+        expires_in = 3600,
+        person_id,
+        user_name = "LinkedIn User",
+        id_token,
+      } = data;
+
+      if (!access_token) {
+        throw new Error("No access token received");
+      }
+
+      if (!person_id) {
+        console.warn("No LinkedIn person ID received, using fallback value");
+      }
 
       // Get the current user ID
       const { data: userData } = await supabase.auth.getUser();
@@ -72,15 +96,17 @@ export const processLinkedInCallback = createAsyncThunk(
 
       // Create the LinkedIn data object
       const linkedln_data = {
-        linkedin_person_id: person_id,
+        linkedin_person_id: person_id || "unknown",
         access_token,
         refresh_token,
+        id_token,
         token_expires_at: new Date(
           Date.now() + expires_in * 1000
         ).toISOString(),
         is_connected: true,
-        permissions_granted: ["w_member_social"],
+        permissions_granted: ["openid", "profile", "w_member_social", "email"],
         user_name,
+        connected_at: new Date().toISOString(),
       };
 
       // Update the user_linkedin_connections table
@@ -91,17 +117,24 @@ export const processLinkedInCallback = createAsyncThunk(
         })
         .eq("uid", userId);
 
-      if (updateError) throw new Error(updateError.message);
+      if (updateError) {
+        console.error("Error updating user data:", updateError);
+        throw new Error(updateError.message || "Failed to update user data");
+      }
 
       return {
         isConnected: true,
-        personId: person_id,
+        personId: person_id || "unknown",
         userName: user_name,
         expiresAt: new Date(Date.now() + expires_in * 1000).toISOString(),
       };
     } catch (error) {
       console.error("Error processing LinkedIn callback:", error);
-      return rejectWithValue("Failed to process LinkedIn authorization");
+      return rejectWithValue(
+        error instanceof Error
+          ? error.message
+          : "Failed to process LinkedIn authorization"
+      );
     }
   }
 );
