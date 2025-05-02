@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ProjectDataProps } from "../../types";
 import { Button } from "../shared/ui/Button";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { getCategoryLabel } from "../../helpers";
 
 interface ProjectDetailProps {
   project: ProjectDataProps;
@@ -77,6 +78,20 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
         <div>
           <h3 className="text-lg font-semibold text-gray-800">Details</h3>
           <dl className="mt-2 space-y-2">
+            {project.category && (
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Category</dt>
+                <dd className="text-base text-gray-900">
+                  {getCategoryLabel(project.category)}
+                </dd>
+              </div>
+            )}
+            {project.year && (
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Year</dt>
+                <dd className="text-base text-gray-900">{project.year}</dd>
+              </div>
+            )}
             {project.authors && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">Authors</dt>
@@ -89,7 +104,6 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
                 <dd className="text-base text-gray-900">{project.promoter}</dd>
               </div>
             )}
-
             {project.collaborators && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">

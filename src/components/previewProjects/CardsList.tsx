@@ -74,14 +74,16 @@ export const CardsList: React.FC<CardsListProps> = ({
                   {openMenuId === project.id && (
                     <div className="absolute right-0 top-full mt-1 w-40 bg-white shadow-lg rounded-md border border-gray-100 z-10">
                       <ul className="py-1">
-                        <li>
-                          <button
-                            onClick={() => handleEditPreview(project)}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            Edit project preview
-                          </button>
-                        </li>
+                        {!isDateInPast(project.publishDate) && (
+                          <li>
+                            <button
+                              onClick={() => handleEditPreview(project)}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              Edit project preview
+                            </button>
+                          </li>
+                        )}
                         <li>
                           <button
                             onClick={() => handleDeletePreview(project)}

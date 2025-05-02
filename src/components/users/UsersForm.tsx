@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { CreateUserProps } from "../../redux/actions/UserActions";
 import { InputField } from "../shared/ui/InputField";
 import { Button } from "../shared/ui/Button";
+import { SelectField } from "../shared/ui/SelectField";
 
 interface UsersFormProps {
   initialData?: CreateUserProps;
@@ -137,26 +138,19 @@ export const UsersForm: React.FC<UsersFormProps> = ({
             error={passwordError}
           />
         )}
-        <div>
-          <label
-            htmlFor="role"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Role
-          </label>
-          <select
-            id="role"
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="customer">Customer</option>
-            <option value="publisher">Publisher</option>
-            <option value="admin">Administrator</option>
-          </select>
-        </div>
+        <SelectField
+          id="role"
+          label="Role"
+          value={formData.role}
+          onChange={handleChange}
+          options={[
+            { value: "customer", label: "Customer" },
+            { value: "publisher", label: "Publisher" },
+            { value: "admin", label: "Administrator" },
+          ]}
+          required
+          className="mb-2"
+        />
         <div className="flex items-center">
           <input
             type="checkbox"

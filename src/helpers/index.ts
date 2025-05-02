@@ -154,3 +154,29 @@ export const extractCoordinates = (url: string): Coordinates | null => {
     return null;
   }
 };
+
+/**
+ * Get the current date in ISO format
+ * @returns The current date in ISO format
+ */
+const categoryMap: Record<string, string> = {
+  residencial: "Residencial",
+  docente: "Docente",
+  oficinas: "Oficinas",
+  planeamiento: "Planeamiento",
+  cultural: "Cultural",
+  publico: "Espacio público",
+  rehabilitacion: "Rehabilitación",
+  interiorismo: "Interiorismo",
+  sanitario: "Sanitario",
+};
+
+/**
+ * Get the label for a category value
+ * @param categoryValue - The category value to get the label for
+ * @returns The label for the category value or an empty string if not found
+ */
+export const getCategoryLabel = (categoryValue: string | undefined): string => {
+  if (!categoryValue) return "";
+  return categoryMap[categoryValue] || categoryValue;
+};

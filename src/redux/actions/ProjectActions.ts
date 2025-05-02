@@ -28,6 +28,8 @@ export const addProject = createAsyncThunk(
           promoter: projectData.promoter,
           collaborators: projectData.collaborators,
           authors: projectData.authors,
+          category: projectData.category,
+          year: projectData.year,
         })
         .select()
         .single();
@@ -172,6 +174,8 @@ export const updateProject = createAsyncThunk(
           promoter: projectData.promoter,
           collaborators: projectData.collaborators,
           authors: projectData.authors,
+          category: projectData.category,
+          year: projectData.year,
         })
         .eq("id", projectData.id)
         .select()

@@ -4,6 +4,7 @@ import { Button } from "../shared/ui/Button";
 import { ProjectDataProps, ProjectImageData, UserDataProps } from "../../types";
 import { CreateProjectProps } from "../../redux/actions/ProjectActions";
 import { KeywordInput } from "../shared/ui/KeywordInput";
+import { SelectField } from "../shared/ui/SelectField";
 
 interface ProjectsFormProps {
   initialData?: ProjectDataProps;
@@ -304,6 +305,34 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               placeholder="Introduce your project location, google maps link complete"
               type="url"
               value={formData.googleMaps || ""}
+              onChange={handleChange}
+            />
+          </div>
+          <SelectField
+            id="category"
+            label="Category (optional)"
+            value={formData.category || ""}
+            onChange={handleChange}
+            options={[
+              { value: "residencial", label: "Residencial" },
+              { value: "docente", label: "Docente" },
+              { value: "oficinas", label: "Oficinas" },
+              { value: "planeamiento", label: "Planeamiento" },
+              { value: "cultural", label: "Cultural" },
+              { value: "publico", label: "Espacio público" },
+              { value: "rehabilitacion", label: "Rehabilitación" },
+              { value: "interiorismo", label: "Interiorismo" },
+              { value: "sanitario", label: "Sanitario" },
+            ]}
+            className="mb-2"
+          />
+          <div className="mb-2">
+            <InputField
+              id="year"
+              label="Year (optional)"
+              placeholder="Building year"
+              type="number"
+              value={formData.year || ""}
               onChange={handleChange}
             />
           </div>

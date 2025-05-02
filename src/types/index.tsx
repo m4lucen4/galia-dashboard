@@ -62,6 +62,8 @@ export type ProjectDataProps = {
   promoter?: string;
   collaborators?: string;
   authors?: string;
+  category?: string;
+  year?: string;
 };
 
 export type SocialNetworksCheck = {

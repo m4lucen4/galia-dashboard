@@ -2,6 +2,8 @@ import React, { useMemo, useEffect, ChangeEvent } from "react";
 import { InputField } from "../shared/ui/InputField";
 import { SocialNetworksCheck } from "../../types";
 import { InstagramIcon, LinkedInIcon } from "../icons";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { checkLinkedInConnection } from "../../redux/actions/SocialNetworksActions";
 
 interface ConfigPublishProps {
   publishDate: string;
@@ -16,6 +18,8 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   onDateChange,
   onSocialNetworkChange,
 }) => {
+  const dispatch = useAppDispatch();
+  const { linkedin } = useAppSelector((state) => state.socialNetworks);
   const currentDate = useMemo(() => {
     const today = new Date();
     return today.toISOString().split("T")[0];
@@ -38,6 +42,10 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
     }
     return "";
   };
+
+  useEffect(() => {
+    dispatch(checkLinkedInConnection());
+  }, [dispatch]);
 
   useEffect(() => {
     if (!publishDate) {
@@ -109,25 +117,34 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
               id="linkedln"
               type="checkbox"
               className={`h-4 w-4 focus:ring-indigo-500 border-gray-300 rounded ${
-                isDateValid
+                isDateValid && linkedin.isConnected
                   ? "text-indigo-600"
                   : "text-gray-300 cursor-not-allowed"
               }`}
               checked={socialNetworks.linkedln}
               onChange={() => onSocialNetworkChange("linkedln")}
-              disabled={!isDateValid}
+              disabled={!isDateValid || !linkedin.isConnected}
             />
             <label
               htmlFor="linkedln"
               className={`ml-2 flex items-center text-sm ${
-                isDateValid ? "text-gray-700" : "text-gray-400"
+                isDateValid && linkedin.isConnected
+                  ? "text-gray-700"
+                  : "text-gray-400"
               }`}
             >
               <LinkedInIcon
-                className={`w-5 h-5 mr-1 ${!isDateValid ? "opacity-50" : ""}`}
+                className={`w-5 h-5 mr-1 ${
+                  !isDateValid || !linkedin.isConnected ? "opacity-50" : ""
+                }`}
               />
               LinkedIn
             </label>
+            {!linkedin.isConnected && !!publishDate && (
+              <span className="ml-2 text-xs text-red-500">
+                No LinkedIn connection.
+              </span>
+            )}
           </div>
         </div>
       </div>

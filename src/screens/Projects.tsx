@@ -125,6 +125,8 @@ export const Projects = () => {
       promoter: project.promoter,
       collaborators: project.collaborators,
       authors: project.authors,
+      category: project.category,
+      year: project.year,
     };
   };
 
