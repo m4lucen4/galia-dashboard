@@ -66,8 +66,6 @@ export const processLinkedInCallback = createAsyncThunk(
         throw new Error("No data received from edge function");
       }
 
-      console.log("LinkedIn API response:", data);
-
       // Extract the access token and other data from the response
       const {
         access_token,
@@ -211,29 +209,35 @@ export const checkLinkedInConnection = createAsyncThunk(
         return { isConnected: false };
       }
 
-      // 4. Verifying the token with LinkedIn API
+      // 4. Verifying the token with LinkedIn API through Edge Function
       try {
-        const linkedInResponse = await fetch("https://api.linkedin.com/v2/me", {
-          headers: {
-            Authorization: `Bearer ${data.linkedln_data.access_token}`,
-          },
-        });
+        const { data: verifyData, error: verifyError } =
+          await supabase.functions.invoke("linkedin-verify-token", {
+            body: { access_token: data.linkedln_data.access_token },
+          });
 
-        if (!linkedInResponse.ok) {
-          console.log(
-            "LinkedIn token validation failed:",
-            await linkedInResponse.text()
-          );
+        if (verifyError) {
+          console.error("Error calling verify token function:", verifyError);
+          return {
+            isConnected: true,
+            personId: data.linkedln_data.linkedin_person_id,
+            userName: data.linkedln_data.user_name,
+            expiresAt: data.linkedln_data.token_expires_at,
+            warning: "Connection could not be verified due to server issues",
+          };
+        }
 
+        if (!verifyData.isValid) {
+          // Token not valid, update database
           await supabase
             .from("userData")
             .update({
-              linkedin_data: {
+              linkedln_data: {
                 ...data.linkedln_data,
                 is_connected: false,
               },
             })
-            .eq("id", authData.user.id);
+            .eq("uid", authData.user.id);
 
           return { isConnected: false };
         }
@@ -245,7 +249,7 @@ export const checkLinkedInConnection = createAsyncThunk(
           expiresAt: data.linkedln_data.token_expires_at,
         };
       } catch (apiError) {
-        console.error("Error validating LinkedIn token:", apiError);
+        console.error("Error verifying LinkedIn token:", apiError);
 
         return {
           isConnected: true,

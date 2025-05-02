@@ -32,7 +32,7 @@ export const Drawer: React.FC<CardProps> = ({
           <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
             <DialogPanel
               transition
-              className="pointer-events-auto relative w-[50vw] transform transition duration-500 ease-in-out data-closed:translate-x-full sm:duration-700"
+              className="pointer-events-auto relative w-full transform transition duration-500 ease-in-out data-closed:translate-x-full sm:w-[50vw] sm:duration-700"
             >
               <TransitionChild>
                 <div className="absolute top-0 left-0 -ml-8 flex pt-4 pr-2 duration-500 ease-in-out data-closed:opacity-0 sm:-ml-10 sm:pr-4">

@@ -2,15 +2,15 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
-import { InputField } from "../components/shared/ui/InputField";
+import { InputField } from "../../components/shared/ui/InputField";
 
-import { checkAuthState, resetPassword } from "../redux/actions/AuthActions";
-import { RootState, AppDispatch } from "../redux/store";
-import { Alert } from "../components/shared/ui/Alert";
-import { clearLoginErrors } from "../redux/slices/AuthSlice";
-import { LoginForm } from "../components/login/LoginForm";
+import { checkAuthState, resetPassword } from "../../redux/actions/AuthActions";
+import { RootState, AppDispatch } from "../../redux/store";
+import { Alert } from "../../components/shared/ui/Alert";
+import { clearLoginErrors } from "../../redux/slices/AuthSlice";
+import { LoginForm } from "../../components/login/LoginForm";
 
-import logoImage from "../assets/mocklab-grey.webp";
+import logoImage from "../../assets/mocklab-grey.webp";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 
 export const LoginScreen = () => {

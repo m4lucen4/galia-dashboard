@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { LoginScreen } from "../screens/Login";
+import { LoginScreen } from "../screens/public/Login";
 import { RecoveryPasswordScreen } from "../screens/RecoveryPassword";
 import { Home } from "../screens/Home";
 import { Profile } from "../screens/Profile";

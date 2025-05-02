@@ -82,16 +82,18 @@ export const Alert: React.FC<AlertProps> = ({
                 </div>
               </div>
             </div>
-            <div className="bg-gray-50 px-4 py-3 gap-2 sm:flex sm:flex-row-reverse sm:px-6 sm:py-4">
-              {onCancel && (
-                <Button title="Cancel" secondary onClick={handleCancel} />
-              )}
+            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:py-4">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row-reverse sm:gap-2">
+                {onCancel && (
+                  <Button title="Cancel" secondary onClick={handleCancel} />
+                )}
 
-              <Button
-                title="Confirm"
-                disabled={disabledConfirmButton}
-                onClick={handleAccept}
-              />
+                <Button
+                  title="Confirm"
+                  disabled={disabledConfirmButton}
+                  onClick={handleAccept}
+                />
+              </div>
             </div>
           </DialogPanel>
         </div>
