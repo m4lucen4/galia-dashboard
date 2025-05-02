@@ -14,12 +14,14 @@ import { PreviewProjects } from "../screens/PreviewProjects";
 import { ProjectsMap } from "../screens/ProjectsMap";
 import { AdminRoute } from "./AdminRoute";
 import { LinkedInCallback } from "../screens/LinkedInCallback";
+import { Privacy } from "../screens/public/Privacy";
 
 export const AppRoutes = () => (
   <Routes>
     <Route element={<PublicRoute />}>
       <Route path="/login" element={<LoginScreen />} />
       <Route path="/projects-map" element={<ProjectsMap />} />
+      <Route path="/privacy" element={<Privacy />} />
     </Route>
     <Route element={<ProtectedRoute />}>
       <Route path="/home" element={<Home />} />
