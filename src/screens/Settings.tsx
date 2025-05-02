@@ -9,11 +9,15 @@ import {
   initiateLinkedInAuth,
   disconnectLinkedIn,
 } from "../redux/actions/SocialNetworksActions";
+import { Alert } from "../components/shared/ui/Alert";
+import { LinkSlashIcon } from "@heroicons/react/24/outline";
 
 export const Settings = () => {
   const dispatch = useAppDispatch();
   const { linkedin, checkLinkedInRequest, disconnectLinkedInRequest } =
     useAppSelector((state) => state.socialNetworks);
+
+  const [showAlertDisconneted, setShowAlertDisconneted] = useState(false);
 
   const [socialNetworks, setSocialNetworks] = useState({
     instagram: false,
@@ -38,9 +42,8 @@ export const Settings = () => {
   };
 
   const handleDisconnectLinkedIn = () => {
-    if (confirm("Are you sure you want to disconnect your LinkedIn account?")) {
-      dispatch(disconnectLinkedIn());
-    }
+    dispatch(disconnectLinkedIn());
+    setShowAlertDisconneted(false);
   };
 
   return (
@@ -57,7 +60,7 @@ export const Settings = () => {
           title="Social Networks"
           subtitle="Connect your accounts to share your projects"
         >
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
             {/* Instagram */}
             <div className="flex flex-col items-center">
               <div className="relative">
@@ -110,7 +113,7 @@ export const Settings = () => {
                   </div>
                 ) : linkedin.isConnected ? (
                   <button
-                    onClick={handleDisconnectLinkedIn}
+                    onClick={() => setShowAlertDisconneted(true)}
                     disabled={disconnectLinkedInRequest.inProgress}
                     className={`absolute -bottom-2 -right-2 ${
                       disconnectLinkedInRequest.inProgress
@@ -180,6 +183,15 @@ export const Settings = () => {
         </Card>
         <CardPreferences />
       </div>
+      {showAlertDisconneted && (
+        <Alert
+          title="Do you want to disconnect LinkedIn?"
+          description="This action will remove your LinkedIn connection."
+          onAccept={handleDisconnectLinkedIn}
+          onCancel={() => setShowAlertDisconneted(false)}
+          icon={LinkSlashIcon}
+        />
+      )}
     </div>
   );
 };
