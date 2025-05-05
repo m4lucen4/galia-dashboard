@@ -12,6 +12,7 @@ import { LoginForm } from "../../components/login/LoginForm";
 
 import logoImage from "../../assets/mocklab-grey.webp";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { useTranslation } from "react-i18next";
 
 export const LoginScreen = () => {
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
@@ -19,6 +20,7 @@ export const LoginScreen = () => {
   const [recoveryEmailSent, setRecoveryEmailSent] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
+  const { t } = useTranslation();
 
   const navigate = useNavigate();
 
@@ -82,7 +84,7 @@ export const LoginScreen = () => {
         {loginRequest.messages && loginRequest.messages.length > 0 && (
           <Alert
             title={loginRequest.messages}
-            description="There seems to be a login problem, please check your credentials"
+            description={t("login.descriptionLoginError")}
             onAccept={() => {
               dispatch(clearLoginErrors());
             }}
@@ -90,8 +92,8 @@ export const LoginScreen = () => {
         )}
         {showRecoveryModal && (
           <Alert
-            title="Recovery password"
-            description="Enter your email to receive a password reset link"
+            title={t("login.titleRecoveryPassword")}
+            description={t("login.descriptionRecoveryPassword")}
             icon={InformationCircleIcon}
             onAccept={
               recoveryEmailSent
@@ -101,7 +103,7 @@ export const LoginScreen = () => {
             onCancel={handleCancelShowRecoveryModal}
           >
             <InputField
-              label="Email"
+              label={t("login.email")}
               id="recoveryEmail"
               onChange={handleRecoveryEmailChange}
               required

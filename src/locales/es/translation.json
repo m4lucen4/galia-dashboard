@@ -1,0 +1,30 @@
+{
+  "shared": {
+    "confirm": "Confirmar",
+    "cancel": "Cancelar"
+  },
+  "menu": {
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "profile": "Perfil",
+    "settings": "Ajustes",
+    "logout": "Salir",
+    "confirmLogout": "¿Estás seguro de que deseas salir?",
+    "home": "Inicio",
+    "users": "Usuarios",
+    "projects": "Proyectos",
+    "publishes": "Publicaciones",
+    "map": "Mapa"
+  },
+  "login": {
+    "title": "Iniciar Sesión",
+    "subtitle": "Introduce tus credenciales",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "button": "Iniciar Sesión",
+    "recoveryPassword": "Recuperar contraseña",
+    "descriptionLoginError": "Parece que hubo un error al iniciar sesión. Por favor, verifica tus credenciales e inténtalo de nuevo.",
+    "titleRecoveryPassword": "Recuperar contraseña",
+    "descriptionRecoveryPassword": "Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña."
+  }
+}

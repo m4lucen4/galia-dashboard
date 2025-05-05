@@ -17,14 +17,7 @@ import { Alert } from "./Alert";
 import { useAppSelector } from "../../../redux/hooks";
 
 import logoImage from "../../../assets/mocklab-bw.png";
-
-const navigation = [
-  { name: "Home", href: "/home", current: false },
-  { name: "Users", href: "/users", current: false, adminOnly: true },
-  { name: "Projects", href: "/projects", current: false },
-  { name: "Preview", href: "/preview-projects", current: false },
-  { name: "Projects Map", href: "/projects-map", current: false },
-];
+import { useTranslation } from "react-i18next";
 
 function classNames(
   ...classes: (string | undefined | null | boolean)[]
@@ -36,8 +29,17 @@ export default function Navbar() {
   const userData = useAppSelector((state: RootState) => state.auth.user);
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
+
+  const navigation = [
+    { name: t("menu.home"), href: "/home", current: false },
+    { name: t("menu.users"), href: "/users", current: false, adminOnly: true },
+    { name: t("menu.projects"), href: "/projects", current: false },
+    { name: t("menu.publishes"), href: "/preview-projects", current: false },
+    { name: t("menu.map"), href: "/projects-map", current: false },
+  ];
 
   const currentPath = location.pathname;
 
@@ -122,7 +124,7 @@ export default function Navbar() {
                     to="/profile"
                     className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                   >
-                    Profile
+                    {t("menu.profile")}
                   </Link>
                 </MenuItem>
                 <MenuItem>
@@ -130,7 +132,7 @@ export default function Navbar() {
                     to="/settings"
                     className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                   >
-                    Settings
+                    {t("menu.settings")}
                   </Link>
                 </MenuItem>
                 <MenuItem>
@@ -138,7 +140,7 @@ export default function Navbar() {
                     onClick={confirmLogout}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden hover:bg-gray-100"
                   >
-                    Logout
+                    {t("menu.logout")}
                   </button>
                 </MenuItem>
               </MenuItems>
@@ -148,8 +150,8 @@ export default function Navbar() {
       </div>
       {showLogoutAlert && (
         <Alert
-          title="Logout"
-          description="Are you sure you want to logout?"
+          title={t("menu.logout")}
+          description={t("menu.confirmLogout")}
           onAccept={handleLogout}
           onCancel={cancelLogout}
         />

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
+import { useTranslation } from "react-i18next";
 import { login } from "../../redux/actions/AuthActions";
 import { LoginProps } from "../../types";
 import { InputField } from "../shared/ui/InputField";
@@ -19,6 +20,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   loginRequest,
   onForgotPassword,
 }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<LoginProps>({
     email: "",
     password: "",
@@ -52,10 +54,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   };
 
   return (
-    <Card title="Login" subtitle="Enter your credentials">
+    <Card title={t("login.title")} subtitle={t("login.subtitle")}>
       <form className="space-y-6" onSubmit={handleSubmit}>
         <InputField
-          label="Email"
+          label={t("login.email")}
           id="email"
           onChange={handleChange}
           required
@@ -63,7 +65,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           value={formData.email}
         />
         <InputField
-          label="Password"
+          label={t("login.password")}
           id="password"
           onChange={handleChange}
           required
@@ -72,12 +74,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         />
         <div className="flex row items-center justify-between">
           <Button
-            title="Login"
+            title={t("login.button")}
             disabled={loginRequest.inProgress}
             type="submit"
           />
           <span className="text-sm cursor-pointer" onClick={onForgotPassword}>
-            Recovery password
+            {t("login.recoveryPassword")}
           </span>
         </div>
       </form>

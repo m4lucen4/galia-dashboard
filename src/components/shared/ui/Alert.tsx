@@ -9,6 +9,7 @@ import {
 } from "@headlessui/react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Button } from "./Button";
+import { useTranslation } from "react-i18next";
 
 interface AlertProps {
   title: string;
@@ -31,6 +32,7 @@ export const Alert: React.FC<AlertProps> = ({
   iconClassName = "size-6 text-white",
   disabledConfirmButton = false,
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(true);
 
   const handleAccept = () => {
@@ -85,11 +87,15 @@ export const Alert: React.FC<AlertProps> = ({
             <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:py-4">
               <div className="flex flex-col-reverse gap-2 sm:flex-row-reverse sm:gap-2">
                 {onCancel && (
-                  <Button title="Cancel" secondary onClick={handleCancel} />
+                  <Button
+                    title={t("shared.cancel")}
+                    secondary
+                    onClick={handleCancel}
+                  />
                 )}
 
                 <Button
-                  title="Confirm"
+                  title={t("shared.confirm")}
                   disabled={disabledConfirmButton}
                   onClick={handleAccept}
                 />

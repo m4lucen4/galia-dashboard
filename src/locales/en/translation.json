@@ -1,0 +1,30 @@
+{
+  "shared": {
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "menu": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout",
+    "confirmLogout": "Are you sure you want to log out?",
+    "home": "Home",
+    "users": "Users",
+    "projects": "Projects",
+    "publishes": "Publications",
+    "map": "Map"
+  },
+  "login": {
+    "title": "Login",
+    "subtitle": "Enter your credentials",
+    "email": "Email",
+    "password": "Password",
+    "button": "Login",
+    "recoveryPassword": "Recover password",
+    "descriptionLoginError": "There seems to be an error logging in. Please verify your credentials and try again.",
+    "titleRecoveryPassword": "Recover password",
+    "descriptionRecoveryPassword": "Enter your email and we will send you a link to reset your password."
+  }
+}

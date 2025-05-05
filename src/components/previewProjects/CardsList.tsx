@@ -113,28 +113,36 @@ export const CardsList: React.FC<CardsListProps> = ({
                       </span>
                     )}
                   </div>
-                  <span className="px-2.5 py-0.5 text-xs rounded-full bg-gray-100 text-black">
+                  <span
+                    className={`px-2.5 py-0.5 text-xs rounded-full ${
+                      project.state === "publish"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-black"
+                    }`}
+                  >
                     {project.state}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="p-5 pt-0 flex gap-3 items-center justify-end mt-2">
+            <div className="p-5 pt-0 flex justify-between items-center mt-2">
+              <div className="flex gap-3">
+                <Button
+                  icon={<InstagramIcon />}
+                  secondary
+                  onClick={() => handleOpenInstagram(project)}
+                />
+                <Button
+                  icon={<LinkedInIcon />}
+                  secondary
+                  onClick={() => handleOpenLinkedln(project)}
+                />
+              </div>
               <Button
                 title="Publish"
                 disabled={isDateInPast(project.publishDate)}
                 onClick={() => handleOpenPublishConfig(project)}
-              />
-              <Button
-                icon={<InstagramIcon />}
-                secondary
-                onClick={() => handleOpenInstagram(project)}
-              />
-              <Button
-                icon={<LinkedInIcon />}
-                secondary
-                onClick={() => handleOpenLinkedln(project)}
               />
             </div>
             {project.publishDate && (
