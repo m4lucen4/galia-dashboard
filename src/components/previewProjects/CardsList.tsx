@@ -33,10 +33,15 @@ export const CardsList: React.FC<CardsListProps> = ({
   handleOpenInstagram,
   handleOpenLinkedln,
 }) => {
+  const sortedProjects = [...projects].sort((a, b) => {
+    if (!a.created_at) return 1;
+    if (!b.created_at) return -1;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
       {Array.isArray(projects) &&
-        projects.map((project: PreviewProjectDataProps) => (
+        sortedProjects.map((project: PreviewProjectDataProps) => (
           <div
             key={project.id}
             className="bg-white border border-black rounded-lg shadow-md overflow-hidden"

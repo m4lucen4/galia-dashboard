@@ -54,7 +54,7 @@ export type ProjectDataProps = {
   title: string;
   state: string;
   description: string;
-  keywords: string;
+  keywords?: string;
   weblink?: string;
   image_data?: ProjectImageData[];
   publications?: number;

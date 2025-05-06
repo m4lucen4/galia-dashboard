@@ -5,6 +5,7 @@ import { ProjectDataProps, ProjectImageData, UserDataProps } from "../../types";
 import { CreateProjectProps } from "../../redux/actions/ProjectActions";
 import { KeywordInput } from "../shared/ui/KeywordInput";
 import { SelectField } from "../shared/ui/SelectField";
+import { CancelIcon } from "../icons";
 
 interface ProjectsFormProps {
   initialData?: ProjectDataProps;
@@ -161,10 +162,9 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
         <div className="mb-2">
           <KeywordInput
             id="keywords"
-            label="Keywords"
-            value={formData.keywords}
+            label="Keywords (optional)"
+            value={formData.keywords || ""}
             onChange={(value) => setFormData({ ...formData, keywords: value })}
-            required
           />
         </div>
         <div className="mb-2">
@@ -220,18 +220,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
                       onClick={() => removeExistingImage(index)}
                       className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
+                      <CancelIcon />
                     </button>
                   </div>
                 ))}
@@ -256,18 +245,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
                       onClick={() => removeImage(index)}
                       className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
+                      <CancelIcon />
                     </button>
                   </div>
                 ))}
