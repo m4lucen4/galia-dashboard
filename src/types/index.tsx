@@ -125,10 +125,20 @@ export type Coordinates = {
   lng: number;
 };
 
+export type LinkedInPage = {
+  id: string;
+  name: string;
+  vanityName: string;
+  logoUrl: string | null;
+  type: "PERSON" | "ORGANIZATION";
+};
+
 export type LinkedInData = {
   isConnected: boolean;
   personId?: string;
   userName?: string;
   expiresAt?: string;
   warning?: string;
+  adminPages?: LinkedInPage[];
+  pagesFetchedAt?: string;
 };

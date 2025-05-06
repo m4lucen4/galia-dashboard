@@ -1,17 +1,20 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
   checkLinkedInConnection,
   processLinkedInCallback,
   disconnectLinkedIn,
+  fetchLinkedInPages,
 } from "../actions/SocialNetworksActions";
 
-import { IRequest, LinkedInData } from "../../types";
+import { IRequest, LinkedInData, LinkedInPage } from "../../types";
 
 interface SocialNetworksState {
   linkedin: LinkedInData;
   checkLinkedInRequest: IRequest;
   processLinkedInCallbackRequest: IRequest;
   disconnectLinkedInRequest: IRequest;
+  fetchLinkedInPagesRequest: IRequest;
+  selectedPublishTarget?: LinkedInPage;
 }
 
 const initialState: SocialNetworksState = {
@@ -37,6 +40,12 @@ const initialState: SocialNetworksState = {
     messages: "",
     ok: false,
   },
+  fetchLinkedInPagesRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
+  selectedPublishTarget: undefined,
 };
 
 const socialNetworksSlice = createSlice({
@@ -45,6 +54,9 @@ const socialNetworksSlice = createSlice({
   reducers: {
     clearLinkedInWarning: (state) => {
       state.linkedin.warning = undefined;
+    },
+    setSelectedPublishTarget: (state, action: PayloadAction<LinkedInPage>) => {
+      state.selectedPublishTarget = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -134,6 +146,40 @@ const socialNetworksSlice = createSlice({
       })
       .addCase(disconnectLinkedIn.rejected, (state, action) => {
         state.disconnectLinkedInRequest = {
+          inProgress: false,
+          messages: action.payload as string,
+          ok: false,
+        };
+      });
+    builder
+      .addCase(fetchLinkedInPages.pending, (state) => {
+        state.fetchLinkedInPagesRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(fetchLinkedInPages.fulfilled, (state, action) => {
+        state.linkedin.adminPages = action.payload.adminPages;
+        state.linkedin.pagesFetchedAt = action.payload.fetchedAt;
+
+        if (
+          !state.selectedPublishTarget &&
+          action.payload.adminPages.length > 0
+        ) {
+          state.selectedPublishTarget = action.payload.adminPages.find(
+            (page: LinkedInPage) => page.type === "PERSON"
+          );
+        }
+
+        state.fetchLinkedInPagesRequest = {
+          inProgress: false,
+          messages: "LinkedIn pages fetched successfully",
+          ok: true,
+        };
+      })
+      .addCase(fetchLinkedInPages.rejected, (state, action) => {
+        state.fetchLinkedInPagesRequest = {
           inProgress: false,
           messages: action.payload as string,
           ok: false,

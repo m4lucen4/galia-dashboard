@@ -5,7 +5,8 @@ const LINKEDIN_CLIENT_ID = import.meta.env.VITE_LINKEDIN_CLIENT_ID;
 const LINKEDIN_REDIRECT_URI =
   import.meta.env.VITE_LINKEDIN_REDIRECT_URI ||
   `${window.location.origin}/auth/linkedin/callback`;
-const LINKEDIN_SCOPE = "openid profile w_member_social email";
+const LINKEDIN_SCOPE =
+  "openid profile w_member_social email r_organization_admin rw_organization_admin r_organization_social w_organization_social r_basicprofile";
 
 export const initiateLinkedInAuth = createAsyncThunk(
   "socialNetworks/initiateLinkedInAuth",
@@ -102,7 +103,17 @@ export const processLinkedInCallback = createAsyncThunk(
           Date.now() + expires_in * 1000
         ).toISOString(),
         is_connected: true,
-        permissions_granted: ["openid", "profile", "w_member_social", "email"],
+        permissions_granted: [
+          "openid",
+          "profile",
+          "w_member_social",
+          "email",
+          "r_organization_admin",
+          "w_organization_social",
+          "r_basicprofile",
+          "rw_organization_admin",
+          "r_organization_social",
+        ],
         user_name,
         connected_at: new Date().toISOString(),
       };
@@ -262,6 +273,67 @@ export const checkLinkedInConnection = createAsyncThunk(
     } catch (error) {
       console.error("Error checking LinkedIn connection:", error);
       return rejectWithValue("Failed to check LinkedIn connection status");
+    }
+  }
+);
+
+export const fetchLinkedInPages = createAsyncThunk(
+  "socialNetworks/fetchLinkedInPages",
+  async ({ isConnected }: { isConnected: boolean }, { rejectWithValue }) => {
+    try {
+      if (!isConnected) {
+        return rejectWithValue("User not connected to LinkedIn");
+      }
+
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) return rejectWithValue("User not authenticated");
+
+      const { data, error } = await supabase
+        .from("userData")
+        .select("linkedln_data")
+        .eq("uid", authData.user.id)
+        .single();
+
+      if (error) throw new Error(error.message);
+      if (!data || !data.linkedln_data) {
+        return rejectWithValue("LinkedIn data not found");
+      }
+
+      const { data: pagesData, error: pagesError } =
+        await supabase.functions.invoke("linkedin-fetch-admin-pages", {
+          body: { access_token: data.linkedln_data.access_token },
+        });
+
+      if (pagesError) {
+        throw new Error(pagesError.message);
+      }
+
+      const updatedLinkedInData = {
+        ...data.linkedln_data,
+        admin_pages: pagesData.pages,
+        pages_fetched_at: new Date().toISOString(),
+      };
+
+      const { error: updateError } = await supabase
+        .from("userData")
+        .update({
+          linkedln_data: updatedLinkedInData,
+        })
+        .eq("uid", authData.user.id);
+
+      if (updateError) throw new Error(updateError.message);
+
+      return {
+        adminPages: pagesData.pages,
+        fetchedAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error("Error fetching LinkedIn admin pages:", error);
+      return rejectWithValue(
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch LinkedIn admin pages"
+      );
     }
   }
 );

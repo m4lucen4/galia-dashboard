@@ -8,16 +8,27 @@ import {
   checkLinkedInConnection,
   initiateLinkedInAuth,
   disconnectLinkedIn,
+  fetchLinkedInPages,
 } from "../redux/actions/SocialNetworksActions";
 import { Alert } from "../components/shared/ui/Alert";
-import { LinkSlashIcon } from "@heroicons/react/24/outline";
+import {
+  LinkSlashIcon,
+  ArrowPathIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+} from "@heroicons/react/24/outline";
 
 export const Settings = () => {
   const dispatch = useAppDispatch();
-  const { linkedin, checkLinkedInRequest, disconnectLinkedInRequest } =
-    useAppSelector((state) => state.socialNetworks);
+  const {
+    linkedin,
+    checkLinkedInRequest,
+    disconnectLinkedInRequest,
+    fetchLinkedInPagesRequest,
+  } = useAppSelector((state) => state.socialNetworks);
 
   const [showAlertDisconneted, setShowAlertDisconneted] = useState(false);
+  const [showPagesSection, setShowPagesSection] = useState(false);
 
   const [socialNetworks, setSocialNetworks] = useState({
     instagram: false,
@@ -26,9 +37,21 @@ export const Settings = () => {
     facebook: false,
   });
 
+  // Verificar conexión con LinkedIn al cargar
   useEffect(() => {
     dispatch(checkLinkedInConnection());
   }, [dispatch]);
+
+  // Cargar páginas de LinkedIn cuando se muestra la sección de páginas
+  useEffect(() => {
+    if (
+      linkedin.isConnected &&
+      showPagesSection &&
+      (!linkedin.adminPages || linkedin.adminPages?.length === 0)
+    ) {
+      dispatch(fetchLinkedInPages({ isConnected: linkedin.isConnected }));
+    }
+  }, [dispatch, linkedin.isConnected, showPagesSection, linkedin.adminPages]);
 
   const handleToggleSocialNetwork = (network: keyof typeof socialNetworks) => {
     setSocialNetworks((prev) => ({
@@ -46,6 +69,35 @@ export const Settings = () => {
     setShowAlertDisconneted(false);
   };
 
+  const handleTogglePagesSection = () => {
+    setShowPagesSection(!showPagesSection);
+  };
+
+  const handleRefreshPages = () => {
+    if (linkedin.isConnected) {
+      dispatch(fetchLinkedInPages({ isConnected: linkedin.isConnected }));
+    }
+  };
+
+  const getLastUpdateText = () => {
+    if (!linkedin.pagesFetchedAt) return "";
+
+    const fetchDate = new Date(linkedin.pagesFetchedAt);
+    const now = new Date();
+    const diffMinutes = Math.floor(
+      (now.getTime() - fetchDate.getTime()) / (1000 * 60)
+    );
+
+    if (diffMinutes < 1) return "updated just now";
+    if (diffMinutes < 60) return `updated ${diffMinutes} minutes ago`;
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `updated ${diffHours} hours ago`;
+
+    const diffDays = Math.floor(diffHours / 24);
+    return `updated ${diffDays} days ago`;
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h3 className="text-base/7 font-semibold text-gray-900">Settings</h3>
@@ -60,7 +112,7 @@ export const Settings = () => {
           title="Social Networks"
           subtitle="Connect your accounts to share your projects"
         >
-          <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-2 gap-4 mb-6">
             {/* Instagram */}
             <div className="flex flex-col items-center">
               <div className="relative">
@@ -180,6 +232,112 @@ export const Settings = () => {
               )}
             </div>
           </div>
+
+          {/* LinkedIn Managed Pages Section */}
+          {linkedin.isConnected && (
+            <div className="mt-2 border-t pt-4">
+              <button
+                onClick={handleTogglePagesSection}
+                className="w-full flex justify-between items-center text-sm text-gray-700 hover:text-gray-900 focus:outline-none mb-2"
+              >
+                <span className="font-medium">LinkedIn Managed Pages</span>
+                <span className="flex items-center">
+                  {linkedin.pagesFetchedAt && (
+                    <span className="text-xs text-gray-500 mr-2">
+                      {getLastUpdateText()}
+                    </span>
+                  )}
+                  {showPagesSection ? (
+                    <ChevronUpIcon className="h-6 w-6" />
+                  ) : (
+                    <ChevronDownIcon className="h-6 w-6" />
+                  )}
+                </span>
+              </button>
+
+              {showPagesSection && (
+                <div className="mt-2 space-y-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs text-gray-500">
+                      Pages you can publish to
+                    </span>
+                    <button
+                      onClick={handleRefreshPages}
+                      disabled={fetchLinkedInPagesRequest.inProgress}
+                      className={`p-1 rounded text-xs flex items-center ${
+                        fetchLinkedInPagesRequest.inProgress
+                          ? "text-gray-400"
+                          : "text-blue-600 hover:text-blue-700"
+                      }`}
+                    >
+                      {fetchLinkedInPagesRequest.inProgress ? (
+                        <div className="animate-spin h-3 w-3 border border-blue-500 rounded-full border-t-transparent mr-1"></div>
+                      ) : (
+                        <ArrowPathIcon className="h-3 w-3 mr-1" />
+                      )}
+                      Refresh
+                    </button>
+                  </div>
+
+                  {fetchLinkedInPagesRequest.inProgress ? (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent mr-2"></div>
+                      <span className="text-sm text-gray-600">
+                        Loading pages...
+                      </span>
+                    </div>
+                  ) : linkedin.adminPages && linkedin.adminPages.length > 0 ? (
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      {linkedin.adminPages.map((page) => (
+                        <div
+                          key={page.id}
+                          className="flex items-center p-2 bg-gray-50 rounded-md border border-gray-100"
+                        >
+                          {page.logoUrl ? (
+                            <img
+                              src={page.logoUrl}
+                              alt={page.name}
+                              className="h-8 w-8 rounded-full mr-3"
+                            />
+                          ) : (
+                            <div
+                              className={`h-8 w-8 rounded-full flex items-center justify-center mr-3 ${
+                                page.type === "PERSON"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : "bg-gray-200 text-gray-700"
+                              }`}
+                            >
+                              {page.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-sm font-medium text-gray-800">
+                              {page.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {page.type === "PERSON"
+                                ? "Personal Profile"
+                                : "Company Page"}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : fetchLinkedInPagesRequest.messages &&
+                    !fetchLinkedInPagesRequest.ok ? (
+                    <div className="p-4 bg-red-50 rounded-md text-sm text-red-600">
+                      {fetchLinkedInPagesRequest.messages}
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-gray-50 rounded-md text-sm text-gray-500 text-center">
+                      No LinkedIn pages found. If you manage any company pages,
+                      they will appear here.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </Card>
         <CardPreferences />
       </div>
