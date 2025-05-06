@@ -26,5 +26,25 @@
     "descriptionLoginError": "Parece que hubo un error al iniciar sesión. Por favor, verifica tus credenciales e inténtalo de nuevo.",
     "titleRecoveryPassword": "Recuperar contraseña",
     "descriptionRecoveryPassword": "Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña."
+  },
+  "settings": {
+    "title": "Ajustes",
+    "description": "Configura tus redes sociales y preferencias.",
+    "socialNetworks": "Redes Sociales",
+    "socialNetworksDescription": "Conecta tus cuentas y comparte tus proyectos.",
+    "connected": "Conectado",
+    "notConnected": "No conectado",
+    "disconnect": "Desconectar",
+    "connectedAs": "Conectado como",
+    "validUntil": "Válido hasta",
+    "publishLinkedlnPages": "Páginas para publicar en LinkedIn",
+    "whereCanPublishPages": "Puedes realizar publicaciones en...",
+    "loadingPages": "Cargando páginas...",
+    "checkingConnection": "Verificando conexión...",
+    "personalPage": "Perfil personal",
+    "companyPage": "Página de empresa",
+    "notFoundPages": "No se encontraron páginas, si administras alguna página en Linkedln aparecerá aquí.",
+    "disconnectLinkedIn": "¿Quieres desconectar tu cuenta de Linkedln?",
+    "disconnectLinkedInDescription": "Al desconectar tu cuenta, ya no podrás publicar en Linkedln."
   }
 }
