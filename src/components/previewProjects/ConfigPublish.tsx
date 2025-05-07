@@ -1,15 +1,17 @@
 import React, { useMemo, useEffect, ChangeEvent } from "react";
 import { InputField } from "../shared/ui/InputField";
-import { SocialNetworksCheck } from "../../types";
+import { LinkedInPageInfo, SocialNetworksCheck } from "../../types";
 import { InstagramIcon, LinkedInIcon } from "../icons";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { checkLinkedInConnection } from "../../redux/actions/SocialNetworksActions";
+import { useLinkedInPages } from "../../hooks/useLinkedInPages";
 
 interface ConfigPublishProps {
   publishDate: string;
   socialNetworks: SocialNetworksCheck;
   onDateChange: (newDate: string) => void;
-  onSocialNetworkChange: (network: "instagram" | "linkedln") => void;
+  onSocialNetworkChange: (
+    network: "instagram" | "linkedln",
+    pageInfo?: LinkedInPageInfo
+  ) => void;
 }
 
 export const ConfigPublish: React.FC<ConfigPublishProps> = ({
@@ -18,8 +20,8 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   onDateChange,
   onSocialNetworkChange,
 }) => {
-  const dispatch = useAppDispatch();
-  const { linkedin } = useAppSelector((state) => state.socialNetworks);
+  const { linkedin } = useLinkedInPages();
+
   const currentDate = useMemo(() => {
     const today = new Date();
     return today.toISOString().split("T")[0];
@@ -44,10 +46,6 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   };
 
   useEffect(() => {
-    dispatch(checkLinkedInConnection());
-  }, [dispatch]);
-
-  useEffect(() => {
     if (!publishDate) {
       if (socialNetworks.instagram) {
         onSocialNetworkChange("instagram");
@@ -70,6 +68,45 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
     onDateChange(newDate);
   };
 
+  const handleLinkedInChange = (checked: boolean) => {
+    if (checked) {
+      if (linkedin.adminPages && linkedin.adminPages.length > 0) {
+        const defaultPage = linkedin.adminPages[0];
+        onSocialNetworkChange("linkedln", {
+          id: defaultPage.id,
+          name: defaultPage.name,
+          type: defaultPage.type,
+        });
+      } else {
+        onSocialNetworkChange("linkedln");
+      }
+    } else {
+      onSocialNetworkChange("linkedln");
+    }
+  };
+
+  const handleLinkedInPageChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    const selectedPage = linkedin.adminPages?.find(
+      (page) => page.id === selectedId
+    );
+
+    if (selectedPage) {
+      onSocialNetworkChange("linkedln", {
+        id: selectedPage.id,
+        name: selectedPage.name,
+        type: selectedPage.type,
+      });
+    }
+  };
+
+  const isLinkedInChecked = !!socialNetworks.linkedln;
+
+  const selectedLinkedInId =
+    typeof socialNetworks.linkedln === "object"
+      ? socialNetworks.linkedln.id
+      : "";
+
   return (
     <div className="space-y-4 mt-4">
       <InputField
@@ -87,6 +124,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
           Select social networks
         </p>
         <div className="space-y-2">
+          {/* Instagram checkbox */}
           <div className="flex items-center">
             <input
               id="instagram"
@@ -112,6 +150,8 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
               Instagram
             </label>
           </div>
+
+          {/* LinkedIn checkbox */}
           <div className="flex items-center">
             <input
               id="linkedln"
@@ -121,8 +161,8 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
                   ? "text-indigo-600"
                   : "text-gray-300 cursor-not-allowed"
               }`}
-              checked={socialNetworks.linkedln}
-              onChange={() => onSocialNetworkChange("linkedln")}
+              checked={isLinkedInChecked}
+              onChange={(e) => handleLinkedInChange(e.target.checked)}
               disabled={!isDateValid || !linkedin.isConnected}
             />
             <label
@@ -146,6 +186,41 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
               </span>
             )}
           </div>
+
+          {/* LinkedIn page selector */}
+          {isLinkedInChecked && linkedin.isConnected && (
+            <div className="ml-6 mt-2">
+              <label
+                htmlFor="linkedin-page"
+                className="block text-xs text-gray-600 mb-1"
+              >
+                Select where to publish
+              </label>
+
+              {linkedin.adminPages && linkedin.adminPages.length > 0 ? (
+                <select
+                  id="linkedin-page"
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
+                  value={selectedLinkedInId}
+                  onChange={handleLinkedInPageChange}
+                >
+                  {linkedin.adminPages.map((page) => (
+                    <option key={page.id} value={page.id}>
+                      {page.name} (
+                      {page.type === "PERSON"
+                        ? "Personal Profile"
+                        : "Company Page"}
+                      )
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="text-xs text-gray-500">
+                  No LinkedIn pages found
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

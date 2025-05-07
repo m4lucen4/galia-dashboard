@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { RootState } from "../redux/store";
 import { usePreviewProjectsData } from "../hooks/usePreviewProjectsData";
-import { PreviewProjectDataProps, SocialNetworksCheck } from "../types";
+import {
+  LinkedInPageInfo,
+  PreviewProjectDataProps,
+  SocialNetworksCheck,
+} from "../types";
 import { Drawer } from "../components/shared/ui/Drawer";
 import InstagramPost from "../components/previewProjects/InstagramPost";
 import {
@@ -124,11 +128,36 @@ export const PreviewProjects = () => {
     setSeePublishConfig(true);
   };
 
-  const handleSocialNetworkChange = (network: "instagram" | "linkedln") => {
-    setSocialNetworks((prev) => ({
-      ...prev,
-      [network]: !prev[network],
-    }));
+  const handleSocialNetworkChange = (
+    network: "instagram" | "linkedln",
+    pageInfo?: LinkedInPageInfo
+  ) => {
+    if (network === "instagram") {
+      setSocialNetworks((prev) => ({
+        ...prev,
+        instagram: !prev.instagram,
+      }));
+    } else {
+      // linkedln
+      if (pageInfo) {
+        setSocialNetworks((prev) => ({
+          ...prev,
+          linkedln: pageInfo,
+        }));
+      } else {
+        if (typeof socialNetworks.linkedln === "object") {
+          setSocialNetworks((prev) => ({
+            ...prev,
+            linkedln: false,
+          }));
+        } else {
+          setSocialNetworks((prev) => ({
+            ...prev,
+            linkedln: !prev.linkedln,
+          }));
+        }
+      }
+    }
   };
 
   const handlePublishProject = () => {

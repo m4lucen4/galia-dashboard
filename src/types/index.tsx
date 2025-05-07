@@ -66,8 +66,14 @@ export type ProjectDataProps = {
   year?: string;
 };
 
+export type LinkedInPageInfo = {
+  id: string;
+  name: string;
+  type: string;
+};
+
 export type SocialNetworksCheck = {
-  linkedln?: boolean;
+  linkedln?: boolean | LinkedInPageInfo;
   instagram?: boolean;
 };
 
