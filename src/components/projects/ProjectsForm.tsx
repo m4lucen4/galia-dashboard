@@ -159,6 +159,19 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
             required
           />
         </div>
+        <div className="flex items-center mb-2">
+          <input
+            type="checkbox"
+            id="requiredAI"
+            name="requiredAI"
+            checked={formData.requiredAI}
+            onChange={handleChange}
+            className="h-4 w-4 text-black focus:ring-gray-400 border-gray-300 rounded"
+          />
+          <label htmlFor="active" className="ml-2 block text-sm text-gray-700">
+            Do you want to use AI for this project? Check yes to enable
+          </label>
+        </div>
         <div className="mb-2">
           <KeywordInput
             id="keywords"
@@ -286,33 +299,36 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               onChange={handleChange}
             />
           </div>
-          <SelectField
-            id="category"
-            label="Category (optional)"
-            value={formData.category || ""}
-            onChange={handleChange}
-            options={[
-              { value: "residencial", label: "Residencial" },
-              { value: "docente", label: "Docente" },
-              { value: "oficinas", label: "Oficinas" },
-              { value: "planeamiento", label: "Planeamiento" },
-              { value: "cultural", label: "Cultural" },
-              { value: "publico", label: "Espacio público" },
-              { value: "rehabilitacion", label: "Rehabilitación" },
-              { value: "interiorismo", label: "Interiorismo" },
-              { value: "sanitario", label: "Sanitario" },
-            ]}
-            className="mb-2"
-          />
-          <div className="mb-2">
-            <InputField
-              id="year"
-              label="Year (optional)"
-              placeholder="Building year"
-              type="number"
-              value={formData.year || ""}
-              onChange={handleChange}
-            />
+          <div className="flex space-x-4 mb-2">
+            <div className="flex-1">
+              <SelectField
+                id="category"
+                label="Category (optional)"
+                value={formData.category || ""}
+                onChange={handleChange}
+                options={[
+                  { value: "residencial", label: "Residencial" },
+                  { value: "docente", label: "Docente" },
+                  { value: "oficinas", label: "Oficinas" },
+                  { value: "planeamiento", label: "Planeamiento" },
+                  { value: "cultural", label: "Cultural" },
+                  { value: "publico", label: "Espacio público" },
+                  { value: "rehabilitacion", label: "Rehabilitación" },
+                  { value: "interiorismo", label: "Interiorismo" },
+                  { value: "sanitario", label: "Sanitario" },
+                ]}
+              />
+            </div>
+            <div className="flex-1">
+              <InputField
+                id="year"
+                label="Year (optional)"
+                placeholder="Building year"
+                type="number"
+                value={formData.year || ""}
+                onChange={handleChange}
+              />
+            </div>
           </div>
           <div className="mb-2">
             <InputField

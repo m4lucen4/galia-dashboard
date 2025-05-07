@@ -117,6 +117,7 @@ export const Projects = () => {
       state: project.state,
       description: project.description,
       keywords: project.keywords,
+      requiredAI: project.requiredAI,
       user: project.user,
       weblink: project.weblink,
       image_data: project.image_data,
