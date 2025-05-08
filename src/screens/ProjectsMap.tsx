@@ -7,13 +7,11 @@ import L from "leaflet";
 import { LoadingSpinner } from "../components/shared/ui/LoadingSpinner";
 import { Coordinates, ProjectDataProps } from "../types";
 import { extractCoordinates } from "../helpers";
-import { Button } from "../components/shared/ui/Button";
-import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { ProjectMarker } from "../components/iaca/ProjectMarker";
 import { ProjectDetail } from "../components/iaca/ProjectDetail";
 import { ProjectsGallery } from "../components/iaca/ProjectsGallery";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import NavbarMap from "../components/shared/ui/NavbarMap";
 
 interface IconDefaultPrototype extends L.Icon.Default {
   _getIconUrl?: () => string;
@@ -37,7 +35,6 @@ L.Icon.Default.mergeOptions({
 
 export const ProjectsMap = () => {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
   const mapRef = useRef(null);
   const [mapCenter, setMapCenter] = useState<Coordinates>({
     lat: 37.5443,
@@ -49,15 +46,6 @@ export const ProjectsMap = () => {
   const { projectFetchWithGoogleMapsRequest, projects } = useAppSelector(
     (state: RootState) => state.project
   );
-  const { authenticated } = useSelector((state: RootState) => state.auth);
-
-  const handleNavigate = () => {
-    if (authenticated) {
-      navigate("/home");
-    } else {
-      navigate("/login");
-    }
-  };
 
   const handleSelectProject = (project: ProjectDataProps) => {
     setSelectedProject(project);
@@ -111,6 +99,7 @@ export const ProjectsMap = () => {
 
   return (
     <div>
+      <NavbarMap />
       <div className="container mx-auto p-4">
         <h3 className="text-base/7 font-semibold text-gray-900">
           Projects Map
@@ -120,10 +109,6 @@ export const ProjectsMap = () => {
             Explore the projects on the map. Click on a marker to see more
             details.
           </p>
-          <Button
-            title={authenticated ? "Go to dash" : "Go to Login"}
-            onClick={handleNavigate}
-          />
         </div>
       </div>
 
@@ -142,6 +127,7 @@ export const ProjectsMap = () => {
               zoom={8}
               className="h-full w-full"
               ref={mapRef}
+              scrollWheelZoom={false}
             >
               <MapCenterUpdater center={mapCenter} />
               <TileLayer

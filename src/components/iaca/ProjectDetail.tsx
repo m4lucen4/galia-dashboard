@@ -39,7 +39,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
             <img
               src={project.image_data?.[currentImageIndex].url}
               alt={`${project.title} - Imagen ${currentImageIndex + 1}`}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-cover"
             />
 
             <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white px-2 py-1 rounded text-xs">
@@ -70,11 +70,6 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
       )}
 
       <div className="space-y-4">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800">Description</h3>
-          <p className="text-gray-700">{project.description}</p>
-        </div>
-
         <div>
           <h3 className="text-lg font-semibold text-gray-800">Details</h3>
           <dl className="mt-2 space-y-2">
@@ -115,6 +110,11 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
               </div>
             )}
           </dl>
+        </div>
+
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800">Description</h3>
+          <p className="text-gray-700">{project.description}</p>
         </div>
 
         {project.googleMaps && (
