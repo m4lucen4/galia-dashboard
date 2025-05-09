@@ -4,8 +4,10 @@ import { Link } from "react-router-dom";
 import { useAppSelector } from "../../../redux/hooks";
 
 import logoImage from "../../../assets/mocklab-bw.png";
+import { useTranslation } from "react-i18next";
 
 export default function NavbarMap() {
+  const { t } = useTranslation();
   const userData = useAppSelector((state: RootState) => state.auth.user);
 
   return (
@@ -23,14 +25,14 @@ export default function NavbarMap() {
                 to="/projects"
                 className="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium"
               >
-                Go projects
+                {t("maps.goProjects")}
               </Link>
             ) : (
               <Link
                 to="/login"
                 className="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium"
               >
-                Login
+                {t("login.title")}
               </Link>
             )}
           </div>

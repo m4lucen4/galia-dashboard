@@ -12,6 +12,7 @@ import { ProjectDetail } from "../components/iaca/ProjectDetail";
 import { ProjectsGallery } from "../components/iaca/ProjectsGallery";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import NavbarMap from "../components/shared/ui/NavbarMap";
+import { useTranslation } from "react-i18next";
 
 interface IconDefaultPrototype extends L.Icon.Default {
   _getIconUrl?: () => string;
@@ -34,6 +35,7 @@ L.Icon.Default.mergeOptions({
 });
 
 export const ProjectsMap = () => {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const mapRef = useRef(null);
   const [mapCenter, setMapCenter] = useState<Coordinates>({
@@ -54,10 +56,10 @@ export const ProjectsMap = () => {
       const coords = extractCoordinates(project.googleMaps);
       if (coords) {
         setMapCenter(coords);
-        const mapElement = document.getElementById("project-map-container");
-        if (mapElement) {
-          mapElement.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
+        // const mapElement = document.getElementById("project-map-container");
+        // if (mapElement) {
+        //   mapElement.scrollIntoView({ behavior: "smooth", block: "start" });
+        // }
       }
     }
   };
@@ -102,23 +104,22 @@ export const ProjectsMap = () => {
       <NavbarMap />
       <div className="container mx-auto p-4">
         <h3 className="text-base/7 font-semibold text-gray-900">
-          Projects Map
+          {t("maps.title")}
         </h3>
         <div className="flex justify-between items-center">
-          <p className="mt-1 max-w-2xl text-sm/6 text-gray-500">
-            Explore the projects on the map. Click on a marker to see more
-            details.
+          <p className="mt-1 max-w-4xl text-sm/6 text-gray-500">
+            {t("maps.subtitle")}
           </p>
         </div>
       </div>
 
       <div
         id="project-map-container"
-        className="mt-6 flex flex-col lg:flex-row h-[500px] w-full"
+        className="mt-4 flex flex-col lg:flex-row h-[500px] w-full"
       >
         <div
           className={`${
-            selectedProject ? "lg:w-1/2" : "w-full"
+            selectedProject ? "lg:w-2/3" : "w-full"
           } h-full rounded-lg shadow-md overflow-hidden transition-all duration-300`}
         >
           {projects && projects.length > 0 && (
@@ -148,7 +149,7 @@ export const ProjectsMap = () => {
         </div>
 
         {selectedProject && (
-          <div className="lg:w-1/2 h-full bg-white rounded-lg shadow-md overflow-auto">
+          <div className="lg:w-1/3 h-full bg-white rounded-lg shadow-md overflow-auto">
             <div className="p-4 relative">
               <button
                 onClick={handleCloseProjectDetail}

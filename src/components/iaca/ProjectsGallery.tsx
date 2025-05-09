@@ -6,6 +6,7 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { getCategoryLabel } from "../../helpers";
+import { useTranslation } from "react-i18next";
 
 interface ProjectsGalleryProps {
   projects: ProjectDataProps[];
@@ -25,6 +26,7 @@ export const ProjectsGallery: React.FC<ProjectsGalleryProps> = ({
   projects,
   onSelectProject,
 }) => {
+  const { t } = useTranslation();
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
@@ -113,7 +115,7 @@ export const ProjectsGallery: React.FC<ProjectsGalleryProps> = ({
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col sm:flex-row justify-between mb-6">
         <h3 className="text-xl font-semibold text-gray-900 mb-4 sm:mb-0">
-          Projects Gallery
+          {t("maps.gallery")}
         </h3>
 
         <div className="flex flex-wrap gap-3">
@@ -193,7 +195,7 @@ export const ProjectsGallery: React.FC<ProjectsGalleryProps> = ({
                     setCategorySearchTerm("");
                   }}
                 >
-                  All Categories
+                  {t("maps.allCategories")}
                 </div>
 
                 {filteredCategories.map((category) => (
@@ -214,13 +216,17 @@ export const ProjectsGallery: React.FC<ProjectsGalleryProps> = ({
           </div>
 
           {(selectedYear || selectedCategory) && (
-            <Button title="X Clear Filters" onClick={clearFilters} secondary />
+            <Button
+              title={t("maps.clearFilters")}
+              onClick={clearFilters}
+              secondary
+            />
           )}
         </div>
       </div>
 
       <div className="mb-4 text-sm text-gray-500">
-        Showing {allImages.length}{" "}
+        {t("maps.showing")} {allImages.length}{" "}
         {allImages.length === 1 ? "result" : "results"}
       </div>
 
@@ -250,7 +256,7 @@ export const ProjectsGallery: React.FC<ProjectsGalleryProps> = ({
 
       {visibleCount < allImages.length && (
         <div className="flex justify-center mt-8">
-          <Button title="Ver más" onClick={handleLoadMore} />
+          <Button title={t("maps.seeMore")} onClick={handleLoadMore} />
         </div>
       )}
     </div>

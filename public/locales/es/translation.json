@@ -46,5 +46,36 @@
     "notFoundPages": "No se encontraron páginas, si administras alguna página en Linkedln aparecerá aquí.",
     "disconnectLinkedIn": "¿Quieres desconectar tu cuenta de Linkedln?",
     "disconnectLinkedInDescription": "Al desconectar tu cuenta, ya no podrás publicar en Linkedln."
+  },
+  "publications": {
+    "noPublications": "No hay publicaciones disponibles.",
+    "title": "Publicaciones",
+    "description": "Gestiona tus publicaciones y revisa el historial.",
+    "loading": "Cargando publicaciones...",
+    "published": "Publicado",
+    "pending": "Pendiente",
+    "failed": "Fallido",
+    "viewDetails": "Ver detalles",
+    "deletePublication": "Eliminar publicación",
+    "deleteConfirmation": "¿Estás seguro de que deseas eliminar esta publicación?"
+  },
+  "maps": {
+    "title": "Mapa de Proyectos",
+    "subtitle": "Explora los proyectos en el mapa. Haz clic en los marcadores para ver más detalles.",
+    "details": "Detalles del proyecto",
+    "visitWebsite": "Visitar sitio web",
+    "category": "Categoría",
+    "year": "Año",
+    "authors": "Autores",
+    "promoter": "Promotor",
+    "collaborators": "Colaboradores",
+    "description": "Descripción",
+    "seeGoogleMaps": "Ver en Google Maps",
+    "seeMore": "Ver más",
+    "goProjects": "Ir a proyectos",
+    "gallery": "Galería",
+    "allCategories": "Todas las categorías",
+    "clearFilters": "Limpiar filtros",
+    "showing": "Mostrando"
   }
 }

@@ -3,12 +3,14 @@ import { ProjectDataProps } from "../../types";
 import { Button } from "../shared/ui/Button";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { getCategoryLabel } from "../../helpers";
+import { useTranslation } from "react-i18next";
 
 interface ProjectDetailProps {
   project: ProjectDataProps;
 }
 
 export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
+  const { t } = useTranslation();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const hasImages = project.image_data && project.image_data.length > 0;
   const totalImages = project.image_data?.length || 0;
@@ -39,7 +41,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
             <img
               src={project.image_data?.[currentImageIndex].url}
               alt={`${project.title} - Imagen ${currentImageIndex + 1}`}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-center"
             />
 
             <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white px-2 py-1 rounded text-xs">
@@ -71,38 +73,62 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
 
       <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-800">Details</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold text-gray-800">
+              {t("maps.details")}
+            </h3>
+            {project.weblink && (
+              <a
+                href={project.weblink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 hover:underline text-sm"
+              >
+                {t("maps.visitWebsite")}
+              </a>
+            )}
+          </div>
           <dl className="mt-2 space-y-2">
-            {project.category && (
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Category</dt>
-                <dd className="text-base text-gray-900">
-                  {getCategoryLabel(project.category)}
-                </dd>
-              </div>
-            )}
-            {project.year && (
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Year</dt>
-                <dd className="text-base text-gray-900">{project.year}</dd>
-              </div>
-            )}
+            <div className="flex flex-row gap-6">
+              {project.category && (
+                <div className="flex-1">
+                  <dt className="text-sm font-medium text-gray-500">
+                    {t("maps.category")}
+                  </dt>
+                  <dd className="text-base text-gray-900">
+                    {getCategoryLabel(project.category)}
+                  </dd>
+                </div>
+              )}
+              {project.year && (
+                <div className="flex-1">
+                  <dt className="text-sm font-medium text-gray-500">
+                    {t("maps.year")}
+                  </dt>
+                  <dd className="text-base text-gray-900">{project.year}</dd>
+                </div>
+              )}
+            </div>
             {project.authors && (
               <div>
-                <dt className="text-sm font-medium text-gray-500">Authors</dt>
+                <dt className="text-sm font-medium text-gray-500">
+                  {t("maps.authors")}
+                </dt>
                 <dd className="text-base text-gray-900">{project.authors}</dd>
               </div>
             )}
             {project.promoter && (
               <div>
-                <dt className="text-sm font-medium text-gray-500">Promoter</dt>
+                <dt className="text-sm font-medium text-gray-500">
+                  {t("maps.promoter")}
+                </dt>
                 <dd className="text-base text-gray-900">{project.promoter}</dd>
               </div>
             )}
             {project.collaborators && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">
-                  Collaborators
+                  {t("maps.collaborators")}
                 </dt>
                 <dd className="text-base text-gray-900">
                   {project.collaborators}
@@ -113,14 +139,16 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
         </div>
 
         <div>
-          <h3 className="text-lg font-semibold text-gray-800">Description</h3>
+          <h3 className="text-lg font-semibold text-gray-800">
+            {t("maps.description")}
+          </h3>
           <p className="text-gray-700">{project.description}</p>
         </div>
 
         {project.googleMaps && (
           <div>
             <Button
-              title="See in Google Maps"
+              title={t("maps.seeGoogleMaps")}
               onClick={() => window.open(project.googleMaps, "_blank")}
             />
           </div>
