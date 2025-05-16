@@ -13,6 +13,11 @@ import { ProjectsGallery } from "../components/iaca/ProjectsGallery";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import NavbarMap from "../components/shared/ui/NavbarMap";
 import { useTranslation } from "react-i18next";
+import provinces from "../assets/regions/provinces.json";
+
+const sortedProvinces = [...provinces].sort((a, b) =>
+  a.label.localeCompare(b.label)
+);
 
 interface IconDefaultPrototype extends L.Icon.Default {
   _getIconUrl?: () => string;
@@ -56,16 +61,21 @@ export const ProjectsMap = () => {
       const coords = extractCoordinates(project.googleMaps);
       if (coords) {
         setMapCenter(coords);
-        // const mapElement = document.getElementById("project-map-container");
-        // if (mapElement) {
-        //   mapElement.scrollIntoView({ behavior: "smooth", block: "start" });
-        // }
       }
     }
   };
 
   const handleCloseProjectDetail = () => {
     setSelectedProject(null);
+  };
+
+  const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (e.target.value) {
+      const [lat, lng] = e.target.value
+        .split(",")
+        .map((coord) => parseFloat(coord));
+      setMapCenter({ lat, lng });
+    }
   };
 
   useEffect(() => {
@@ -106,10 +116,30 @@ export const ProjectsMap = () => {
         <h3 className="text-base/7 font-semibold text-gray-900">
           {t("maps.title")}
         </h3>
-        <div className="flex justify-between items-center">
-          <p className="mt-1 max-w-4xl text-sm/6 text-gray-500">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <p className="mt-1 max-w-xl text-sm/6 text-gray-500">
             {t("maps.subtitle")}
           </p>
+          <div className="w-full md:w-64">
+            <select
+              id="province-select"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              onChange={handleProvinceChange}
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Selecciona una provincia
+              </option>
+              {sortedProvinces.map((province) => (
+                <option
+                  key={province.code}
+                  value={province.coordinates.join(",")}
+                >
+                  {province.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
