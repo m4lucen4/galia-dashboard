@@ -71,6 +71,7 @@ const projectSlice = createSlice({
       state.projectAddRequest = initialState.projectAddRequest;
       state.projectsFetchRequest = initialState.projectsFetchRequest;
       state.projectFetchByIdRequest = initialState.projectFetchByIdRequest;
+      state.updateProjectStateRequest = initialState.updateProjectStateRequest;
     },
     clearSelectedProject: (state) => {
       state.project = null;

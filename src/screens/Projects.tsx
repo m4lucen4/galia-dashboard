@@ -19,11 +19,15 @@ import {
 } from "../redux/slices/ProjectSlice";
 import { ProjectsTable } from "../components/projects/ProjectsTable";
 import { useProjectsData } from "../hooks/useProjectsData";
+import { WorkingInProgress } from "../components/shared/ui/WorkingInProgress";
+import { useNavigate } from "react-router-dom";
 
 export const Projects = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const user = useAppSelector((state: RootState) => state.auth.user);
   const { project, projectAddRequest, projects, projectsFetchRequest } =
     useAppSelector((state: RootState) => state.project);
@@ -41,6 +45,18 @@ export const Projects = () => {
   useEffect(() => {
     fetchProjectsData();
   }, [fetchProjectsData]);
+
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+        dispatch(clearProjectErrors());
+        navigate("/preview-projects");
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, navigate, dispatch]);
 
   const handleOpenDrawer = () => {
     setIsEditMode(false);
@@ -93,6 +109,7 @@ export const Projects = () => {
         .then(() => {
           fetchProjectsData();
           setShowLaunchModal(false);
+          setIsLoading(true);
         });
     }
   };
@@ -133,6 +150,22 @@ export const Projects = () => {
 
   if (!user) {
     return;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <WorkingInProgress
+          customMessages={[
+            "Preparando tus publicaciones...",
+            "Generando contenido...",
+            "Optimizando imágenes...",
+            "Aplicando cambios...",
+            "Finalizando proceso...",
+          ]}
+        />
+      </div>
+    );
   }
 
   return (
