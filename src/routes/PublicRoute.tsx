@@ -16,7 +16,7 @@ export const PublicRoute = ({ children }: PublicRouteProps) => {
     dispatch(checkAuthState());
   }, [dispatch]);
 
-  if (authenticated && location.pathname !== "/projects-map") {
+  if (authenticated && !location.pathname.startsWith("/projects-map")) {
     return <Navigate to="/home" replace />;
   }
 

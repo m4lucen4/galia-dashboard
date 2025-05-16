@@ -1,4 +1,6 @@
 import { useEffect, useState, useRef } from "react";
+
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { fetchProjectsWithGoogleMaps } from "../redux/actions/ProjectActions";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { RootState } from "../redux/store";
@@ -42,6 +44,9 @@ L.Icon.Default.mergeOptions({
 export const ProjectsMap = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { projectId } = useParams<{ projectId: string }>();
   const mapRef = useRef(null);
   const [mapCenter, setMapCenter] = useState<Coordinates>({
     lat: 37.5443,
@@ -49,6 +54,7 @@ export const ProjectsMap = () => {
   });
   const [selectedProject, setSelectedProject] =
     useState<ProjectDataProps | null>(null);
+  const [projectsLoaded, setProjectsLoaded] = useState(false);
 
   const { projectFetchWithGoogleMapsRequest, projects } = useAppSelector(
     (state: RootState) => state.project
@@ -56,6 +62,7 @@ export const ProjectsMap = () => {
 
   const handleSelectProject = (project: ProjectDataProps) => {
     setSelectedProject(project);
+    navigate(`/projects-map/${project.id}${location.search}`);
 
     if (project.googleMaps) {
       const coords = extractCoordinates(project.googleMaps);
@@ -67,6 +74,7 @@ export const ProjectsMap = () => {
 
   const handleCloseProjectDetail = () => {
     setSelectedProject(null);
+    navigate(`/projects-map${location.search}`);
   };
 
   const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -79,7 +87,10 @@ export const ProjectsMap = () => {
   };
 
   useEffect(() => {
-    dispatch(fetchProjectsWithGoogleMaps());
+    dispatch(fetchProjectsWithGoogleMaps()).then(() => {
+      setProjectsLoaded(true);
+    });
+
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = "https://unpkg.com/leaflet@1.7.1/dist/leaflet.css";
@@ -94,16 +105,26 @@ export const ProjectsMap = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (projects && projects.length > 0) {
-      const projectWithCoords = projects.find((p) => p.googleMaps);
-      if (projectWithCoords && projectWithCoords.googleMaps) {
-        const coords = extractCoordinates(projectWithCoords.googleMaps);
-        if (coords) {
-          setMapCenter(coords);
+    if (projectId && projects.length > 0) {
+      const project = projects.find(
+        (p) => String(p.id) === projectId || String(p.id) === String(projectId)
+      );
+
+      if (project) {
+        setSelectedProject(project);
+        if (project.googleMaps) {
+          const coords = extractCoordinates(project.googleMaps);
+          if (coords) {
+            setMapCenter(coords);
+          }
+        }
+      } else {
+        if (projectsLoaded) {
+          dispatch(fetchProjectsWithGoogleMaps());
         }
       }
     }
-  }, [projects]);
+  }, [projectId, projects, projectsLoaded, dispatch]);
 
   if (projectFetchWithGoogleMapsRequest.inProgress) {
     return <LoadingSpinner />;

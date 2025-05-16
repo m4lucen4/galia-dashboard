@@ -76,6 +76,8 @@
     "gallery": "Galería",
     "allCategories": "Todas las categorías",
     "clearFilters": "Limpiar filtros",
-    "showing": "Mostrando"
+    "showing": "Mostrando",
+    "copyLink": "Copiar enlace",
+    "linkCopied": "¡Enlace copiado!"
   }
 }

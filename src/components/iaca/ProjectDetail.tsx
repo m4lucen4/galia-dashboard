@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { ProjectDataProps } from "../../types";
 import { Button } from "../shared/ui/Button";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  LinkIcon,
+} from "@heroicons/react/24/outline";
 import { getCategoryLabel } from "../../helpers";
 import { useTranslation } from "react-i18next";
 
@@ -12,6 +16,7 @@ interface ProjectDetailProps {
 export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
   const { t } = useTranslation();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [copied, setCopied] = useState(false);
   const hasImages = project.image_data && project.image_data.length > 0;
   const totalImages = project.image_data?.length || 0;
 
@@ -29,6 +34,33 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
     setCurrentImageIndex((prevIndex) =>
       prevIndex === totalImages - 1 ? 0 : prevIndex + 1
     );
+  };
+
+  const handleCopyLink = () => {
+    const url = window.location.href;
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      });
+    } else {
+      const textArea = document.createElement("textarea");
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        document.execCommand("copy");
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error("Error al copiar la URL:", err);
+      }
+
+      document.body.removeChild(textArea);
+    }
   };
 
   return (
@@ -74,9 +106,23 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
       <div className="space-y-4">
         <div>
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-800">
-              {t("maps.details")}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-gray-800">
+                {t("maps.details")}
+              </h3>
+              <button
+                onClick={handleCopyLink}
+                className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                title={t("maps.copyLink")}
+              >
+                <LinkIcon className="h-4 w-4" />
+              </button>
+              {copied && (
+                <span className="text-xs text-green-600 ml-1">
+                  {t("maps.linkCopied")}
+                </span>
+              )}
+            </div>
             {project.weblink && (
               <a
                 href={project.weblink}

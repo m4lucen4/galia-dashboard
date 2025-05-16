@@ -21,6 +21,7 @@ export const AppRoutes = () => (
     <Route element={<PublicRoute />}>
       <Route path="/login" element={<LoginScreen />} />
       <Route path="/projects-map" element={<ProjectsMap />} />
+      <Route path="/projects-map/:projectId" element={<ProjectsMap />} />
       <Route path="/privacy" element={<Privacy />} />
     </Route>
     <Route element={<ProtectedRoute />}>
