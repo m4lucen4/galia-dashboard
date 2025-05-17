@@ -1,7 +1,8 @@
 {
   "shared": {
     "confirm": "Confirmar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "working": "Trabajando en tu proyecto"
   },
   "menu": {
     "confirm": "Confirmar",
@@ -78,6 +79,34 @@
     "clearFilters": "Limpiar filtros",
     "showing": "Mostrando",
     "copyLink": "Copiar enlace",
-    "linkCopied": "¡Enlace copiado!"
+    "linkCopied": "¡Enlace copiado!",
+    "allYears": "Todos los años",
+    "filterByYear": "Filtrar por año",
+    "filterByCategory": "Filtrar por categoría",
+    "searchCategory": "Buscar categoría",
+    "results": "resultados",
+    "result": "resultado"
+  },
+  "projects": {
+    "title": "Proyectos",
+    "description": "Crea y edita tus proyectos, cuando los tengas preparados lanza las publicaciones.",
+    "editProject": "Editar proyecto",
+    "createProject": "Crear proyecto",
+    "create": "Crear",
+    "stage1": "Preparando tus publicaciones...",
+    "stage2": "Generando contenido...",
+    "stage3": "Optimizando imágenes...",
+    "stage4": "Aplicando cambios...",
+    "stage5": "Finalizando proceso...",
+    "launchTitle": "¿Lanzar publicación?",
+    "launchDescription": "Tu proyecto será lanzado para generar una versión preliminar, en unos instantes estará disponible en Publicaciones.",
+    "recoveryTitle": "¿Quieres recuperar este proyecto?",
+    "recoveryDescription": "El proyecto será restaurado a versión borrador",
+    "tableTitle": "Título",
+    "tableState": "Estado",
+    "tableActions": "Acciones",
+    "tableRecovery": "Recuperar",
+    "tableEdit": "Editar",
+    "tableLaunch": "Lanzar"
   }
 }

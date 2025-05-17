@@ -1,4 +1,5 @@
 import { FC, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface WorkingInProgressProps {
   duration?: number; // duración en ms
@@ -7,10 +8,11 @@ interface WorkingInProgressProps {
 }
 
 export const WorkingInProgress: FC<WorkingInProgressProps> = ({
-  duration = 5000,
+  duration = 10000,
   fullScreen = true,
   customMessages,
 }) => {
+  const { t } = useTranslation();
   const defaultMessages = [
     "Iniciando proceso...",
     "Generando estructura...",
@@ -75,7 +77,7 @@ export const WorkingInProgress: FC<WorkingInProgressProps> = ({
 
       <div className="mt-8 text-center">
         <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
-          Trabajando en tu proyecto
+          {t("shared.working")}
         </h3>
         <p className="text-blue-600 dark:text-blue-400 font-medium text-md min-h-[1.5rem]">
           {messages[currentMessageIndex]}

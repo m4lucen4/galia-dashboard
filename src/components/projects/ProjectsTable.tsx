@@ -12,6 +12,7 @@ import { LoadingSpinner } from "../shared/ui/LoadingSpinner";
 import { useAppDispatch } from "../../redux/hooks";
 import { Button } from "../shared/ui/Button";
 import { fetchProjectById } from "../../redux/actions/ProjectActions";
+import { useTranslation } from "react-i18next";
 
 type ProjectsTableProps = {
   projects: ProjectDataProps[];
@@ -28,6 +29,7 @@ export const ProjectsTable = ({
   onLaunchProject,
   onRecoveryProject,
 }: ProjectsTableProps) => {
+  const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([]);
   const dispatch = useAppDispatch();
 
@@ -44,10 +46,10 @@ export const ProjectsTable = ({
       cell: (info) => `${info.getValue()}`,
     }),
     columnHelper.accessor("title", {
-      header: "Title",
+      header: t("projects.tableTitle"),
     }),
     columnHelper.accessor("state", {
-      header: "State",
+      header: t("projects.tableState"),
       cell: (info) => {
         const state = info.getValue();
         if (!state) return "-";
@@ -68,13 +70,13 @@ export const ProjectsTable = ({
     }),
     columnHelper.display({
       id: "actions",
-      header: "Actions",
+      header: t("projects.tableActions"),
       cell: (props) => {
         if (props.row.original.state !== "draft") {
           return (
             <div className="flex space-x-2">
               <Button
-                title="Recovery"
+                title={t("projects.tableRecovery")}
                 onClick={() => onRecoveryProject(props.row.original.id)}
               />
             </div>
@@ -84,11 +86,11 @@ export const ProjectsTable = ({
         return (
           <div className="flex space-x-2">
             <Button
-              title="Launch"
+              title={t("projects.tableLaunch")}
               onClick={() => onLaunchProject(props.row.original.id)}
             />
             <Button
-              title="Edit"
+              title={t("projects.tableEdit")}
               secondary
               onClick={() => handleEditClick(props.row.original)}
             />

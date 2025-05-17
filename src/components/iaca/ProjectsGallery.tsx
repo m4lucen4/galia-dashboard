@@ -126,7 +126,7 @@ export const ProjectsGallery: React.FC<ProjectsGalleryProps> = ({
               className="flex items-center justify-between w-40 px-3 py-2 text-sm bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50"
             >
               <span className="truncate">
-                {selectedYear || "Filter by Year"}
+                {selectedYear || t("maps.filterByYear")}
               </span>
               <ChevronDownIcon className="h-4 w-4 ml-2" />
             </button>
@@ -140,7 +140,7 @@ export const ProjectsGallery: React.FC<ProjectsGalleryProps> = ({
                     setIsYearDropdownOpen(false);
                   }}
                 >
-                  All Years
+                  {t("maps.allYears")}
                 </div>
                 {uniqueYears.map((year) => (
                   <div
@@ -166,7 +166,7 @@ export const ProjectsGallery: React.FC<ProjectsGalleryProps> = ({
               <span className="truncate">
                 {selectedCategory
                   ? getCategoryLabel(selectedCategory)
-                  : "Filter by Category"}
+                  : t("maps.filterByCategory")}
               </span>
               <ChevronDownIcon className="h-4 w-4 ml-2" />
             </button>
@@ -178,7 +178,7 @@ export const ProjectsGallery: React.FC<ProjectsGalleryProps> = ({
                     <MagnifyingGlassIcon className="h-4 w-4 text-gray-400 mr-2" />
                     <input
                       type="text"
-                      placeholder="Search categories"
+                      placeholder={t("maps.searchCategory")}
                       className="w-full outline-none text-sm"
                       value={categorySearchTerm}
                       onChange={(e) => setCategorySearchTerm(e.target.value)}
@@ -227,7 +227,7 @@ export const ProjectsGallery: React.FC<ProjectsGalleryProps> = ({
 
       <div className="mb-4 text-sm text-gray-500">
         {t("maps.showing")} {allImages.length}{" "}
-        {allImages.length === 1 ? "result" : "results"}
+        {allImages.length === 1 ? t("maps.result") : t("maps.results")}
       </div>
 
       <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-2">

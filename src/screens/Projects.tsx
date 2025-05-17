@@ -21,8 +21,10 @@ import { ProjectsTable } from "../components/projects/ProjectsTable";
 import { useProjectsData } from "../hooks/useProjectsData";
 import { WorkingInProgress } from "../components/shared/ui/WorkingInProgress";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export const Projects = () => {
+  const { t } = useTranslation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,7 +54,7 @@ export const Projects = () => {
         setIsLoading(false);
         dispatch(clearProjectErrors());
         navigate("/preview-projects");
-      }, 5000);
+      }, 10000);
 
       return () => clearTimeout(timer);
     }
@@ -157,11 +159,11 @@ export const Projects = () => {
       <div className="flex items-center justify-center h-screen">
         <WorkingInProgress
           customMessages={[
-            "Preparando tus publicaciones...",
-            "Generando contenido...",
-            "Optimizando imágenes...",
-            "Aplicando cambios...",
-            "Finalizando proceso...",
+            t("projects.stage1"),
+            t("projects.stage2"),
+            t("projects.stage3"),
+            t("projects.stage4"),
+            t("projects.stage5"),
           ]}
         />
       </div>
@@ -170,16 +172,19 @@ export const Projects = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h3 className="text-base/7 font-semibold text-gray-900">Projects</h3>
+      <h3 className="text-base/7 font-semibold text-gray-900">
+        {t("projects.title")}
+      </h3>
       <div className="flex justify-between items-center mb-4">
-        <p className="mt-1 max-w-2xl text-sm/6 text-gray-500">
-          From here you can create and edit project drafts and launch them for
-          the first publication version
+        <p className="mt-1 max-w-7xl text-sm/6 text-gray-500">
+          {t("projects.description")}
         </p>
       </div>
-      <Button title="Create new project" onClick={handleOpenDrawer} />
+      <Button title={t("projects.create")} onClick={handleOpenDrawer} />
       <Drawer
-        title={isEditMode ? "Edit Project" : "Create Project"}
+        title={
+          isEditMode ? t("projects.editProject") : t("projects.createProject")
+        }
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       >
@@ -207,16 +212,16 @@ export const Projects = () => {
       )}
       {showLaunchModal && (
         <Alert
-          title="Shall we start working?"
-          description="Your project will be launched to generate a preliminary version, in a few minutes it will be available in Project Preview"
+          title={t("projects.launchTitle")}
+          description={t("projects.launchDescription")}
           onAccept={handleConfirmLaunch}
           onCancel={() => setShowLaunchModal(false)}
         />
       )}
       {showRecoveryModal && (
         <Alert
-          title="Do you want to recover the project?"
-          description="The project will be restored to draft version"
+          title={t("projects.recoveryTitle")}
+          description={t("projects.recoveryDescription")}
           onAccept={handleConfirmRecovery}
           onCancel={() => setShowRecoveryModal(false)}
         />
