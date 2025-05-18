@@ -11,6 +11,7 @@ import {
   isDateInPast,
   truncateText,
 } from "../../helpers";
+import { useTranslation } from "react-i18next";
 
 interface CardsListProps {
   projects: PreviewProjectDataProps[];
@@ -33,6 +34,7 @@ export const CardsList: React.FC<CardsListProps> = ({
   handleOpenInstagram,
   handleOpenLinkedln,
 }) => {
+  const { t } = useTranslation();
   const sortedProjects = [...projects].sort((a, b) => {
     if (a.state !== b.state) {
       if (a.state === "preview") return -1;
@@ -90,7 +92,7 @@ export const CardsList: React.FC<CardsListProps> = ({
                               onClick={() => handleEditPreview(project)}
                               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             >
-                              Edit project preview
+                              {t("previewProjects.editPreviewProject")}
                             </button>
                           </li>
                         )}
@@ -99,7 +101,7 @@ export const CardsList: React.FC<CardsListProps> = ({
                             onClick={() => handleDeletePreview(project)}
                             className="w-full text-left px-4 py-2 text-sm text-red-800 hover:bg-gray-100"
                           >
-                            Delete project preview
+                            {t("previewProjects.deletePreviewProject")}
                           </button>
                         </li>
                       </ul>
@@ -111,14 +113,14 @@ export const CardsList: React.FC<CardsListProps> = ({
                 <div className="flex justify-between items-start">
                   <div className="flex flex-col">
                     <span className="text-sm text-gray-500">
-                      Created at:{" "}
+                      {t("previewProjects.createdAt")}{" "}
                       {project.created_at
                         ? formatDateToDDMMYYYY(project.created_at)
                         : "N/A"}
                     </span>
                     {project.publishDate && (
                       <span className="text-sm text-gray-500">
-                        Publish date:{" "}
+                        {t("previewProjects.publishedAt")}{" "}
                         {formatDateToDDMMYYYY(project.publishDate)}
                       </span>
                     )}
@@ -150,7 +152,7 @@ export const CardsList: React.FC<CardsListProps> = ({
                 />
               </div>
               <Button
-                title="Publish"
+                title={t("previewProjects.publish")}
                 disabled={isDateInPast(project.publishDate)}
                 onClick={() => handleOpenPublishConfig(project)}
               />
@@ -159,8 +161,8 @@ export const CardsList: React.FC<CardsListProps> = ({
               <div className="px-5 pb-4 mt-1">
                 <p className="text-xs text-gray-500 italic pt-2">
                   {isDateInPast(project.publishDate)
-                    ? "The project has already been published or is in the process of being published"
-                    : "You can modify the publication data until the day before the scheduled date"}
+                    ? t("previewProjects.messagePublished")
+                    : t("previewProjects.messagePrepublish")}
                 </p>
               </div>
             )}

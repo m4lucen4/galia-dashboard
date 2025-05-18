@@ -21,9 +21,11 @@ import { ConfigPublish } from "../components/previewProjects/ConfigPublish";
 import { CardsList } from "../components/previewProjects/CardsList";
 import { PreviewProjectForm } from "../components/previewProjects/PreviewProjectForm";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
+import { useTranslation } from "react-i18next";
 
 export const PreviewProjects = () => {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [seeInstagram, setSeeInstagram] = useState(false);
   const [seeLinkedln, setSeeLinkedln] = useState(false);
@@ -104,10 +106,10 @@ export const PreviewProjects = () => {
   };
 
   const getDrawerTitle = () => {
-    if (seeInstagram) return "Preview Instagram";
-    if (seeLinkedln) return "Preview LinkedIn";
-    if (seeEditPreview) return "Edit Preview Project";
-    return "Preview Project";
+    if (seeInstagram) return t("previewProjects.instagramPreview");
+    if (seeLinkedln) return t("previewProjects.linkedlnPreview");
+    if (seeEditPreview) return t("previewProjects.editPreviewProject");
+    return t("previewProjects.previewProject");
   };
 
   const handleOpenPublishConfig = (project: PreviewProjectDataProps) => {
@@ -186,19 +188,20 @@ export const PreviewProjects = () => {
 
   if (!projects.length) {
     return (
-      <div className="text-center py-8 text-gray-500">No preview projects</div>
+      <div className="text-center py-8 text-gray-500">
+        {t("previewProjects.noProjects")}
+      </div>
     );
   }
 
   return (
     <div className="container mx-auto p-4">
       <h3 className="text-base/7 font-semibold text-gray-900">
-        Preview Projects
+        {t("previewProjects.title")}
       </h3>
       <div className="flex justify-between items-center mb-4">
-        <p className="mt-1 max-w-2xl text-sm/6 text-gray-500">
-          From here you can see a preview of the projects before they are
-          published
+        <p className="mt-1 max-w-7xl text-sm/6 text-gray-500">
+          {t("previewProjects.description")}
         </p>
       </div>
       <Drawer
@@ -233,8 +236,8 @@ export const PreviewProjects = () => {
       />
       {seePublishConfig && (
         <Alert
-          title="Configure your publication"
-          description="Select the date and social network where you want to publish"
+          title={t("previewProjects.configurePublish")}
+          description={t("previewProjects.configureDescription")}
           icon={CalendarDaysIcon}
           onAccept={handlePublishProject}
           onCancel={() => setSeePublishConfig(false)}
@@ -254,8 +257,8 @@ export const PreviewProjects = () => {
       )}
       {deleteProject && (
         <Alert
-          title="Do you want to delete the project?"
-          description="Are you sure you want to delete this project? This action cannot be undone."
+          title={t("previewProjects.deleteProject")}
+          description={t("previewProjects.deleteDescription")}
           onAccept={handleConfirmDelete}
           onCancel={() => setDeleteProject(false)}
         />

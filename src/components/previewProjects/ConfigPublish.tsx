@@ -3,6 +3,7 @@ import { InputField } from "../shared/ui/InputField";
 import { LinkedInPageInfo, SocialNetworksCheck } from "../../types";
 import { InstagramIcon, LinkedInIcon } from "../icons";
 import { useLinkedInPages } from "../../hooks/useLinkedInPages";
+import { useTranslation } from "react-i18next";
 
 interface ConfigPublishProps {
   publishDate: string;
@@ -20,6 +21,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   onDateChange,
   onSocialNetworkChange,
 }) => {
+  const { t } = useTranslation();
   const { linkedin } = useLinkedInPages();
 
   const currentDate = useMemo(() => {
@@ -32,15 +34,15 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
 
   const dateError =
     publishDate && publishDate < currentDate
-      ? "Publish date must be in the future"
+      ? t("previewProjects.messageFutureDate")
       : "";
 
   const getHelperText = () => {
     if (!publishDate) {
-      return "Select a date to publish the project";
+      return t("previewProjects.messageSelectDate");
     }
     if (isCurrentDate) {
-      return "By selecting the current date, your project will be published immediately";
+      return t("previewProjects.messageCurrentDate");
     }
     return "";
   };
@@ -111,7 +113,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
     <div className="space-y-4 mt-4">
       <InputField
         id="publishDate"
-        label="Publication date"
+        label={t("previewProjects.publishedAt")}
         type="date"
         value={publishDate}
         onChange={handleDateChange}
@@ -121,7 +123,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
       />
       <div>
         <p className="block text-sm font-medium text-gray-700 mb-2">
-          Select social networks
+          {t("previewProjects.selectSocialNetworks")}
         </p>
         <div className="space-y-2">
           {/* Instagram checkbox */}
@@ -182,7 +184,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
             </label>
             {!linkedin.isConnected && !!publishDate && (
               <span className="ml-2 text-xs text-red-500">
-                No LinkedIn connection.
+                {t("previewProjects.noLinkedlnConnection")}
               </span>
             )}
           </div>
@@ -194,7 +196,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
                 htmlFor="linkedin-page"
                 className="block text-xs text-gray-600 mb-1"
               >
-                Select where to publish
+                {t("previewProjects.selectLindkedlnPage")}
               </label>
 
               {linkedin.adminPages && linkedin.adminPages.length > 0 ? (
@@ -208,15 +210,15 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
                     <option key={page.id} value={page.id}>
                       {page.name} (
                       {page.type === "PERSON"
-                        ? "Personal Profile"
-                        : "Company Page"}
+                        ? t("previewProjects.personalProfile")
+                        : t("previewProjects.companyPage")}
                       )
                     </option>
                   ))}
                 </select>
               ) : (
                 <div className="text-xs text-gray-500">
-                  No LinkedIn pages found
+                  {t("previewProjects.noLinkedlnPages")}
                 </div>
               )}
             </div>

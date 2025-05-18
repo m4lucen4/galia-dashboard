@@ -134,5 +134,33 @@
     "placeholderPromoter": "Promotor del proyecto",
     "collaborators": "Colaboradores",
     "placeholderCollaborators": "Colaboradores del proyecto"
+  },
+  "previewProjects": {
+    "title": "Vista previa de proyectos",
+    "description": "Desde aquí puedes ver una vista previa de los proyectos antes de que sean publicados.",
+    "noProjects": "No hay proyectos disponibles.",
+    "configurePublish": "Configurar publicación",
+    "configureDescription": "Selecciona la fecha y la red social donde quieres publicar.",
+    "instagramPreview": "Vista previa de Instagram",
+    "linkedlnPreview": "Vista previa de LinkedIn",
+    "editPreviewProject": "Editar proyecto",
+    "deletePreviewProject": "Eliminar proyecto",
+    "previewProject": "Vista previa del proyecto",
+    "deleteProject": "¿Deseas eliminar el proyecto?",
+    "deleteDescription": "¿Estás seguro de que deseas eliminar este proyecto? Esta acción no se puede deshacer.",
+    "createdAt": "Fecha creación:",
+    "publishedAt": "Fecha publicación:",
+    "publish": "Publicar",
+    "messagePublished": "El proyecto ya ha sido publicado o está en proceso de publicación",
+    "messagePrepublish": "Puedes modificar los datos de la publicación hasta el día anterior a la fecha programada",
+    "selectSocialNetworks": "Selecciona las redes sociales",
+    "noLinkedlnConnection": "No hay conexión con LinkedIn",
+    "messageFutureDate": "La fecha de publicación no puede ser anterior a la fecha actual",
+    "messageSelectDate": "Selecciona una fecha de publicación",
+    "messageCurrentDate": "Al seleccionar la fecha actual, tu proyecto se publicará inmediatamente",
+    "selectLindkedlnPage": "Selecciona donde quieres publicar",
+    "noLinkedlnPages": "No hay páginas de LinkedIn disponibles",
+    "personalProfile": "Perfil personal",
+    "companyPage": "Página de empresa"
   }
 }
