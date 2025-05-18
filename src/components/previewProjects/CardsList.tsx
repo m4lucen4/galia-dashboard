@@ -34,6 +34,11 @@ export const CardsList: React.FC<CardsListProps> = ({
   handleOpenLinkedln,
 }) => {
   const sortedProjects = [...projects].sort((a, b) => {
+    if (a.state !== b.state) {
+      if (a.state === "preview") return -1;
+      if (b.state === "preview") return 1;
+    }
+
     if (!a.created_at) return 1;
     if (!b.created_at) return -1;
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -120,7 +125,7 @@ export const CardsList: React.FC<CardsListProps> = ({
                   </div>
                   <span
                     className={`px-2.5 py-0.5 text-xs rounded-full ${
-                      project.state === "publish"
+                      project.state === "published"
                         ? "bg-green-100 text-green-800"
                         : "bg-gray-100 text-black"
                     }`}
