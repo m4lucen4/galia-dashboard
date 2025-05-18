@@ -46,10 +46,10 @@ export const ProjectsTable = ({
       cell: (info) => `${info.getValue()}`,
     }),
     columnHelper.accessor("title", {
-      header: t("projects.tableTitle"),
+      header: t("projects.projectTitle"),
     }),
     columnHelper.accessor("state", {
-      header: t("projects.tableState"),
+      header: t("projects.state"),
       cell: (info) => {
         const state = info.getValue();
         if (!state) return "-";
@@ -65,18 +65,18 @@ export const ProjectsTable = ({
       },
     }),
     columnHelper.accessor("keywords", {
-      header: "Keywords",
+      header: t("projects.keywords"),
       cell: (info) => info.getValue() || "-",
     }),
     columnHelper.display({
       id: "actions",
-      header: t("projects.tableActions"),
+      header: t("projects.actions"),
       cell: (props) => {
         if (props.row.original.state !== "draft") {
           return (
             <div className="flex space-x-2">
               <Button
-                title={t("projects.tableRecovery")}
+                title={t("projects.recovery")}
                 onClick={() => onRecoveryProject(props.row.original.id)}
               />
             </div>
@@ -86,11 +86,11 @@ export const ProjectsTable = ({
         return (
           <div className="flex space-x-2">
             <Button
-              title={t("projects.tableLaunch")}
+              title={t("projects.launch")}
               onClick={() => onLaunchProject(props.row.original.id)}
             />
             <Button
-              title={t("projects.tableEdit")}
+              title={t("projects.edit")}
               secondary
               onClick={() => handleEditClick(props.row.original)}
             />
@@ -119,7 +119,7 @@ export const ProjectsTable = ({
   if (!projects.length) {
     return (
       <div className="text-center py-8 text-gray-500">
-        No registered projects
+        {t("projects.noProjects")}
       </div>
     );
   }

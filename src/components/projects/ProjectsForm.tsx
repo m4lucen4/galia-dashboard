@@ -6,6 +6,7 @@ import { CreateProjectProps } from "../../redux/actions/ProjectActions";
 import { KeywordInput } from "../shared/ui/KeywordInput";
 import { SelectField } from "../shared/ui/SelectField";
 import { CancelIcon } from "../icons";
+import { useTranslation } from "react-i18next";
 
 interface ProjectsFormProps {
   initialData?: ProjectDataProps;
@@ -22,6 +23,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   isEditMode = false,
   user,
 }) => {
+  const { t } = useTranslation();
   const defaultFormData: CreateProjectProps = {
     user: user?.uid,
     title: "",
@@ -141,8 +143,8 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
         <div className="mb-2">
           <InputField
             id="title"
-            label="Project Title"
-            placeholder="Enter project title"
+            label={t("projects.projectTitle")}
+            placeholder={t("projects.projectPlaceholderTitle")}
             type="text"
             value={formData.title}
             onChange={handleChange}
@@ -152,7 +154,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
         <div className="mb-2">
           <InputField
             id="description"
-            label="Description"
+            label={t("projects.projectDescription")}
             type="textarea"
             value={formData.description}
             onChange={handleChange}
@@ -169,13 +171,13 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
             className="h-4 w-4 text-black focus:ring-gray-400 border-gray-300 rounded"
           />
           <label htmlFor="active" className="ml-2 block text-sm text-gray-700">
-            Do you want to use AI for this project? Check yes to enable
+            {t("projects.requiredAI")}
           </label>
         </div>
         <div className="mb-2">
           <KeywordInput
             id="keywords"
-            label="Keywords (optional)"
+            label={t("projects.keywords")}
             value={formData.keywords || ""}
             onChange={(value) => setFormData({ ...formData, keywords: value })}
           />
@@ -183,7 +185,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
         <div className="mb-2">
           <InputField
             id="weblink"
-            label="Web Link (optional)"
+            label={t("projects.web")}
             placeholder="https://example.com"
             type="url"
             value={formData.weblink || ""}
@@ -192,7 +194,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
         </div>
         <div className="col-span-2 mb-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Project Images ({totalImagesCount}/15)
+            {t("projects.projectImages")} ({totalImagesCount}/15)
           </label>
           <div className="mt-1 flex items-center">
             <input
@@ -206,20 +208,22 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               disabled={existingImages.length >= 15}
             />
             <Button
-              title="Select Images"
+              title={t("projects.selectImages")}
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={existingImages.length >= 15}
             />
             <span className="ml-3 text-sm text-gray-500">
-              {selectedImages.length} new images selected
+              {selectedImages.length} {t("projects.selectedImages")}
             </span>
           </div>
 
           {/* Existing Images */}
           {existingImages.length > 0 && (
             <>
-              <h4 className="font-medium text-sm mt-4 mb-2">Existing Images</h4>
+              <h4 className="font-medium text-sm mt-4 mb-2">
+                {t("projects.existingImages")}
+              </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {existingImages.map((img, index) => (
                   <div key={`existing-${index}`} className="relative group">
@@ -244,7 +248,10 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
           {/* Preview images */}
           {previewUrls.length > 0 && (
             <>
-              <h4 className="font-medium text-sm mt-4 mb-2">New Images</h4>
+              <h4 className="font-medium text-sm mt-4 mb-2">
+                {" "}
+                {t("projects.newImages")}
+              </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {previewUrls.map((url, index) => (
                   <div key={`new-${index}`} className="relative group">
@@ -268,7 +275,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
 
           <div className="my-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              How many publications do you want to create?
+              {t("projects.howManyPublications")}
             </label>
             <div className="flex space-x-1">
               {[1, 2, 3, 4].map((value) => (
@@ -292,8 +299,8 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
           <div className="mb-2">
             <InputField
               id="googleMaps"
-              label="Google Maps Link (optional)"
-              placeholder="Introduce your project location, google maps link complete"
+              label={t("projects.googleMaps")}
+              placeholder={t("projects.placeholderGoogleMaps")}
               type="url"
               value={formData.googleMaps || ""}
               onChange={handleChange}
@@ -303,7 +310,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
             <div className="flex-1">
               <SelectField
                 id="category"
-                label="Category (optional)"
+                label={t("projects.category")}
                 value={formData.category || ""}
                 onChange={handleChange}
                 options={[
@@ -322,8 +329,8 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
             <div className="flex-1">
               <InputField
                 id="year"
-                label="Year (optional)"
-                placeholder="Building year"
+                label={t("projects.year")}
+                placeholder={t("projects.placeholderYear")}
                 type="number"
                 value={formData.year || ""}
                 onChange={handleChange}
@@ -333,8 +340,8 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
           <div className="mb-2">
             <InputField
               id="authors"
-              label="Authors (optional)"
-              placeholder="Authors name"
+              label={t("projects.authors")}
+              placeholder={t("projects.placeholderAuthors")}
               type="text"
               value={formData.authors || ""}
               onChange={handleChange}
@@ -343,8 +350,8 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
           <div className="mb-2">
             <InputField
               id="promoter"
-              label="Promoter (optional)"
-              placeholder="Promoter name"
+              label={t("projects.promoter")}
+              placeholder={t("projects.placeholderPromoter")}
               type="text"
               value={formData.promoter || ""}
               onChange={handleChange}
@@ -353,8 +360,8 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
           <div className="mb-2">
             <InputField
               id="collaborators"
-              label="Collaborators (optional)"
-              placeholder="Collaborators names"
+              label={t("projects.collaborators")}
+              placeholder={t("projects.placeholderCollaborators")}
               type="text"
               value={formData.collaborators || ""}
               onChange={handleChange}
@@ -366,7 +373,9 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
       <div className="mt-6">
         <Button
           fullWidth
-          title={isEditMode ? "Edit Project" : "Create Project"}
+          title={
+            isEditMode ? t("projects.editProject") : t("projects.createProject")
+          }
           disabled={loading}
           type="submit"
         />

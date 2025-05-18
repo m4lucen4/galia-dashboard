@@ -1,4 +1,5 @@
 import React, { useState, KeyboardEvent, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 interface KeywordInputProps {
   label: string;
@@ -6,7 +7,6 @@ interface KeywordInputProps {
   value: string;
   onChange: (value: string) => void;
   required?: boolean;
-  placeholder?: string;
   disabled?: boolean;
   error?: string;
 }
@@ -17,10 +17,10 @@ export const KeywordInput: React.FC<KeywordInputProps> = ({
   value,
   onChange,
   required = false,
-  placeholder = "Add keywords...",
   disabled = false,
   error,
 }) => {
+  const { t } = useTranslation();
   const [inputValue, setInputValue] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -113,7 +113,9 @@ export const KeywordInput: React.FC<KeywordInputProps> = ({
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onBlur={handleBlur}
-          placeholder={keywords.length === 0 ? placeholder : ""}
+          placeholder={
+            keywords.length === 0 ? t("projects.placeholderKeywords") : ""
+          }
           disabled={disabled}
           required={required && keywords.length === 0}
           className="flex-grow outline-none min-w-[80px] bg-transparent"
