@@ -93,6 +93,8 @@
     "editProject": "Editar proyecto",
     "createProject": "Crear proyecto",
     "create": "Crear",
+    "cleanFilters": "Limpiar filtros",
+    "allStates": "Todos los estados",
     "stage1": "Preparando tus publicaciones...",
     "stage2": "Generando contenido...",
     "stage3": "Optimizando imágenes...",
