@@ -4,9 +4,17 @@ import {
   processLinkedInCallback,
   disconnectLinkedIn,
   fetchLinkedInPages,
+  checkInstagramConnection,
+  disconnectInstagram,
+  processInstagramCallback,
 } from "../actions/SocialNetworksActions";
 
-import { IRequest, LinkedInData, LinkedInPage } from "../../types";
+import {
+  InstagramData,
+  IRequest,
+  LinkedInData,
+  LinkedInPage,
+} from "../../types";
 
 interface SocialNetworksState {
   linkedin: LinkedInData;
@@ -15,6 +23,10 @@ interface SocialNetworksState {
   disconnectLinkedInRequest: IRequest;
   fetchLinkedInPagesRequest: IRequest;
   selectedPublishTarget?: LinkedInPage;
+  instagram: InstagramData;
+  checkInstagramRequest: IRequest;
+  processInstagramCallbackRequest: IRequest;
+  disconnectInstagramInRequest: IRequest;
 }
 
 const initialState: SocialNetworksState = {
@@ -46,6 +58,27 @@ const initialState: SocialNetworksState = {
     ok: false,
   },
   selectedPublishTarget: undefined,
+  instagram: {
+    isConnected: false,
+    userId: undefined,
+    userName: undefined,
+    expiresAt: undefined,
+  },
+  checkInstagramRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
+  processInstagramCallbackRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
+  disconnectInstagramInRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
 };
 
 const socialNetworksSlice = createSlice({
@@ -180,6 +213,94 @@ const socialNetworksSlice = createSlice({
       })
       .addCase(fetchLinkedInPages.rejected, (state, action) => {
         state.fetchLinkedInPagesRequest = {
+          inProgress: false,
+          messages: action.payload as string,
+          ok: false,
+        };
+      });
+    builder
+      .addCase(checkInstagramConnection.pending, (state) => {
+        state.checkInstagramRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(checkInstagramConnection.fulfilled, (state, action) => {
+        if (action.payload) {
+          state.instagram = {
+            isConnected: action.payload.isConnected,
+            userId: action.payload.userId,
+            userName: action.payload.username,
+            expiresAt: action.payload.expiresAt,
+          };
+        }
+        state.checkInstagramRequest = {
+          inProgress: false,
+          messages: action.payload?.warning || "",
+          ok: true,
+        };
+      })
+      .addCase(checkInstagramConnection.rejected, (state, action) => {
+        state.checkInstagramRequest = {
+          inProgress: false,
+          messages: action.payload as string,
+          ok: false,
+        };
+      });
+    builder
+      .addCase(disconnectInstagram.pending, (state) => {
+        state.disconnectInstagramInRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(disconnectInstagram.fulfilled, (state) => {
+        state.instagram = {
+          isConnected: false,
+          userId: undefined,
+          userName: undefined,
+          expiresAt: undefined,
+        };
+        state.disconnectInstagramInRequest = {
+          inProgress: false,
+          messages: "Instagram disconnected successfully",
+          ok: true,
+        };
+      })
+      .addCase(disconnectInstagram.rejected, (state, action) => {
+        state.disconnectInstagramInRequest = {
+          inProgress: false,
+          messages: action.payload as string,
+          ok: false,
+        };
+      });
+    builder
+      .addCase(processInstagramCallback.pending, (state) => {
+        state.processInstagramCallbackRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(processInstagramCallback.fulfilled, (state, action) => {
+        if (action.payload) {
+          state.instagram = {
+            isConnected: action.payload.isConnected,
+            userId: action.payload.userId,
+            userName: action.payload.username,
+            expiresAt: action.payload.expiresAt,
+          };
+        }
+        state.processInstagramCallbackRequest = {
+          inProgress: false,
+          messages: "Instagram connected successfully",
+          ok: true,
+        };
+      })
+      .addCase(processInstagramCallback.rejected, (state, action) => {
+        state.processInstagramCallbackRequest = {
           inProgress: false,
           messages: action.payload as string,
           ok: false,

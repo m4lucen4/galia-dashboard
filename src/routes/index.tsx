@@ -15,6 +15,7 @@ import { ProjectsMap } from "../screens/ProjectsMap";
 import { AdminRoute } from "./AdminRoute";
 import { LinkedInCallback } from "../screens/LinkedInCallback";
 import { Privacy } from "../screens/public/Privacy";
+import { InstagramCallback } from "../screens/InstagramCallback";
 
 export const AppRoutes = () => (
   <Routes>
@@ -31,6 +32,7 @@ export const AppRoutes = () => (
       <Route path="/projects" element={<Projects />} />
       <Route path="/preview-projects" element={<PreviewProjects />} />
       <Route path="/auth/linkedin/callback" element={<LinkedInCallback />} />
+      <Route path="/auth/instagram/callback" element={<InstagramCallback />} />
     </Route>
     <Route element={<AdminRoute />}>
       <Route path="/users" element={<Users />} />

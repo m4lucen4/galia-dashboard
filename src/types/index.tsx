@@ -149,3 +149,10 @@ export type LinkedInData = {
   adminPages?: LinkedInPage[];
   pagesFetchedAt?: string;
 };
+
+export type InstagramData = {
+  isConnected: boolean;
+  userId?: string;
+  userName?: string;
+  expiresAt?: string;
+};

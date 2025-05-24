@@ -46,7 +46,9 @@
     "companyPage": "Página de empresa",
     "notFoundPages": "No se encontraron páginas, si administras alguna página en Linkedln aparecerá aquí.",
     "disconnectLinkedIn": "¿Quieres desconectar tu cuenta de Linkedln?",
-    "disconnectLinkedInDescription": "Al desconectar tu cuenta, ya no podrás publicar en Linkedln."
+    "disconnectLinkedInDescription": "Al desconectar tu cuenta, ya no podrás publicar en Linkedln.",
+    "disconnectInstagram": "¿Quieres desconectar tu cuenta de Instagram?",
+    "disconnectInstagramDescription": "Al desconectar tu cuenta, ya no podrás publicar en Instagram."
   },
   "publications": {
     "noPublications": "No hay publicaciones disponibles.",

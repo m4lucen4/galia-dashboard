@@ -6,7 +6,6 @@ import {
   LinkedInIcon,
 } from "../components/icons";
 import { useState, useEffect } from "react";
-import { Switch } from "../components/shared/ui/Switch";
 import { CardPreferences } from "../components/settings/CardPreferences";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
@@ -14,6 +13,9 @@ import {
   initiateLinkedInAuth,
   disconnectLinkedIn,
   fetchLinkedInPages,
+  initiateInstagramAuth,
+  checkInstagramConnection,
+  disconnectInstagram,
 } from "../redux/actions/SocialNetworksActions";
 import { Alert } from "../components/shared/ui/Alert";
 import {
@@ -32,18 +34,19 @@ export const Settings = () => {
     checkLinkedInRequest,
     disconnectLinkedInRequest,
     fetchLinkedInPagesRequest,
+    instagram,
+    checkInstagramRequest,
+    disconnectInstagramInRequest,
   } = useAppSelector((state) => state.socialNetworks);
 
   const [showAlertDisconneted, setShowAlertDisconneted] = useState(false);
+  const [showAlertInstagramDisconneted, setShowAlertInstagramDisconneted] =
+    useState(false);
   const [showPagesSection, setShowPagesSection] = useState(false);
-
-  const [socialNetworks, setSocialNetworks] = useState({
-    instagram: false,
-    linkedin: false,
-  });
 
   useEffect(() => {
     dispatch(checkLinkedInConnection());
+    dispatch(checkInstagramConnection());
   }, [dispatch]);
 
   useEffect(() => {
@@ -56,19 +59,21 @@ export const Settings = () => {
     }
   }, [dispatch, linkedin.isConnected, showPagesSection, linkedin.adminPages]);
 
-  const handleToggleSocialNetwork = (network: keyof typeof socialNetworks) => {
-    setSocialNetworks((prev) => ({
-      ...prev,
-      [network]: !prev[network],
-    }));
-  };
-
   const handleConnectLinkedIn = () => {
     dispatch(initiateLinkedInAuth());
   };
 
+  const handleConnectInstagram = () => {
+    dispatch(initiateInstagramAuth());
+  };
+
   const handleDisconnectLinkedIn = () => {
     dispatch(disconnectLinkedIn());
+    setShowAlertDisconneted(false);
+  };
+
+  const handleDisconnectInstagram = () => {
+    dispatch(disconnectInstagram());
     setShowAlertDisconneted(false);
   };
 
@@ -96,33 +101,77 @@ export const Settings = () => {
             {/* Instagram */}
             <div className="flex flex-col items-center">
               <div className="relative">
+                {/* Instagram icon and status */}
                 <div
                   className={`p-4 rounded-full ${
-                    socialNetworks.instagram ? "bg-pink-50" : "bg-gray-100"
+                    instagram.isConnected ? "bg-pink-50" : "bg-gray-100"
                   }`}
                 >
                   <InstagramIcon
                     className={`w-8 h-8 ${
-                      socialNetworks.instagram
-                        ? "text-pink-600"
-                        : "text-gray-500"
+                      instagram.isConnected ? "text-pink-600" : "text-gray-500"
                     }`}
                   />
                 </div>
-                <Switch
-                  checked={socialNetworks.instagram}
-                  onChange={() => handleToggleSocialNetwork("instagram")}
-                  className="absolute -bottom-2 -right-2"
-                />
+                {checkInstagramRequest.inProgress ? (
+                  <div className="absolute -bottom-2 -right-2 bg-gray-300 rounded-full p-1 w-6 h-6 flex items-center justify-center">
+                    <div className="animate-spin h-3 w-3 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+                  </div>
+                ) : instagram.isConnected ? (
+                  <button
+                    onClick={() => setShowAlertDisconneted(true)}
+                    disabled={disconnectInstagramInRequest.inProgress}
+                    className={`absolute -bottom-2 -right-2 ${
+                      disconnectLinkedInRequest.inProgress
+                        ? "bg-gray-400"
+                        : "bg-red-500 hover:bg-red-600"
+                    } text-white rounded-full p-1`}
+                    title={t("settings.disconnect")}
+                  >
+                    {disconnectInstagramInRequest.inProgress ? (
+                      <div className="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent"></div>
+                    ) : (
+                      <CancelIcon />
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleConnectInstagram}
+                    className="absolute -bottom-2 -right-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1"
+                    title="Connect with Instagram"
+                  >
+                    <AddIcon />
+                  </button>
+                )}
               </div>
               <p className="mt-3 text-sm font-medium text-gray-900">
                 Instagram
               </p>
               <p className="text-xs text-gray-500">
-                {socialNetworks.instagram
-                  ? t("settings.connected")
-                  : t("settings.notConnected")}
+                {checkInstagramRequest.inProgress ? (
+                  <span className="text-gray-400">
+                    {" "}
+                    {t("settings.checkingConnection")}
+                  </span>
+                ) : instagram.isConnected ? (
+                  <span className="text-green-500">
+                    {t("settings.connectedAs")}{" "}
+                    {instagram.userName
+                      ? truncateText(instagram.userName, 15)
+                      : ""}
+                  </span>
+                ) : (
+                  <span className="text-red-500">
+                    {t("settings.notConnected")}
+                  </span>
+                )}
               </p>
+              {instagram.isConnected && instagram.expiresAt && (
+                <p className="text-xs text-gray-400 mt-1">
+                  {t("settings.validUntil")}{" "}
+                  {new Date(instagram.expiresAt).toLocaleDateString()}
+                </p>
+              )}
             </div>
 
             {/* LinkedIn */}
@@ -294,6 +343,15 @@ export const Settings = () => {
           description={t("settings.disconnectLinkedInDescription")}
           onAccept={handleDisconnectLinkedIn}
           onCancel={() => setShowAlertDisconneted(false)}
+          icon={LinkSlashIcon}
+        />
+      )}
+      {showAlertInstagramDisconneted && (
+        <Alert
+          title={t("settings.disconnectInstagram")}
+          description={t("settings.disconnectInstagramDescription")}
+          onAccept={handleDisconnectInstagram}
+          onCancel={() => setShowAlertInstagramDisconneted(false)}
           icon={LinkSlashIcon}
         />
       )}

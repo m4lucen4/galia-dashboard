@@ -8,6 +8,12 @@ const LINKEDIN_REDIRECT_URI =
 const LINKEDIN_SCOPE =
   "openid profile w_member_social email r_organization_admin rw_organization_admin r_organization_social w_organization_social r_basicprofile";
 
+const INSTAGRAM_APP_ID = import.meta.env.VITE_INSTAGRAM_APP_ID;
+const INSTAGRAM_REDIRECT_URI =
+  import.meta.env.VITE_INSTAGRAM_REDIRECT_URI ||
+  `${window.location.origin}/auth/instagram/callback`;
+const INSTAGRAM_SCOPE = "user_profile,user_media";
+
 export const initiateLinkedInAuth = createAsyncThunk(
   "socialNetworks/initiateLinkedInAuth",
   async (_, { rejectWithValue }) => {
@@ -334,6 +340,256 @@ export const fetchLinkedInPages = createAsyncThunk(
           ? error.message
           : "Failed to fetch LinkedIn admin pages"
       );
+    }
+  }
+);
+
+export const initiateInstagramAuth = createAsyncThunk(
+  "socialNetworks/initiateInstagramAuth",
+  async (_, { rejectWithValue }) => {
+    try {
+      // Generate state for CSRF protection
+      const state = Math.random().toString(36).substring(2, 15);
+
+      // Save state in localStorage
+      localStorage.setItem("instagram_auth_state", state);
+
+      // Build Instagram authorization URL
+      const authUrl = `https://api.instagram.com/oauth/authorize?client_id=${INSTAGRAM_APP_ID}&redirect_uri=${encodeURIComponent(
+        INSTAGRAM_REDIRECT_URI
+      )}&scope=${INSTAGRAM_SCOPE}&response_type=code&state=${state}`;
+
+      // Redirect to Instagram
+      window.location.href = authUrl;
+
+      return true;
+    } catch (error) {
+      console.error("Error initiating Instagram auth:", error);
+      return rejectWithValue("Failed to initiate Instagram authorization");
+    }
+  }
+);
+
+export const processInstagramCallback = createAsyncThunk(
+  "socialNetworks/processInstagramCallback",
+  async (
+    { code, state }: { code: string; state: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      // Verify state parameter
+      const savedState = localStorage.getItem("instagram_auth_state");
+      if (state !== savedState) {
+        return rejectWithValue("State mismatch. Possible CSRF attack.");
+      }
+
+      // Clean up state
+      localStorage.removeItem("instagram_auth_state");
+
+      // Exchange code for access token via Edge Function
+      const { data, error } = await supabase.functions.invoke(
+        "instagram-exchange-code",
+        {
+          body: { code, redirect_uri: INSTAGRAM_REDIRECT_URI },
+        }
+      );
+
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || "Error calling edge function");
+      }
+
+      if (!data) {
+        throw new Error("No data received from edge function");
+      }
+
+      const {
+        access_token,
+        user_id,
+        expires_in = 3600,
+        username = "Instagram User",
+      } = data;
+
+      if (!access_token) {
+        throw new Error("No access token received");
+      }
+
+      // Get current user
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+
+      if (!userId) {
+        return rejectWithValue("User not authenticated");
+      }
+
+      // Create Instagram data object
+      const instagram_data = {
+        instagram_user_id: user_id,
+        access_token,
+        token_expires_at: new Date(
+          Date.now() + expires_in * 1000
+        ).toISOString(),
+        is_connected: true,
+        username,
+        connected_at: new Date().toISOString(),
+        permissions_granted: ["user_profile", "user_media"],
+      };
+
+      // Update user data
+      const { error: updateError } = await supabase
+        .from("userData")
+        .update({
+          instagram_data,
+        })
+        .eq("uid", userId);
+
+      if (updateError) {
+        console.error("Error updating user data:", updateError);
+        throw new Error(updateError.message || "Failed to update user data");
+      }
+
+      return {
+        isConnected: true,
+        userId: user_id,
+        username,
+        expiresAt: new Date(Date.now() + expires_in * 1000).toISOString(),
+      };
+    } catch (error) {
+      console.error("Error processing Instagram callback:", error);
+      return rejectWithValue(
+        error instanceof Error
+          ? error.message
+          : "Failed to process Instagram authorization"
+      );
+    }
+  }
+);
+
+export const disconnectInstagram = createAsyncThunk(
+  "socialNetworks/disconnectInstagram",
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+
+      if (!userId) {
+        return rejectWithValue("User not authenticated");
+      }
+
+      // Get current Instagram data
+      const { data: user, error: fetchError } = await supabase
+        .from("userData")
+        .select("instagram_data")
+        .eq("uid", userId)
+        .single();
+
+      if (fetchError) throw new Error(fetchError.message);
+
+      // Update is_connected to false
+      const updatedInstagramData = user.instagram_data
+        ? { ...user.instagram_data, is_connected: false }
+        : null;
+
+      // Update database
+      const { error } = await supabase
+        .from("userData")
+        .update({
+          instagram_data: updatedInstagramData,
+        })
+        .eq("uid", userId);
+
+      if (error) throw new Error(error.message);
+
+      return true;
+    } catch (error) {
+      console.error("Error disconnecting Instagram:", error);
+      return rejectWithValue("Failed to disconnect Instagram");
+    }
+  }
+);
+
+export const checkInstagramConnection = createAsyncThunk(
+  "socialNetworks/checkInstagramConnection",
+  async (_, { rejectWithValue }) => {
+    try {
+      // Get current user
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) return { isConnected: false };
+
+      const { data, error } = await supabase
+        .from("userData")
+        .select("instagram_data")
+        .eq("uid", authData.user.id)
+        .single();
+
+      if (error) throw new Error(error.message);
+
+      // Check if user has Instagram data
+      if (!data || !data.instagram_data || !data.instagram_data.is_connected) {
+        return { isConnected: false };
+      }
+
+      // Check if token is expired
+      const tokenExpired =
+        new Date(data.instagram_data.token_expires_at) < new Date();
+
+      if (tokenExpired) {
+        return { isConnected: false };
+      }
+
+      // Verify token with Instagram API through Edge Function
+      try {
+        const { data: verifyData, error: verifyError } =
+          await supabase.functions.invoke("instagram-verify-token", {
+            body: { access_token: data.instagram_data.access_token },
+          });
+
+        if (verifyError) {
+          console.error("Error calling verify token function:", verifyError);
+          return {
+            isConnected: true,
+            userId: data.instagram_data.instagram_user_id,
+            username: data.instagram_data.username,
+            expiresAt: data.instagram_data.token_expires_at,
+            warning: "Connection could not be verified due to server issues",
+          };
+        }
+
+        if (!verifyData.isValid) {
+          // Token not valid, update database
+          await supabase
+            .from("userData")
+            .update({
+              instagram_data: {
+                ...data.instagram_data,
+                is_connected: false,
+              },
+            })
+            .eq("uid", authData.user.id);
+
+          return { isConnected: false };
+        }
+
+        return {
+          isConnected: true,
+          userId: data.instagram_data.instagram_user_id,
+          username: data.instagram_data.username,
+          expiresAt: data.instagram_data.token_expires_at,
+        };
+      } catch (apiError) {
+        console.error("Error verifying Instagram token:", apiError);
+
+        return {
+          isConnected: true,
+          userId: data.instagram_data.instagram_user_id,
+          username: data.instagram_data.username,
+          expiresAt: data.instagram_data.token_expires_at,
+          warning: "Connection could not be verified due to network issues",
+        };
+      }
+    } catch (error) {
+      console.error("Error checking Instagram connection:", error);
+      return rejectWithValue("Failed to check Instagram connection status");
     }
   }
 );
