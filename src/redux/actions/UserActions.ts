@@ -159,7 +159,7 @@ export const addUser = createAsyncThunk(
       }
 
       try {
-        await fetch("/api/send-welcome-email", {
+        await fetch("/api/create-user-template", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
