@@ -158,6 +158,23 @@ export const addUser = createAsyncThunk(
         };
       }
 
+      try {
+        await fetch("/api/send-welcome-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: userRecord.email,
+            password: userRecord.password,
+            firstName: userRecord.firstName,
+            lastName: userRecord.lastName,
+          }),
+        });
+      } catch (emailError) {
+        console.error("Error sending welcome email:", emailError);
+      }
+
       // Return the complete record to update Redux state
       return {
         user: userRecord,
