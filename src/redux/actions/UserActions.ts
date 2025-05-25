@@ -180,7 +180,7 @@ export const addUser = createAsyncThunk(
 
       // 6. Send a welcome email to the user
       try {
-        await fetch("/api/create-user-template", {
+        const emailResponse = await fetch("/api/create-user-template", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -192,8 +192,20 @@ export const addUser = createAsyncThunk(
             lastName: userRecord.last_name,
           }),
         });
+
+        if (!emailResponse.ok) {
+          const errorData = await emailResponse.json().catch(() => ({}));
+          console.error("Failed to send welcome email:", {
+            status: emailResponse.status,
+            statusText: emailResponse.statusText,
+            error: errorData,
+          });
+        } else {
+          const emailResult = await emailResponse.json();
+          console.log("Welcome email sent successfully:", emailResult);
+        }
       } catch (emailError) {
-        console.error("Error sending welcome email:", emailError);
+        console.error("Network error sending welcome email:", emailError);
       }
 
       // 7. Return the created user data
