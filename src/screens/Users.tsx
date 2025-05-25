@@ -15,8 +15,10 @@ import { Alert } from "../components/shared/ui/Alert";
 import { clearErrors } from "../redux/slices/UserSlice";
 import { Button } from "../components/shared/ui/Button";
 import { errorMessages } from "../helpers";
+import { useTranslation } from "react-i18next";
 
 export const Users = () => {
+  const { t } = useTranslation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const dispatch = useAppDispatch();
@@ -98,10 +100,17 @@ export const Users = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Users</h1>
-      <Button title="Create User" onClick={handleOpenDrawer} />
+      <h3 className="text-base/7 font-semibold text-gray-900">
+        {t("users.title")}
+      </h3>
+      <div className="flex justify-between items-center mb-4">
+        <p className="mt-1 max-w-7xl text-sm/6 text-gray-500">
+          {t("users.description")}
+        </p>
+      </div>
+      <Button title={t("users.createUser")} onClick={handleOpenDrawer} />
       <Drawer
-        title={isEditMode ? "Edit User" : "Create User"}
+        title={isEditMode ? t("users.editUser") : t("users.createUser")}
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       >

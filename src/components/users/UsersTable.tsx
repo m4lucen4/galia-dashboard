@@ -12,6 +12,7 @@ import { LoadingSpinner } from "../shared/ui/LoadingSpinner";
 import { useAppDispatch } from "../../redux/hooks";
 import { fetchUserByUid } from "../../redux/actions/UserActions";
 import { Button } from "../shared/ui/Button";
+import { useTranslation } from "react-i18next";
 
 type UsersTableProps = {
   users: UserDataProps[];
@@ -24,6 +25,7 @@ export const UsersTable = ({
   isLoading,
   onEditUser,
 }: UsersTableProps) => {
+  const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([]);
   const dispatch = useAppDispatch();
 
@@ -36,23 +38,34 @@ export const UsersTable = ({
 
   const columns = [
     columnHelper.accessor("first_name", {
-      header: "First Name",
+      header: t("users.firstName"),
       cell: (info) => `${info.getValue()} ${info.row.original.last_name}`,
     }),
     columnHelper.accessor("email", {
-      header: "Email",
+      header: t("users.email"),
     }),
     columnHelper.accessor("company", {
-      header: "Company",
+      header: t("users.company"),
       cell: (info) => info.getValue() || "-",
     }),
     columnHelper.accessor("role", {
-      header: "Role",
-      cell: (info) =>
-        info.getValue() === "admin" ? "Administrador" : "Usuario",
+      header: t("users.role"),
+      cell: (info) => {
+        const role = info.getValue();
+        switch (role) {
+          case "admin":
+            return t("users.admin");
+          case "customer":
+            return t("users.customer");
+          case "publisher":
+            return t("users.publisher");
+          default:
+            return role;
+        }
+      },
     }),
     columnHelper.accessor("active", {
-      header: "State",
+      header: t("users.state"),
       cell: (info) => (
         <span
           className={`px-2 py-1 text-xs font-semibold rounded-full ${
@@ -61,17 +74,17 @@ export const UsersTable = ({
               : "bg-red-100 text-red-800"
           }`}
         >
-          {info.getValue() ? "Active" : "Inactive"}
+          {info.getValue() ? t("users.active") : t("users.inactive")}
         </span>
       ),
     }),
     columnHelper.display({
       id: "actions",
-      header: "Actions",
+      header: t("users.actions"),
       cell: (props) => (
         <div className="flex space-x-2">
           <Button
-            title="Edit"
+            title={t("users.edit")}
             onClick={() => handleEditClick(props.row.original)}
           />
         </div>

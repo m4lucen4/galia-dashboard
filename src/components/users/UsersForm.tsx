@@ -3,6 +3,7 @@ import { CreateUserProps } from "../../redux/actions/UserActions";
 import { InputField } from "../shared/ui/InputField";
 import { Button } from "../shared/ui/Button";
 import { SelectField } from "../shared/ui/SelectField";
+import { useTranslation } from "react-i18next";
 
 interface UsersFormProps {
   initialData?: CreateUserProps;
@@ -17,6 +18,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
   loading,
   isEditMode = false,
 }) => {
+  const { t } = useTranslation();
   const defaultFormData: CreateUserProps = {
     first_name: "",
     last_name: "",
@@ -81,7 +83,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <InputField
           id="first_name"
-          label="First Name"
+          label={t("users.firstName")}
           type="text"
           value={formData.first_name}
           onChange={handleChange}
@@ -89,7 +91,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
         />
         <InputField
           id="last_name"
-          label="Last Name"
+          label={t("users.lastName")}
           type="text"
           value={formData.last_name}
           onChange={handleChange}
@@ -97,7 +99,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
         />
         <InputField
           id="email"
-          label="Email"
+          label={t("users.email")}
           type="email"
           value={formData.email}
           onChange={handleChange}
@@ -106,7 +108,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
         />
         <InputField
           id="phone"
-          label="Phone"
+          label={t("users.phone")}
           type="tel"
           value={formData.phone}
           onChange={handleChange}
@@ -114,14 +116,14 @@ export const UsersForm: React.FC<UsersFormProps> = ({
         />
         <InputField
           id="company"
-          label="Company"
+          label={t("users.company")}
           type="text"
           value={formData.company}
           onChange={handleChange}
         />
         <InputField
           id="vat"
-          label="VAT"
+          label={t("users.vat")}
           type="text"
           value={formData.vat}
           onChange={handleChange}
@@ -130,7 +132,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
         {isEditMode ? null : (
           <InputField
             id="password"
-            label="Password"
+            label={t("users.password")}
             type="password"
             value={formData.password}
             onChange={handleChange}
@@ -140,13 +142,13 @@ export const UsersForm: React.FC<UsersFormProps> = ({
         )}
         <SelectField
           id="role"
-          label="Role"
+          label={t("users.role")}
           value={formData.role}
           onChange={handleChange}
           options={[
-            { value: "customer", label: "Customer" },
-            { value: "publisher", label: "Publisher" },
-            { value: "admin", label: "Administrator" },
+            { value: "customer", label: t("users.customer") },
+            { value: "publisher", label: t("users.publisher") },
+            { value: "admin", label: t("users.admin") },
           ]}
           required
           className="mb-2"
@@ -161,14 +163,14 @@ export const UsersForm: React.FC<UsersFormProps> = ({
             className="h-4 w-4 text-black focus:ring-gray-400 border-gray-300 rounded"
           />
           <label htmlFor="active" className="ml-2 block text-sm text-gray-700">
-            Active?
+            {t("users.active")}
           </label>
         </div>
       </div>
       <div className="mt-6">
         <Button
           fullWidth
-          title={isEditMode ? "Edit User" : "Create User"}
+          title={isEditMode ? t("users.editUser") : t("users.createUser")}
           disabled={loading}
           type="submit"
         />

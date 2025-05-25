@@ -28,6 +28,28 @@
     "titleRecoveryPassword": "Recuperar contraseña",
     "descriptionRecoveryPassword": "Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña."
   },
+  "users": {
+    "title": "Usuarios",
+    "description": "Gestiona los usuarios de la plataforma.",
+    "createUser": "Crear Usuario",
+    "editUser": "Editar Usuario",
+    "firstName": "Nombre",
+    "lastName": "Apellidos",
+    "email": "Correo Electrónico",
+    "phone": "Teléfono",
+    "company": "Empresa",
+    "vat": "NIF",
+    "password": "Contraseña",
+    "role": "Rol",
+    "admin": "Administrador",
+    "customer": "Cliente",
+    "publisher": "Publicador",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "state": "Estado",
+    "actions": "Acciones",
+    "edit": "Editar"
+  },
   "settings": {
     "title": "Ajustes",
     "description": "Configura tus redes sociales y preferencias.",
