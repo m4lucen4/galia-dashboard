@@ -4,11 +4,6 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  console.log("Environment check:", {
-    hasResendKey: !!process.env.RESEND_API_KEY,
-    requestMethod: req.method,
-    requestBody: req.body,
-  });
   // Configurar CORS
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Origin", "*");
