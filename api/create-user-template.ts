@@ -29,7 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const { data, error } = await resend.emails.send({
-      from: "Mocklab <noreply@portaltraducciones.eulen.com>",
+      from: "Mocklab <noreply@mocklab.app>",
       to: [email],
       subject: "Bienvenido a mocklab, este es tu usuario",
       html: `
