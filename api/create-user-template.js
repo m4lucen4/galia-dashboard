@@ -1,9 +1,8 @@
-import { Resend } from "resend";
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+const { Resend } = require("resend");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req, res) {
   // Configurar CORS
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -28,7 +27,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .json({ message: "Email and password are required" });
     }
 
-    const { error } = await resend.emails.send({
+    if (!process.env.RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is not configured");
+      return res.status(500).json({ message: "Email service not configured" });
+    }
+
+    const { data, error } = await resend.emails.send({
       from: "Mocklab <noreply@portaltraducciones.eulen.com>",
       to: [email],
       subject: "Bienvenido a mocklab, este es tu usuario",
@@ -118,12 +122,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (error) {
       console.error("Error sending welcome email:", error);
-      return res.status(400).json({ error });
+      return res.status(400).json({ error: error.message || error });
     }
 
-    return res.status(200).json({ success: true });
+    console.log("Email sent successfully:", data);
+    return res.status(200).json({ success: true, id: data?.id });
   } catch (error) {
     console.error("Error in welcome email handler:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
-}
+};
