@@ -99,7 +99,21 @@ export const addUser = createAsyncThunk(
   "users/addUser",
   async (userData: CreateUserProps, { rejectWithValue }) => {
     try {
-      // 1. Create user in Supabase Authentication
+      // 1. Save the current admin session
+      const sessionResult = await supabase.auth.getSession();
+      const currentSession = sessionResult.data.session;
+
+      if (!currentSession) {
+        return rejectWithValue({
+          message: "Admin user is not authenticated",
+          status: 401,
+        });
+      }
+
+      const adminAccessToken = currentSession.access_token;
+      const adminRefreshToken = currentSession.refresh_token;
+
+      // 2. Create user in the authentication system
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
@@ -119,7 +133,13 @@ export const addUser = createAsyncThunk(
         });
       }
 
-      // 2. Create user in the userData table
+      // 3. Restore the admin session
+      await supabase.auth.setSession({
+        access_token: adminAccessToken,
+        refresh_token: adminRefreshToken,
+      });
+
+      // 4. Create user in the database
       const { error: dbError } = await supabase.from("userData").insert({
         uid: authData.user.id,
         active: userData.active,
@@ -139,7 +159,7 @@ export const addUser = createAsyncThunk(
         });
       }
 
-      // 3. Get the complete record for verification and state update
+      // 5. Recover the user data from the database
       const { data: userRecord, error: fetchError } = await supabase
         .from("userData")
         .select("*")
@@ -158,6 +178,7 @@ export const addUser = createAsyncThunk(
         };
       }
 
+      // 6. Send a welcome email to the user
       try {
         await fetch("/api/create-user-template", {
           method: "POST",
@@ -166,16 +187,16 @@ export const addUser = createAsyncThunk(
           },
           body: JSON.stringify({
             email: userRecord.email,
-            password: userRecord.password,
-            firstName: userRecord.firstName,
-            lastName: userRecord.lastName,
+            password: userData.password,
+            firstName: userRecord.first_name,
+            lastName: userRecord.last_name,
           }),
         });
       } catch (emailError) {
         console.error("Error sending welcome email:", emailError);
       }
 
-      // Return the complete record to update Redux state
+      // 7. Return the created user data
       return {
         user: userRecord,
         message: "User created successfully",
