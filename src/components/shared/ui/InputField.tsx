@@ -23,6 +23,7 @@ interface InputFieldProps {
   error?: string;
   min?: string;
   helperText?: string;
+  className?: string;
 }
 
 export const InputField: React.FC<InputFieldProps> = ({
@@ -37,9 +38,12 @@ export const InputField: React.FC<InputFieldProps> = ({
   error,
   min,
   helperText,
+  className,
 }) => {
   const baseClassName =
     "block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-gray-800 sm:text-sm/6";
+
+  const inputClassName = className || baseClassName;
 
   return (
     <div>
@@ -56,7 +60,7 @@ export const InputField: React.FC<InputFieldProps> = ({
           onChange={onChange as React.ChangeEventHandler<HTMLTextAreaElement>}
           required={required}
           value={value}
-          className={`${baseClassName} min-h-[6em]`}
+          className={`${inputClassName} min-h-[6em]`}
           rows={6}
         />
       ) : (
@@ -69,7 +73,7 @@ export const InputField: React.FC<InputFieldProps> = ({
           required={required}
           type={type}
           value={value}
-          className={baseClassName}
+          className={inputClassName}
           min={min}
         />
       )}

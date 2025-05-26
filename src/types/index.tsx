@@ -29,6 +29,7 @@ export type UserDataProps = {
   company: string;
   vat: string;
   role: string;
+  language?: string;
 };
 
 export type ProjectImageData = {

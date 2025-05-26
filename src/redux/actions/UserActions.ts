@@ -200,9 +200,6 @@ export const addUser = createAsyncThunk(
             statusText: emailResponse.statusText,
             error: errorData,
           });
-        } else {
-          const emailResult = await emailResponse.json();
-          console.log("Welcome email sent successfully:", emailResult);
         }
       } catch (emailError) {
         console.error("Network error sending welcome email:", emailError);
@@ -242,6 +239,8 @@ export const updateUser = createAsyncThunk(
       if (userData.company !== undefined) updateData.company = userData.company;
       if (userData.vat !== undefined) updateData.vat = userData.vat;
       if (userData.role !== undefined) updateData.role = userData.role;
+      if (userData.language !== undefined)
+        updateData.language = userData.language;
 
       const { error: dbError } = await supabase
         .from("userData")

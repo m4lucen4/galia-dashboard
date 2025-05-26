@@ -186,5 +186,24 @@
     "noLinkedlnPages": "No hay páginas de LinkedIn disponibles",
     "personalProfile": "Perfil personal",
     "companyPage": "Página de empresa"
+  },
+  "profile": {
+    "title": "Perfil",
+    "description": "Gestiona tu perfil y preferencias",
+    "changePassword": "Cambiar contraseña",
+    "firstName": "Nombre",
+    "lastName": "Apellidos",
+    "email": "Correo electrónico",
+    "phone": "Teléfono",
+    "company": "Empresa",
+    "vat": "NIF",
+    "language": "Idioma",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "editProfile": "Editar perfil",
+    "titleChangePassword": "¿Quieres cambiar tu contraseña?",
+    "descriptionChangePassword": "Por favor, introduce tu nueva contraseña y confírmala",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Confirmar contraseña"
   }
 }

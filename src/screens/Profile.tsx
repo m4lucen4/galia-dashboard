@@ -13,6 +13,8 @@ import { clearErrors } from "../redux/slices/UserSlice";
 import { InputField } from "../components/shared/ui/InputField";
 import { LoadingSpinner } from "../components/shared/ui/LoadingSpinner";
 import { LockClosedIcon } from "@heroicons/react/24/outline";
+import { useTranslation } from "react-i18next";
+import { SelectField } from "../components/shared/ui/SelectField";
 
 export const Profile = () => {
   const user = useAppSelector((state: RootState) => state.auth.user);
@@ -22,6 +24,7 @@ export const Profile = () => {
   const { changePasswordRequest } = useAppSelector(
     (state: RootState) => state.auth
   );
+  const { t, i18n } = useTranslation();
   const dispatch = useAppDispatch();
   const [passwordError, setPasswordError] = useState("");
   const [showPasswordAlert, setShowPasswordAlert] = useState(false);
@@ -50,6 +53,7 @@ export const Profile = () => {
         active: userData.active,
         role: userData.role,
         password: "",
+        language: userData.language || "",
       });
     }
   }, [userData]);
@@ -108,16 +112,6 @@ export const Profile = () => {
 
     if (!formData) return;
 
-    if (
-      formData.password &&
-      formData.password.length > 0 &&
-      formData.password.length < 6
-    ) {
-      setPasswordError("La contraseña debe tener al menos 6 caracteres");
-      return;
-    }
-
-    // Si la contraseña está vacía, eliminamos la propiedad para no enviarla
     const dataToSubmit = { ...formData };
     if (!dataToSubmit.password || dataToSubmit.password.trim() === "") {
       delete dataToSubmit.password;
@@ -131,6 +125,15 @@ export const Profile = () => {
         }
         setIsEditing(false);
       });
+  };
+
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedLanguage = e.target.value;
+    i18n.changeLanguage(selectedLanguage);
+
+    if (formData) {
+      setFormData({ ...formData, language: selectedLanguage });
+    }
   };
 
   const handleEdit = () => {
@@ -152,6 +155,7 @@ export const Profile = () => {
         active: userData.active,
         role: userData.role,
         password: "",
+        language: userData.language || "",
       });
     }
   };
@@ -177,148 +181,145 @@ export const Profile = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h3 className="text-base/7 font-semibold text-gray-900">Profile</h3>
+      <h3 className="text-base/7 font-semibold text-gray-900">
+        {t("profile.title")}
+      </h3>
       <div className="flex justify-between items-center">
         <p className="mt-1 max-w-2xl text-sm/6 text-gray-500">
-          Personal details and settings.
+          {t("profile.description")}
         </p>
         <span
           className="text-sm/6 text-gray-500 hover:text-black cursor-pointer underline"
           onClick={handleChangePassword}
         >
-          Change your password
+          {t("profile.changePassword")}
         </span>
       </div>
       {formData && userData && (
         <div>
           <form onSubmit={handleSubmit}>
             <div className="mt-6 border-t border-gray-100">
-              <dl className="divide-y divide-gray-100">
-                <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                  <dt className="text-sm/6 font-medium text-gray-900">
-                    First Name
-                  </dt>
-                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                    <input
-                      id="first_name"
-                      name="first_name"
-                      onChange={handleChange}
-                      required
-                      disabled={!isEditing}
-                      type="text"
-                      value={formData.first_name}
-                      className={`block w-full py-1.5 text-base text-gray-900 ${
-                        isEditing
-                          ? "bg-transparent outline-none px-0 border-b-2 border-gray-800 focus:border-black"
-                          : "bg-transparent border-none outline-none px-0 border-b border-transparent hover:border-gray-200"
-                      } sm:text-sm/6`}
-                    />
-                  </dd>
+              <div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <InputField
+                  id="first_name"
+                  label={t("profile.firstName")}
+                  type="text"
+                  disabled={!isEditing}
+                  value={formData.first_name ?? ""}
+                  onChange={handleChange}
+                  required
+                  className={`block w-full py-1.5 text-base text-gray-900 ${
+                    isEditing
+                      ? "bg-transparent outline-none px-0 border-b-2 border-gray-800 focus:border-black"
+                      : "bg-transparent border-none outline-none px-0 border-b border-transparent hover:border-gray-200"
+                  } sm:text-sm/6`}
+                />
+                <InputField
+                  id="last_name"
+                  label={t("profile.lastName")}
+                  type="text"
+                  disabled={!isEditing}
+                  value={formData.last_name ?? ""}
+                  onChange={handleChange}
+                  required
+                  className={`block w-full py-1.5 text-base text-gray-900 ${
+                    isEditing
+                      ? "bg-transparent outline-none px-0 border-b-2 border-gray-800 focus:border-black"
+                      : "bg-transparent border-none outline-none px-0 border-b border-transparent hover:border-gray-200"
+                  } sm:text-sm/6`}
+                />
+              </div>
+              <div className="py-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <dt className="text-sm/6 font-medium text-gray-900">
+                      Email
+                    </dt>
+                    <dd className="mt-1 text-sm/6 text-gray-700">
+                      {userData.email}
+                    </dd>
+                  </div>
+                  <InputField
+                    id="phone"
+                    label={t("profile.phone")}
+                    type="text"
+                    disabled={!isEditing}
+                    value={formData.phone ?? ""}
+                    onChange={handleChange}
+                    required
+                    className={`block w-full py-1.5 text-base text-gray-900 ${
+                      isEditing
+                        ? "bg-transparent outline-none px-0 border-b-2 border-gray-800 focus:border-black"
+                        : "bg-transparent border-none outline-none px-0 border-b border-transparent hover:border-gray-200"
+                    } sm:text-sm/6`}
+                  />
                 </div>
-                <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                  <dt className="text-sm/6 font-medium text-gray-900">
-                    Last Name
-                  </dt>
-                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                    <input
-                      id="last_name"
-                      name="last_name"
-                      onChange={handleChange}
-                      required
-                      disabled={!isEditing}
-                      type="text"
-                      value={formData.last_name}
-                      className={`block w-full py-1.5 text-base text-gray-900 ${
-                        isEditing
-                          ? "bg-transparent outline-none px-0 border-b-2 border-gray-800 focus:border-black"
-                          : "bg-transparent border-none outline-none px-0 border-b border-transparent hover:border-gray-200"
-                      } sm:text-sm/6`}
-                    />
-                  </dd>
-                </div>
-                <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                  <dt className="text-sm/6 font-medium text-gray-900">Email</dt>
-                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                    {userData.email}
-                  </dd>
-                </div>
-                <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                  <dt className="text-sm/6 font-medium text-gray-900">Phone</dt>
-                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                    <input
-                      id="phone"
-                      name="phone"
-                      onChange={handleChange}
-                      required
-                      disabled={!isEditing}
-                      type="text"
-                      value={formData.phone}
-                      className={`block w-full py-1.5 text-base text-gray-900 ${
-                        isEditing
-                          ? "bg-transparent outline-none px-0 border-b-2 border-gray-800 focus:border-black"
-                          : "bg-transparent border-none outline-none px-0 border-b border-transparent hover:border-gray-200"
-                      } sm:text-sm/6`}
-                    />
-                  </dd>
-                </div>
-                <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                  <dt className="text-sm/6 font-medium text-gray-900">
-                    Company
-                  </dt>
-                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                    <input
-                      id="company"
-                      name="company"
-                      onChange={handleChange}
-                      required
-                      disabled={!isEditing}
-                      type="text"
-                      value={formData.company}
-                      className={`block w-full py-1.5 text-base text-gray-900 ${
-                        isEditing
-                          ? "bg-transparent outline-none px-0 border-b-2 border-gray-800 focus:border-black"
-                          : "bg-transparent border-none outline-none px-0 border-b border-transparent hover:border-gray-200"
-                      } sm:text-sm/6`}
-                    />
-                  </dd>
-                </div>
-                <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                  <dt className="text-sm/6 font-medium text-gray-900">VAT</dt>
-                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                    <input
-                      id="vat"
-                      name="vat"
-                      onChange={handleChange}
-                      required
-                      disabled={!isEditing}
-                      type="text"
-                      value={formData.vat}
-                      className={`block w-full py-1.5 text-base text-gray-900 ${
-                        isEditing
-                          ? "bg-transparent outline-none px-0 border-b-2 border-gray-800 focus:border-black"
-                          : "bg-transparent border-none outline-none px-0 border-b border-transparent hover:border-gray-200"
-                      } sm:text-sm/6`}
-                    />
-                  </dd>
-                </div>
-              </dl>
+              </div>
+              <div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <InputField
+                  id="company"
+                  label={t("profile.company")}
+                  type="text"
+                  disabled={!isEditing}
+                  value={formData.company ?? ""}
+                  onChange={handleChange}
+                  required
+                  className={`block w-full py-1.5 text-base text-gray-900 ${
+                    isEditing
+                      ? "bg-transparent outline-none px-0 border-b-2 border-gray-800 focus:border-black"
+                      : "bg-transparent border-none outline-none px-0 border-b border-transparent hover:border-gray-200"
+                  } sm:text-sm/6`}
+                />
+                <InputField
+                  id="vat"
+                  label={t("profile.vat")}
+                  type="text"
+                  disabled={!isEditing}
+                  value={formData.vat ?? ""}
+                  onChange={handleChange}
+                  required
+                  className={`block w-full py-1.5 text-base text-gray-900 ${
+                    isEditing
+                      ? "bg-transparent outline-none px-0 border-b-2 border-gray-800 focus:border-black"
+                      : "bg-transparent border-none outline-none px-0 border-b border-transparent hover:border-gray-200"
+                  } sm:text-sm/6`}
+                />
+              </div>
+              <div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <SelectField
+                  id="language"
+                  className={`block w-full py-1.5 text-base text-gray-900 ${
+                    isEditing
+                      ? "bg-transparent outline-none px-0 border-b-2 border-gray-800 focus:border-black"
+                      : "bg-transparent border-none outline-none px-0 border-b border-transparent hover:border-gray-200"
+                  } sm:text-sm/6`}
+                  disabled={!isEditing}
+                  label={t("profile.language")}
+                  value={formData.language ?? ""}
+                  onChange={handleLanguageChange}
+                  options={[
+                    { value: "es", label: "Español" },
+                    { value: "en", label: "English" },
+                  ]}
+                />
+              </div>
             </div>
             {isEditing ? (
               <div className="flex space-x-3 mt-4">
                 <Button
-                  title="Save"
+                  title={t("profile.save")}
                   type="submit"
                   disabled={userUpdateRequest?.inProgress}
                 />
                 <Button
-                  title="Cancel"
+                  title={t("profile.cancel")}
                   secondary
                   onClick={handleCancel}
                   disabled={userUpdateRequest?.inProgress}
                 />
               </div>
             ) : (
-              <Button title="Edit profile" onClick={handleEdit} />
+              <Button title={t("profile.editProfile")} onClick={handleEdit} />
             )}
           </form>
         </div>
@@ -332,15 +333,15 @@ export const Profile = () => {
       )}
       {showPasswordAlert && (
         <Alert
-          title="Do you want to change your password?"
-          description="Please enter your new password."
+          title={t("profile.titleChangePassword")}
+          description={t("profile.descriptionChangePassword")}
           icon={LockClosedIcon}
           onAccept={handlePasswordAlertAccept}
           onCancel={handlePasswordAlertCancel}
         >
           <InputField
             id="password"
-            label="New Password"
+            label={t("profile.newPassword")}
             type="password"
             value={newPassword}
             onChange={handlePasswordChange}
@@ -350,7 +351,7 @@ export const Profile = () => {
           />
           <InputField
             id="repeatPassword"
-            label="Repeat new Password"
+            label={t("profile.confirmPassword")}
             type="password"
             value={repeatPassword}
             onChange={handlePasswordChange}

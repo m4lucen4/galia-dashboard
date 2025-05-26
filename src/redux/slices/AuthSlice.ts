@@ -82,6 +82,7 @@ const authSlice = createSlice({
             company: action.payload.userData?.company || "",
             vat: action.payload.userData?.vat || "",
             role: action.payload.userData?.role || "",
+            language: action.payload.userData?.language || "",
             updated_at: action.payload.userData?.updated_at || "",
           };
         }
@@ -123,6 +124,7 @@ const authSlice = createSlice({
             vat: action.payload.userData?.vat || "",
             role: action.payload.userData?.role || "",
             updated_at: action.payload.userData?.updated_at || "",
+            language: action.payload.userData?.language || "",
           };
           state.token = action.payload.session?.access_token;
           state.authenticated = true;

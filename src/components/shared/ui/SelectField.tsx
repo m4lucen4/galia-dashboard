@@ -8,6 +8,7 @@ interface Option {
 interface SelectFieldProps {
   id: string;
   label: string;
+  disabled?: boolean;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   options: Option[];
@@ -20,26 +21,30 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   id,
   label,
   value,
+  disabled = false,
   onChange,
   options,
   required = false,
-  className = "",
+  className,
   placeholder,
 }) => {
+  const baseClassName =
+    "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500";
+
+  const inputClassName = className || baseClassName;
   return (
     <div className={className}>
-      <label
-        htmlFor={id}
-        className="block text-sm font-medium text-gray-700 mb-1"
-      >
-        {label} {required && <span className="text-red-500">*</span>}
+      <label className="text-base text-sm text-black" htmlFor={id}>
+        {label}
+        {required && <span className="ml-1 text-blue-600 font-medium">*</span>}
       </label>
       <select
         id={id}
         name={id}
         value={value}
+        disabled={disabled}
         onChange={onChange}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className={inputClassName}
         required={required}
       >
         {placeholder && (
