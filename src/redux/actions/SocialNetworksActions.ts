@@ -396,15 +396,20 @@ export const processInstagramCallback = createAsyncThunk(
         throw new Error("No data received from edge function");
       }
 
-      const {
-        access_token,
-        user_id,
-        expires_in = 3600,
-        username = "Instagram User",
-      } = data;
+      const { access_token = 3600 } = data;
 
       if (!access_token) {
         throw new Error("No access token received");
+      }
+
+      // Verify token and get user information using the verify token function
+      const { data: verifyData, error: verifyError } =
+        await supabase.functions.invoke("instagram-verify-token", {
+          body: { access_token },
+        });
+
+      if (verifyError || !verifyData || !verifyData.isValid) {
+        throw new Error("Failed to verify token or get user information");
       }
 
       // Get current user
@@ -415,17 +420,29 @@ export const processInstagramCallback = createAsyncThunk(
         return rejectWithValue("User not authenticated");
       }
 
-      // Create Instagram data object
+      // Extract user information from verify response
+      const { tokenData, userData: instagramUserData } = verifyData;
+
+      // Create Instagram data object with complete information
       const instagram_data = {
-        instagram_user_id: user_id,
+        instagram_user_id: instagramUserData.id,
         access_token,
         token_expires_at: new Date(
-          Date.now() + expires_in * 1000
+          tokenData.expires_at * 1000 // Convert from Unix timestamp
+        ).toISOString(),
+        data_access_expires_at: new Date(
+          tokenData.data_access_expires_at * 1000
         ).toISOString(),
         is_connected: true,
-        username,
+        username: instagramUserData.name,
+        user_id: instagramUserData.id,
+        app_id: tokenData.app_id,
         connected_at: new Date().toISOString(),
-        permissions_granted: ["user_profile", "user_media"],
+        permissions_granted: tokenData.scopes,
+        granular_scopes: tokenData.granular_scopes,
+        token_type: tokenData.type,
+        application: tokenData.application,
+        issued_at: new Date(tokenData.issued_at * 1000).toISOString(),
       };
 
       // Update user data
@@ -443,9 +460,9 @@ export const processInstagramCallback = createAsyncThunk(
 
       return {
         isConnected: true,
-        userId: user_id,
-        username,
-        expiresAt: new Date(Date.now() + expires_in * 1000).toISOString(),
+        userId: instagramUserData.id,
+        username: instagramUserData.name,
+        expiresAt: new Date(tokenData.expires_at * 1000).toISOString(),
       };
     } catch (error) {
       console.error("Error processing Instagram callback:", error);

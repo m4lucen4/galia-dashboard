@@ -74,7 +74,7 @@ export const Settings = () => {
 
   const handleDisconnectInstagram = () => {
     dispatch(disconnectInstagram());
-    setShowAlertDisconneted(false);
+    setShowAlertInstagramDisconneted(false);
   };
 
   const handleTogglePagesSection = () => {
@@ -119,7 +119,7 @@ export const Settings = () => {
                   </div>
                 ) : instagram.isConnected ? (
                   <button
-                    onClick={() => setShowAlertDisconneted(true)}
+                    onClick={() => setShowAlertInstagramDisconneted(true)}
                     disabled={disconnectInstagramInRequest.inProgress}
                     className={`absolute -bottom-2 -right-2 ${
                       disconnectLinkedInRequest.inProgress
