@@ -21,6 +21,11 @@ export const InstagramCallback = () => {
 
         if (error) {
           setStatus(`Authorization failed: ${errorDescription || error}`);
+          console.error(
+            "Instagram authorization error:",
+            error,
+            errorDescription
+          );
           //setTimeout(() => navigate("/settings"), 3000);
           return;
         }
