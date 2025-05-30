@@ -21,18 +21,13 @@ export const InstagramCallback = () => {
 
         if (error) {
           setStatus(`Authorization failed: ${errorDescription || error}`);
-          console.error(
-            "Instagram authorization error:",
-            error,
-            errorDescription
-          );
-          //setTimeout(() => navigate("/settings"), 3000);
+          setTimeout(() => navigate("/settings"), 3000);
           return;
         }
 
         if (!code || !state) {
           setStatus("Missing required parameters");
-          //setTimeout(() => navigate("/settings"), 3000);
+          setTimeout(() => navigate("/settings"), 3000);
           return;
         }
 
@@ -42,7 +37,7 @@ export const InstagramCallback = () => {
 
         if (result) {
           setStatus("Instagram successfully connected!");
-          //setTimeout(() => navigate("/settings"), 1500);
+          setTimeout(() => navigate("/settings"), 1500);
         }
       } catch (error: unknown) {
         setStatus(
@@ -50,7 +45,7 @@ export const InstagramCallback = () => {
             error instanceof Error ? error.message : "Unknown error"
           }`
         );
-        //setTimeout(() => navigate("/settings"), 3000);
+        setTimeout(() => navigate("/settings"), 3000);
       }
     };
 
