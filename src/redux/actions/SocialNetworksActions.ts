@@ -350,9 +350,9 @@ export const initiateInstagramAuth = createAsyncThunk(
       const state = Math.random().toString(36).substring(2, 15);
       localStorage.setItem("instagram_auth_state", state);
 
-      const authUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=${INSTAGRAM_APP_ID}&redirect_uri=${encodeURIComponent(
+      const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${INSTAGRAM_APP_ID}&redirect_uri=${encodeURIComponent(
         INSTAGRAM_REDIRECT_URI
-      )}&response_type=code&scope=instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments,instagram_business_content_publish,instagram_business_manage_insights&state=${state}`;
+      )}&state=${state}&response_type=code&scope=pages_show_list,instagram_basic,instagram_content_publish,business_management`;
 
       window.location.href = authUrl;
       return true;
