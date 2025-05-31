@@ -70,7 +70,16 @@
     "disconnectLinkedIn": "Do you want to disconnect your LinkedIn account?",
     "disconnectLinkedInDescription": "Once disconnected, you will no longer be able to publish on LinkedIn.",
     "disconnectInstagram": "Do you want to disconnect your Instagram account?",
-    "disconnectInstagramDescription": "Once disconnected, you will no longer be able to publish on Instagram."
+    "disconnectInstagramDescription": "Once disconnected, you will no longer be able to publish on Instagram.",
+    "publishInstagramPages": "Pages to publish on Instagram",
+    "whereCanPublishInstagramPages": "You can publish to...",
+    "loadingInstagramPages": "Loading Instagram pages...",
+    "notFoundInstagramPages": "No Instagram pages found. If you manage an Instagram page, it will appear here.",
+    "followers": "Followers",
+    "posts": "Posts",
+    "viaFacebookPage": "Via Facebook page",
+    "instagramDescription": "To publish on Instagram, you must connect your Facebook account and have a business page.",
+    "noInstagramConnection": "No Instagram connection"
   },
   "publications": {
     "noPublications": "No publications available.",

@@ -7,6 +7,7 @@ import {
   checkInstagramConnection,
   disconnectInstagram,
   processInstagramCallback,
+  fetchInstagramPages,
 } from "../actions/SocialNetworksActions";
 
 import {
@@ -27,6 +28,7 @@ interface SocialNetworksState {
   checkInstagramRequest: IRequest;
   processInstagramCallbackRequest: IRequest;
   disconnectInstagramInRequest: IRequest;
+  fetchInstagramPagesRequest: IRequest;
 }
 
 const initialState: SocialNetworksState = {
@@ -75,6 +77,11 @@ const initialState: SocialNetworksState = {
     ok: false,
   },
   disconnectInstagramInRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
+  fetchInstagramPagesRequest: {
     inProgress: false,
     messages: "",
     ok: false,
@@ -306,8 +313,34 @@ const socialNetworksSlice = createSlice({
           ok: false,
         };
       });
+    builder
+      .addCase(fetchInstagramPages.pending, (state) => {
+        state.fetchInstagramPagesRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(fetchInstagramPages.fulfilled, (state, action) => {
+        state.instagram.businessPages = action.payload.businessPages;
+        state.instagram.pagesFetchedAt = action.payload.fetchedAt;
+
+        state.fetchInstagramPagesRequest = {
+          inProgress: false,
+          messages: "Instagram business pages fetched successfully",
+          ok: true,
+        };
+      })
+      .addCase(fetchInstagramPages.rejected, (state, action) => {
+        state.fetchInstagramPagesRequest = {
+          inProgress: false,
+          messages: action.payload as string,
+          ok: false,
+        };
+      });
   },
 });
 
-export const { clearLinkedInWarning } = socialNetworksSlice.actions;
+export const { clearLinkedInWarning, setSelectedPublishTarget } =
+  socialNetworksSlice.actions;
 export default socialNetworksSlice.reducer;

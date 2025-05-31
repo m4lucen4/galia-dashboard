@@ -70,7 +70,16 @@
     "disconnectLinkedIn": "¿Quieres desconectar tu cuenta de Linkedln?",
     "disconnectLinkedInDescription": "Al desconectar tu cuenta, ya no podrás publicar en Linkedln.",
     "disconnectInstagram": "¿Quieres desconectar tu cuenta de Instagram?",
-    "disconnectInstagramDescription": "Al desconectar tu cuenta, ya no podrás publicar en Instagram."
+    "disconnectInstagramDescription": "Al desconectar tu cuenta, ya no podrás publicar en Instagram.",
+    "publishInstagramPages": "Páginas para publicar en Instagram",
+    "whereCanPublishInstagramPages": "Puedes realizar publicaciones en...",
+    "loadingInstagramPages": "Cargando páginas de Instagram...",
+    "notFoundInstagramPages": "No se encontraron páginas de Instagram, si administras alguna página en Instagram aparecerá aquí.",
+    "followers": "Seguidores",
+    "posts": "Publicaciones",
+    "viaFacebookPage": "Vía página de Facebook",
+    "instagramDescription": "Para publicar en Instagram, debes conectar tu cuenta de Facebook y tener una página de empresa.",
+    "noInstagramConnection": "No hay conexión con Instagram"
   },
   "publications": {
     "noPublications": "No hay publicaciones disponibles.",

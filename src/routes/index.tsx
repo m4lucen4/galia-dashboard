@@ -3,7 +3,7 @@ import { LoginScreen } from "../screens/public/Login";
 import { RecoveryPasswordScreen } from "../screens/RecoveryPassword";
 import { Home } from "../screens/Home";
 import { Profile } from "../screens/Profile";
-import { Settings } from "../screens/Settings";
+import { Settings } from "../features/settings/screens/Settings";
 import { Users } from "../screens/Users";
 import { Projects } from "../screens/Projects";
 

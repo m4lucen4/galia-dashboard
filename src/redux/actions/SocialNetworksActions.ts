@@ -603,3 +603,65 @@ export const checkInstagramConnection = createAsyncThunk(
     }
   }
 );
+
+export const fetchInstagramPages = createAsyncThunk(
+  "socialNetworks/fetchInstagramPages",
+  async ({ isConnected }: { isConnected: boolean }, { rejectWithValue }) => {
+    try {
+      if (!isConnected) {
+        return rejectWithValue("User not connected to Instagram");
+      }
+
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) return rejectWithValue("User not authenticated");
+
+      const { data, error } = await supabase
+        .from("userData")
+        .select("instagram_data")
+        .eq("uid", authData.user.id)
+        .single();
+
+      if (error) throw new Error(error.message);
+      if (!data || !data.instagram_data) {
+        return rejectWithValue("Instagram data not found");
+      }
+
+      const { data: pagesData, error: pagesError } =
+        await supabase.functions.invoke("instagram-fetch-admin-pages", {
+          body: { access_token: data.instagram_data.access_token },
+        });
+
+      if (pagesError) {
+        throw new Error(pagesError.message);
+      }
+
+      const updatedInstagramData = {
+        ...data.instagram_data,
+        business_pages: pagesData.pages,
+        pages_fetched_at: new Date().toISOString(),
+      };
+
+      const { error: updateError } = await supabase
+        .from("userData")
+        .update({
+          instagram_data: updatedInstagramData,
+        })
+        .eq("uid", authData.user.id);
+
+      if (updateError) throw new Error(updateError.message);
+
+      return {
+        businessPages: pagesData.pages,
+        totalPages: pagesData.total_pages,
+        fetchedAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error("Error fetching Instagram business pages:", error);
+      return rejectWithValue(
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch Instagram business pages"
+      );
+    }
+  }
+);
