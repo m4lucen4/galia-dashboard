@@ -396,7 +396,7 @@ export const processInstagramCallback = createAsyncThunk(
         throw new Error("No data received from edge function");
       }
 
-      const { access_token = 3600 } = data;
+      const { access_token, expires_in = 3600 } = data;
 
       if (!access_token) {
         throw new Error("No access token received");
@@ -427,9 +427,9 @@ export const processInstagramCallback = createAsyncThunk(
       const instagram_data = {
         instagram_user_id: instagramUserData.id,
         access_token,
-        token_expires_at: new Date(
-          tokenData.expires_at * 1000 // Convert from Unix timestamp
-        ).toISOString(),
+        token_expires_at: tokenData.expires_at
+          ? new Date(tokenData.expires_at * 1000).toISOString()
+          : new Date(Date.now() + expires_in * 1000).toISOString(),
         data_access_expires_at: new Date(
           tokenData.data_access_expires_at * 1000
         ).toISOString(),
