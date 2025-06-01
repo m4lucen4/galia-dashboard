@@ -194,7 +194,10 @@
     "selectLindkedlnPage": "Selecciona donde quieres publicar",
     "noLinkedlnPages": "No hay páginas de LinkedIn disponibles",
     "personalProfile": "Perfil personal",
-    "companyPage": "Página de empresa"
+    "companyPage": "Página de empresa",
+    "noInstagramConnection": "Sin conexión a Instagram",
+    "selectInstagramPage": "Seleccionar cuenta de Instagram",
+    "noInstagramPages": "No hay cuentas de Instagram disponibles"
   },
   "profile": {
     "title": "Perfil",
