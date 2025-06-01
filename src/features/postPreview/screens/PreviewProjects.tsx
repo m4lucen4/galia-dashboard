@@ -1,25 +1,26 @@
 import { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { RootState } from "../redux/store";
-import { usePreviewProjectsData } from "../hooks/usePreviewProjectsData";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { RootState } from "../../../redux/store";
+import { usePreviewProjectsData } from "../../../hooks/usePreviewProjectsData";
 import {
+  InstagramPageInfo,
   LinkedInPageInfo,
   PreviewProjectDataProps,
   SocialNetworksCheck,
-} from "../types";
-import { Drawer } from "../components/shared/ui/Drawer";
-import InstagramPost from "../components/previewProjects/InstagramPost";
+} from "../../../types";
+import { Drawer } from "../../../components/shared/ui/Drawer";
+import InstagramPost from "../../../components/previewProjects/InstagramPost";
 import {
   fetchPreviewProjectById,
   updateProjectPublishing,
   deletePreviewProject,
-} from "../redux/actions/PreviewProjectActions";
-import LinkedInPost from "../components/previewProjects/LinkedinPost";
-import { fetchUserByUid } from "../redux/actions/UserActions";
-import { Alert } from "../components/shared/ui/Alert";
-import { ConfigPublish } from "../components/previewProjects/ConfigPublish";
-import { CardsList } from "../components/previewProjects/CardsList";
-import { PreviewProjectForm } from "../components/previewProjects/PreviewProjectForm";
+} from "../../../redux/actions/PreviewProjectActions";
+import LinkedInPost from "../../../components/previewProjects/LinkedinPost";
+import { fetchUserByUid } from "../../../redux/actions/UserActions";
+import { Alert } from "../../../components/shared/ui/Alert";
+import { ConfigPublish } from "../../../components/previewProjects/ConfigPublish";
+import { CardsList } from "../../../components/previewProjects/CardsList";
+import { PreviewProjectForm } from "../../../components/previewProjects/PreviewProjectForm";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 
@@ -132,32 +133,31 @@ export const PreviewProjects = () => {
 
   const handleSocialNetworkChange = (
     network: "instagram" | "linkedln",
-    pageInfo?: LinkedInPageInfo
+    pageInfo?: LinkedInPageInfo | InstagramPageInfo
   ) => {
     if (network === "instagram") {
-      setSocialNetworks((prev) => ({
-        ...prev,
-        instagram: !prev.instagram,
-      }));
-    } else {
-      // linkedln
       if (pageInfo) {
         setSocialNetworks((prev) => ({
           ...prev,
-          linkedln: pageInfo,
+          instagram: pageInfo as InstagramPageInfo,
         }));
       } else {
-        if (typeof socialNetworks.linkedln === "object") {
-          setSocialNetworks((prev) => ({
-            ...prev,
-            linkedln: false,
-          }));
-        } else {
-          setSocialNetworks((prev) => ({
-            ...prev,
-            linkedln: !prev.linkedln,
-          }));
-        }
+        setSocialNetworks((prev) => ({
+          ...prev,
+          instagram: false,
+        }));
+      }
+    } else {
+      if (pageInfo) {
+        setSocialNetworks((prev) => ({
+          ...prev,
+          linkedln: pageInfo as LinkedInPageInfo,
+        }));
+      } else {
+        setSocialNetworks((prev) => ({
+          ...prev,
+          linkedln: false,
+        }));
       }
     }
   };

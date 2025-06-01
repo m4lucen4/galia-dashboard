@@ -10,12 +10,12 @@ import { Projects } from "../screens/Projects";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { PublicRoute } from "./PublicRoute";
 import { PasswordResetRoute } from "./PasswordResetRoute";
-import { PreviewProjects } from "../screens/PreviewProjects";
 import { ProjectsMap } from "../screens/ProjectsMap";
 import { AdminRoute } from "./AdminRoute";
 import { LinkedInCallback } from "../screens/LinkedInCallback";
 import { Privacy } from "../screens/public/Privacy";
 import { InstagramCallback } from "../screens/InstagramCallback";
+import { PreviewProjects } from "../features/postPreview/screens/PreviewProjects";
 
 export const AppRoutes = () => (
   <Routes>

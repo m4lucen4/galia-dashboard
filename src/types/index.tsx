@@ -74,9 +74,18 @@ export type LinkedInPageInfo = {
   type: string;
 };
 
+export type InstagramPageInfo = {
+  id: string;
+  name: string;
+  type: "BUSINESS";
+  accessToken: string;
+  facebookPageId?: string;
+  facebookPageName?: string;
+};
+
 export type SocialNetworksCheck = {
   linkedln?: boolean | LinkedInPageInfo;
-  instagram?: boolean;
+  instagram?: boolean | InstagramPageInfo;
 };
 
 export type PreviewProjectDataProps = {
