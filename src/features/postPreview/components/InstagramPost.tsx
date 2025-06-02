@@ -12,7 +12,7 @@ import {
   PreviewProjectDataProps,
   UserDataProps,
   ProjectImageData,
-} from "../../types";
+} from "../../../types";
 
 interface IProjectInstagramPostProps {
   project: PreviewProjectDataProps;
