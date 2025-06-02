@@ -197,7 +197,11 @@
     "companyPage": "Company page",
     "noInstagramConnection": "No Instagram connection",
     "selectInstagramPage": "Select Instagram account",
-    "noInstagramPages": "No Instagram accounts available"
+    "noInstagramPages": "No Instagram accounts available",
+    "instagramPosted": "Published on Instagram",
+    "instagramFailed": "Instagram error",
+    "linkedlnPosted": "Published on LinkedIn",
+    "linkedlnFailed": "LinkedIn error"
   },
   "profile": {
     "title": "Profile",

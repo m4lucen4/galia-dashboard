@@ -100,6 +100,8 @@ export type PreviewProjectDataProps = {
   image_data?: ProjectImageData[];
   publishDate?: string;
   checkSocialNetworks?: SocialNetworksCheck;
+  instagramResult?: string;
+  linkedlnResult?: string;
 };
 
 export type UpdateProjectPublishingProps = {

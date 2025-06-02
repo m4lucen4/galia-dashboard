@@ -30,8 +30,6 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   const { linkedin } = useLinkedInPages();
   const { instagram } = useInstagramPages();
 
-  console.log("ConfigPublish instagram:", instagram);
-
   const currentDate = useMemo(() => {
     const today = new Date();
     return today.toISOString().split("T")[0];

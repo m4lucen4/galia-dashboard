@@ -9,17 +9,17 @@ import {
   SocialNetworksCheck,
 } from "../../../types";
 import { Drawer } from "../../../components/shared/ui/Drawer";
-import InstagramPost from "../../../components/previewProjects/InstagramPost";
+import InstagramPost from "../components/InstagramPost";
+import LinkedInPost from "../components//LinkedinPost";
 import {
   fetchPreviewProjectById,
   updateProjectPublishing,
   deletePreviewProject,
 } from "../../../redux/actions/PreviewProjectActions";
-import LinkedInPost from "../../../components/previewProjects/LinkedinPost";
 import { fetchUserByUid } from "../../../redux/actions/UserActions";
 import { Alert } from "../../../components/shared/ui/Alert";
 import { ConfigPublish } from "../../../components/previewProjects/ConfigPublish";
-import { CardsList } from "../../../components/previewProjects/CardsList";
+import { CardsList } from "../components/cardList";
 import { PreviewProjectForm } from "../../../components/previewProjects/PreviewProjectForm";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
