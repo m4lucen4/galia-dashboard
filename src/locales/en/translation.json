@@ -2,7 +2,14 @@
   "shared": {
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "working": "Working on your project"
+    "working": "Working on your project",
+    "previous": "Previous",
+    "next": "Next",
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "results": "results",
+    "page": "Page"
   },
   "menu": {
     "confirm": "Confirm",
