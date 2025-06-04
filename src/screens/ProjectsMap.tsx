@@ -16,6 +16,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import NavbarMap from "../components/shared/ui/NavbarMap";
 import { useTranslation } from "react-i18next";
 import provinces from "../assets/regions/provinces.json";
+import { clearProjects } from "../redux/slices/ProjectSlice";
 
 const sortedProvinces = [...provinces].sort((a, b) =>
   a.label.localeCompare(b.label)
@@ -101,6 +102,7 @@ export const ProjectsMap = () => {
 
     return () => {
       document.head.removeChild(link);
+      dispatch(clearProjects());
     };
   }, [dispatch]);
 
