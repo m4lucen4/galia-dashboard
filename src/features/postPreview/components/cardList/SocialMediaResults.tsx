@@ -37,6 +37,12 @@ export const SocialMediaResults: React.FC<SocialMediaResultsProps> = ({
             {t("previewProjects.instagramFailed")}
           </span>
         )}
+        {instagramResult === "notSelected" && (
+          <span className="flex items-center gap-1 text-blue-600">
+            <XCircleIcon className="h-3 w-3" />
+            {t("previewProjects.instagramNotSelected")}
+          </span>
+        )}
         {linkedlnResult === "true" && (
           <span className="flex items-center gap-1 text-green-600">
             <CheckCircleIcon className="h-3 w-3" />
@@ -47,6 +53,12 @@ export const SocialMediaResults: React.FC<SocialMediaResultsProps> = ({
           <span className="flex items-center gap-1 text-red-600">
             <XCircleIcon className="h-3 w-3" />
             {t("previewProjects.linkedlnFailed")}
+          </span>
+        )}
+        {linkedlnResult === "notSelected" && (
+          <span className="flex items-center gap-1 text-blue-600">
+            <XCircleIcon className="h-3 w-3" />
+            {t("previewProjects.linkedlnNotSelected")}
           </span>
         )}
       </div>

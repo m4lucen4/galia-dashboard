@@ -1,4 +1,9 @@
-import { Coordinates, LoginProps } from "../types";
+import { Coordinates, LoginProps, PreviewProjectDataProps } from "../types";
+
+interface ProjectStateInfo {
+  displayState: string;
+  className: string;
+}
 
 /**
  * Valida el formulario de inicio de sesión
@@ -179,4 +184,86 @@ const categoryMap: Record<string, string> = {
 export const getCategoryLabel = (categoryValue: string | undefined): string => {
   if (!categoryValue) return "";
   return categoryMap[categoryValue] || categoryValue;
+};
+
+/**
+ * Determines the display state and styling for a project based on its publication results
+ * @param project - The project data containing publication results and state
+ * @returns {ProjectStateInfo} An object containing the display state and CSS class name
+ *
+ * The function evaluates Instagram and LinkedIn publication results to determine:
+ * - "published" (green) - All attempted publications were successful
+ * - "error en publicación" (red) - All attempted publications failed
+ * - "publicado con errores" (yellow) - Mix of successes and failures
+ * - "publicado parcialmente" (blue) - Some successes with no failures
+ * - "error parcial" (orange) - Some failures with no successes
+ * - Default state (green/gray) - When no publication results exist
+ */
+export const getProjectStateInfo = (
+  project: PreviewProjectDataProps
+): ProjectStateInfo => {
+  const { instagramResult, linkedlnResult, state } = project;
+
+  if (!instagramResult && !linkedlnResult) {
+    return {
+      displayState: state,
+      className:
+        state === "published"
+          ? "bg-green-100 text-green-800"
+          : "bg-gray-100 text-black",
+    };
+  }
+
+  const successCount =
+    (instagramResult === "true" || instagramResult === "notSelected" ? 1 : 0) +
+    (linkedlnResult === "true" || linkedlnResult === "notSelected" ? 1 : 0);
+
+  const failureCount =
+    (instagramResult === "false" ? 1 : 0) +
+    (linkedlnResult === "false" ? 1 : 0);
+
+  const totalAttempts = (instagramResult ? 1 : 0) + (linkedlnResult ? 1 : 0);
+
+  if (successCount === totalAttempts && totalAttempts > 0) {
+    return {
+      displayState: "published",
+      className: "bg-green-100 text-green-800",
+    };
+  }
+
+  if (failureCount === totalAttempts && totalAttempts > 0) {
+    return {
+      displayState: "error en publicación",
+      className: "bg-red-100 text-red-800",
+    };
+  }
+
+  if (successCount > 0 && failureCount > 0) {
+    return {
+      displayState: "publicado con errores",
+      className: "bg-yellow-100 text-yellow-800",
+    };
+  }
+
+  if (successCount > 0 && failureCount === 0) {
+    return {
+      displayState: "publicado parcialmente",
+      className: "bg-blue-100 text-blue-800",
+    };
+  }
+
+  if (failureCount > 0 && successCount === 0) {
+    return {
+      displayState: "error parcial",
+      className: "bg-orange-100 text-orange-800",
+    };
+  }
+
+  return {
+    displayState: state,
+    className:
+      state === "published"
+        ? "bg-green-100 text-green-800"
+        : "bg-gray-100 text-black",
+  };
 };

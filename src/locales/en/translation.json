@@ -207,8 +207,10 @@
     "noInstagramPages": "No Instagram accounts available",
     "instagramPosted": "Published on Instagram",
     "instagramFailed": "Instagram error",
+    "instagramNotSelected": "Instagram not selected",
     "linkedlnPosted": "Published on LinkedIn",
-    "linkedlnFailed": "LinkedIn error"
+    "linkedlnFailed": "LinkedIn error",
+    "linkedlnNotSelected": "LinkedIn not selected"
   },
   "profile": {
     "title": "Profile",
