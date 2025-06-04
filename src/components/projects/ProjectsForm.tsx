@@ -92,9 +92,32 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const filesArray = Array.from(e.target.files);
+      const maxFileSize = 5 * 1024 * 1024;
+      const validFiles: File[] = [];
+      const invalidFiles: string[] = [];
 
-      const maxNewImages = 15 - existingImages.length;
-      const limitedFiles = filesArray.slice(0, maxNewImages);
+      filesArray.forEach((file) => {
+        if (file.size > maxFileSize) {
+          invalidFiles.push(
+            `${file.name} (${(file.size / (1024 * 1024)).toFixed(1)}MB)`
+          );
+        } else {
+          validFiles.push(file);
+        }
+      });
+
+      if (invalidFiles.length > 0) {
+        alert(
+          `${t("projects.imageSizeError")}:\n${invalidFiles.join("\n")}\n\n${t("projects.maxSizeAllowed")}: 5MB`
+        );
+      }
+
+      const maxNewImages = 10 - existingImages.length;
+      const limitedFiles = validFiles.slice(0, maxNewImages);
+
+      if (validFiles.length > maxNewImages) {
+        alert(`${t("projects.maxImagesError")} ${maxNewImages}`);
+      }
 
       setSelectedImages(limitedFiles);
     }
@@ -194,7 +217,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
         </div>
         <div className="col-span-2 mb-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t("projects.projectImages")} ({totalImagesCount}/15)
+            {t("projects.projectImages")} ({totalImagesCount}/10)
           </label>
           <div className="mt-1 flex items-center">
             <input
@@ -205,18 +228,23 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               onChange={handleImageChange}
               className="hidden"
               id="project-images"
-              disabled={existingImages.length >= 15}
+              disabled={existingImages.length >= 10}
             />
             <Button
               title={t("projects.selectImages")}
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={existingImages.length >= 15}
+              disabled={existingImages.length >= 10}
             />
             <span className="ml-3 text-sm text-gray-500">
               {selectedImages.length} {t("projects.selectedImages")}
             </span>
           </div>
+
+          <p className="text-xs text-gray-500 mt-1">
+            {t("projects.imageLimit")}: 10 {t("projects.maxImages")}, 5MB{" "}
+            {t("projects.maxSizePerImage")}
+          </p>
 
           {/* Existing Images */}
           {existingImages.length > 0 && (

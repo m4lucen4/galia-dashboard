@@ -173,7 +173,13 @@
     "promoter": "Promoter",
     "placeholderPromoter": "Project promoter",
     "collaborators": "Collaborators",
-    "placeholderCollaborators": "Project collaborators"
+    "placeholderCollaborators": "Project collaborators",
+    "maxSizePerImage": "Maximum size per image",
+    "imageLimit": "Image limit",
+    "maxImages": "Maximum images",
+    "imageSizeError": "Image size error",
+    "maxSizeAllowed": "The maximum allowed size per image is",
+    "maxImagesError": "The maximum number of images is"
   },
   "previewProjects": {
     "title": "Project Preview",
