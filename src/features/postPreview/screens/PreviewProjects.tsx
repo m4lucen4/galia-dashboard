@@ -18,7 +18,7 @@ import {
 } from "../../../redux/actions/PreviewProjectActions";
 import { fetchUserByUid } from "../../../redux/actions/UserActions";
 import { Alert } from "../../../components/shared/ui/Alert";
-import { ConfigPublish } from "../../../components/previewProjects/ConfigPublish";
+import { ConfigPublish } from "../components/configPublish";
 import { CardsList } from "../components/cardList";
 import { PreviewProjectForm } from "../../../components/previewProjects/PreviewProjectForm";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
