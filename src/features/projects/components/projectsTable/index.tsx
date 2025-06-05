@@ -19,8 +19,8 @@ import {
   RecoverIcon,
   LaunchIcon,
   DeleteIcon,
+  EditIcon,
 } from "../../../../components/icons";
-import { EditIcon } from "../../../../components/icons/EditIcon";
 
 type ProjectsTableProps = {
   projects: ProjectDataProps[];
