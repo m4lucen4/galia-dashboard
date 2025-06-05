@@ -19,6 +19,7 @@ import {
   RecoverIcon,
   LaunchIcon,
   DeleteIcon,
+  EditIcon,
 } from "../../../../components/icons";
 
 type ProjectsTableProps = {
@@ -38,17 +39,6 @@ export const ProjectsTable = ({
   onRecoveryProject,
   onDeleteProject,
 }: ProjectsTableProps) => {
-  const EditIconInline = () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-4 w-4"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-    >
-      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-    </svg>
-  );
-
   const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([]);
   const dispatch = useAppDispatch();
@@ -64,9 +54,11 @@ export const ProjectsTable = ({
     columnHelper.accessor("id", {
       header: "ID",
       cell: (info) => `${info.getValue()}`,
+      size: 50,
     }),
     columnHelper.accessor("title", {
       header: t("projects.projectTitle"),
+      size: 300,
     }),
     columnHelper.accessor("state", {
       header: t("projects.state"),
@@ -83,10 +75,12 @@ export const ProjectsTable = ({
 
         return stateFormatMap[state] || state;
       },
+      size: 100,
     }),
     columnHelper.accessor("keywords", {
       header: t("projects.keywords"),
       cell: (info) => info.getValue() || "-",
+      size: 200,
     }),
     columnHelper.display({
       id: "actions",
@@ -117,7 +111,7 @@ export const ProjectsTable = ({
               onClick={() => onLaunchProject(props.row.original.id)}
             />
             <Button
-              icon={<EditIconInline />}
+              icon={<EditIcon />}
               secondary
               onClick={() => handleEditClick(props.row.original)}
             />
