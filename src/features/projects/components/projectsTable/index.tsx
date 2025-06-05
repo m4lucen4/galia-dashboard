@@ -17,10 +17,10 @@ import { useTranslation } from "react-i18next";
 import { Pagination } from "./Pagination";
 import {
   RecoverIcon,
-  EditIcon,
   LaunchIcon,
   DeleteIcon,
 } from "../../../../components/icons";
+import { EditIcon } from "../../../../components/icons/EditIcon";
 
 type ProjectsTableProps = {
   projects: ProjectDataProps[];
