@@ -6,4 +6,4 @@ export * from "./AddIcon";
 export * from "./RecoverIcon";
 export * from "./DeleteIcon";
 export * from "./LaunchIcon";
-export * from "./EditIcon";
+export * from "./PencilIcon";

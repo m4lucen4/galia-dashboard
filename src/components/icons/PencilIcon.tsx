@@ -4,7 +4,7 @@ interface EditIconProps {
   className?: string;
 }
 
-export const EditIcon: React.FC<EditIconProps> = ({
+export const PencilIcon: React.FC<EditIconProps> = ({
   className = "h-5 w-5",
 }) => {
   return (

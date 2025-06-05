@@ -19,7 +19,7 @@ import {
   RecoverIcon,
   LaunchIcon,
   DeleteIcon,
-  EditIcon,
+  PencilIcon,
 } from "../../../../components/icons";
 
 type ProjectsTableProps = {
@@ -111,7 +111,7 @@ export const ProjectsTable = ({
               onClick={() => onLaunchProject(props.row.original.id)}
             />
             <Button
-              icon={<EditIcon />}
+              icon={<PencilIcon />}
               secondary
               onClick={() => handleEditClick(props.row.original)}
             />
