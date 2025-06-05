@@ -467,3 +467,65 @@ export const updateProjectDraft = createAsyncThunk(
     }
   }
 );
+
+export const deleteProject = createAsyncThunk(
+  "projects/deleteProject",
+  async (projectId: string, { rejectWithValue }) => {
+    try {
+      const { data: project, error: fetchError } = await supabase
+        .from("projects")
+        .select("image_data")
+        .eq("id", projectId)
+        .single();
+
+      if (fetchError) {
+        return rejectWithValue({
+          message: `Error fetching project for deletion: ${fetchError.message}`,
+          status: fetchError.code,
+        });
+      }
+
+      if (project?.image_data && Array.isArray(project.image_data)) {
+        for (const imageInfo of project.image_data) {
+          if (imageInfo.url) {
+            const urlParts = imageInfo.url.split("/");
+            const fileName = urlParts.slice(-2).join("/");
+
+            const { error: deleteImageError } = await supabase.storage
+              .from("projects-images")
+              .remove([fileName]);
+
+            if (deleteImageError) {
+              console.error("Error deleting image:", deleteImageError);
+            }
+          }
+        }
+      }
+
+      const { error: deleteError } = await supabase
+        .from("projects")
+        .delete()
+        .eq("id", projectId);
+
+      if (deleteError) {
+        return rejectWithValue({
+          message: `Error deleting project: ${deleteError.message}`,
+          status: deleteError.code,
+        });
+      }
+
+      return {
+        projectId,
+        message: "Project deleted successfully",
+      };
+    } catch (error: unknown) {
+      console.error("Error in deleteProject:", error);
+      const appError: SupabaseError = {
+        message:
+          error instanceof Error ? error.message : "Error deleting project",
+        status: 500,
+      };
+      return rejectWithValue(appError);
+    }
+  }
+);

@@ -1,0 +1,391 @@
+{
+  "name": "Creación de publicaciones",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "5ec2d474-7200-45d1-a0f2-20725c6ffbd1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -700,
+        0
+      ],
+      "id": "dbd957a2-fb40-48f2-83f5-f0244dddc250",
+      "name": "Webhook",
+      "webhookId": "5ec2d474-7200-45d1-a0f2-20725c6ffbd1"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "projects",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{$json[\"query\"][\"id\"]}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -460,
+        0
+      ],
+      "id": "6f7278ff-f0db-441f-bf19-7def0a0d7460",
+      "name": "Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HFXyXXsu9b7PnhFG",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const cantidad = $json[\"publications\"];\nconst publicaciones = [];\n\nfor (let i = 0; i < cantidad; i++) {\n  publicaciones.push({\n    json: {\n      ...$json,\n      variante: i + 1\n    }\n  });\n}\n\nreturn publicaciones;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        0
+      ],
+      "id": "7fc64f18-baf0-46dc-9f2d-920915988516",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Redacta una descripción arquitectónica breve y evocadora de un edificio contemporáneo. Describe cómo se organiza la fachada principal, qué elementos la componen o articulan, y cómo se dan los encuentros volumétricos. Añade observaciones sobre la materialidad, el ritmo compositivo y cualquier gesto que rompa la regularidad (como vuelos, contrapeos o cambios de escala).\n\nA partir de la siguiente descripción y palabras clave, genera un texto atractivo, creativo y profesional para una publicación.\n\nDevuélvelo **únicamente** como un **objeto JSON válido** con esta estructura exacta (sin comillas envolventes, sin texto antes o después):\n\n```json\n{\n  \"publicacion\": {\n    \"texto\": \"...\"\n  }\n}\n\nMuy importante:\n    •\tUsa un máximo de 75 palabras.\n\t•\tNo devuelvas nada fuera del JSON (ni comentarios, ni explicaciones).\n\t•\tNo encierres el JSON en comillas.\n\t•\tNo uses \\n fuera de comillas.\n\t•\tNo escribas nada antes o después del objeto.\n\nDescripción: {{ $json[\"description\"] }}\n \nPalabras clave: {{ $json[\"keywords\"] }}\n \nNúmero de variante: {{ $json[\"variante\"] }}\n\nEl estilo debe ser único en cada variante. El tono debe ser técnico, claro y visualmente sugerente, como en una memoria de proyecto arquitectónico."
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {
+          "maxTokens": 4096,
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        440,
+        -220
+      ],
+      "id": "ec44e948-d9b3-4abe-8aa5-08373ab70d00",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "AitxvXAR9DFgZPi8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        900,
+        -40
+      ],
+      "id": "f5994ba4-0fba-4b5a-ba70-231ee08988d2",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "tableId": "projectsPreview",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "project_id",
+              "fieldValue": "={{$json[\"project_id\"]}}"
+            },
+            {
+              "fieldId": "user",
+              "fieldValue": "={{$json[\"user\"]}}"
+            },
+            {
+              "fieldId": "title",
+              "fieldValue": "={{$json[\"title\"]}}"
+            },
+            {
+              "fieldId": "state",
+              "fieldValue": "preview"
+            },
+            {
+              "fieldId": "image_data",
+              "fieldValue": "={{$json[\"image_data\"]}}"
+            },
+            {
+              "fieldId": "weblink",
+              "fieldValue": "={{$json[\"weblink\"]}}"
+            },
+            {
+              "fieldId": "description_rich",
+              "fieldValue": "={{$json[\"description_rich\"]}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        -40
+      ],
+      "id": "de1401aa-7368-4203-a084-a5c96eba0c83",
+      "name": "Supabase1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HFXyXXsu9b7PnhFG",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "let rawContent = $json.message?.content;\nlet texto = \"Texto no generado\";\n\ntry {\n  // Si ya es un objeto, accede directamente\n  if (typeof rawContent === \"object\" && rawContent !== null) {\n    texto = rawContent.publicacion?.texto ?? texto;\n  }\n  // Si es un string, intenta parsear\n  else if (typeof rawContent === \"string\") {\n    const parsed = JSON.parse(rawContent);\n    texto = parsed.publicacion?.texto ?? texto;\n  }\n} catch (err) {\n  // Fallback si el JSON está malformado\n  texto = \"Texto no generado (error de parseo)\";\n}\n\nreturn {\n  json: {\n    project_id: $json.id,\n    user: $json.user,\n    title: $json.title,\n    state: \"preview\",\n    weblink: $json.weblink,\n    image_data: $json.image_data,\n    description: $json.description,\n    description_rich: texto,\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        -40
+      ],
+      "id": "41594b68-ab89-468f-9b4f-32be2a89e557",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d3cde422-1956-45f8-9ea3-053e174671e0",
+              "leftValue": "={{$json[\"requiredAI\"]}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6fb4e389-8c54-4370-b2f1-dd6fa4f4fa98",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "let rawContent = $json.message?.content;\nlet texto = \"Texto no generado\";\n\ntry {\n  // Si ya es un objeto, accede directamente\n  if (typeof rawContent === \"object\" && rawContent !== null) {\n    texto = rawContent.publicacion?.texto ?? texto;\n  }\n  // Si es un string, intenta parsear\n  else if (typeof rawContent === \"string\") {\n    const parsed = JSON.parse(rawContent);\n    texto = parsed.publicacion?.texto ?? texto;\n  }\n} catch (err) {\n  // Fallback si el JSON está malformado\n  texto = \"Texto no generado (error de parseo)\";\n}\n\nreturn {\n  json: {\n    project_id: $json.id,\n    user: $json.user,\n    title: $json.title,\n    state: \"preview\",\n    weblink: $json.weblink,\n    image_data: $json.image_data,\n    description: $json.description,\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        200
+      ],
+      "id": "2a052d1e-9205-4c33-a3de-43146b9bdce1",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "tableId": "projectsPreview",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "project_id",
+              "fieldValue": "={{$json[\"project_id\"]}}"
+            },
+            {
+              "fieldId": "user",
+              "fieldValue": "={{$json[\"user\"]}}"
+            },
+            {
+              "fieldId": "title",
+              "fieldValue": "={{$json[\"title\"]}}"
+            },
+            {
+              "fieldId": "state",
+              "fieldValue": "preview"
+            },
+            {
+              "fieldId": "image_data",
+              "fieldValue": "={{$json[\"image_data\"]}}"
+            },
+            {
+              "fieldId": "weblink",
+              "fieldValue": "={{$json[\"weblink\"]}}"
+            },
+            {
+              "fieldId": "description_rich",
+              "fieldValue": "={{$json[\"description\"]}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        900,
+        200
+      ],
+      "id": "674f9e73-ca06-46ea-a286-35273c973620",
+      "name": "Supabase2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HFXyXXsu9b7PnhFG",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Supabase1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Supabase2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a94ce947-be00-4c28-909a-88191bf51089",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d7a9026e160546b818e2c999d37da6cf05ed24223f78e1cc875f6dad19d3c0b1"
+  },
+  "id": "Y80hforWDxKj1Klo",
+  "tags": []
+}

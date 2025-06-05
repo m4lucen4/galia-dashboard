@@ -179,7 +179,9 @@
     "maxImages": "Maximum images",
     "imageSizeError": "Image size error",
     "maxSizeAllowed": "The maximum allowed size per image is",
-    "maxImagesError": "The maximum number of images is"
+    "maxImagesError": "The maximum number of images is",
+    "deleteTitle": "Delete project",
+    "deleteDescription": "Are you sure you want to delete this project? This action cannot be undone."
   },
   "previewProjects": {
     "title": "Project Preview",

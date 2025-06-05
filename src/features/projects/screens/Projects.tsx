@@ -1,25 +1,26 @@
 import { useEffect, useState } from "react";
-import { useAppSelector, useAppDispatch } from "../redux/hooks";
-import { RootState } from "../redux/store";
-import { Drawer } from "../components/shared/ui/Drawer";
-import { Alert } from "../components/shared/ui/Alert";
-import { Button } from "../components/shared/ui/Button";
-import { errorMessages } from "../helpers";
-import { ProjectsForm } from "../components/projects/ProjectsForm";
+import { useAppSelector, useAppDispatch } from "../../../redux/hooks";
+import { RootState } from "../../../redux/store";
+import { Drawer } from "../../../components/shared/ui/Drawer";
+import { Alert } from "../../../components/shared/ui/Alert";
+import { Button } from "../../../components/shared/ui/Button";
+import { errorMessages } from "../../../helpers";
+import { ProjectsForm } from "../../../components/projects/ProjectsForm";
 import {
   addProject,
   CreateProjectProps,
   updateProject,
   updateProjectPreview,
   updateProjectDraft,
-} from "../redux/actions/ProjectActions";
+  deleteProject,
+} from "../../../redux/actions/ProjectActions";
 import {
   clearProjectErrors,
   clearSelectedProject,
-} from "../redux/slices/ProjectSlice";
-import { ProjectsTable } from "../components/projects/ProjectsTable";
-import { useProjectsData } from "../hooks/useProjectsData";
-import { WorkingInProgress } from "../components/shared/ui/WorkingInProgress";
+} from "../../../redux/slices/ProjectSlice";
+import { ProjectsTable } from "../components/projectsTable";
+import { useProjectsData } from "../../../hooks/useProjectsData";
+import { WorkingInProgress } from "../../../components/shared/ui/WorkingInProgress";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -39,6 +40,7 @@ export const Projects = () => {
   );
   const [showLaunchModal, setShowLaunchModal] = useState(false);
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const fetchProjectsData = useProjectsData(user);
   const errorMessage = errorMessages({
@@ -78,6 +80,27 @@ export const Projects = () => {
     dispatch(clearSelectedProject());
     setIsEditMode(true);
     setDrawerOpen(true);
+  };
+
+  const handleDeleteProject = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedProjectId) {
+      console.log("Deleting project with ID:", selectedProjectId);
+      dispatch(deleteProject(selectedProjectId))
+        .unwrap()
+        .then(() => {
+          fetchProjectsData();
+          setShowDeleteModal(false);
+        })
+        .catch((error) => {
+          console.error("Error deleting project:", error);
+          setShowDeleteModal(false);
+        });
+    }
   };
 
   const handleProjectSubmit = (formData: CreateProjectProps) => {
@@ -207,12 +230,12 @@ export const Projects = () => {
                 {state === "draft"
                   ? "Draft"
                   : state === "preview"
-                  ? "Preview"
-                  : state === "inProgress"
-                  ? "In progress"
-                  : state === "launched"
-                  ? "Launched"
-                  : state}
+                    ? "Preview"
+                    : state === "inProgress"
+                      ? "In progress"
+                      : state === "launched"
+                        ? "Launched"
+                        : state}
               </option>
             ))}
           </select>
@@ -244,6 +267,7 @@ export const Projects = () => {
         onEditProject={handleEditProject}
         onLaunchProject={handleLaunchProject}
         onRecoveryProject={handleRecoveyProject}
+        onDeleteProject={handleDeleteProject}
       />
       {errorMessage && (
         <Alert
@@ -266,6 +290,14 @@ export const Projects = () => {
           description={t("projects.recoveryDescription")}
           onAccept={handleConfirmRecovery}
           onCancel={() => setShowRecoveryModal(false)}
+        />
+      )}
+      {showDeleteModal && (
+        <Alert
+          title={t("projects.deleteTitle")}
+          description={t("projects.deleteDescription")}
+          onAccept={handleConfirmDelete}
+          onCancel={() => setShowDeleteModal(false)}
         />
       )}
     </div>

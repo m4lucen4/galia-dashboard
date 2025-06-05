@@ -5,7 +5,7 @@ import { Home } from "../screens/Home";
 import { Profile } from "../screens/Profile";
 import { Settings } from "../features/settings/screens/Settings";
 import { Users } from "../screens/Users";
-import { Projects } from "../screens/Projects";
+import { Projects } from "../features/projects/screens/Projects";
 
 import { ProtectedRoute } from "./ProtectedRoute";
 import { PublicRoute } from "./PublicRoute";

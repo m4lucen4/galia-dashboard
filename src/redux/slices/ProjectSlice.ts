@@ -8,6 +8,7 @@ import {
   fetchProjectsWithGoogleMaps,
   updateProjectPreview,
   updateProjectDraft,
+  deleteProject,
 } from "../actions/ProjectActions";
 import { ProjectDataProps, IRequest, SupabaseError } from "../../types";
 
@@ -21,6 +22,7 @@ interface ProjectState {
   projectFetchByUserIdRequest: IRequest;
   projectFetchWithGoogleMapsRequest: IRequest;
   updateProjectStateRequest: IRequest;
+  deleteProjectRequest: IRequest;
 }
 
 const initialState: ProjectState = {
@@ -61,6 +63,11 @@ const initialState: ProjectState = {
     messages: "",
     ok: false,
   },
+  deleteProjectRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
 };
 
 const projectSlice = createSlice({
@@ -72,6 +79,7 @@ const projectSlice = createSlice({
       state.projectsFetchRequest = initialState.projectsFetchRequest;
       state.projectFetchByIdRequest = initialState.projectFetchByIdRequest;
       state.updateProjectStateRequest = initialState.updateProjectStateRequest;
+      state.deleteProjectRequest = initialState.deleteProjectRequest;
     },
     clearSelectedProject: (state) => {
       state.project = null;
@@ -314,6 +322,42 @@ const projectSlice = createSlice({
             : errorPayload?.message || "Error desconocido";
 
         state.projectFetchWithGoogleMapsRequest = {
+          inProgress: false,
+          messages: errorMessage,
+          ok: false,
+        };
+      });
+    builder
+      .addCase(deleteProject.pending, (state) => {
+        state.deleteProjectRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(deleteProject.fulfilled, (state, action) => {
+        state.projects = state.projects.filter(
+          (project) => project.id !== action.payload.projectId
+        );
+
+        if (state.project?.id === action.payload.projectId) {
+          state.project = null;
+        }
+
+        state.deleteProjectRequest = {
+          inProgress: false,
+          messages: action.payload.message,
+          ok: true,
+        };
+      })
+      .addCase(deleteProject.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage =
+          typeof errorPayload === "string"
+            ? errorPayload
+            : errorPayload?.message || "Error desconocido";
+
+        state.deleteProjectRequest = {
           inProgress: false,
           messages: errorMessage,
           ok: false,

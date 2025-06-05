@@ -1,0 +1,1323 @@
+{
+  "name": "Publicación programada",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 3
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "cbcdabc4-4964-4caf-91b2-349f1bcb6d93",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "projectsPreview",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "publishDate",
+              "condition": "lte",
+              "keyValue": "={{ new Date().toISOString() }}"
+            },
+            {
+              "keyName": "state",
+              "condition": "eq",
+              "keyValue": "preview"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "4169326f-d698-44f9-8f88-19b12e12eb84",
+      "name": "Find registers in previewProjects",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HFXyXXsu9b7PnhFG",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9490a3e7-ae66-465d-b9e8-a7de5adc3036",
+              "name": "user",
+              "value": "={{ $json.user }}",
+              "type": "string"
+            },
+            {
+              "id": "b3c9ef64-635e-46c1-bdce-0b8a1203fb81",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "55fb8414-23ea-4906-9150-5041b771cdcf",
+              "name": "images",
+              "value": "={{ $json.image_data }}",
+              "type": "array"
+            },
+            {
+              "id": "69287f47-b788-43bf-be7a-384b87fe887e",
+              "name": "description",
+              "value": "={{ $json.description_rich }}",
+              "type": "string"
+            },
+            {
+              "id": "092c1b00-e717-4adc-9843-9f80f9bd2e13",
+              "name": "link",
+              "value": "={{ $json.weblink }}",
+              "type": "string"
+            },
+            {
+              "id": "72268cf0-7cd8-40e1-940a-59cd438e075a",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "0f4e9ee3-557c-4266-ae9a-613d03b6c9cc",
+              "name": "linkedlnData",
+              "value": "={{ $json.checkSocialNetworks }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        460,
+        0
+      ],
+      "id": "b4b9e046-97cb-4c10-af33-9f50bea62ab3",
+      "name": "Clean project fields"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "userData",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "uid",
+              "keyValue": "={{$json[\"user\"]}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        760,
+        160
+      ],
+      "id": "795a8668-b410-42c5-8adf-cd058820155b",
+      "name": "Get user by project",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HFXyXXsu9b7PnhFG",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dcf12aac-766b-4af6-99c0-30975e965052",
+              "name": "token",
+              "value": "={{ $json.linkedln_data.access_token }}",
+              "type": "string"
+            },
+            {
+              "id": "59e7a7f5-1391-4afc-8bda-a84b881ac79f",
+              "name": "linkedlnID",
+              "value": "={{ $json.linkedln_data.linkedin_person_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3b42b08b-ec90-4776-8658-7c2e35d99e19",
+              "name": "premissions",
+              "value": "={{ $json.linkedln_data.permissions_granted }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1020,
+        160
+      ],
+      "id": "a06a19d7-1875-41ce-989a-dc61b898949a",
+      "name": "Clean user fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  item.json.images = item.json.images.filter(image => image.status !== 'not_selected');\n  return item;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "id": "3d195738-10b8-485d-9714-b456bc1011b2",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        1320,
+        20
+      ],
+      "id": "2fe92e94-2b9d-4ea3-b011-3731219fd030",
+      "name": "Merge project/user",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const grouped = {};\n\nfor (const item of items) {\n  const json = item.json;\n  const key = json.id; // puedes usar title si lo prefieres\n\n  if (!grouped[key]) {\n    grouped[key] = { ...json };\n    grouped[key].images = [...(json.images || [])];\n  } else {\n    // Añadir imágenes si no están ya\n    const existingUrls = new Set(grouped[key].images.map(img => img.url));\n    for (const img of json.images || []) {\n      if (!existingUrls.has(img.url)) {\n        grouped[key].images.push(img);\n      }\n    }\n  }\n}\n\nreturn Object.values(grouped).map(post => ({ json: post }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2220,
+        0
+      ],
+      "id": "d54a9bc1-f113-43fd-b605-ec4dc34683dc",
+      "name": "CONVERTIR ARRAY"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "images",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2480,
+        0
+      ],
+      "id": "b1c2f172-1e2a-411f-8075-a94dd94dc35c",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.images.url }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2840,
+        0
+      ],
+      "id": "e1eab446-b468-4762-b01d-86e478d1ada1",
+      "name": "NODO GET"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.linkedin.com/v2/assets?action=registerUpload",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\n  \"Authorization\": \"Bearer {{$json.token}}\",\n  \"Content-Type\": \"application/json\",\n  \"X-Restli-Protocol-Version\": \"2.0.0\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"registerUploadRequest\": {\n    \"owner\": \"{{$json.uploadOwnerUrn}}\",\n    \"recipes\": [\"urn:li:digitalmediaRecipe:feedshare-image\"],\n    \"serviceRelationships\": [\n      {\n        \"relationshipType\": \"OWNER\",\n        \"identifier\": \"urn:li:userGeneratedContent\"\n      }\n    ]\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3060,
+        -220
+      ],
+      "id": "278a04a6-0286-4135-8307-58d54e0f66ea",
+      "name": "NODO POST IMAGES"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\n\nfor (const item of items) {\n  const json = item.json;\n\n  let ownerUrn;\n\n  try {\n    const linkedlnData = JSON.parse(json.linkedlnData);\n\n    if (\n      linkedlnData &&\n      linkedlnData.linkedln &&\n      linkedlnData.linkedln.id &&\n      linkedlnData.linkedln.type\n    ) {\n      const id = linkedlnData.linkedln.id;\n      const type = linkedlnData.linkedln.type;\n\n      ownerUrn =\n        type === \"ORGANIZATION\"\n          ? `urn:li:organization:${id}`\n          : `urn:li:person:${json.linkedlnID}`;\n    } else {\n      // Fallback a perfil personal si no hay info de página\n      ownerUrn = `urn:li:person:${json.linkedlnID}`;\n    }\n  } catch (err) {\n    console.warn(\"Error parsing linkedlnData, defaulting to person:\", err);\n    ownerUrn = `urn:li:person:${json.linkedlnID}`;\n  }\n\n  results.push({\n    json: {\n      ...json,\n      uploadOwnerUrn: ownerUrn,\n    },\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2840,
+        -220
+      ],
+      "id": "e7583ed4-cd90-43da-938d-69f3bbd36d6f",
+      "name": "Code5"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        3340,
+        -20
+      ],
+      "id": "5d88c85a-109a-4867-b6ff-2e45910667ee",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const grouped = {};\n\nfor (const item of items) {\n  const json = item.json;\n  const value = item.json.value || item.value;\n  const asset = value?.asset;\n\n  const key = json.title;\n\n  // Parseamos los datos de linkedlnData\n  const linkedlnData =\n    typeof json.linkedlnData === \"string\"\n      ? JSON.parse(json.linkedlnData)\n      : json.linkedlnData;\n\n  const isOrganization = linkedlnData?.linkedln?.type === \"ORGANIZATION\";\n  const organizationId = linkedlnData?.linkedln?.id;\n  const personalId = json.linkedlnID;\n\n  // Calculamos el author en formato URN dinámico\n  const authorUrn = isOrganization\n    ? `urn:li:organization:${organizationId}`\n    : `urn:li:person:${personalId}`;\n\n  if (!grouped[key]) {\n    grouped[key] = {\n      id: json.id,\n      user: json.user,\n      title: json.title,\n      description: json.description,\n      token: json.token,\n      linkedlnID: json.linkedlnID,\n      author: authorUrn,\n      assets: [],\n    };\n  }\n\n  if (asset) {\n    grouped[key].assets.push(asset);\n  }\n}\n\nreturn Object.values(grouped).map(post => ({ json: post }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3660,
+        -220
+      ],
+      "id": "7f1e0629-c3e3-4624-97c6-d73c9f6a306a",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.linkedin.com/v2/ugcPosts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"author\": \"{{ $json.author }}\",\n  \"lifecycleState\": \"PUBLISHED\",\n  \"specificContent\": {\n    \"com.linkedin.ugc.ShareContent\": {\n      \"shareCommentary\": {\n        \"text\": \"{{ $json.description }}\"\n      },\n      \"shareMediaCategory\": \"IMAGE\",\n      \"media\": {{ JSON.stringify($json.assets.map(asset => ({ status: \"READY\", description: { text: $json.title }, media: asset, title: { text: $json.title } }))) }}\n    }\n  },\n  \"visibility\": {\n    \"com.linkedin.ugc.MemberNetworkVisibility\": \"PUBLIC\"\n  }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3920,
+        -220
+      ],
+      "id": "b23be503-7163-4e74-9a60-f82e6d61e2d7",
+      "name": "post Linkedln"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "projectsPreview",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Code1').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "state",
+              "fieldValue": "published"
+            },
+            {
+              "fieldId": "linkedlnResult",
+              "fieldValue": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4200,
+        -220
+      ],
+      "id": "accba92b-03f3-45ba-b2a6-1ef71302a28c",
+      "name": "Supabase1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HFXyXXsu9b7PnhFG",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{$json.value.uploadMechanism[\"com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest\"].uploadUrl}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "media-type-family",
+              "value": "STILLIMAGE"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3660,
+        -20
+      ],
+      "id": "b4da2ff2-9d49-4912-8599-128018977839",
+      "name": "subir cada imagen a su uploadUrl",
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const instagramData = JSON.parse($json.linkedlnData);\nconst imageUrls = $json.images.map(img => img.url);\n\nreturn {\n  id: $json.id,\n  caption: $json.description,\n  instagram_id: instagramData.instagram.id,\n  access_token: instagramData.instagram.accessToken,\n  images: imageUrls\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2340,
+        560
+      ],
+      "id": "56c4806c-8e91-49b6-99e6-62c5d3b5bd84",
+      "name": "Preparar datos para Instagram"
+    },
+    {
+      "parameters": {
+        "batchSize": "={{ $json.images.length }}",
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2700,
+        560
+      ],
+      "id": "a6496a0b-0bb0-417e-a50b-f22ca008dc70",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $json.instagram_id }}/media",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=image_url",
+              "value": "={{ $json.image_url }}"
+            },
+            {
+              "name": "is_carousel_item",
+              "value": "true"
+            },
+            {
+              "name": "=access_token",
+              "value": "={{ $json.access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4380,
+        1060
+      ],
+      "id": "a905c08c-3e30-42fb-a3f7-d9f47d81517f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const urls = $json.images || [];\n\nreturn urls.map(url => ({\n  json: {\n    id: $json.id,\n    image_url: url,\n    access_token: $json.access_token,\n    instagram_id: $json.instagram_id,\n    caption: $json.caption\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2960,
+        760
+      ],
+      "id": "cce6e0dc-f48c-4e91-a987-5ee7ddac1793",
+      "name": "Cada item una imagen"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $json.instagram_id }}/media",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "media_type",
+              "value": "CAROUSEL"
+            },
+            {
+              "name": "=caption",
+              "value": "={{ $json.caption }}"
+            },
+            {
+              "name": "=access_token",
+              "value": "={{ $json.access_token }}"
+            },
+            {
+              "name": "=children",
+              "value": "={{ $json.children }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3360,
+        360
+      ],
+      "id": "824b905c-737d-469e-9109-eaf7f4e9bb48",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $node[\"Preparar envío final a Instagram\"].json[\"instagram_id\"] }}/media_publish",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=creation_id",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "name": "=access_token",
+              "value": "={{ $node[\"Preparar envío final a Instagram\"].json[\"access_token\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3740,
+        360
+      ],
+      "id": "30dc70a0-3257-4504-9494-da7ccc5c8d9a",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "amount": 1.5
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4160,
+        1060
+      ],
+      "id": "d2f92dff-41a9-4062-a692-7b833059a67a",
+      "name": "Wait",
+      "webhookId": "2198d960-9cfb-41cb-b0d2-cd68dd715673"
+    },
+    {
+      "parameters": {
+        "jsCode": "const childrenIds = $items().map(item => item.json.id).join(',');\n\n// Recuperamos datos del nodo original\nconst { id, instagram_id, caption, access_token } = $items(\"Preparar datos para Instagram\")[0].json;\n\nreturn [\n  {\n    json: {\n      id,\n      children: childrenIds,\n      instagram_id,\n      caption,\n      access_token,\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2960,
+        360
+      ],
+      "id": "38f34771-9ebf-4d3b-9ccf-4c723eca5e2e",
+      "name": "Preparar envío final a Instagram"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.image_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3420,
+        760
+      ],
+      "id": "0235dc12-9779-4eea-829e-eb11c58bda69",
+      "name": "Verificar que la imagen es pública",
+      "alwaysOutputData": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a199f9fc-133a-431d-b193-43e8412517a3",
+              "leftValue": "={{$node[\"Verificar que la imagen es pública\"].json[\"statusCode\"]}}",
+              "rightValue": "200",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3660,
+        760
+      ],
+      "id": "123e85c2-32e6-45e5-8730-f871c9b84573",
+      "name": "¿Imagen válida?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "projectsPreview",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $node[\"Cada item una imagen\"].json[\"id\"] }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "instagramResult",
+              "fieldValue": "false"
+            },
+            {
+              "fieldId": "state",
+              "fieldValue": "published"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3660,
+        1020
+      ],
+      "id": "ecdfec1a-f9a3-490f-a192-763cd26ad567",
+      "name": "Actualizar registro con error",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HFXyXXsu9b7PnhFG",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        3880,
+        540
+      ],
+      "id": "0d9548f3-6f80-471e-b200-e4760f4c3a03",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "projectsPreview",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $node[\"Preparar envío final a Instagram\"].json[\"id\"] }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "instagramResult",
+              "fieldValue": "true"
+            },
+            {
+              "fieldId": "state",
+              "fieldValue": "published"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4160,
+        360
+      ],
+      "id": "0a2e38b8-fd4c-406e-842c-0cad501a1b17",
+      "name": "Actualizar registro con éxito",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HFXyXXsu9b7PnhFG",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = JSON.parse($json.linkedlnData);\nreturn { json: { ...$json, linkedlnParsed: data } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        20
+      ],
+      "id": "e269fe59-9a12-4c59-aa53-4c1ca5ce7a1f",
+      "name": "Code6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "59be27e2-155a-4169-b641-67f27056ae09",
+              "leftValue": "={{ $json.linkedlnParsed.linkedln !== false }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1820,
+        20
+      ],
+      "id": "a0d78ffe-7a08-4a59-891c-aad7a8aa70f0",
+      "name": "Publicar en Linkedln?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "projectsPreview",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $node[\"Merge project/user1\"].json[\"id\"] }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "linkedlnResult",
+              "fieldValue": "notSelected"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2220,
+        160
+      ],
+      "id": "5d00df23-2670-4a88-a5f8-574e67e3b35e",
+      "name": "Actualizar registro sin publicación en linkedln",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HFXyXXsu9b7PnhFG",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "59be27e2-155a-4169-b641-67f27056ae09",
+              "leftValue": "={{ $json.linkedlnParsed.instagram !== false }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2080,
+        580
+      ],
+      "id": "94ef8120-789f-4a0b-9e28-97348948f8a1",
+      "name": "Publicar en Instagram?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "projectsPreview",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $node[\"Merge project/user1\"].json[\"id\"] }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "instagramResult",
+              "fieldValue": "notSelected"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2140,
+        860
+      ],
+      "id": "7786b72b-05c2-47a1-ab07-1b72f800b9a9",
+      "name": "Actualizar registro sin publicación en instagram",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HFXyXXsu9b7PnhFG",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Find registers in previewProjects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find registers in previewProjects": {
+      "main": [
+        [
+          {
+            "node": "Clean project fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get user by project": {
+      "main": [
+        [
+          {
+            "node": "Clean user fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean project fields": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get user by project",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Merge project/user",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean user fields": {
+      "main": [
+        [
+          {
+            "node": "Merge project/user",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge project/user": {
+      "main": [
+        [
+          {
+            "node": "Code6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONVERTIR ARRAY": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code5": {
+      "main": [
+        [
+          {
+            "node": "NODO POST IMAGES",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "NODO GET",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NODO POST IMAGES": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NODO GET": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "post Linkedln",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "post Linkedln": {
+      "main": [
+        [
+          {
+            "node": "Supabase1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "subir cada imagen a su uploadUrl",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar datos para Instagram": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Preparar envío final a Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cada item una imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cada item una imagen": {
+      "main": [
+        [
+          {
+            "node": "Verificar que la imagen es pública",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Actualizar registro con éxito",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar envío final a Instagram": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar que la imagen es pública": {
+      "main": [
+        [
+          {
+            "node": "¿Imagen válida?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Imagen válida?": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Actualizar registro con error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code6": {
+      "main": [
+        [
+          {
+            "node": "Publicar en Linkedln?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Publicar en Instagram?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publicar en Linkedln?": {
+      "main": [
+        [
+          {
+            "node": "CONVERTIR ARRAY",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Actualizar registro sin publicación en linkedln",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publicar en Instagram?": {
+      "main": [
+        [
+          {
+            "node": "Preparar datos para Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Actualizar registro sin publicación en instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d02af6c8-1759-4570-9d52-c572c95220d1",
+  "meta": {
+    "instanceId": "d7a9026e160546b818e2c999d37da6cf05ed24223f78e1cc875f6dad19d3c0b1"
+  },
+  "id": "JSQcNGdJHj7XBiRX",
+  "tags": [
+    {
+      "createdAt": "2025-06-03T18:31:50.543Z",
+      "updatedAt": "2025-06-03T18:31:50.543Z",
+      "id": "MBVezkLs1IxknRSo",
+      "name": "instagram"
+    },
+    {
+      "createdAt": "2025-06-03T18:32:37.694Z",
+      "updatedAt": "2025-06-03T18:32:37.694Z",
+      "id": "e6uNX5PuFjjoXAkI",
+      "name": "cron"
+    },
+    {
+      "createdAt": "2025-06-03T18:31:47.169Z",
+      "updatedAt": "2025-06-03T18:31:47.169Z",
+      "id": "eDHiUi8LVTVK2H6S",
+      "name": "linkedln"
+    }
+  ]
+}

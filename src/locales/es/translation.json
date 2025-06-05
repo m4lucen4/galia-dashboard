@@ -179,7 +179,9 @@
     "maxImages": "imágenes máximo",
     "imageSizeError": "Error de tamaño",
     "maxSizeAllowed": "El tamaño máximo permitido por imagen es de",
-    "maxImagesError": "El número máximo de imágenes es de"
+    "maxImagesError": "El número máximo de imágenes es de",
+    "deleteTitle": "Eliminar Proyecto",
+    "deleteDescription": "¿Estás seguro de que deseas eliminar este proyecto? Esta acción no se puede deshacer."
   },
   "previewProjects": {
     "title": "Vista previa de proyectos",

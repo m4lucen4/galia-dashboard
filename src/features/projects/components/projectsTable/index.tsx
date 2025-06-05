@@ -8,12 +8,19 @@ import {
   useReactTable,
   SortingState,
 } from "@tanstack/react-table";
-import { ProjectDataProps } from "../../types";
-import { LoadingSpinner } from "../shared/ui/LoadingSpinner";
-import { useAppDispatch } from "../../redux/hooks";
-import { Button } from "../shared/ui/Button";
-import { fetchProjectById } from "../../redux/actions/ProjectActions";
+import { ProjectDataProps } from "../../../../types";
+import { LoadingSpinner } from "../../../../components/shared/ui/LoadingSpinner";
+import { useAppDispatch } from "../../../../redux/hooks";
+import { Button } from "../../../../components/shared/ui/Button";
+import { fetchProjectById } from "../../../../redux/actions/ProjectActions";
 import { useTranslation } from "react-i18next";
+import { Pagination } from "./Pagination";
+import {
+  RecoverIcon,
+  EditIcon,
+  LaunchIcon,
+  DeleteIcon,
+} from "../../../../components/icons";
 
 type ProjectsTableProps = {
   projects: ProjectDataProps[];
@@ -21,6 +28,7 @@ type ProjectsTableProps = {
   onEditProject: () => void;
   onLaunchProject: (projectId: string) => void;
   onRecoveryProject: (projectId: string) => void;
+  onDeleteProject: (projectId: string) => void;
 };
 
 export const ProjectsTable = ({
@@ -29,6 +37,7 @@ export const ProjectsTable = ({
   onEditProject,
   onLaunchProject,
   onRecoveryProject,
+  onDeleteProject,
 }: ProjectsTableProps) => {
   const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -77,8 +86,14 @@ export const ProjectsTable = ({
           return (
             <div className="flex space-x-2">
               <Button
-                title={t("projects.recovery")}
+                icon={<RecoverIcon />}
+                secondary
                 onClick={() => onRecoveryProject(props.row.original.id)}
+              />
+              <Button
+                icon={<DeleteIcon />}
+                secondary
+                onClick={() => onDeleteProject(props.row.original.id)}
               />
             </div>
           );
@@ -87,13 +102,19 @@ export const ProjectsTable = ({
         return (
           <div className="flex space-x-2">
             <Button
-              title={t("projects.launch")}
+              icon={<LaunchIcon />}
+              secondary
               onClick={() => onLaunchProject(props.row.original.id)}
             />
             <Button
-              title={t("projects.edit")}
+              icon={<EditIcon />}
               secondary
               onClick={() => handleEditClick(props.row.original)}
+            />
+            <Button
+              icon={<DeleteIcon />}
+              secondary
+              onClick={() => onDeleteProject(props.row.original.id)}
             />
           </div>
         );
@@ -177,89 +198,7 @@ export const ProjectsTable = ({
           </tbody>
         </table>
       </div>
-      {/* Controles de paginación */}
-      <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-        <div className="flex-1 flex justify-between sm:hidden">
-          <button
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {t("shared.previous")}
-          </button>
-          <button
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {t("shared.next")}
-          </button>
-        </div>
-        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm text-gray-700">
-              {t("shared.showing")}{" "}
-              <span className="font-medium">
-                {table.getState().pagination.pageIndex *
-                  table.getState().pagination.pageSize +
-                  1}
-              </span>{" "}
-              {t("shared.to")}{" "}
-              <span className="font-medium">
-                {Math.min(
-                  (table.getState().pagination.pageIndex + 1) *
-                    table.getState().pagination.pageSize,
-                  table.getFilteredRowModel().rows.length
-                )}
-              </span>
-              {" - "}
-              <span className="font-medium">
-                {table.getFilteredRowModel().rows.length}
-              </span>{" "}
-              {t("shared.results")}
-            </p>
-          </div>
-          <div>
-            <nav
-              className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-              aria-label="Pagination"
-            >
-              <button
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-                className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {"<<"}
-              </button>
-              <button
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {"<"}
-              </button>
-              <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                {t("shared.page")} {table.getState().pagination.pageIndex + 1}{" "}
-                {t("shared.of")} {table.getPageCount()}
-              </span>
-              <button
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {">"}
-              </button>
-              <button
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-                className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {">>"}
-              </button>
-            </nav>
-          </div>
-        </div>
-      </div>
+      <Pagination table={table} />
     </div>
   );
 };
