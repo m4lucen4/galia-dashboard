@@ -57,6 +57,13 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
 
   useEffect(() => {
     if (!publishDate) {
+      onDateChange(currentDate);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!publishDate || (publishDate && publishDate < currentDate)) {
       if (socialNetworks.instagram) {
         onSocialNetworkChange("instagram");
       }
@@ -69,6 +76,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
     socialNetworks.instagram,
     socialNetworks.linkedln,
     onSocialNetworkChange,
+    currentDate,
   ]);
 
   const handleDateChange = (

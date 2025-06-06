@@ -1,7 +1,7 @@
 import React from "react";
 import { Marker as LeafletMarker } from "react-leaflet";
-import { extractCoordinates } from "../../helpers";
-import { ProjectDataProps } from "../../types";
+import { extractCoordinates } from "../../../helpers";
+import { ProjectDataProps } from "../../../types";
 import L from "leaflet";
 
 interface ProjectMarkerProps {

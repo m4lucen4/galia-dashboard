@@ -10,7 +10,7 @@ import { Projects } from "../features/projects/screens/Projects";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { PublicRoute } from "./PublicRoute";
 import { PasswordResetRoute } from "./PasswordResetRoute";
-import { ProjectsMap } from "../screens/ProjectsMap";
+import { ProjectsMap } from "../features/maps/screens/ProjectsMap";
 import { AdminRoute } from "./AdminRoute";
 import { LinkedInCallback } from "../screens/LinkedInCallback";
 import { Privacy } from "../screens/public/Privacy";

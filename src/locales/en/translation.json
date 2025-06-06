@@ -125,7 +125,8 @@
     "filterByCategory": "Filter by category",
     "searchCategory": "Search category",
     "results": "results",
-    "result": "result"
+    "result": "result",
+    "selectProvince": "Select province"
   },
   "projects": {
     "title": "Projects",

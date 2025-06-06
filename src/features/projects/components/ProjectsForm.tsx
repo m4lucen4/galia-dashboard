@@ -1,11 +1,15 @@
 import React, { useEffect, useState, useRef } from "react";
-import { InputField } from "../shared/ui/InputField";
-import { Button } from "../shared/ui/Button";
-import { ProjectDataProps, ProjectImageData, UserDataProps } from "../../types";
-import { CreateProjectProps } from "../../redux/actions/ProjectActions";
-import { KeywordInput } from "../shared/ui/KeywordInput";
-import { SelectField } from "../shared/ui/SelectField";
-import { CancelIcon } from "../icons";
+import { InputField } from "../../../components/shared/ui/InputField";
+import { Button } from "../../../components/shared/ui/Button";
+import {
+  ProjectDataProps,
+  ProjectImageData,
+  UserDataProps,
+} from "../../../types";
+import { CreateProjectProps } from "../../../redux/actions/ProjectActions";
+import { KeywordInput } from "../../../components/shared/ui/KeywordInput";
+import { SelectField } from "../../../components/shared/ui/SelectField";
+import { CancelIcon } from "../../../components/icons";
 import { useTranslation } from "react-i18next";
 
 interface ProjectsFormProps {

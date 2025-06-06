@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { ProjectDataProps } from "../../types";
-import { Button } from "../shared/ui/Button";
+import { ProjectDataProps } from "../../../types";
+import { Button } from "../../../components/shared/ui/Button";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   LinkIcon,
 } from "@heroicons/react/24/outline";
-import { getCategoryLabel } from "../../helpers";
+import { getCategoryLabel } from "../../../helpers";
 import { useTranslation } from "react-i18next";
 
 interface ProjectDetailProps {
@@ -65,11 +65,9 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project }) => {
 
   return (
     <div className="project-detail">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">{project.title}</h2>
-
       {hasImages && (
         <div className="mb-6 relative">
-          <div className="relative w-full h-72 rounded-lg overflow-hidden">
+          <div className="relative w-full h-96 rounded-lg overflow-hidden">
             <img
               src={project.image_data?.[currentImageIndex].url}
               alt={`${project.title} - Imagen ${currentImageIndex + 1}`}

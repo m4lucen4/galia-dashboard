@@ -25,7 +25,7 @@
     "map": "Mapa"
   },
   "login": {
-    "title": "Iniciar Sesión",
+    "title": "Iniciar sesión",
     "subtitle": "Introduce tus credenciales",
     "email": "Correo electrónico",
     "password": "Contraseña",
@@ -125,7 +125,8 @@
     "filterByCategory": "Filtrar por categoría",
     "searchCategory": "Buscar categoría",
     "results": "resultados",
-    "result": "resultado"
+    "result": "resultado",
+    "selectProvince": "Selecciona una provincia"
   },
   "projects": {
     "title": "Proyectos",

@@ -5,7 +5,6 @@ import { Drawer } from "../../../components/shared/ui/Drawer";
 import { Alert } from "../../../components/shared/ui/Alert";
 import { Button } from "../../../components/shared/ui/Button";
 import { errorMessages } from "../../../helpers";
-import { ProjectsForm } from "../../../components/projects/ProjectsForm";
 import {
   addProject,
   CreateProjectProps,
@@ -23,6 +22,7 @@ import { useProjectsData } from "../../../hooks/useProjectsData";
 import { WorkingInProgress } from "../../../components/shared/ui/WorkingInProgress";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ProjectsForm } from "../components/ProjectsForm";
 
 export const Projects = () => {
   const { t } = useTranslation();

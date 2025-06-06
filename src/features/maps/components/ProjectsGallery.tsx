@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { ProjectDataProps } from "../../types";
-import { Button } from "../shared/ui/Button";
+import { ProjectDataProps } from "../../../types";
+import { Button } from "../../../components/shared/ui/Button";
 import {
   ChevronDownIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
-import { getCategoryLabel } from "../../helpers";
+import { getCategoryLabel } from "../../../helpers";
 import { useTranslation } from "react-i18next";
 
 interface ProjectsGalleryProps {
@@ -235,7 +235,9 @@ export const ProjectsGallery: React.FC<ProjectsGalleryProps> = ({
           <div
             key={`${image.projectId}-${index}`}
             className="break-inside-avoid mb-2"
-            onClick={() => onSelectProject(image.project)}
+            onClick={() => {
+              onSelectProject(image.project);
+            }}
           >
             <div className="group relative overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer">
               <img
