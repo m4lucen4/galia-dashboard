@@ -9,6 +9,7 @@ interface CheckSocialNetworkProps {
   isChecked: boolean;
   isDateValid: boolean;
   publishDate: string;
+  loading: boolean;
   onChange: (checked: boolean) => void;
 }
 
@@ -19,6 +20,7 @@ export const CheckSocialNetwork: React.FC<CheckSocialNetworkProps> = ({
   isChecked,
   isDateValid,
   publishDate,
+  loading,
   onChange,
 }) => {
   const { t } = useTranslation();
@@ -40,7 +42,7 @@ export const CheckSocialNetwork: React.FC<CheckSocialNetworkProps> = ({
         }`}
         checked={isChecked}
         onChange={(e) => onChange(e.target.checked)}
-        disabled={!isDateValid || !isConnected}
+        disabled={!isDateValid || !isConnected || loading}
       />
       <label
         htmlFor={id}

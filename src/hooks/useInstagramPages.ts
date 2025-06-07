@@ -26,7 +26,7 @@ export const useInstagramPages = () => {
   return {
     instagram,
     isCheckingConnection: checkInstagramRequest.inProgress,
-    isFetchingPages: fetchInstagramPagesRequest.inProgress,
+    isFetchingInstagramPages: fetchInstagramPagesRequest.inProgress,
     connectionError: checkInstagramRequest.messages,
     pagesError: fetchInstagramPagesRequest.messages,
   };

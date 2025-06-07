@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { AppDispatch } from "../../redux/store";
+import { AppDispatch } from "../../../redux/store";
 import { useTranslation } from "react-i18next";
-import { login } from "../../redux/actions/AuthActions";
-import { LoginProps } from "../../types";
-import { InputField } from "../shared/ui/InputField";
-import { Button } from "../shared/ui/Button";
-import { isFormValid, validateLoginForm } from "../../helpers";
-import { Card } from "../shared/ui/Card";
+import { login } from "../../../redux/actions/AuthActions";
+import { LoginProps } from "../../../types";
+import { InputField } from "../../../components/shared/ui/InputField";
+import { Button } from "../../../components/shared/ui/Button";
+import { isFormValid, validateLoginForm } from "../../../helpers";
+import { Card } from "../../../components/shared/ui/Card";
 
 interface LoginFormProps {
   loginRequest: {

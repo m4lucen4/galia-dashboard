@@ -26,7 +26,7 @@ export const useLinkedInPages = () => {
   return {
     linkedin,
     isCheckingConnection: checkLinkedInRequest.inProgress,
-    isFetchingPages: fetchLinkedInPagesRequest.inProgress,
+    isFetchingLinkedinPages: fetchLinkedInPagesRequest.inProgress,
     connectionError: checkLinkedInRequest.messages,
     pagesError: fetchLinkedInPagesRequest.messages,
   };

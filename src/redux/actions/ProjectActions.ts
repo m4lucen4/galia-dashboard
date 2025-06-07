@@ -49,7 +49,7 @@ export const addProject = createAsyncThunk(
         projectData.images.length > 0 &&
         newProject.id
       ) {
-        const imagesToUpload = projectData.images.slice(0, 15);
+        const imagesToUpload = projectData.images.slice(0, 10);
 
         for (const [index, image] of imagesToUpload.entries()) {
           const fileExt = image.name.split(".").pop();
@@ -124,7 +124,7 @@ export const updateProject = createAsyncThunk(
       if (projectData.images && projectData.images.length > 0) {
         const imagesToUpload = projectData.images.slice(
           0,
-          15 - imageData.length
+          10 - imageData.length
         );
 
         for (const [index, image] of imagesToUpload.entries()) {

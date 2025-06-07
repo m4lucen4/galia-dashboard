@@ -29,8 +29,8 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   onSocialNetworkChange,
 }) => {
   const { t } = useTranslation();
-  const { linkedin } = useLinkedInPages();
-  const { instagram } = useInstagramPages();
+  const { linkedin, isFetchingLinkedinPages } = useLinkedInPages();
+  const { instagram, isFetchingInstagramPages } = useInstagramPages();
 
   const currentDate = useMemo(() => {
     const today = new Date();
@@ -195,6 +195,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
             isDateValid={isDateValid}
             publishDate={publishDate}
             onChange={handleInstagramChange}
+            loading={isFetchingInstagramPages}
           />
           {isInstagramChecked && instagram.isConnected && (
             <InstagramSelectPage
@@ -211,6 +212,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
             isDateValid={isDateValid}
             publishDate={publishDate}
             onChange={handleLinkedInChange}
+            loading={isFetchingLinkedinPages}
           />
           {isLinkedInChecked && linkedin.isConnected && (
             <LinkedlnSelectPage
