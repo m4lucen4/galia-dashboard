@@ -146,6 +146,7 @@ export const updateProjectPublishing = createAsyncThunk(
       const updateData: {
         publishDate?: string | null;
         checkSocialNetworks?: SocialNetworksCheck;
+        state?: string;
       } = {};
 
       if (publishDate !== undefined) {
@@ -154,6 +155,16 @@ export const updateProjectPublishing = createAsyncThunk(
 
       if (checkSocialNetworks !== undefined) {
         updateData.checkSocialNetworks = checkSocialNetworks;
+      }
+
+      const hasPublishDate = publishDate && publishDate !== "";
+      const hasSocialNetworks =
+        checkSocialNetworks?.instagram || checkSocialNetworks?.linkedln;
+
+      if (hasPublishDate && hasSocialNetworks) {
+        updateData.state = "scheduled";
+      } else {
+        updateData.state = "preview";
       }
 
       const { data: updatedProject, error } = await supabase

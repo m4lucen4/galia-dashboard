@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { CalendarDaysIcon } from "@heroicons/react/24/outline";
+
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { RootState } from "../../../redux/store";
 import { usePreviewProjectsData } from "../../../hooks/usePreviewProjectsData";
+import { useAlertManager } from "../../../hooks/useAlertManager";
 import {
   InstagramPageInfo,
   LinkedInPageInfo,
@@ -22,27 +27,24 @@ import { Alert } from "../../../components/shared/ui/Alert";
 import { ConfigPublish } from "../components/configPublish";
 import { CardsList } from "../components/cardList";
 import { PreviewProjectForm } from "../../../components/previewProjects/PreviewProjectForm";
-import { CalendarDaysIcon } from "@heroicons/react/24/outline";
-import { useTranslation } from "react-i18next";
 
 export const PreviewProjects = () => {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
+  const { openAlert, closeAlert, isAlertOpen, getSelectedProject } =
+    useAlertManager();
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [seeInstagram, setSeeInstagram] = useState(false);
   const [seeLinkedln, setSeeLinkedln] = useState(false);
   const [seeEditPreview, setEditSeePreview] = useState(false);
-  const [deleteProject, setDeleteProject] = useState(false);
-  const [publishAgain, setPublishAgain] = useState(false);
-  const [seePublishConfig, setSeePublishConfig] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [selectedProject, setSelectedProject] =
-    useState<PreviewProjectDataProps | null>(null);
   const [publishDate, setPublishDate] = useState<string>("");
   const [socialNetworks, setSocialNetworks] = useState<SocialNetworksCheck>({
     instagram: false,
     linkedln: false,
   });
+
   const user = useAppSelector((state: RootState) => state.auth.user);
   const { userData } = useAppSelector((state: RootState) => state.user);
   const { projects, project, previewProjectUpdateRequest } = useAppSelector(
@@ -65,34 +67,34 @@ export const PreviewProjects = () => {
   };
 
   const handleDeletePreview = (project: PreviewProjectDataProps) => {
-    setSelectedProject(project);
-    setDeleteProject(true);
+    openAlert("delete", project);
     setOpenMenuId(null);
   };
 
   const handleConfirmDelete = () => {
+    const selectedProject = getSelectedProject();
     if (selectedProject) {
       dispatch(deletePreviewProject(selectedProject.id))
         .unwrap()
         .then(() => {
-          setDeleteProject(false);
+          closeAlert();
           fetchPreviewProjectsData();
         });
     }
   };
 
   const handlePublishAgain = (project: PreviewProjectDataProps) => {
-    setSelectedProject(project);
-    setPublishAgain(true);
+    openAlert("publishAgain", project);
     setOpenMenuId(null);
   };
 
   const handleConfirmPublishAgain = () => {
+    const selectedProject = getSelectedProject();
     if (selectedProject) {
       dispatch(resetProjectToPreview(selectedProject.id.toString()))
         .unwrap()
         .then(() => {
-          setPublishAgain(false);
+          closeAlert();
           fetchPreviewProjectsData();
         });
     }
@@ -133,8 +135,6 @@ export const PreviewProjects = () => {
   };
 
   const handleOpenPublishConfig = (project: PreviewProjectDataProps) => {
-    setSelectedProject(project);
-
     if (project.publishDate) {
       const dateOnly = project.publishDate.split("T")[0];
       setPublishDate(dateOnly);
@@ -147,7 +147,7 @@ export const PreviewProjects = () => {
       linkedln: project.checkSocialNetworks?.linkedln || false,
     });
 
-    setSeePublishConfig(true);
+    openAlert("publishConfig", project);
   };
 
   const handleSocialNetworkChange = (
@@ -182,6 +182,7 @@ export const PreviewProjects = () => {
   };
 
   const handlePublishProject = () => {
+    const selectedProject = getSelectedProject();
     if (selectedProject) {
       dispatch(
         updateProjectPublishing({
@@ -192,7 +193,7 @@ export const PreviewProjects = () => {
       )
         .unwrap()
         .then(() => {
-          setSeePublishConfig(false);
+          closeAlert();
           fetchPreviewProjectsData();
         });
     }
@@ -223,6 +224,7 @@ export const PreviewProjects = () => {
           {t("previewProjects.description")}
         </p>
       </div>
+
       <Drawer
         title={getDrawerTitle()}
         isOpen={drawerOpen}
@@ -254,13 +256,14 @@ export const PreviewProjects = () => {
         handleOpenLinkedln={handleOpenLinkedln}
         handlePublishAgain={handlePublishAgain}
       />
-      {seePublishConfig && (
+
+      {isAlertOpen("publishConfig") && (
         <Alert
           title={t("previewProjects.configurePublish")}
           description={t("previewProjects.configureDescription")}
           icon={CalendarDaysIcon}
           onAccept={handlePublishProject}
-          onCancel={() => setSeePublishConfig(false)}
+          onCancel={closeAlert}
           disabledConfirmButton={
             !socialNetworks.instagram &&
             !socialNetworks.linkedln &&
@@ -275,21 +278,23 @@ export const PreviewProjects = () => {
           />
         </Alert>
       )}
-      {deleteProject && (
+
+      {isAlertOpen("delete") && (
         <Alert
           title={t("previewProjects.deleteProject")}
           description={t("previewProjects.deleteDescription")}
           onAccept={handleConfirmDelete}
-          onCancel={() => setDeleteProject(false)}
+          onCancel={closeAlert}
         />
       )}
-      {publishAgain && (
+
+      {isAlertOpen("publishAgain") && (
         <Alert
           title={t("previewProjects.publishAgain")}
           description={t("previewProjects.publishAgainDescription")}
           icon={CalendarDaysIcon}
           onAccept={handleConfirmPublishAgain}
-          onCancel={() => setPublishAgain(false)}
+          onCancel={closeAlert}
         />
       )}
     </div>

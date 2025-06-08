@@ -193,6 +193,7 @@ export const getCategoryLabel = (categoryValue: string | undefined): string => {
  *
  * The function evaluates Instagram and LinkedIn publication results to determine:
  * - "published" (green) - All attempted publications were successful
+ * - "scheduled" (blue) - The project is scheduled for future publication
  * - "error en publicación" (red) - All attempted publications failed
  * - "publicado con errores" (yellow) - Mix of successes and failures
  * - "publicado parcialmente" (blue) - Some successes with no failures
@@ -203,6 +204,13 @@ export const getProjectStateInfo = (
   project: PreviewProjectDataProps
 ): ProjectStateInfo => {
   const { instagramResult, linkedlnResult, state } = project;
+
+  if (state === "scheduled") {
+    return {
+      displayState: "scheduled",
+      className: "bg-blue-100 text-blue-800",
+    };
+  }
 
   if (!instagramResult && !linkedlnResult) {
     return {
