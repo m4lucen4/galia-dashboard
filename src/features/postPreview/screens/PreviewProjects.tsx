@@ -27,6 +27,7 @@ import { Alert } from "../../../components/shared/ui/Alert";
 import { ConfigPublish } from "../components/configPublish";
 import { CardsList } from "../components/cardList";
 import { PreviewProjectForm } from "../../../components/previewProjects/PreviewProjectForm";
+import { Filters } from "../components/Filters";
 
 export const PreviewProjects = () => {
   const dispatch = useAppDispatch();
@@ -44,12 +45,18 @@ export const PreviewProjects = () => {
     instagram: false,
     linkedln: false,
   });
+  const [selectedFilter, setSelectedFilter] = useState<string>("all");
 
   const user = useAppSelector((state: RootState) => state.auth.user);
   const { userData } = useAppSelector((state: RootState) => state.user);
   const { projects, project, previewProjectUpdateRequest } = useAppSelector(
     (state: RootState) => state.previewProject
   );
+
+  const filteredProjects = projects.filter((project) => {
+    if (selectedFilter === "all") return true;
+    return project.state === selectedFilter;
+  });
 
   const handleToggleMenu = (projectId: string) => {
     if (openMenuId === projectId) {
@@ -225,6 +232,12 @@ export const PreviewProjects = () => {
         </p>
       </div>
 
+      <Filters
+        projects={projects}
+        selectedFilter={selectedFilter}
+        onFilterChange={setSelectedFilter}
+      />
+
       <Drawer
         title={getDrawerTitle()}
         isOpen={drawerOpen}
@@ -246,7 +259,7 @@ export const PreviewProjects = () => {
       </Drawer>
 
       <CardsList
-        projects={projects}
+        projects={filteredProjects}
         openMenuId={openMenuId}
         handleToggleMenu={handleToggleMenu}
         handleEditPreview={handleEditPreview}

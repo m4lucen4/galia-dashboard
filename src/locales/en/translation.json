@@ -221,7 +221,13 @@
     "linkedlnFailed": "LinkedIn error",
     "linkedlnNotSelected": "LinkedIn not selected",
     "publishAgain": "Publish again",
-    "publishAgainDescription": "Do you want to republish this project? It will be published again on the selected social networks."
+    "publishAgainDescription": "Do you want to republish this project? It will be published again on the selected social networks.",
+    "filters": {
+      "all": "All",
+      "preview": "Preview",
+      "scheduled": "Scheduled",
+      "published": "Published"
+    }
   },
   "profile": {
     "title": "Profile",

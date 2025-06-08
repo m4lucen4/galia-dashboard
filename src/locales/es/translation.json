@@ -221,7 +221,13 @@
     "linkedlnFailed": "Error en LinkedIn",
     "linkedlnNotSelected": "No seleccionado LinkedIn",
     "publishAgain": "Publicar de nuevo",
-    "publishAgainDescription": "¿Estás seguro de que deseas volver a publicar este proyecto? Esta acción reiniciará el proceso de publicación."
+    "publishAgainDescription": "¿Estás seguro de que deseas volver a publicar este proyecto? Esta acción reiniciará el proceso de publicación.",
+    "filters": {
+      "all": "Todos",
+      "preview": "Vista previa",
+      "scheduled": "Programados",
+      "published": "Publicados"
+    }
   },
   "profile": {
     "title": "Perfil",
