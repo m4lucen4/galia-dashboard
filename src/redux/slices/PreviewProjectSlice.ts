@@ -7,6 +7,7 @@ import {
   updateProjectPublishing,
   deletePreviewProject,
   updatePreviewProject,
+  resetProjectToPreview,
 } from "../actions/PreviewProjectActions";
 
 interface ProjectState {
@@ -18,6 +19,7 @@ interface ProjectState {
   previewProjectUpdatePublishingRequest: IRequest;
   previewProjectDeleteRequest: IRequest;
   previewProjectUpdateRequest: IRequest;
+  previewProjectResetRequest: IRequest;
 }
 
 const initialState: ProjectState = {
@@ -49,6 +51,11 @@ const initialState: ProjectState = {
     ok: false,
   },
   previewProjectUpdateRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
+  previewProjectResetRequest: {
     inProgress: false,
     messages: "",
     ok: false,
@@ -249,6 +256,45 @@ const previewProjectSlice = createSlice({
             : errorPayload?.message || "Error desconocido";
 
         state.previewProjectUpdateRequest = {
+          inProgress: false,
+          messages: errorMessage,
+          ok: false,
+        };
+      });
+    builder
+      .addCase(resetProjectToPreview.pending, (state) => {
+        state.previewProjectResetRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(resetProjectToPreview.fulfilled, (state, action) => {
+        const { id } = action.payload.project;
+        const projectIndex = state.projects.findIndex(
+          (project) => project.id === id
+        );
+        if (projectIndex !== -1) {
+          state.projects[projectIndex].state = "preview";
+          state.projects[projectIndex].publishDate = undefined;
+          state.projects[projectIndex].checkSocialNetworks = undefined;
+          state.projects[projectIndex].instagramResult = undefined;
+          state.projects[projectIndex].linkedlnResult = undefined;
+        }
+        state.previewProjectResetRequest = {
+          inProgress: false,
+          messages: "",
+          ok: true,
+        };
+      })
+      .addCase(resetProjectToPreview.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage =
+          typeof errorPayload === "string"
+            ? errorPayload
+            : errorPayload?.message || "Error desconocido";
+
+        state.previewProjectResetRequest = {
           inProgress: false,
           messages: errorMessage,
           ok: false,

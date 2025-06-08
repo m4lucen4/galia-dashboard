@@ -15,6 +15,7 @@ import {
   fetchPreviewProjectById,
   updateProjectPublishing,
   deletePreviewProject,
+  resetProjectToPreview,
 } from "../../../redux/actions/PreviewProjectActions";
 import { fetchUserByUid } from "../../../redux/actions/UserActions";
 import { Alert } from "../../../components/shared/ui/Alert";
@@ -32,6 +33,7 @@ export const PreviewProjects = () => {
   const [seeLinkedln, setSeeLinkedln] = useState(false);
   const [seeEditPreview, setEditSeePreview] = useState(false);
   const [deleteProject, setDeleteProject] = useState(false);
+  const [publishAgain, setPublishAgain] = useState(false);
   const [seePublishConfig, setSeePublishConfig] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] =
@@ -74,6 +76,23 @@ export const PreviewProjects = () => {
         .unwrap()
         .then(() => {
           setDeleteProject(false);
+          fetchPreviewProjectsData();
+        });
+    }
+  };
+
+  const handlePublishAgain = (project: PreviewProjectDataProps) => {
+    setSelectedProject(project);
+    setPublishAgain(true);
+    setOpenMenuId(null);
+  };
+
+  const handleConfirmPublishAgain = () => {
+    if (selectedProject) {
+      dispatch(resetProjectToPreview(selectedProject.id.toString()))
+        .unwrap()
+        .then(() => {
+          setPublishAgain(false);
           fetchPreviewProjectsData();
         });
     }
@@ -233,6 +252,7 @@ export const PreviewProjects = () => {
         handleOpenPublishConfig={handleOpenPublishConfig}
         handleOpenInstagram={handleOpenInstagram}
         handleOpenLinkedln={handleOpenLinkedln}
+        handlePublishAgain={handlePublishAgain}
       />
       {seePublishConfig && (
         <Alert
@@ -261,6 +281,15 @@ export const PreviewProjects = () => {
           description={t("previewProjects.deleteDescription")}
           onAccept={handleConfirmDelete}
           onCancel={() => setDeleteProject(false)}
+        />
+      )}
+      {publishAgain && (
+        <Alert
+          title={t("previewProjects.publishAgain")}
+          description={t("previewProjects.publishAgainDescription")}
+          icon={CalendarDaysIcon}
+          onAccept={handleConfirmPublishAgain}
+          onCancel={() => setPublishAgain(false)}
         />
       )}
     </div>

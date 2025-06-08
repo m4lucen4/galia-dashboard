@@ -219,7 +219,9 @@
     "instagramNotSelected": "No seleccionado Instagram",
     "linkedlnPosted": "Publicado en LinkedIn",
     "linkedlnFailed": "Error en LinkedIn",
-    "linkedlnNotSelected": "No seleccionado LinkedIn"
+    "linkedlnNotSelected": "No seleccionado LinkedIn",
+    "publishAgain": "Publicar de nuevo",
+    "publishAgainDescription": "¿Estás seguro de que deseas volver a publicar este proyecto? Esta acción reiniciará el proceso de publicación."
   },
   "profile": {
     "title": "Perfil",

@@ -297,3 +297,46 @@ export const deletePreviewProject = createAsyncThunk(
     }
   }
 );
+
+export const resetProjectToPreview = createAsyncThunk(
+  "projectsPreview/resetProjectToPreview",
+  async (projectId: string, { rejectWithValue }) => {
+    try {
+      const updateData = {
+        state: "preview",
+        publishDate: null,
+        checkSocialNetworks: null,
+        instagramResult: null,
+        linkedlnResult: null,
+      };
+
+      const { data: updatedProject, error } = await supabase
+        .from("projectsPreview")
+        .update(updateData)
+        .eq("id", projectId)
+        .select()
+        .single();
+
+      if (error) {
+        return rejectWithValue({
+          message: `Error resetting project to preview: ${error.message}`,
+          status: error.code,
+        });
+      }
+
+      return {
+        project: updatedProject,
+        message: "Project reset to preview successfully",
+      };
+    } catch (error: unknown) {
+      const appError: SupabaseError = {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error resetting project to preview",
+        status: 500,
+      };
+      return rejectWithValue(appError);
+    }
+  }
+);

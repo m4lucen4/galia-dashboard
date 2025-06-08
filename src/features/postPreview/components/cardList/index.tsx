@@ -19,6 +19,7 @@ interface CardsListProps {
   handleOpenPublishConfig: (project: PreviewProjectDataProps) => void;
   handleOpenInstagram: (project: PreviewProjectDataProps) => void;
   handleOpenLinkedln: (project: PreviewProjectDataProps) => void;
+  handlePublishAgain: (project: PreviewProjectDataProps) => void;
 }
 
 export const CardsList: React.FC<CardsListProps> = ({
@@ -30,6 +31,7 @@ export const CardsList: React.FC<CardsListProps> = ({
   handleOpenPublishConfig,
   handleOpenInstagram,
   handleOpenLinkedln,
+  handlePublishAgain,
 }) => {
   const { t } = useTranslation();
   const sortedProjects = [...projects].sort((a, b) => {
@@ -80,6 +82,7 @@ export const CardsList: React.FC<CardsListProps> = ({
                   onToggleMenu={handleToggleMenu}
                   onEditPreview={handleEditPreview}
                   onDeletePreview={handleDeletePreview}
+                  onPublishAgain={handlePublishAgain}
                 />
               </div>
               <ProjectInfo project={project} />
