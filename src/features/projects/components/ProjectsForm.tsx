@@ -41,6 +41,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
     promoter: "",
     collaborators: "",
     authors: "",
+    showMap: false,
   };
 
   const [formData, setFormData] = useState<CreateProjectProps>(
@@ -328,15 +329,35 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               ))}
             </div>
           </div>
-          <div className="mb-2">
-            <InputField
-              id="googleMaps"
-              label={t("projects.googleMaps")}
-              placeholder={t("projects.placeholderGoogleMaps")}
-              type="url"
-              value={formData.googleMaps || ""}
-              onChange={handleChange}
-            />
+          <div className="flex items-end space-x-4 mb-2">
+            <div className="flex-1">
+              <InputField
+                id="googleMaps"
+                label={t("projects.googleMaps")}
+                placeholder={t("projects.placeholderGoogleMaps")}
+                type="url"
+                value={formData.googleMaps || ""}
+                onChange={handleChange}
+              />
+            </div>
+            {user?.role === "admin" && (
+              <div className="flex items-center pb-1">
+                <input
+                  type="checkbox"
+                  id="showMap"
+                  name="showMap"
+                  checked={formData.showMap}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-black focus:ring-gray-400 border-gray-300 rounded"
+                />
+                <label
+                  htmlFor="showMap"
+                  className="ml-2 block text-sm text-gray-700 whitespace-nowrap"
+                >
+                  Mostrar?
+                </label>
+              </div>
+            )}
           </div>
           <div className="flex space-x-4 mb-2">
             <div className="flex-1">

@@ -31,6 +31,7 @@ export const addProject = createAsyncThunk(
           authors: projectData.authors,
           category: projectData.category,
           year: projectData.year,
+          showMap: projectData.showMap,
         })
         .select()
         .single();
@@ -178,6 +179,7 @@ export const updateProject = createAsyncThunk(
           authors: projectData.authors,
           category: projectData.category,
           year: projectData.year,
+          showMap: projectData.showMap,
         })
         .eq("id", projectData.id)
         .select()
@@ -353,7 +355,9 @@ export const fetchProjectsWithGoogleMaps = createAsyncThunk(
 
       const projectsWithGoogleMaps = projects.filter(
         (project) =>
-          project.googleMaps && Object.keys(project.googleMaps).length > 0
+          project.googleMaps &&
+          Object.keys(project.googleMaps).length > 0 &&
+          project.showMap === true
       );
 
       return {

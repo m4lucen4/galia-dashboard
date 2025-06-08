@@ -66,6 +66,7 @@ export type ProjectDataProps = {
   authors?: string;
   category?: string;
   year?: string;
+  showMap?: boolean;
 };
 
 export type LinkedInPageInfo = {

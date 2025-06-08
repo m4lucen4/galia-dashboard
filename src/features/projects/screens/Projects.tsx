@@ -179,6 +179,7 @@ export const Projects = () => {
       authors: project.authors,
       category: project.category,
       year: project.year,
+      showMap: project.showMap,
     };
   };
 

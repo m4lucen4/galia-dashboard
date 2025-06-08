@@ -19,7 +19,7 @@ export const useProjectsData = (user: UserDataProps | null | undefined) => {
 
     if (user.role === "admin") {
       dispatch(fetchProjects());
-    } else if (user.role === "customer") {
+    } else if (user.role === "customer" || user.role === "publisher") {
       dispatch(fetchProjectsByUserId(user.uid));
     }
   }, [dispatch, user]);
