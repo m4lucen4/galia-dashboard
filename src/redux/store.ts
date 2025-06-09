@@ -4,6 +4,7 @@ import userReducer from "./slices/UserSlice";
 import projectReducer from "./slices/ProjectSlice";
 import previewProjectReducer from "./slices/PreviewProjectSlice";
 import socialNetworksReducer from "./slices/SocialNetworksSlice";
+import settingsReducer from "./slices/SettingsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     project: projectReducer,
     previewProject: previewProjectReducer,
     socialNetworks: socialNetworksReducer,
+    settings: settingsReducer,
   },
 });
 
