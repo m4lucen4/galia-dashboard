@@ -169,6 +169,7 @@ export const Projects = () => {
       description: project.description,
       keywords: project.keywords,
       requiredAI: project.requiredAI,
+      prompt: project.prompt,
       user: project.user,
       weblink: project.weblink,
       image_data: project.image_data,

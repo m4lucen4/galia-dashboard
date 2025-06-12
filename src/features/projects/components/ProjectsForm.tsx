@@ -11,6 +11,8 @@ import { KeywordInput } from "../../../components/shared/ui/KeywordInput";
 import { SelectField } from "../../../components/shared/ui/SelectField";
 import { CancelIcon } from "../../../components/icons";
 import { useTranslation } from "react-i18next";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { fetchPrompts } from "../../../redux/actions/AdminActions";
 
 interface ProjectsFormProps {
   initialData?: ProjectDataProps;
@@ -27,12 +29,15 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   isEditMode = false,
   user,
 }) => {
+  const dispatch = useAppDispatch();
   const { t } = useTranslation();
   const defaultFormData: CreateProjectProps = {
     user: user?.uid,
     title: "",
     state: "draft",
     description: "",
+    requiredAI: false,
+    prompt: "",
     keywords: "",
     weblink: "",
     image_data: [],
@@ -44,6 +49,8 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
     showMap: false,
   };
 
+  const { prompts } = useAppSelector((state) => state.admin);
+
   const [formData, setFormData] = useState<CreateProjectProps>(
     initialData || defaultFormData
   );
@@ -51,6 +58,10 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<ProjectImageData[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    dispatch(fetchPrompts());
+  }, [dispatch]);
 
   useEffect(() => {
     if (initialData) {
@@ -202,6 +213,20 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
             {t("projects.requiredAI")}
           </label>
         </div>
+        {formData.requiredAI && (
+          <div className="flex items-center mb-2">
+            <SelectField
+              id="prompt"
+              label={t("projects.selectPrompt")}
+              value={formData.prompt || ""}
+              onChange={handleChange}
+              options={prompts.map((prompt) => ({
+                value: prompt.description,
+                label: prompt.title,
+              }))}
+            />
+          </div>
+        )}
         <div className="mb-2">
           <KeywordInput
             id="keywords"

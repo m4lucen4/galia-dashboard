@@ -22,7 +22,8 @@
     "users": "Usuarios",
     "projects": "Proyectos",
     "publishes": "Publicaciones",
-    "map": "Mapa"
+    "map": "Mapa",
+    "adminPanel": "Administración"
   },
   "login": {
     "title": "Iniciar sesión",
@@ -182,7 +183,8 @@
     "maxSizeAllowed": "El tamaño máximo permitido por imagen es de",
     "maxImagesError": "El número máximo de imágenes es de",
     "deleteTitle": "Eliminar Proyecto",
-    "deleteDescription": "¿Estás seguro de que deseas eliminar este proyecto? Esta acción no se puede deshacer."
+    "deleteDescription": "¿Estás seguro de que deseas eliminar este proyecto? Esta acción no se puede deshacer.",
+    "selectPrompt": "Selecciona un prompt"
   },
   "previewProjects": {
     "title": "Vista previa de proyectos",
@@ -247,5 +249,18 @@
     "descriptionChangePassword": "Por favor, introduce tu nueva contraseña y confírmala",
     "newPassword": "Nueva contraseña",
     "confirmPassword": "Confirmar contraseña"
+  },
+  "admin": {
+    "title": "Panel de Administración",
+    "description": "Gestiona mocklab desde aquí",
+    "prompts": "Prompts",
+    "noPrompts": "No hay prompts disponibles",
+    "actions": "Acciones",
+    "addPrompt": "Añadir Prompt",
+    "editPrompt": "Editar Prompt",
+    "createPrompt": "Crear Prompt",
+    "promptTitle": "Título del Prompt",
+    "promptDescription": "Descripción del Prompt",
+    "confirmDeletePrompt": "¿Estás seguro de que deseas eliminar este prompt? Esta acción no se puede deshacer."
   }
 }

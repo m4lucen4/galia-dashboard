@@ -182,7 +182,8 @@
     "maxSizeAllowed": "The maximum allowed size per image is",
     "maxImagesError": "The maximum number of images is",
     "deleteTitle": "Delete project",
-    "deleteDescription": "Are you sure you want to delete this project? This action cannot be undone."
+    "deleteDescription": "Are you sure you want to delete this project? This action cannot be undone.",
+    "selectPrompt": "Select prompt"
   },
   "previewProjects": {
     "title": "Project Preview",
@@ -247,5 +248,18 @@
     "descriptionChangePassword": "Please enter and confirm your new password",
     "newPassword": "New password",
     "confirmPassword": "Confirm password"
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "description": "Manage mocklab from here",
+    "prompts": "Prompts",
+    "noPrompts": "No prompts available.",
+    "actions": "Actions",
+    "addPrompt": "Add Prompt",
+    "editPrompt": "Edit Prompt",
+    "createPrompt": "Create Prompt",
+    "promptTitle": "Prompt Title",
+    "promptDescription": "Prompt Description",
+    "confirmDeletePrompt": "Are you sure you want to delete this prompt?"
   }
 }

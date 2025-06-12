@@ -1,17 +1,32 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 interface CardProps {
   title?: string;
   subtitle?: string;
   children: React.ReactNode;
+  navigateTo?: string;
 }
 
-export const Card: React.FC<CardProps> = ({ title, subtitle, children }) => {
+export const Card: React.FC<CardProps> = ({
+  title,
+  subtitle,
+  children,
+  navigateTo,
+}) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (navigateTo) {
+      navigate(navigateTo);
+    }
+  };
   return (
     <div
-      className={
-        "bg-white border border-black rounded-lg shadow-md overflow-hidden"
-      }
+      className={`bg-white border border-black rounded-lg shadow-md overflow-hidden ${
+        navigateTo ? "cursor-pointer hover:shadow-lg transition-shadow" : ""
+      }`}
+      onClick={handleClick}
     >
       {title && (
         <div className="px-6 pt-4">

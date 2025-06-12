@@ -6,6 +6,7 @@ import { Profile } from "../screens/Profile";
 import { Settings } from "../features/settings/screens/Settings";
 import { Users } from "../screens/Users";
 import { Projects } from "../features/projects/screens/Projects";
+import { AdminPanel } from "../features/adminPanel/screens/AdminPanel";
 
 import { ProtectedRoute } from "./ProtectedRoute";
 import { PublicRoute } from "./PublicRoute";
@@ -36,6 +37,7 @@ export const AppRoutes = () => (
     </Route>
     <Route element={<AdminRoute />}>
       <Route path="/users" element={<Users />} />
+      <Route path="/admin-panel" element={<AdminPanel />} />
     </Route>
     <Route element={<PasswordResetRoute />}>
       <Route path="/reset-password" element={<RecoveryPasswordScreen />} />

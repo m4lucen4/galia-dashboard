@@ -5,7 +5,7 @@ import {
   fetchPrompts,
   fetchPromptById,
   deletePrompt,
-} from "../actions/SettingsActions";
+} from "../actions/AdminActions";
 
 import { PromptsProps, IRequest, SupabaseError } from "../../types";
 
@@ -49,7 +49,7 @@ const initialState: UserState = {
   },
 };
 
-const settingsSlice = createSlice({
+const adminSlice = createSlice({
   name: "settings",
   initialState,
   reducers: {},
@@ -198,4 +198,4 @@ const settingsSlice = createSlice({
   },
 });
 
-export default settingsSlice.reducer;
+export default adminSlice.reducer;
