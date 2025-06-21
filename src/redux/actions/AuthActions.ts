@@ -1,6 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ChangePasswordProps, LoginProps } from "../../types";
 import { supabase } from "../../helpers/supabase";
+import i18n from "../../i18n";
 
 interface AppError {
   message: string;
@@ -37,6 +38,10 @@ export const login = createAsyncThunk(
           session: data.session,
           userData: null,
         };
+      }
+
+      if (userData?.language) {
+        i18n.changeLanguage(userData.language);
       }
       return {
         user: data.user,
@@ -79,6 +84,10 @@ export const checkAuthState = createAsyncThunk(
           session: data.session,
           userData: null,
         };
+      }
+
+      if (userData?.language) {
+        i18n.changeLanguage(userData.language);
       }
 
       return {

@@ -88,7 +88,6 @@ export const Profile = () => {
       setRepeatPassword(value);
     }
 
-    // Limpiar error al escribir
     setPasswordError("");
   };
 
@@ -300,6 +299,7 @@ export const Profile = () => {
                   options={[
                     { value: "es", label: "Español" },
                     { value: "en", label: "English" },
+                    { value: "cat", label: "Català" },
                   ]}
                 />
               </div>

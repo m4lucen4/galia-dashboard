@@ -23,7 +23,7 @@ export const LoginScreen = () => {
   const [recoveryEmailSent, setRecoveryEmailSent] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const navigate = useNavigate();
 
@@ -32,6 +32,15 @@ export const LoginScreen = () => {
   const authenticated = useSelector(
     (state: RootState) => state.auth.authenticated
   );
+
+  useEffect(() => {
+    const browserLanguage = navigator.language.split("-")[0];
+    const supportedLanguages = ["es", "en", "cat"];
+
+    if (supportedLanguages.includes(browserLanguage)) {
+      i18n.changeLanguage(browserLanguage);
+    }
+  }, [i18n]);
 
   useEffect(() => {
     dispatch(checkAuthState());
