@@ -7,15 +7,6 @@ export type ChangePasswordProps = {
   newPassword: string;
 };
 
-export type UserProps = {
-  uid: string;
-  email: string;
-  name: string;
-  created_at: string;
-  last_sign_in_at: string;
-  role: string;
-};
-
 export type UserDataProps = {
   id: string;
   created_at: string;

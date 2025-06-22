@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAppDispatch } from "../redux/hooks";
-import { processInstagramCallback } from "../redux/actions/SocialNetworksActions";
-import { InstagramIcon } from "../components/icons";
+import { useAppDispatch } from "../../../redux/hooks";
+import { processInstagramCallback } from "../../../redux/actions/SocialNetworksActions";
+import { InstagramIcon } from "../../../components/icons";
 
 export const InstagramCallback = () => {
   const [status, setStatus] = useState("Processing Instagram authorization...");

@@ -38,7 +38,6 @@ export default function Navbar() {
     { name: t("menu.users"), href: "/users", current: false, adminOnly: true },
     { name: t("menu.projects"), href: "/projects", current: false },
     { name: t("menu.publishes"), href: "/preview-projects", current: false },
-    { name: t("menu.map"), href: "/projects-map", current: false },
   ];
 
   const currentPath = location.pathname;
