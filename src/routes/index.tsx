@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { LoginScreen } from "../features/login/screens/Login";
 import { RecoveryPasswordScreen } from "../screens/RecoveryPassword";
 import { Home } from "../screens/Home";
-import { Profile } from "../screens/Profile";
+import { Profile } from "../features/profile/screens/Profile";
 import { Settings } from "../features/settings/screens/Settings";
 import { Users } from "../screens/Users";
 import { Projects } from "../features/projects/screens/Projects";
