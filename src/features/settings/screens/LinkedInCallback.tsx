@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAppDispatch } from "../redux/hooks";
-import { processLinkedInCallback } from "../redux/actions/SocialNetworksActions";
-import { LinkedInIcon } from "../components/icons";
+import { useAppDispatch } from "../../../redux/hooks";
+import { processLinkedInCallback } from "../../../redux/actions/SocialNetworksActions";
+import { LinkedInIcon } from "../../../components/icons";
 
 export const LinkedInCallback = () => {
   const [status, setStatus] = useState("Processing LinkedIn authorization...");
