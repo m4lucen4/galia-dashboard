@@ -183,7 +183,11 @@
     "maxImagesError": "The maximum number of images is",
     "deleteTitle": "Delete project",
     "deleteDescription": "Are you sure you want to delete this project? This action cannot be undone.",
-    "selectPrompt": "Select prompt"
+    "selectPrompt": "Select prompt",
+    "pending": "Pending",
+    "published": "Published",
+    "extraInfoPublished": "Published on guiadearquitectura.com",
+    "extraInfoPending": "Pending to be published on guiadearquitectura.com"
   },
   "previewProjects": {
     "title": "Project Preview",

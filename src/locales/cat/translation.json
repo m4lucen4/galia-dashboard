@@ -184,7 +184,11 @@
     "maxImagesError": "El nombre màxim d'imatges és de",
     "deleteTitle": "Eliminar Projecte",
     "deleteDescription": "Estàs segur que vols eliminar aquest projecte? Aquesta acció no es pot desfer.",
-    "selectPrompt": "Selecciona un prompt"
+    "selectPrompt": "Selecciona un prompt",
+    "pending": "Pendent",
+    "published": "Publicat",
+    "extraInfoPublished": "Publicat a guiadearquitectura.com",
+    "extraInfoPending": "Pendent de publicar a guiadearquitectura.com"
   },
   "previewProjects": {
     "title": "Vista prèvia de projectes",

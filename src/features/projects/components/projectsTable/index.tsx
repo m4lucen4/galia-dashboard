@@ -12,6 +12,7 @@ import { ProjectDataProps } from "../../../../types";
 import { LoadingSpinner } from "../../../../components/shared/ui/LoadingSpinner";
 import { useAppDispatch } from "../../../../redux/hooks";
 import { Button } from "../../../../components/shared/ui/Button";
+import { Badge } from "../../../../components/shared/ui/Badge";
 import { fetchProjectById } from "../../../../redux/actions/ProjectActions";
 import { useTranslation } from "react-i18next";
 import { Pagination } from "./Pagination";
@@ -39,6 +40,7 @@ export const ProjectsTable = ({
   onRecoveryProject,
   onDeleteProject,
 }: ProjectsTableProps) => {
+  console.log("ProjectsTable rendered with projects:", projects);
   const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([]);
   const dispatch = useAppDispatch();
@@ -58,6 +60,37 @@ export const ProjectsTable = ({
     }),
     columnHelper.accessor("title", {
       header: t("projects.projectTitle"),
+      cell: (info) => {
+        const project = info.row.original;
+        const hasGoogleMaps =
+          project.googleMaps && project.googleMaps.trim() !== "";
+
+        return (
+          <div className="flex items-center gap-2">
+            <span>{info.getValue()}</span>
+            {hasGoogleMaps && (
+              <Badge
+                title={
+                  project.showMap
+                    ? t("projects.published")
+                    : t("projects.pending")
+                }
+                extraInfo={
+                  project.showMap
+                    ? t("projects.extraInfoPublished")
+                    : t("projects.extraInfoPending")
+                }
+                primaryColor={project.showMap ? "green" : "yellow"}
+                url={
+                  project.showMap
+                    ? `https://guiadearquitectura.com/project/${project.id}`
+                    : undefined
+                }
+              />
+            )}
+          </div>
+        );
+      },
       size: 300,
     }),
     columnHelper.accessor("state", {
@@ -76,11 +109,6 @@ export const ProjectsTable = ({
         return stateFormatMap[state] || state;
       },
       size: 100,
-    }),
-    columnHelper.accessor("keywords", {
-      header: t("projects.keywords"),
-      cell: (info) => info.getValue() || "-",
-      size: 200,
     }),
     columnHelper.display({
       id: "actions",

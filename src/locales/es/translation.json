@@ -184,7 +184,11 @@
     "maxImagesError": "El número máximo de imágenes es de",
     "deleteTitle": "Eliminar Proyecto",
     "deleteDescription": "¿Estás seguro de que deseas eliminar este proyecto? Esta acción no se puede deshacer.",
-    "selectPrompt": "Selecciona un prompt"
+    "selectPrompt": "Selecciona un prompt",
+    "pending": "Pendiente",
+    "published": "Publicado",
+    "extraInfoPublished": "Publicado en guiadearquitectura.com",
+    "extraInfoPending": "Pendiente de publicar en guiadearquitectura.com"
   },
   "previewProjects": {
     "title": "Vista previa de proyectos",
