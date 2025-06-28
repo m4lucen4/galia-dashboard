@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { RootState, AppDispatch } from "../redux/store";
 import { checkAuthState } from "../redux/actions/AuthActions";
+import Footer from "../components/shared/ui/Footer";
 
 interface PublicRouteProps {
   children?: React.ReactNode;
@@ -20,5 +21,10 @@ export const PublicRoute = ({ children }: PublicRouteProps) => {
     return <Navigate to="/home" replace />;
   }
 
-  return <>{children || <Outlet />}</>;
+  return (
+    <>
+      {children || <Outlet />}
+      <Footer />
+    </>
+  );
 };

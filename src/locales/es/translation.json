@@ -266,5 +266,11 @@
     "promptTitle": "Título del Prompt",
     "promptDescription": "Descripción del Prompt",
     "confirmDeletePrompt": "¿Estás seguro de que deseas eliminar este prompt? Esta acción no se puede deshacer."
+  },
+  "footer": {
+    "allRightsReserved": "Todos los derechos reservados.",
+    "documentation": "Documentación",
+    "privacyPolicy": "Política de privacidad",
+    "legalAdvice": "Aviso legal"
   }
 }
