@@ -1,8 +1,4 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { useEffect } from "react";
-import { RootState, AppDispatch } from "../redux/store";
-import { checkAuthState } from "../redux/actions/AuthActions";
+import { Outlet } from "react-router-dom";
 import Footer from "../components/shared/ui/Footer";
 
 interface PublicRouteProps {
@@ -10,17 +6,6 @@ interface PublicRouteProps {
 }
 
 export const PublicRoute = ({ children }: PublicRouteProps) => {
-  const { authenticated } = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch<AppDispatch>();
-
-  useEffect(() => {
-    dispatch(checkAuthState());
-  }, [dispatch]);
-
-  if (authenticated && !location.pathname.startsWith("/projects-map")) {
-    return <Navigate to="/home" replace />;
-  }
-
   return (
     <>
       {children || <Outlet />}

@@ -13,15 +13,20 @@ import { PublicRoute } from "./PublicRoute";
 import { PasswordResetRoute } from "./PasswordResetRoute";
 import { AdminRoute } from "./AdminRoute";
 
+import { Web } from "../features/web/screen/Web";
 import { Privacy } from "../screens/public/Privacy";
 import { InstagramCallback } from "../features/settings/screens/InstagramCallback";
 import { LinkedInCallback } from "../features/settings/screens/LinkedInCallback";
 import { PreviewProjects } from "../features/postPreview/screens/PreviewProjects";
+import { NonAuthenticatedRoute } from "./NonAuthenticatedRoute";
 
 export const AppRoutes = () => (
   <Routes>
-    <Route element={<PublicRoute />}>
+    <Route element={<NonAuthenticatedRoute />}>
       <Route path="/login" element={<LoginScreen />} />
+    </Route>
+    <Route element={<PublicRoute />}>
+      <Route path="/web" element={<Web />} />
       <Route path="/privacy" element={<Privacy />} />
     </Route>
     <Route element={<ProtectedRoute />}>
