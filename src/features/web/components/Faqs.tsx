@@ -22,13 +22,13 @@ const Faqs: React.FC = () => {
   };
 
   return (
-    <section className="w-full bg-gray-50 py-16 px-4 sm:px-6 lg:px-8">
+    <section className="w-full bg-gray-100 py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
+          <h2 className="text-3xl font-medium text-gray-900 sm:text-4xl mb-4">
             Preguntas frecuentes
           </h2>
-          <p className="text-sm text-gray-600 max-w-4xl mx-auto">
+          <p className="text-md text-gray-600 max-w-4xl mx-auto">
             Aquí encontrarás respuestas a las preguntas más comunes sobre el uso
             de la aplicación.
             <br />

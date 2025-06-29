@@ -44,7 +44,7 @@ const HowWorks: React.FC = () => {
             <p className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">
               Proceso simplificado
             </p>
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
+            <h2 className="text-3xl font-medium text-gray-900 sm:text-4xl">
               Cómo funciona
             </h2>
           </div>
