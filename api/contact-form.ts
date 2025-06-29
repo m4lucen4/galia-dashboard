@@ -31,7 +31,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Email de notificación para tu equipo
     const { data, error } = await resend.emails.send({
       from: "Formulario Contacto <noreply@mocklab.app>",
-      to: ["hola@mocklab.com"], // Tu email de contacto
+      to: ["hola@mocklab.app"],
       subject: `Nuevo mensaje de contacto de ${nombre}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
