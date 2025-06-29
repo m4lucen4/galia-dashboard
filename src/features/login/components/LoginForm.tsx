@@ -88,7 +88,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       </Card>
       <div className="mt-4 text-center">
         <Link
-          to="/web"
+          to="/"
           className="text-sm text-gray-400 hover:text-gray-800 cursor-pointer"
         >
           {t("login.goBackWeb")}

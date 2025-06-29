@@ -26,7 +26,7 @@ export const AppRoutes = () => (
       <Route path="/login" element={<LoginScreen />} />
     </Route>
     <Route element={<PublicRoute />}>
-      <Route path="/web" element={<Web />} />
+      <Route path="/" element={<Web />} />
       <Route path="/privacy" element={<Privacy />} />
     </Route>
     <Route element={<ProtectedRoute />}>
@@ -45,7 +45,7 @@ export const AppRoutes = () => (
     <Route element={<PasswordResetRoute />}>
       <Route path="/reset-password" element={<RecoveryPasswordScreen />} />
     </Route>
-    <Route path="/" element={<Navigate to="/home" replace />} />
-    <Route path="*" element={<Navigate to="/home" replace />} />
+    <Route path="/" element={<Navigate to="/" replace />} />
+    <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>
 );
