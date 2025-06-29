@@ -91,7 +91,7 @@ const Features: React.FC = () => {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="p-6  hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+              className="p-6 hover:-translate-y-1 transition-all duration-300 cursor-pointer"
             >
               <div className="flex items-center justify-center w-16 h-16 bg-gray-50 rounded-4xl mb-4 mx-auto">
                 {feature.icon}
