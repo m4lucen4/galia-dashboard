@@ -6,7 +6,6 @@ import { checkAuthState } from "../redux/actions/AuthActions";
 import { LoadingSpinner } from "../components/shared/ui/LoadingSpinner";
 
 import Navbar from "../components/shared/ui/Navbar";
-import Footer from "../components/shared/ui/Footer";
 
 interface ProtectedRouteProps {
   children?: React.ReactNode;
@@ -40,7 +39,6 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       <div className="container mx-auto mt-6 px-4">
         {children || <Outlet />}
       </div>
-      <Footer />
     </>
   );
 };
