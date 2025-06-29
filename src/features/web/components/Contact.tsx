@@ -7,6 +7,7 @@ const Contact: React.FC = () => {
     telefono: "",
     email: "",
     mensaje: "",
+    politicaPrivacidad: false,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,25 +18,33 @@ const Contact: React.FC = () => {
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target as HTMLInputElement;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.politicaPrivacidad) {
+      setSubmitStatus("error");
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitStatus("idle");
 
     try {
+      const { ...dataToSend } = formData;
+
       const response = await fetch("/api/contact-form", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       });
 
       if (response.ok) {
@@ -46,6 +55,7 @@ const Contact: React.FC = () => {
           telefono: "",
           email: "",
           mensaje: "",
+          politicaPrivacidad: false,
         });
       } else {
         setSubmitStatus("error");
@@ -76,7 +86,9 @@ const Contact: React.FC = () => {
             {submitStatus === "error" && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
                 <p className="text-red-800">
-                  Error al enviar el mensaje. Por favor, inténtalo de nuevo.
+                  {!formData.politicaPrivacidad
+                    ? "Debes aceptar la política de privacidad para continuar."
+                    : "Error al enviar el mensaje. Por favor, inténtalo de nuevo."}
                 </p>
               </div>
             )}
@@ -173,6 +185,34 @@ const Contact: React.FC = () => {
                 />
               </div>
 
+              {/* Checkbox de política de privacidad */}
+              <div className="flex items-start">
+                <div className="flex items-center h-5">
+                  <input
+                    id="politicaPrivacidad"
+                    name="politicaPrivacidad"
+                    type="checkbox"
+                    checked={formData.politicaPrivacidad}
+                    onChange={handleInputChange}
+                    className="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 rounded focus:ring-gray-500 focus:ring-2"
+                  />
+                </div>
+                <div className="ml-3 text-sm">
+                  <label htmlFor="politicaPrivacidad" className="text-gray-600">
+                    He leído y acepto la{" "}
+                    <a
+                      href="/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-900 underline hover:text-gray-700"
+                    >
+                      política de privacidad
+                    </a>{" "}
+                    *
+                  </label>
+                </div>
+              </div>
+
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -183,6 +223,7 @@ const Contact: React.FC = () => {
             </form>
           </div>
 
+          {/* ...resto del código de la columna derecha sin cambios... */}
           <div className="lg:pl-8">
             <div className="mb-8">
               <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">
