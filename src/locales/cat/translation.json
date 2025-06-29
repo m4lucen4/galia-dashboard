@@ -34,7 +34,8 @@
     "recoveryPassword": "Recuperar contrasenya",
     "descriptionLoginError": "Sembla que hi ha hagut un error en iniciar sessió. Si us plau, verifica les teves credencials i torna-ho a intentar.",
     "titleRecoveryPassword": "Recuperar contrasenya",
-    "descriptionRecoveryPassword": "Introdueix el teu correu electrònic i t'enviarem un enllaç per restablir la teva contrasenya."
+    "descriptionRecoveryPassword": "Introdueix el teu correu electrònic i t'enviarem un enllaç per restablir la teva contrasenya.",
+    "goBackWeb": "Tornar a la web"
   },
   "users": {
     "title": "Usuaris",

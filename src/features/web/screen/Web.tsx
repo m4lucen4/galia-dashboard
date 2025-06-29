@@ -1,3 +1,4 @@
+import NavbarWeb from "../../../components/shared/ui/NavbarWeb";
 import Collaborators from "../components/Collaborators";
 import Contact from "../components/Contact";
 import Faqs from "../components/Faqs";
@@ -10,14 +11,28 @@ import Team from "../components/Team";
 export const Web = () => {
   return (
     <div>
-      <Hero />
-      <Features />
-      <HowWorks />
-      <Faqs />
-      <Collaborators />
-      <Membership />
-      <Team />
-      <Contact />
+      <NavbarWeb />
+      {/* Agregar padding-top para compensar el navbar fijo */}
+      <div className="pt-16">
+        <Hero />
+        <div id="caracteristicas">
+          <Features />
+        </div>
+        <HowWorks />
+        <div id="faq">
+          <Faqs />
+        </div>
+        <Collaborators />
+        <div id="precios">
+          <Membership />
+        </div>
+        <div id="equipo">
+          <Team />
+        </div>
+        <div id="contacto">
+          <Contact />
+        </div>
+      </div>
     </div>
   );
 };

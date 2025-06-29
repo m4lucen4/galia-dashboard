@@ -223,7 +223,6 @@ const Contact: React.FC = () => {
             </form>
           </div>
 
-          {/* ...resto del código de la columna derecha sin cambios... */}
           <div className="lg:pl-8">
             <div className="mb-8">
               <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">

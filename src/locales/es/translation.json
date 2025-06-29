@@ -34,7 +34,8 @@
     "recoveryPassword": "Recuperar contraseña",
     "descriptionLoginError": "Parece que hubo un error al iniciar sesión. Por favor, verifica tus credenciales e inténtalo de nuevo.",
     "titleRecoveryPassword": "Recuperar contraseña",
-    "descriptionRecoveryPassword": "Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña."
+    "descriptionRecoveryPassword": "Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
+    "goBackWeb": "Volver a la web"
   },
   "users": {
     "title": "Usuarios",

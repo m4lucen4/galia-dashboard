@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
+import { Link } from "react-router-dom";
 import { AppDispatch } from "../../../redux/store";
 import { useTranslation } from "react-i18next";
 import { login } from "../../../redux/actions/AuthActions";
@@ -54,35 +55,45 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   };
 
   return (
-    <Card title={t("login.title")} subtitle={t("login.subtitle")}>
-      <form className="space-y-6" onSubmit={handleSubmit}>
-        <InputField
-          label={t("login.email")}
-          id="email"
-          onChange={handleChange}
-          required
-          type="email"
-          value={formData.email}
-        />
-        <InputField
-          label={t("login.password")}
-          id="password"
-          onChange={handleChange}
-          required
-          type="password"
-          value={formData.password}
-        />
-        <div className="flex row items-center justify-between">
-          <Button
-            title={t("login.button")}
-            disabled={loginRequest.inProgress}
-            type="submit"
+    <>
+      <Card title={t("login.title")} subtitle={t("login.subtitle")}>
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <InputField
+            label={t("login.email")}
+            id="email"
+            onChange={handleChange}
+            required
+            type="email"
+            value={formData.email}
           />
-          <span className="text-sm cursor-pointer" onClick={onForgotPassword}>
-            {t("login.recoveryPassword")}
-          </span>
-        </div>
-      </form>
-    </Card>
+          <InputField
+            label={t("login.password")}
+            id="password"
+            onChange={handleChange}
+            required
+            type="password"
+            value={formData.password}
+          />
+          <div className="flex row items-center justify-between">
+            <Button
+              title={t("login.button")}
+              disabled={loginRequest.inProgress}
+              type="submit"
+            />
+            <span className="text-sm cursor-pointer" onClick={onForgotPassword}>
+              {t("login.recoveryPassword")}
+            </span>
+          </div>
+        </form>
+      </Card>
+      <div className="mt-4 text-center">
+        <Link
+          to="/web"
+          className="text-sm text-gray-400 hover:text-gray-800 cursor-pointer"
+        >
+          {t("login.goBackWeb")}
+        </Link>
+      </div>
+    </>
   );
 };

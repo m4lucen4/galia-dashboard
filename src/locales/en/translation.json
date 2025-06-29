@@ -33,7 +33,8 @@
     "recoveryPassword": "Recover password",
     "descriptionLoginError": "There was an error logging in. Please check your credentials and try again.",
     "titleRecoveryPassword": "Recover Password",
-    "descriptionRecoveryPassword": "Enter your email address and we will send you a link to reset your password."
+    "descriptionRecoveryPassword": "Enter your email address and we will send you a link to reset your password.",
+    "goBackWeb": "Go back to the website"
   },
   "users": {
     "title": "Users",
