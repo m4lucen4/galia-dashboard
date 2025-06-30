@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 
-import step01 from "../../../assets/web/01.jpg";
-import step02 from "../../../assets/web/02.jpg";
-import step03 from "../../../assets/web/03.jpg";
+import step01 from "../../../assets/web/01.webp";
+import step02 from "../../../assets/web/02.webp";
+import step03 from "../../../assets/web/03.webp";
 
 const HowWorks: React.FC = () => {
   const [modalImage, setModalImage] = useState<string | null>(null);

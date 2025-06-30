@@ -1,7 +1,7 @@
 import React from "react";
 
-import malucena from "../../../assets/web/malucena.jpg";
-import nachovillegas from "../../../assets/web/nachovillegas.jpg";
+import malucena from "../../../assets/web/malucena.webp";
+import nachovillegas from "../../../assets/web/nachovillegas.webp";
 
 const Team: React.FC = () => {
   const teamMembers = [
