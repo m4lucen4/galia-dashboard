@@ -12,7 +12,6 @@ export const Web = () => {
   return (
     <div>
       <NavbarWeb />
-      {/* Agregar padding-top para compensar el navbar fijo */}
       <div className="pt-16">
         <Hero />
         <div id="caracteristicas">

@@ -5,6 +5,16 @@ const Membership: React.FC = () => {
     "monthly"
   );
 
+  const scrollToContact = () => {
+    const element = document.getElementById("contacto");
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+
   const plans = [
     {
       name: "Gratis",
@@ -121,11 +131,12 @@ const Membership: React.FC = () => {
                     </span>
                   </div>
                 ) : (
-                  <div className="mb-6 h-12"></div>
+                  <div className="mb-12"></div>
                 )}
 
                 {/* Botón */}
                 <button
+                  onClick={scrollToContact}
                   className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${plan.buttonStyle}`}
                 >
                   {plan.buttonText}
