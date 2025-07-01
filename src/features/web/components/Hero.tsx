@@ -12,9 +12,9 @@ const Hero: React.FC = () => {
               Ahorra tiempo y mejora tu presencia en redes sociales
             </h1>
             <p className="mt-6 text-md leading-8 text-gray-600">
-              Simplifica la creación de contenido mediante IA rellenando un
-              sencillo formulario a partir de la información básica de cada
-              proyecto.
+              Simplifica el proceso de elaboración, revisión y publicación de
+              contenido para tu estudio de arquitectura o diseño mediante
+              herramientas de IA.
             </p>
           </div>
           <div className="flex justify-center lg:justify-end">

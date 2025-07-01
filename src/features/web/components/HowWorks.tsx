@@ -16,7 +16,7 @@ const HowWorks: React.FC = () => {
     },
     {
       number: "02",
-      title: "Genera con IA",
+      title: "Genera las publicaciones",
       image: step02,
       alt: "Generación de contenido con IA",
     },
