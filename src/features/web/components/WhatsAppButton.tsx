@@ -18,25 +18,10 @@ const WhatsAppButton: React.FC = () => {
   const handleSendMessage = () => {
     if (!message.trim()) return;
 
-    const isMobile =
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      );
-
     const encodedMessage = encodeURIComponent(message);
+    const waWebUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
 
-    if (isMobile) {
-      // Protocolo whatsapp:// que abre la app nativa
-      window.open(
-        `whatsapp://send?phone=${phoneNumber}&text=${encodedMessage}`,
-        "_blank"
-      );
-    } else {
-      window.open(
-        `https://wa.me/${phoneNumber}?text=${encodedMessage}`,
-        "_blank"
-      );
-    }
+    window.location.href = waWebUrl;
 
     setIsModalOpen(false);
   };
