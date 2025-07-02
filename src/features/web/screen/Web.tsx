@@ -1,4 +1,5 @@
 import NavbarWeb from "../../../components/shared/ui/NavbarWeb";
+import WhatsAppButton from "../components/WhatsAppButton";
 import Collaborators from "../components/Collaborators";
 import Contact from "../components/Contact";
 import Faqs from "../components/Faqs";
@@ -32,6 +33,7 @@ export const Web = () => {
           <Contact />
         </div>
       </div>
+      <WhatsAppButton />
     </div>
   );
 };
