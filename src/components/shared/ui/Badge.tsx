@@ -2,7 +2,7 @@ import React from "react";
 
 interface BadgeProps {
   title: string;
-  extraInfo: string;
+  extraInfo?: string;
   primaryColor: "green" | "yellow" | "blue" | "red" | "gray";
   url?: string;
 }
@@ -30,7 +30,7 @@ export const Badge: React.FC<BadgeProps> = ({
   return (
     <div className="relative group">
       <span
-        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+        className={`inline-flex items-center px-4 py-2 rounded-full text-xs font-medium ${
           url ? "cursor-pointer hover:opacity-80" : "cursor-help"
         } ${colorClasses[primaryColor]}`}
         onClick={handleClick}
@@ -38,12 +38,14 @@ export const Badge: React.FC<BadgeProps> = ({
         {title}
       </span>
 
-      <div className="absolute z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bottom-full left-1/2 transform -translate-x-1/2 mb-2">
-        <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap">
-          {extraInfo}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+      {extraInfo && (
+        <div className="absolute z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bottom-full left-1/2 transform -translate-x-1/2 mb-2">
+          <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap">
+            {extraInfo}
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

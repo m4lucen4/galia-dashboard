@@ -66,16 +66,11 @@ export const ProjectsTable = ({
           project.googleMaps && project.googleMaps.trim() !== "";
 
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2">
             <span>{info.getValue()}</span>
             {hasGoogleMaps && (
               <Badge
                 title={
-                  project.showMap
-                    ? t("projects.published")
-                    : t("projects.pending")
-                }
-                extraInfo={
                   project.showMap
                     ? t("projects.extraInfoPublished")
                     : t("projects.extraInfoPending")
@@ -91,7 +86,7 @@ export const ProjectsTable = ({
           </div>
         );
       },
-      size: 300,
+      size: 500,
     }),
     columnHelper.accessor("state", {
       header: t("projects.state"),
