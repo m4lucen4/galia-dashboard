@@ -5,7 +5,7 @@ import step02 from "../../../assets/web/02.webp";
 import step03 from "../../../assets/web/03.webp";
 
 const HowWorks: React.FC = () => {
-  const [modalImage, setModalImage] = useState<string | null>(null);
+  const [modalImageIndex, setModalImageIndex] = useState<number | null>(null);
 
   const steps = [
     {
@@ -28,12 +28,28 @@ const HowWorks: React.FC = () => {
     },
   ];
 
-  const openModal = (image: string) => {
-    setModalImage(image);
+  const openModal = (imageIndex: number) => {
+    setModalImageIndex(imageIndex);
   };
 
   const closeModal = () => {
-    setModalImage(null);
+    setModalImageIndex(null);
+  };
+
+  const goToPrevious = () => {
+    if (modalImageIndex !== null) {
+      const prevIndex =
+        modalImageIndex === 0 ? steps.length - 1 : modalImageIndex - 1;
+      setModalImageIndex(prevIndex);
+    }
+  };
+
+  const goToNext = () => {
+    if (modalImageIndex !== null) {
+      const nextIndex =
+        modalImageIndex === steps.length - 1 ? 0 : modalImageIndex + 1;
+      setModalImageIndex(nextIndex);
+    }
   };
 
   return (
@@ -59,20 +75,20 @@ const HowWorks: React.FC = () => {
           </div>
         </div>
 
-        {/* Línea separadora */}
         <div className="border-t border-gray-200 mb-12"></div>
 
-        {/* Sección de pasos con 3 columnas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {steps.map((step, index) => (
             <div key={index} className="text-center">
-              <h3 className="text-xl font-semibold text-gray-900 mb-12">
-                {step.number}. {step.title}
-              </h3>
-              <div
-                className="cursor-pointer"
-                onClick={() => openModal(step.image)}
-              >
+              <div className="flex items-end justify-center mb-12">
+                <span className="text-5xl md:text-6xl font-bold text-gray-900 leading-none">
+                  {step.number}.
+                </span>
+                <h3 className="text-md font-semibold text-gray-900 ml-2 mb-2">
+                  {step.title}
+                </h3>
+              </div>
+              <div className="cursor-pointer" onClick={() => openModal(index)}>
                 <img
                   src={step.image}
                   alt={step.alt}
@@ -84,16 +100,18 @@ const HowWorks: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal para imagen ampliada */}
-      {modalImage && (
+      {modalImageIndex !== null && (
         <div
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
           onClick={closeModal}
         >
-          <div className="relative max-w-4xl max-h-full">
+          <div
+            className="relative max-w-4xl max-h-full"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={closeModal}
-              className="absolute -top-4 -right-4 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors"
+              className="absolute -top-4 -right-4 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors z-10"
             >
               <svg
                 className="w-6 h-6 text-gray-600"
@@ -109,11 +127,70 @@ const HowWorks: React.FC = () => {
                 />
               </svg>
             </button>
+
+            <button
+              onClick={goToPrevious}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-3 shadow-lg transition-all z-10"
+            >
+              <svg
+                className="w-6 h-6 text-gray-800"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+
+            <button
+              onClick={goToNext}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-3 shadow-lg transition-all z-10"
+            >
+              <svg
+                className="w-6 h-6 text-gray-800"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+
             <img
-              src={modalImage}
-              alt="Imagen ampliada"
+              src={steps[modalImageIndex].image}
+              alt={steps[modalImageIndex].alt}
               className="max-w-full max-h-full object-contain rounded-lg"
             />
+
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+              {steps.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setModalImageIndex(index)}
+                  className={`w-3 h-3 rounded-full transition-all ${
+                    index === modalImageIndex
+                      ? "bg-white"
+                      : "bg-white bg-opacity-50 hover:bg-opacity-75"
+                  }`}
+                />
+              ))}
+            </div>
+
+            <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 text-center">
+              <p className="text-black text-lg font-semibold">
+                {steps[modalImageIndex].number}. {steps[modalImageIndex].title}
+              </p>
+            </div>
           </div>
         </div>
       )}
