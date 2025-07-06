@@ -187,7 +187,7 @@ export const updateProjectPublishing = createAsyncThunk(
 
         if (today === pubDate) {
           const webhookUrl = `${
-            import.meta.env.VITE_SUPABASE_FUNCTION_N8N_LINKEDLN_URL
+            import.meta.env.VITE_SUPABASE_FUNCTION_N8N_INSTANT_PUBLICATION
           }?id=${projectId}`;
 
           try {

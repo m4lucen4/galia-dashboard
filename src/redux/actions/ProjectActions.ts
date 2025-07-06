@@ -33,6 +33,8 @@ export const addProject = createAsyncThunk(
           category: projectData.category,
           year: projectData.year,
           showMap: projectData.showMap,
+          photoCredit: projectData.photoCredit,
+          photoCreditLink: projectData.photoCreditLink,
         })
         .select()
         .single();
@@ -182,6 +184,8 @@ export const updateProject = createAsyncThunk(
           category: projectData.category,
           year: projectData.year,
           showMap: projectData.showMap,
+          photoCredit: projectData.photoCredit,
+          photoCreditLink: projectData.photoCreditLink,
         })
         .eq("id", projectData.id)
         .select()
@@ -385,7 +389,7 @@ export const updateProjectPreview = createAsyncThunk(
   async (projectId: string, { rejectWithValue }) => {
     try {
       const webhookUrl = `${
-        import.meta.env.VITE_SUPABASE_FUNCTION_N8N_URL
+        import.meta.env.VITE_SUPABASE_FUNCTION_N8N_CREATE_PUBLICATIONS
       }?id=${projectId}`;
 
       const webhookResponse = await fetch(webhookUrl, {

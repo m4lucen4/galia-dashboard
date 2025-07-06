@@ -47,6 +47,8 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
     collaborators: "",
     authors: "",
     showMap: false,
+    photoCredit: "",
+    photoCreditLink: "",
   };
 
   const { prompts } = useAppSelector((state) => state.admin);
@@ -444,6 +446,28 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               value={formData.collaborators || ""}
               onChange={handleChange}
             />
+          </div>
+          <div className="flex space-x-4 mb-2">
+            <div className="flex-1">
+              <InputField
+                id="photoCredit"
+                label={t("projects.photoCredit")}
+                placeholder={t("projects.placeholderPhotoCredit")}
+                type="text"
+                value={formData.photoCredit || ""}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="flex-1">
+              <InputField
+                id="photoCreditLink"
+                label={t("projects.photoCreditLink")}
+                placeholder={t("projects.placeholderPhotoCreditLink")}
+                type="url"
+                value={formData.photoCreditLink || ""}
+                onChange={handleChange}
+              />
+            </div>
           </div>
         </div>
       </div>

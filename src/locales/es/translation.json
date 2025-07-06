@@ -189,7 +189,11 @@
     "pending": "Pendiente",
     "published": "Publicado",
     "extraInfoPublished": "Publicado en guiadearquitectura.com",
-    "extraInfoPending": "Pendiente de publicar en guiadearquitectura.com"
+    "extraInfoPending": "Pendiente de publicar en guiadearquitectura.com",
+    "photoCredit": "Fotógrafo",
+    "placeholderPhotoCredit": "Fotógrafo del proyecto",
+    "photoCreditLink": "Página web",
+    "placeholderPhotoCreditLink": "Página web del fotógrafo"
   },
   "previewProjects": {
     "title": "Vista previa de proyectos",

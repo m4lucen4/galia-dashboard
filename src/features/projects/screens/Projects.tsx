@@ -89,7 +89,6 @@ export const Projects = () => {
 
   const handleConfirmDelete = () => {
     if (selectedProjectId) {
-      console.log("Deleting project with ID:", selectedProjectId);
       dispatch(deleteProject(selectedProjectId))
         .unwrap()
         .then(() => {
@@ -181,6 +180,8 @@ export const Projects = () => {
       category: project.category,
       year: project.year,
       showMap: project.showMap,
+      photoCredit: project.photoCredit,
+      photoCreditLink: project.photoCreditLink,
     };
   };
 

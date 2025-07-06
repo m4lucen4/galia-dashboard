@@ -59,6 +59,8 @@ export type ProjectDataProps = {
   category?: string;
   year?: string;
   showMap?: boolean;
+  photoCredit?: string;
+  photoCreditLink?: string;
 };
 
 export type LinkedInPageInfo = {

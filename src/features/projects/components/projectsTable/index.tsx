@@ -40,7 +40,6 @@ export const ProjectsTable = ({
   onRecoveryProject,
   onDeleteProject,
 }: ProjectsTableProps) => {
-  console.log("ProjectsTable rendered with projects:", projects);
   const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([]);
   const dispatch = useAppDispatch();
