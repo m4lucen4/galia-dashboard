@@ -127,7 +127,6 @@ export const UsersForm: React.FC<UsersFormProps> = ({
           type="text"
           value={formData.vat}
           onChange={handleChange}
-          required
         />
         {isEditMode ? null : (
           <InputField
