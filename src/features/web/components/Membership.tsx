@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 const Membership: React.FC = () => {
   const [billingType, setBillingType] = useState<"monthly" | "annual">(
-    "monthly"
+    "annual"
   );
   const [postsPerMonth, setPostsPerMonth] = useState(15);
   const [pricePerHour, setPricePerHour] = useState(20);
@@ -26,7 +26,7 @@ const Membership: React.FC = () => {
       buttonStyle: "bg-gray-100 text-gray-700 hover:bg-gray-200",
       cardStyle: "bg-white border border-gray-200",
       features: [
-        "Hasta 10 publicaciones",
+        "Hasta 10 publicaciones al mes",
         "Integración OpenAI",
         "Instagram",
         "Linkedin",
@@ -35,7 +35,7 @@ const Membership: React.FC = () => {
     {
       name: "Profesional",
       subtitle: "Versión ilimitada",
-      price: { monthly: 24, annual: 180 },
+      price: { monthly: 24, annual: 192 },
       buttonText: "Empezar",
       buttonStyle: "bg-gray-600 text-white hover:bg-gray-700",
       cardStyle: "bg-black text-white border border-gray-800",
