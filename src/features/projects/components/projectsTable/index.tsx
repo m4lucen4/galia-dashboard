@@ -115,11 +115,19 @@ export const ProjectsTable = ({
                 icon={<RecoverIcon />}
                 secondary
                 onClick={() => onRecoveryProject(props.row.original.id)}
+                tooltip={t("projects.recoveryProject")}
+              />
+              <Button
+                icon={<PencilIcon />}
+                secondary
+                onClick={() => handleEditClick(props.row.original)}
+                tooltip={t("projects.editProject")}
               />
               <Button
                 icon={<DeleteIcon />}
                 secondary
                 onClick={() => onDeleteProject(props.row.original.id)}
+                tooltip={t("projects.deleteProject")}
               />
             </div>
           );
@@ -131,16 +139,19 @@ export const ProjectsTable = ({
               icon={<LaunchIcon />}
               secondary
               onClick={() => onLaunchProject(props.row.original.id)}
+              tooltip={t("projects.launchProject")}
             />
             <Button
               icon={<PencilIcon />}
               secondary
               onClick={() => handleEditClick(props.row.original)}
+              tooltip={t("projects.editProject")}
             />
             <Button
               icon={<DeleteIcon />}
               secondary
               onClick={() => onDeleteProject(props.row.original.id)}
+              tooltip={t("projects.deleteProject")}
             />
           </div>
         );

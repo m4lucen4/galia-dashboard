@@ -5,7 +5,7 @@ interface RecoverIconProps {
 }
 
 export const RecoverIcon: React.FC<RecoverIconProps> = ({
-  className = "h-4 w-4",
+  className = "h-5 w-5",
 }) => {
   return (
     <svg

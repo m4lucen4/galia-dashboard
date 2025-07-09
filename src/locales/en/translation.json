@@ -192,7 +192,10 @@
     "photoCredit": "Photographer",
     "placeholderPhotoCredit": "Project photographer",
     "photoCreditLink": "Website",
-    "placeholderPhotoCreditLink": "Photographer's website"
+    "placeholderPhotoCreditLink": "Photographer's website",
+    "deleteProject": "Delete project",
+    "launchProject": "Launch project",
+    "recoveryProject": "Recover project"
   },
   "previewProjects": {
     "title": "Project Preview",
