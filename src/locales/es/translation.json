@@ -181,6 +181,7 @@
     "imageLimit": "Límites",
     "maxImages": "imágenes máximo",
     "imageSizeError": "Error de tamaño",
+    "imageAspectRatioError": "Imágenes con aspect ratio inválido (debe estar entre 0.8 y 1.91):",
     "maxSizeAllowed": "El tamaño máximo permitido por imagen es de",
     "maxImagesError": "El número máximo de imágenes es de",
     "deleteTitle": "Eliminar Proyecto",

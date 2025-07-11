@@ -181,6 +181,7 @@
     "imageLimit": "Límits",
     "maxImages": "imatges màxim",
     "imageSizeError": "Error de mida",
+    "imageAspectRatioError": "Imatges amb aspecte de ràtio invàlid (ha d'estar entre 0.8 i 1.91):",
     "maxSizeAllowed": "La mida màxima permesa per imatge és de",
     "maxImagesError": "El nombre màxim d'imatges és de",
     "deleteTitle": "Eliminar Projecte",

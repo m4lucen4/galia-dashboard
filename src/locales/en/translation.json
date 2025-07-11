@@ -180,6 +180,7 @@
     "imageLimit": "Image limit",
     "maxImages": "Maximum images",
     "imageSizeError": "Image size error",
+    "imageAspectRatioError": "Images with invalid aspect ratio (must be between 0.8 and 1.91):",
     "maxSizeAllowed": "The maximum allowed size per image is",
     "maxImagesError": "The maximum number of images is",
     "deleteTitle": "Delete project",

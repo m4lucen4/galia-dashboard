@@ -275,3 +275,91 @@ export const getProjectStateInfo = (
         : "bg-gray-100 text-black",
   };
 };
+
+export interface ImageValidationResult {
+  validFiles: File[];
+  invalidFiles: string[];
+  invalidAspectRatioFiles: string[];
+}
+
+export interface ImageValidationOptions {
+  maxFileSize?: number;
+  minAspectRatio?: number;
+  maxAspectRatio?: number;
+  maxImages?: number;
+  existingImagesCount?: number;
+}
+
+/**
+ * Validates an array of image files based on size and aspect ratio constraints
+ * @param files - Array of files to validate
+ * @param options - Validation options including size and aspect ratio limits
+ * @returns Promise that resolves to validation results
+ */
+export const validateImageFiles = async (
+  files: File[],
+  options: ImageValidationOptions = {}
+): Promise<ImageValidationResult> => {
+  const {
+    maxFileSize = 5 * 1024 * 1024, // 5MB default
+    minAspectRatio = 0.8,
+    maxAspectRatio = 1.91,
+    maxImages = 10,
+    existingImagesCount = 0,
+  } = options;
+
+  const validFiles: File[] = [];
+  const invalidFiles: string[] = [];
+  const invalidAspectRatioFiles: string[] = [];
+
+  const processFile = (file: File): Promise<void> => {
+    return new Promise((resolve) => {
+      // Validate file size
+      if (file.size > maxFileSize) {
+        invalidFiles.push(
+          `${file.name} (${(file.size / (1024 * 1024)).toFixed(1)}MB)`
+        );
+        resolve();
+        return;
+      }
+
+      // Validate aspect ratio
+      const img = new Image();
+      img.onload = () => {
+        const aspectRatio = img.width / img.height;
+
+        if (aspectRatio < minAspectRatio || aspectRatio > maxAspectRatio) {
+          invalidAspectRatioFiles.push(
+            `${file.name} (ratio: ${aspectRatio.toFixed(2)})`
+          );
+        } else {
+          validFiles.push(file);
+        }
+
+        // Clean up the object URL
+        URL.revokeObjectURL(img.src);
+        resolve();
+      };
+
+      img.onerror = () => {
+        invalidFiles.push(`${file.name} (formato no válido)`);
+        URL.revokeObjectURL(img.src);
+        resolve();
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  await Promise.all(files.map(processFile));
+
+  // Limit the number of valid files based on existing images
+  const maxNewImages = maxImages - existingImagesCount;
+  const limitedValidFiles = validFiles.slice(0, maxNewImages);
+
+  return {
+    validFiles: limitedValidFiles,
+    invalidFiles,
+    invalidAspectRatioFiles,
+  };
+};

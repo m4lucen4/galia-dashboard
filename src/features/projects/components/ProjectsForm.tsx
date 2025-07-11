@@ -13,6 +13,7 @@ import { CancelIcon } from "../../../components/icons";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { fetchPrompts } from "../../../redux/actions/AdminActions";
+import { validateImageFiles } from "../../../helpers";
 
 interface ProjectsFormProps {
   initialData?: ProjectDataProps;
@@ -107,37 +108,50 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const filesArray = Array.from(e.target.files);
-      const maxFileSize = 5 * 1024 * 1024;
-      const validFiles: File[] = [];
-      const invalidFiles: string[] = [];
 
-      filesArray.forEach((file) => {
-        if (file.size > maxFileSize) {
-          invalidFiles.push(
-            `${file.name} (${(file.size / (1024 * 1024)).toFixed(1)}MB)`
+      try {
+        const validationResult = await validateImageFiles(filesArray, {
+          maxFileSize: 5 * 1024 * 1024, // 5MB
+          minAspectRatio: 0.8,
+          maxAspectRatio: 1.91,
+          maxImages: 10,
+          existingImagesCount: existingImages.length,
+        });
+
+        // Show size and format errors
+        if (validationResult.invalidFiles.length > 0) {
+          alert(
+            `${t("projects.imageSizeError")}:\n${validationResult.invalidFiles.join("\n")}\n\n${t("projects.maxSizeAllowed")}: 5MB`
           );
-        } else {
-          validFiles.push(file);
         }
-      });
 
-      if (invalidFiles.length > 0) {
-        alert(
-          `${t("projects.imageSizeError")}:\n${invalidFiles.join("\n")}\n\n${t("projects.maxSizeAllowed")}: 5MB`
-        );
+        // Show aspect ratio errors
+        if (validationResult.invalidAspectRatioFiles.length > 0) {
+          alert(
+            `${t("projects.imageAspectRatioError")}:\n${validationResult.invalidAspectRatioFiles.join("\n")}`
+          );
+        }
+
+        // Check if we had to limit the number of files
+        const totalValidFiles = validationResult.validFiles.length;
+        const totalValidFilesBeforeLimit =
+          filesArray.length -
+          validationResult.invalidFiles.length -
+          validationResult.invalidAspectRatioFiles.length;
+
+        if (totalValidFilesBeforeLimit > totalValidFiles) {
+          const maxNewImages = 10 - existingImages.length;
+          alert(`${t("projects.maxImagesError")} ${maxNewImages}`);
+        }
+
+        setSelectedImages(validationResult.validFiles);
+      } catch (error) {
+        console.error("Error validating images:", error);
+        alert("Error al validar las imágenes. Por favor, inténtalo de nuevo.");
       }
-
-      const maxNewImages = 10 - existingImages.length;
-      const limitedFiles = validFiles.slice(0, maxNewImages);
-
-      if (validFiles.length > maxNewImages) {
-        alert(`${t("projects.maxImagesError")} ${maxNewImages}`);
-      }
-
-      setSelectedImages(limitedFiles);
     }
   };
 
@@ -275,7 +289,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
 
           <p className="text-xs text-gray-500 mt-1">
             {t("projects.imageLimit")}: 10 {t("projects.maxImages")}, 5MB{" "}
-            {t("projects.maxSizePerImage")}
+            {t("projects.maxSizePerImage")}, aspect ratio entre 0.8 y 1.91
           </p>
 
           {/* Existing Images */}
