@@ -352,7 +352,7 @@ export const initiateInstagramAuth = createAsyncThunk(
 
       const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${INSTAGRAM_APP_ID}&redirect_uri=${encodeURIComponent(
         INSTAGRAM_REDIRECT_URI
-      )}&state=${state}&response_type=code&scope=pages_show_list,instagram_basic,instagram_content_publish,business_management`;
+      )}&state=${state}&response_type=code&scope=pages_show_list,instagram_business_basic,instagram_content_publish,business_management`;
 
       window.location.href = authUrl;
       return true;
