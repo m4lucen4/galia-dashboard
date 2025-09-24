@@ -40,12 +40,13 @@ export const InstagramCallback = () => {
           setTimeout(() => navigate("/settings"), 1500);
         }
       } catch (error: unknown) {
+        console.error("Instagram callback processing error:", error);
         setStatus(
           `Failed to connect Instagram: ${
             error instanceof Error ? error.message : "Unknown error"
           }`
         );
-        setTimeout(() => navigate("/settings"), 3000);
+        //setTimeout(() => navigate("/settings"), 3000);
       }
     };
 
