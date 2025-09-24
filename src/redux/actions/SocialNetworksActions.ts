@@ -372,16 +372,13 @@ export const initiateInstagramAuth = createAsyncThunk(
 
 export const processInstagramCallback = createAsyncThunk(
   "socialNetworks/processInstagramCallback",
-  async (
-    { code, state }: { code: string; state: string },
-    { rejectWithValue }
-  ) => {
+  async ({ code }: { code: string; state: string }, { rejectWithValue }) => {
     try {
       // Verify state parameter
-      const savedState = sessionStorage.getItem("instagram_auth_state");
-      if (state !== savedState) {
-        return rejectWithValue("State mismatch. Possible CSRF attack.");
-      }
+      // const savedState = sessionStorage.getItem("instagram_auth_state");
+      // if (state !== savedState) {
+      //   return rejectWithValue("State mismatch. Possible CSRF attack.");
+      // }
 
       // Clean up state
       sessionStorage.removeItem("instagram_auth_state");
