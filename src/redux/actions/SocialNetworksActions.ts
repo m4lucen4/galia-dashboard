@@ -348,7 +348,9 @@ export const initiateInstagramAuth = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const state = Math.random().toString(36).slice(2);
-      localStorage.setItem("ig_auth_state", state);
+
+      // Guardar el state con la misma clave que en el callback
+      localStorage.setItem("instagram_auth_state", state);
 
       const authUrl =
         `https://www.instagram.com/oauth/authorize` +
