@@ -25,11 +25,11 @@ export const InstagramCallback = () => {
           return;
         }
 
-        const savedState = localStorage.getItem("instagram_auth_state");
+        const savedState = sessionStorage.getItem("instagram_auth_state");
         console.log(
           "Debug: state from URL:",
           state,
-          "savedState from localStorage:",
+          "savedState from sessionStorage:",
           savedState
         );
         if (state !== savedState) {
@@ -37,7 +37,7 @@ export const InstagramCallback = () => {
           //setTimeout(() => navigate("/settings"), 3000);
           return;
         }
-        localStorage.removeItem("instagram_auth_state");
+        sessionStorage.removeItem("instagram_auth_state");
 
         if (!code || !state) {
           setStatus("Missing required parameters");
