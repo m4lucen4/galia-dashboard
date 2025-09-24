@@ -25,6 +25,14 @@ export const InstagramCallback = () => {
           return;
         }
 
+        const savedState = localStorage.getItem("instagram_auth_state");
+        if (state !== savedState) {
+          setStatus("State mismatch. Possible CSRF attack.");
+          setTimeout(() => navigate("/settings"), 3000);
+          return;
+        }
+        localStorage.removeItem("instagram_auth_state");
+
         if (!code || !state) {
           setStatus("Missing required parameters");
           setTimeout(() => navigate("/settings"), 3000);
