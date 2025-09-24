@@ -349,8 +349,8 @@ export const initiateInstagramAuth = createAsyncThunk(
     try {
       const state = Math.random().toString(36).slice(2);
 
-      // Guardar el state con la misma clave que en el callback
-      localStorage.setItem("instagram_auth_state", state);
+      // Guardar el state en sessionStorage en lugar de localStorage
+      sessionStorage.setItem("instagram_auth_state", state);
 
       const authUrl =
         `https://www.instagram.com/oauth/authorize` +
@@ -378,13 +378,13 @@ export const processInstagramCallback = createAsyncThunk(
   ) => {
     try {
       // Verify state parameter
-      const savedState = localStorage.getItem("instagram_auth_state");
+      const savedState = sessionStorage.getItem("instagram_auth_state");
       if (state !== savedState) {
         return rejectWithValue("State mismatch. Possible CSRF attack.");
       }
 
       // Clean up state
-      localStorage.removeItem("instagram_auth_state");
+      sessionStorage.removeItem("instagram_auth_state");
 
       // Exchange code for access token via Edge Function
       const { data, error } = await supabase.functions.invoke(
