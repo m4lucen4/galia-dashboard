@@ -347,17 +347,22 @@ export const initiateInstagramAuth = createAsyncThunk(
   "socialNetworks/initiateInstagramAuth",
   async (_, { rejectWithValue }) => {
     try {
-      const state = Math.random().toString(36).substring(2, 15);
-      localStorage.setItem("instagram_auth_state", state);
+      const state = Math.random().toString(36).slice(2);
+      localStorage.setItem("ig_auth_state", state);
 
-      const authUrl = `https://api.instagram.com/oauth/authorize?client_id=${INSTAGRAM_APP_ID}&redirect_uri=${encodeURIComponent(
-        INSTAGRAM_REDIRECT_URI
-      )}&state=${state}&response_type=code&scope=instagram_business_basic,instagram_content_publish,pages_show_list,business_management`;
+      const authUrl =
+        `https://www.instagram.com/oauth/authorize` +
+        `?client_id=${INSTAGRAM_APP_ID}` +
+        `&redirect_uri=${encodeURIComponent(INSTAGRAM_REDIRECT_URI)}` +
+        `&scope=instagram_business_basic` +
+        `&response_type=code` +
+        `&state=${state}` +
+        `&force_reauth=true`;
 
       window.location.href = authUrl;
       return true;
-    } catch (error) {
-      console.error("Error initiating Instagram auth:", error);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (e) {
       return rejectWithValue("Failed to initiate Instagram authorization");
     }
   }
