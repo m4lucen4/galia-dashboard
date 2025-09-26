@@ -427,13 +427,24 @@ export const processInstagramCallback = createAsyncThunk(
       // Extract user information from verify response
       const { tokenData, userData: instagramUserData } = verifyData;
 
-      // Create Instagram data object with complete information
+      // Calculate token_expires_at with fallback logic
+      let calculatedExpiresAt: string;
+      if (tokenData && tokenData.expires_at) {
+        calculatedExpiresAt = new Date(
+          tokenData.expires_at * 1000
+        ).toISOString();
+      } else if (typeof expires_in === "number") {
+        calculatedExpiresAt = new Date(
+          Date.now() + expires_in * 1000
+        ).toISOString();
+      } else {
+        calculatedExpiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
+      }
+
       const instagram_data = {
         instagram_user_id: instagramUserData.id,
         access_token,
-        token_expires_at: tokenData.expires_at
-          ? new Date(tokenData.expires_at * 1000).toISOString()
-          : new Date(Date.now() + expires_in * 1000).toISOString(),
+        token_expires_at: calculatedExpiresAt,
         data_access_expires_at: new Date(
           tokenData.data_access_expires_at * 1000
         ).toISOString(),
@@ -466,7 +477,7 @@ export const processInstagramCallback = createAsyncThunk(
         isConnected: true,
         userId: instagramUserData.id,
         username: instagramUserData.name,
-        expiresAt: new Date(tokenData.expires_at * 1000).toISOString(),
+        expiresAt: calculatedExpiresAt,
       };
     } catch (error) {
       console.error("Error processing Instagram callback:", error);
