@@ -363,3 +363,19 @@ export const validateImageFiles = async (
     invalidAspectRatioFiles,
   };
 };
+
+export const openPopup = (
+  url: string,
+  name = "instagram_oauth",
+  width = 600,
+  height = 700
+): Window | null => {
+  const left = window.screenX + (window.outerWidth - width) / 2;
+  const top = window.screenY + (window.outerHeight - height) / 2;
+
+  return window.open(
+    url,
+    name,
+    `width=${width},height=${height},left=${left},top=${top},status=no,toolbar=no,menubar=no,scrollbars=yes,resizable=yes`
+  );
+};

@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { supabase } from "../../helpers/supabase";
+import { openPopup } from "../../helpers";
 
 const LINKEDIN_CLIENT_ID = import.meta.env.VITE_LINKEDIN_CLIENT_ID;
 const LINKEDIN_REDIRECT_URI =
@@ -349,7 +350,7 @@ export const initiateInstagramAuth = createAsyncThunk(
     try {
       const state = Math.random().toString(36).slice(2);
 
-      // Guardar el state en sessionStorage en lugar de localStorage
+      // Guardar el state en sessionStorage
       sessionStorage.setItem("instagram_auth_state", state);
 
       const authUrl =
@@ -361,8 +362,47 @@ export const initiateInstagramAuth = createAsyncThunk(
         `&state=${state}` +
         `&force_reauth=true`;
 
-      window.location.href = authUrl;
-      return true;
+      // Abrir popup
+      const win = openPopup(authUrl);
+      if (!win) {
+        // si el navegador bloquea popup → fallback
+        window.location.href = authUrl;
+        return true;
+      }
+
+      // Esperar a que el popup redirija a redirect_uri
+      return await new Promise<{ code: string; state: string }>(
+        (resolve, reject) => {
+          const timer = setInterval(() => {
+            try {
+              if (!win || win.closed) {
+                clearInterval(timer);
+                reject("Popup closed before completing login");
+                return;
+              }
+
+              const currentUrl = win.location.href;
+
+              if (currentUrl.startsWith(INSTAGRAM_REDIRECT_URI)) {
+                const params = new URL(currentUrl).searchParams;
+                const code = params.get("code");
+                const stateReturned = params.get("state");
+
+                win.close();
+                clearInterval(timer);
+
+                if (code && stateReturned === state) {
+                  resolve({ code, state: stateReturned });
+                } else {
+                  reject("Missing or invalid code/state");
+                }
+              }
+            } catch {
+              // Ignorar mientras el popup esté en dominio de Instagram (CORS)
+            }
+          }, 500);
+        }
+      );
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return rejectWithValue("Failed to initiate Instagram authorization");
