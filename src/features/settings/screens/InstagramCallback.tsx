@@ -51,6 +51,8 @@ export const InstagramCallback = () => {
           processInstagramCallback({ code, state })
         ).unwrap();
 
+        console.log("Debug: processInstagramCallback result:", result);
+
         if (result) {
           setStatus("Instagram successfully connected!");
           setTimeout(() => navigate("/settings"), 1500);
