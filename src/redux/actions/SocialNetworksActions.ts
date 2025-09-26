@@ -374,16 +374,10 @@ export const processInstagramCallback = createAsyncThunk(
   "socialNetworks/processInstagramCallback",
   async ({ code }: { code: string; state: string }, { rejectWithValue }) => {
     try {
-      // Verify state parameter
-      // const savedState = sessionStorage.getItem("instagram_auth_state");
-      // if (state !== savedState) {
-      //   return rejectWithValue("State mismatch. Possible CSRF attack.");
-      // }
-
       // Clean up state
       sessionStorage.removeItem("instagram_auth_state");
 
-      // Exchange code for access token via Edge Function
+      // 1. Exchange code for access token
       const { data, error } = await supabase.functions.invoke(
         "instagram-exchange-code",
         {
@@ -395,18 +389,16 @@ export const processInstagramCallback = createAsyncThunk(
         console.error("Edge function error:", error);
         throw new Error(error.message || "Error calling edge function");
       }
-
       if (!data) {
-        throw new Error("No data received from edge function");
+        throw new Error("No data received from exchange function");
       }
 
       const { access_token, expires_in = 3600 } = data;
-
       if (!access_token) {
         throw new Error("No access token received");
       }
 
-      // Verify token and get user information using the verify token function
+      // 2. Verify token and get extended info
       const { data: verifyData, error: verifyError } =
         await supabase.functions.invoke("instagram-verify-token", {
           body: { access_token },
@@ -416,56 +408,49 @@ export const processInstagramCallback = createAsyncThunk(
         throw new Error("Failed to verify token or get user information");
       }
 
-      // Get current user
+      // 3. Get current Supabase user
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
-
       if (!userId) {
         return rejectWithValue("User not authenticated");
       }
 
-      // Extract user information from verify response
-      const { tokenData, userData: instagramUserData } = verifyData;
+      // 4. Extract data from verifyData
+      const { tokenData, business_pages } = verifyData;
 
-      // Calculate token_expires_at with fallback logic
-      let calculatedExpiresAt: string;
-      if (tokenData && tokenData.expires_at) {
-        calculatedExpiresAt = new Date(
-          tokenData.expires_at * 1000
-        ).toISOString();
-      } else if (typeof expires_in === "number") {
-        calculatedExpiresAt = new Date(
-          Date.now() + expires_in * 1000
-        ).toISOString();
-      } else {
-        calculatedExpiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
-      }
+      // Calculate token expiration
+      const calculatedExpiresAt = tokenData?.expires_at
+        ? new Date(tokenData.expires_at * 1000).toISOString()
+        : new Date(Date.now() + expires_in * 1000).toISOString();
 
+      // Build instagram_data object
       const instagram_data = {
-        instagram_user_id: instagramUserData.id,
-        access_token,
-        token_expires_at: calculatedExpiresAt,
-        data_access_expires_at: new Date(
-          tokenData.data_access_expires_at * 1000
-        ).toISOString(),
-        is_connected: true,
-        username: instagramUserData.name,
-        user_id: instagramUserData.id,
         app_id: tokenData.app_id,
-        connected_at: new Date().toISOString(),
-        permissions_granted: tokenData.scopes,
-        granular_scopes: tokenData.granular_scopes,
-        token_type: tokenData.type,
+        user_id: tokenData.user_id, // viene de debug_token
+        instagram_user_id: tokenData.user_id,
+        username: tokenData.username, // viene de /me/accounts.instagram_business_account
         application: tokenData.application,
-        issued_at: new Date(tokenData.issued_at * 1000).toISOString(),
+        token_type: tokenData.token_type,
+        permissions_granted: tokenData.permissions_granted,
+        granular_scopes: tokenData.granular_scopes,
+        access_token,
+        issued_at: tokenData.issued_at
+          ? new Date(tokenData.issued_at * 1000).toISOString()
+          : new Date().toISOString(),
+        token_expires_at: calculatedExpiresAt,
+        data_access_expires_at: tokenData.data_access_expires_at
+          ? new Date(tokenData.data_access_expires_at * 1000).toISOString()
+          : null,
+        connected_at: new Date().toISOString(),
+        is_connected: true,
+        business_pages: business_pages || [],
+        pages_fetched_at: new Date().toISOString(),
       };
 
-      // Update user data
+      // 5. Update user data in Supabase
       const { error: updateError } = await supabase
         .from("userData")
-        .update({
-          instagram_data,
-        })
+        .update({ instagram_data })
         .eq("uid", userId);
 
       if (updateError) {
@@ -473,10 +458,11 @@ export const processInstagramCallback = createAsyncThunk(
         throw new Error(updateError.message || "Failed to update user data");
       }
 
+      // 6. Return simplified info for Redux state
       return {
         isConnected: true,
-        userId: instagramUserData.id,
-        username: instagramUserData.name,
+        userId: tokenData.user_id,
+        username: tokenData.username,
         expiresAt: calculatedExpiresAt,
       };
     } catch (error) {
