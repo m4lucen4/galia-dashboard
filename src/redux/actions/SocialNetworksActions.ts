@@ -8,7 +8,8 @@ const LINKEDIN_REDIRECT_URI =
 const LINKEDIN_SCOPE =
   "openid profile w_member_social email r_organization_admin rw_organization_admin r_organization_social w_organization_social r_basicprofile";
 
-const INSTAGRAM_APP_ID = import.meta.env.VITE_INSTAGRAM_APP_ID;
+//const INSTAGRAM_APP_ID = import.meta.env.VITE_INSTAGRAM_APP_ID;
+const META_APP_ID = import.meta.env.VITE_META_APP_ID;
 const INSTAGRAM_REDIRECT_URI =
   import.meta.env.VITE_INSTAGRAM_REDIRECT_URI ||
   `${window.location.origin}/auth/instagram/callback`;
@@ -343,6 +344,33 @@ export const fetchLinkedInPages = createAsyncThunk(
   }
 );
 
+// export const initiateInstagramAuth = createAsyncThunk(
+//   "socialNetworks/initiateInstagramAuth",
+//   async (_, { rejectWithValue }) => {
+//     try {
+//       const state = Math.random().toString(36).slice(2);
+
+//       // Guardar el state en sessionStorage
+//       sessionStorage.setItem("instagram_auth_state", state);
+
+//       const authUrl =
+//         `https://www.instagram.com/oauth/authorize` +
+//         `?client_id=${INSTAGRAM_APP_ID}` +
+//         `&redirect_uri=${encodeURIComponent(INSTAGRAM_REDIRECT_URI)}` +
+//         `&scope=instagram_business_basic` +
+//         `&response_type=code` +
+//         `&state=${state}` +
+//         `&force_reauth=true`;
+
+//       window.location.href = authUrl;
+//       return true;
+//       // eslint-disable-next-line @typescript-eslint/no-unused-vars
+//     } catch (e) {
+//       return rejectWithValue("Failed to initiate Instagram authorization");
+//     }
+//   }
+// );
+
 export const initiateInstagramAuth = createAsyncThunk(
   "socialNetworks/initiateInstagramAuth",
   async (_, { rejectWithValue }) => {
@@ -353,13 +381,12 @@ export const initiateInstagramAuth = createAsyncThunk(
       sessionStorage.setItem("instagram_auth_state", state);
 
       const authUrl =
-        `https://www.instagram.com/oauth/authorize` +
-        `?client_id=${INSTAGRAM_APP_ID}` +
+        `https://www.facebook.com/v19.0/dialog/oauth` +
+        `?client_id=${META_APP_ID}` +
         `&redirect_uri=${encodeURIComponent(INSTAGRAM_REDIRECT_URI)}` +
-        `&scope=instagram_business_basic` +
+        `&scope=instagram_business_basic,pages_show_list,instagram_content_publish` +
         `&response_type=code` +
-        `&state=${state}` +
-        `&force_reauth=true`;
+        `&state=${state}`;
 
       window.location.href = authUrl;
       return true;
@@ -426,9 +453,9 @@ export const processInstagramCallback = createAsyncThunk(
       // Build instagram_data object
       const instagram_data = {
         app_id: tokenData.app_id,
-        user_id: tokenData.user_id, // viene de debug_token
+        user_id: tokenData.user_id,
         instagram_user_id: tokenData.user_id,
-        username: tokenData.username, // viene de /me/accounts.instagram_business_account
+        username: tokenData.username,
         application: tokenData.application,
         token_type: tokenData.token_type,
         permissions_granted: tokenData.permissions_granted,
