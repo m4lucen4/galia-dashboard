@@ -8,7 +8,8 @@ const LINKEDIN_REDIRECT_URI =
 const LINKEDIN_SCOPE =
   "openid profile w_member_social email r_organization_admin rw_organization_admin r_organization_social w_organization_social r_basicprofile";
 
-const INSTAGRAM_APP_ID = import.meta.env.VITE_INSTAGRAM_APP_ID;
+//const INSTAGRAM_APP_ID = import.meta.env.VITE_INSTAGRAM_APP_ID;
+const META_APP_ID = import.meta.env.VITE_META_APP_ID;
 const INSTAGRAM_REDIRECT_URI =
   import.meta.env.VITE_INSTAGRAM_REDIRECT_URI ||
   `${window.location.origin}/auth/instagram/callback`;
@@ -353,13 +354,12 @@ export const initiateInstagramAuth = createAsyncThunk(
       sessionStorage.setItem("instagram_auth_state", state);
 
       const authUrl =
-        `https://www.instagram.com/oauth/authorize` +
-        `?client_id=${INSTAGRAM_APP_ID}` +
+        `https://www.facebook.com/v19.0/dialog/oauth` +
+        `?client_id=${META_APP_ID}` +
         `&redirect_uri=${encodeURIComponent(INSTAGRAM_REDIRECT_URI)}` +
-        `&scope=instagram_business_basic` +
+        `&scope=instagram_business_basic,pages_show_list,instagram_content_publish` +
         `&response_type=code` +
-        `&state=${state}` +
-        `&force_reauth=true`;
+        `&state=${state}`;
 
       window.location.href = authUrl;
       return true;
