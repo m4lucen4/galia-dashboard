@@ -25,23 +25,7 @@ export const InstagramCallback = () => {
           return;
         }
 
-        const savedState = sessionStorage.getItem("instagram_auth_state");
-        console.log(
-          "Debug: state from URL:",
-          state,
-          "savedState from sessionStorage:",
-          savedState
-        );
-        if (state !== savedState) {
-          console.log("error1 State mismatch detected");
-          setStatus("State mismatch. Possible CSRF attack.");
-          setTimeout(() => navigate("/settings"), 3000);
-          return;
-        }
-        sessionStorage.removeItem("instagram_auth_state");
-
         if (!code || !state) {
-          console.log("error2 Missing required parameters");
           setStatus("Missing required parameters");
           setTimeout(() => navigate("/settings"), 3000);
           return;
@@ -51,15 +35,11 @@ export const InstagramCallback = () => {
           processInstagramCallback({ code, state })
         ).unwrap();
 
-        console.log("Debug: processInstagramCallback result:", result);
-
         if (result) {
           setStatus("Instagram successfully connected!");
           setTimeout(() => navigate("/settings"), 1500);
         }
       } catch (error: unknown) {
-        console.log("error3 error catched");
-        console.error("Instagram callback processing error:", error);
         setStatus(
           `Failed to connect Instagram: ${
             error instanceof Error ? error.message : "Unknown error"

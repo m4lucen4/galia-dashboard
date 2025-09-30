@@ -8,8 +8,7 @@ const LINKEDIN_REDIRECT_URI =
 const LINKEDIN_SCOPE =
   "openid profile w_member_social email r_organization_admin rw_organization_admin r_organization_social w_organization_social r_basicprofile";
 
-//const INSTAGRAM_APP_ID = import.meta.env.VITE_INSTAGRAM_APP_ID;
-const META_APP_ID = import.meta.env.VITE_META_APP_ID;
+const INSTAGRAM_APP_ID = import.meta.env.VITE_INSTAGRAM_APP_ID;
 const INSTAGRAM_REDIRECT_URI =
   import.meta.env.VITE_INSTAGRAM_REDIRECT_URI ||
   `${window.location.origin}/auth/instagram/callback`;
@@ -348,23 +347,17 @@ export const initiateInstagramAuth = createAsyncThunk(
   "socialNetworks/initiateInstagramAuth",
   async (_, { rejectWithValue }) => {
     try {
-      const state = Math.random().toString(36).slice(2);
+      const state = Math.random().toString(36).substring(2, 15);
+      localStorage.setItem("instagram_auth_state", state);
 
-      // Guardar el state en sessionStorage
-      sessionStorage.setItem("instagram_auth_state", state);
-
-      const authUrl =
-        `https://www.facebook.com/v19.0/dialog/oauth` +
-        `?client_id=${META_APP_ID}` +
-        `&redirect_uri=${encodeURIComponent(INSTAGRAM_REDIRECT_URI)}` +
-        `&scope=instagram_business_basic,pages_show_list,instagram_content_publish` +
-        `&response_type=code` +
-        `&state=${state}`;
+      const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${INSTAGRAM_APP_ID}&redirect_uri=${encodeURIComponent(
+        INSTAGRAM_REDIRECT_URI
+      )}&state=${state}&response_type=code&scope=pages_show_list,instagram_basic,instagram_content_publish,business_management`;
 
       window.location.href = authUrl;
       return true;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
+    } catch (error) {
+      console.error("Error initiating Instagram auth:", error);
       return rejectWithValue("Failed to initiate Instagram authorization");
     }
   }
@@ -372,12 +365,21 @@ export const initiateInstagramAuth = createAsyncThunk(
 
 export const processInstagramCallback = createAsyncThunk(
   "socialNetworks/processInstagramCallback",
-  async ({ code }: { code: string; state: string }, { rejectWithValue }) => {
+  async (
+    { code, state }: { code: string; state: string },
+    { rejectWithValue }
+  ) => {
     try {
-      // Clean up state
-      sessionStorage.removeItem("instagram_auth_state");
+      // Verify state parameter
+      const savedState = localStorage.getItem("instagram_auth_state");
+      if (state !== savedState) {
+        return rejectWithValue("State mismatch. Possible CSRF attack.");
+      }
 
-      // 1. Exchange code for access token
+      // Clean up state
+      localStorage.removeItem("instagram_auth_state");
+
+      // Exchange code for access token via Edge Function
       const { data, error } = await supabase.functions.invoke(
         "instagram-exchange-code",
         {
@@ -389,16 +391,18 @@ export const processInstagramCallback = createAsyncThunk(
         console.error("Edge function error:", error);
         throw new Error(error.message || "Error calling edge function");
       }
+
       if (!data) {
-        throw new Error("No data received from exchange function");
+        throw new Error("No data received from edge function");
       }
 
       const { access_token, expires_in = 3600 } = data;
+
       if (!access_token) {
         throw new Error("No access token received");
       }
 
-      // 2. Verify token and get extended info
+      // Verify token and get user information using the verify token function
       const { data: verifyData, error: verifyError } =
         await supabase.functions.invoke("instagram-verify-token", {
           body: { access_token },
@@ -408,49 +412,45 @@ export const processInstagramCallback = createAsyncThunk(
         throw new Error("Failed to verify token or get user information");
       }
 
-      // 3. Get current Supabase user
+      // Get current user
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
+
       if (!userId) {
         return rejectWithValue("User not authenticated");
       }
 
-      // 4. Extract data from verifyData
-      const { tokenData, business_pages } = verifyData;
+      // Extract user information from verify response
+      const { tokenData, userData: instagramUserData } = verifyData;
 
-      // Calculate token expiration
-      const calculatedExpiresAt = tokenData?.expires_at
-        ? new Date(tokenData.expires_at * 1000).toISOString()
-        : new Date(Date.now() + expires_in * 1000).toISOString();
-
-      // Build instagram_data object
+      // Create Instagram data object with complete information
       const instagram_data = {
-        app_id: tokenData.app_id,
-        user_id: tokenData.user_id,
-        instagram_user_id: tokenData.user_id,
-        username: tokenData.username,
-        application: tokenData.application,
-        token_type: tokenData.token_type,
-        permissions_granted: tokenData.permissions_granted,
-        granular_scopes: tokenData.granular_scopes,
+        instagram_user_id: instagramUserData.id,
         access_token,
-        issued_at: tokenData.issued_at
-          ? new Date(tokenData.issued_at * 1000).toISOString()
-          : new Date().toISOString(),
-        token_expires_at: calculatedExpiresAt,
-        data_access_expires_at: tokenData.data_access_expires_at
-          ? new Date(tokenData.data_access_expires_at * 1000).toISOString()
-          : null,
-        connected_at: new Date().toISOString(),
+        token_expires_at: tokenData.expires_at
+          ? new Date(tokenData.expires_at * 1000).toISOString()
+          : new Date(Date.now() + expires_in * 1000).toISOString(),
+        data_access_expires_at: new Date(
+          tokenData.data_access_expires_at * 1000
+        ).toISOString(),
         is_connected: true,
-        business_pages: business_pages || [],
-        pages_fetched_at: new Date().toISOString(),
+        username: instagramUserData.name,
+        user_id: instagramUserData.id,
+        app_id: tokenData.app_id,
+        connected_at: new Date().toISOString(),
+        permissions_granted: tokenData.scopes,
+        granular_scopes: tokenData.granular_scopes,
+        token_type: tokenData.type,
+        application: tokenData.application,
+        issued_at: new Date(tokenData.issued_at * 1000).toISOString(),
       };
 
-      // 5. Update user data in Supabase
+      // Update user data
       const { error: updateError } = await supabase
         .from("userData")
-        .update({ instagram_data })
+        .update({
+          instagram_data,
+        })
         .eq("uid", userId);
 
       if (updateError) {
@@ -458,12 +458,11 @@ export const processInstagramCallback = createAsyncThunk(
         throw new Error(updateError.message || "Failed to update user data");
       }
 
-      // 6. Return simplified info for Redux state
       return {
         isConnected: true,
-        userId: tokenData.user_id,
-        username: tokenData.username,
-        expiresAt: calculatedExpiresAt,
+        userId: instagramUserData.id,
+        username: instagramUserData.name,
+        expiresAt: new Date(tokenData.expires_at * 1000).toISOString(),
       };
     } catch (error) {
       console.error("Error processing Instagram callback:", error);
