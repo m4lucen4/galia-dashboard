@@ -1,12 +1,11 @@
 import { Table } from "@tanstack/react-table";
 import { useTranslation } from "react-i18next";
-import { ProjectDataProps } from "../../../../types";
 
-type PaginationProps = {
-  table: Table<ProjectDataProps>;
+type PaginationProps<TData> = {
+  table: Table<TData>;
 };
 
-export const Pagination: React.FC<PaginationProps> = ({ table }) => {
+export const Pagination = <TData,>({ table }: PaginationProps<TData>) => {
   const { t } = useTranslation();
 
   return (

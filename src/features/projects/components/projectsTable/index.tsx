@@ -15,7 +15,7 @@ import { Button } from "../../../../components/shared/ui/Button";
 import { Badge } from "../../../../components/shared/ui/Badge";
 import { fetchProjectById } from "../../../../redux/actions/ProjectActions";
 import { useTranslation } from "react-i18next";
-import { Pagination } from "./Pagination";
+import { Pagination } from "../../../../components/shared/ui/Pagination";
 import {
   RecoverIcon,
   LaunchIcon,

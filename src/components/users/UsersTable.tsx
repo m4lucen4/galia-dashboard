@@ -6,6 +6,7 @@ import {
   getSortedRowModel,
   useReactTable,
   SortingState,
+  getPaginationRowModel,
 } from "@tanstack/react-table";
 import { UserDataProps } from "../../types";
 import { LoadingSpinner } from "../shared/ui/LoadingSpinner";
@@ -13,6 +14,7 @@ import { useAppDispatch } from "../../redux/hooks";
 import { fetchUserByUid } from "../../redux/actions/UserActions";
 import { Button } from "../shared/ui/Button";
 import { useTranslation } from "react-i18next";
+import { Pagination } from "../shared/ui/Pagination";
 
 type UsersTableProps = {
   users: UserDataProps[];
@@ -101,6 +103,13 @@ export const UsersTable = ({
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    columnResizeMode: "onChange",
+    initialState: {
+      pagination: {
+        pageSize: 5,
+      },
+    },
   });
 
   if (isLoading) {
@@ -154,6 +163,7 @@ export const UsersTable = ({
           </tbody>
         </table>
       </div>
+      <Pagination table={table} />
     </div>
   );
 };

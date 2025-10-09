@@ -289,7 +289,8 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
 
           <p className="text-xs text-gray-500 mt-1">
             {t("projects.imageLimit")}: 10 {t("projects.maxImages")}, 5MB{" "}
-            {t("projects.maxSizePerImage")}, aspect ratio entre 0.8 y 1.91
+            {t("projects.maxSizePerImage")}, proporciones desde 4:5 (vertical)
+            hasta 16:9 (panorámica)
           </p>
 
           {/* Existing Images */}
