@@ -190,4 +190,6 @@ export type PromptsProps = {
   updated_at?: string;
   title: string;
   description: string;
+  user: string;
+  isPrivate: boolean;
 };

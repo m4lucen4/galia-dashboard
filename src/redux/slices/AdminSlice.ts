@@ -4,6 +4,7 @@ import {
   updatePrompt,
   fetchPrompts,
   fetchPromptById,
+  fetchPromptsByUser,
   deletePrompt,
 } from "../actions/AdminActions";
 
@@ -16,6 +17,7 @@ interface UserState {
   updatePromptRequest: IRequest;
   fetchPromptsRequest: IRequest;
   fetchPromptByIdRequest: IRequest;
+  fetchPromptsByUserRequest: IRequest;
   deletePromptRequest: IRequest;
 }
 
@@ -38,6 +40,11 @@ const initialState: UserState = {
     ok: false,
   },
   fetchPromptByIdRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
+  fetchPromptsByUserRequest: {
     inProgress: false,
     messages: "",
     ok: false,
@@ -159,6 +166,35 @@ const adminSlice = createSlice({
             : errorPayload?.message || "Error desconocido";
 
         state.fetchPromptByIdRequest = {
+          inProgress: false,
+          messages: errorMessage,
+          ok: false,
+        };
+      });
+    builder
+      .addCase(fetchPromptsByUser.pending, (state) => {
+        state.fetchPromptsByUserRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(fetchPromptsByUser.fulfilled, (state, action) => {
+        state.prompts = action.payload.prompts;
+        state.fetchPromptsByUserRequest = {
+          inProgress: false,
+          messages: "",
+          ok: true,
+        };
+      })
+      .addCase(fetchPromptsByUser.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage =
+          typeof errorPayload === "string"
+            ? errorPayload
+            : errorPayload?.message || "Error desconocido";
+
+        state.fetchPromptsByUserRequest = {
           inProgress: false,
           messages: errorMessage,
           ok: false,

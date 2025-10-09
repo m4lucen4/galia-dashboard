@@ -23,7 +23,8 @@
     "projects": "Projectes",
     "publishes": "Publicacions",
     "map": "Mapa",
-    "adminPanel": "Administració"
+    "adminPanel": "Administració",
+    "gpts": "Els meus GPTs"
   },
   "login": {
     "title": "Iniciar sessió",
@@ -197,7 +198,8 @@
     "placeholderPhotoCreditLink": "Pàgina web del fotògraf",
     "deleteProject": "Eliminar projecte",
     "launchProject": "Llançar projecte",
-    "recoveryProject": "Recuperar projecte"
+    "recoveryProject": "Recuperar projecte",
+    "selectPromptOption": "Selecciona un Gpt"
   },
   "previewProjects": {
     "title": "Vista prèvia de projectes",
@@ -266,16 +268,16 @@
     "descriptionProfile": "Descripció del perfil"
   },
   "admin": {
-    "title": "Panell d'Administració",
-    "description": "Gestiona mocklab des d'aquí",
-    "prompts": "Prompts",
-    "noPrompts": "No hi ha prompts disponibles",
+    "title": "Els meus GPTs",
+    "description": "Gestiona els teus gpts personalitzats.",
+    "prompts": "Gpt´s",
+    "noPrompts": "No hi ha gpts disponibles",
     "actions": "Accions",
-    "addPrompt": "Afegir Prompt",
-    "editPrompt": "Editar Prompt",
-    "createPrompt": "Crear Prompt",
-    "promptTitle": "Títol del Prompt",
-    "promptDescription": "Descripció del Prompt",
-    "confirmDeletePrompt": "Estàs segur que vols eliminar aquest prompt? Aquesta acció no es pot desfer."
+    "addPrompt": "Afegir Gpt",
+    "editPrompt": "Editar Gpt",
+    "createPrompt": "Crear Gpt",
+    "promptTitle": "Títol del Gpt",
+    "promptDescription": "Descripció del Gpt",
+    "confirmDeletePrompt": "Estàs segur que vols eliminar aquest Gpt? Aquesta acció no es pot desfer."
   }
 }

@@ -1,8 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Card } from "../../../components/shared/ui/Card";
-import { PromptsTable } from "../components/promptsTable";
+import { MyGptsTable } from "../components/myGptsTable";
 
-export const AdminPanel = () => {
+export const MyGpts = () => {
   const { t } = useTranslation();
 
   return (
@@ -15,10 +14,7 @@ export const AdminPanel = () => {
           {t("admin.description")}
         </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        <Card title={t("admin.prompts")}>Gestión de prompts</Card>
-      </div>
-      <PromptsTable />
+      <MyGptsTable />
     </div>
   );
 };

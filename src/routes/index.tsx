@@ -6,7 +6,7 @@ import { Profile } from "../features/profile/screens/Profile";
 import { Settings } from "../features/settings/screens/Settings";
 import { Users } from "../screens/Users";
 import { Projects } from "../features/projects/screens/Projects";
-import { AdminPanel } from "../features/adminPanel/screens/AdminPanel";
+import { MyGpts } from "../features/adminPanel/screens/MyGpts";
 
 import { ProtectedRoute } from "./ProtectedRoute";
 import { PublicRoute } from "./PublicRoute";
@@ -35,12 +35,12 @@ export const AppRoutes = () => (
       <Route path="/settings" element={<Settings />} />
       <Route path="/projects" element={<Projects />} />
       <Route path="/preview-projects" element={<PreviewProjects />} />
+      <Route path="/my-gpts" element={<MyGpts />} />
       <Route path="/auth/linkedin/callback" element={<LinkedInCallback />} />
       <Route path="/auth/instagram/callback" element={<InstagramCallback />} />
     </Route>
     <Route element={<AdminRoute />}>
       <Route path="/users" element={<Users />} />
-      <Route path="/admin-panel" element={<AdminPanel />} />
     </Route>
     <Route element={<PasswordResetRoute />}>
       <Route path="/reset-password" element={<RecoveryPasswordScreen />} />

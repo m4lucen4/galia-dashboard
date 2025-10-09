@@ -16,6 +16,8 @@ export const addPrompt = createAsyncThunk(
         .insert({
           title: promptData.title,
           description: promptData.description,
+          user: promptData.user,
+          isPrivate: promptData.isPrivate,
         })
         .select()
         .single();
@@ -57,6 +59,8 @@ export const updatePrompt = createAsyncThunk(
           updated_at: new Date().toISOString(),
           title: promptData.title,
           description: promptData.description,
+          isPrivate: promptData.isPrivate,
+          user: promptData.user,
         })
         .eq("id", promptData.id)
         .select()
@@ -158,6 +162,62 @@ export const fetchPromptById = createAsyncThunk(
       const appError: SupabaseError = {
         message:
           error instanceof Error ? error.message : "Error retrieving prompt",
+        status: 500,
+      };
+      return rejectWithValue(appError);
+    }
+  }
+);
+
+export const fetchPromptsByUser = createAsyncThunk(
+  "prompts/fetchPromptsByUser",
+  async (
+    {
+      userUid,
+      includePublic = true,
+    }: { userUid: string; includePublic?: boolean },
+    { rejectWithValue }
+  ) => {
+    try {
+      let query = supabase.from("prompts").select("*");
+
+      if (includePublic) {
+        query = query.or(`user.eq.${userUid},isPrivate.eq.false`);
+      } else {
+        query = query.eq("user", userUid);
+      }
+
+      const { data: prompts, error } = await query.order("created_at", {
+        ascending: false,
+      });
+
+      if (error) {
+        return rejectWithValue({
+          message: `Error getting user prompts: ${error.message}`,
+          status: error.code,
+        });
+      }
+
+      if (!prompts || prompts.length === 0) {
+        return {
+          prompts: [],
+          message: includePublic
+            ? "No prompts available for this user"
+            : "User doesn't have any prompts yet",
+        };
+      }
+
+      return {
+        prompts: prompts,
+        message: `${prompts.length} prompts found for user`,
+      };
+    } catch (error: unknown) {
+      console.error("Error in fetchPromptsByUser:", error);
+      const appError: SupabaseError = {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error retrieving user prompts",
         status: 500,
       };
       return rejectWithValue(appError);

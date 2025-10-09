@@ -19,16 +19,20 @@ import {
   deletePrompt,
   updatePrompt,
   addPrompt,
+  fetchPromptsByUser,
 } from "../../../../redux/actions/AdminActions";
 import { Drawer } from "../../../../components/shared/ui/Drawer";
 import { InputField } from "../../../../components/shared/ui/InputField";
+import { RootState } from "../../../../redux/store";
 
 interface FormData {
   title: string;
   description: string;
+  user: string;
+  isPrivate: boolean;
 }
 
-export const PromptsTable = () => {
+export const MyGptsTable = () => {
   const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([]);
   const dispatch = useAppDispatch();
@@ -39,11 +43,15 @@ export const PromptsTable = () => {
     updatePromptRequest,
   } = useAppSelector((state) => state.admin);
 
+  const user = useAppSelector((state: RootState) => state.auth.user);
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingPrompt, setEditingPrompt] = useState<PromptsProps | null>(null);
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
+    user: "",
+    isPrivate: false,
   });
 
   const handleChange = (
@@ -60,28 +68,37 @@ export const PromptsTable = () => {
     e.preventDefault();
 
     try {
+      const isUserAdmin = user?.role === "admin";
+
+      const promptData = {
+        title: formData.title,
+        description: formData.description,
+        user: user?.uid || "",
+        isPrivate: !isUserAdmin,
+      };
+
       if (editingPrompt) {
         await dispatch(
           updatePrompt({
             id: editingPrompt.id,
-            title: formData.title,
-            description: formData.description,
+            ...promptData,
           })
         ).unwrap();
       } else {
-        await dispatch(
-          addPrompt({
-            title: formData.title,
-            description: formData.description,
-          })
-        ).unwrap();
+        await dispatch(addPrompt(promptData)).unwrap();
       }
 
-      dispatch(fetchPrompts());
+      if (user?.role === "admin") {
+        dispatch(fetchPrompts());
+      } else if (user?.uid) {
+        dispatch(
+          fetchPromptsByUser({ userUid: user.uid, includePublic: false })
+        );
+      }
 
       setDrawerOpen(false);
       setEditingPrompt(null);
-      setFormData({ title: "", description: "" });
+      setFormData({ title: "", description: "", user: "", isPrivate: false });
     } catch (error) {
       console.error("Error al guardar prompt:", error);
     }
@@ -92,6 +109,8 @@ export const PromptsTable = () => {
     setFormData({
       title: prompt.title,
       description: prompt.description || "",
+      user: prompt.user,
+      isPrivate: prompt.isPrivate,
     });
     setDrawerOpen(true);
   };
@@ -100,7 +119,13 @@ export const PromptsTable = () => {
     if (window.confirm(t("admin.confirmDeletePrompt"))) {
       try {
         await dispatch(deletePrompt(prompt.id)).unwrap();
-        dispatch(fetchPrompts());
+        if (user?.role === "admin") {
+          dispatch(fetchPrompts());
+        } else if (user?.uid) {
+          dispatch(
+            fetchPromptsByUser({ userUid: user.uid, includePublic: false })
+          );
+        }
       } catch (error) {
         console.error("Error al eliminar prompt:", error);
       }
@@ -109,14 +134,19 @@ export const PromptsTable = () => {
 
   const handleAddNew = () => {
     setEditingPrompt(null);
-    setFormData({ title: "", description: "" });
+    setFormData({
+      title: "",
+      description: "",
+      user: user?.uid || "",
+      isPrivate: user?.role !== "admin",
+    });
     setDrawerOpen(true);
   };
 
   const handleCloseDrawer = () => {
     setDrawerOpen(false);
     setEditingPrompt(null);
-    setFormData({ title: "", description: "" });
+    setFormData({ title: "", description: "", user: "", isPrivate: false });
   };
 
   const columnHelper = createColumnHelper<PromptsProps>();
@@ -155,8 +185,12 @@ export const PromptsTable = () => {
   ];
 
   useEffect(() => {
-    dispatch(fetchPrompts());
-  }, [dispatch]);
+    if (user?.role === "admin") {
+      dispatch(fetchPrompts());
+    } else if (user?.uid) {
+      dispatch(fetchPromptsByUser({ userUid: user.uid, includePublic: false }));
+    }
+  }, [dispatch, user?.role, user?.uid]);
 
   const table = useReactTable({
     data: prompts,
@@ -205,7 +239,6 @@ export const PromptsTable = () => {
                 <InputField
                   id="title"
                   label={t("admin.promptTitle")}
-                  placeholder={t("admin.promptPlaceholderTitle")}
                   type="text"
                   value={formData.title}
                   onChange={handleChange}

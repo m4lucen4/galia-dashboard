@@ -23,7 +23,8 @@
     "projects": "Proyectos",
     "publishes": "Publicaciones",
     "map": "Mapa",
-    "adminPanel": "Administración"
+    "adminPanel": "Administración",
+    "gpts": "Mis GPTs"
   },
   "login": {
     "title": "Iniciar sesión",
@@ -197,7 +198,8 @@
     "placeholderPhotoCreditLink": "Página web del fotógrafo",
     "deleteProject": "Eliminar proyecto",
     "launchProject": "Lanzar proyecto",
-    "recoveryProject": "Recuperar proyecto"
+    "recoveryProject": "Recuperar proyecto",
+    "selectPromptOption": "Selecciona un Gpt"
   },
   "previewProjects": {
     "title": "Vista previa de proyectos",
@@ -266,17 +268,17 @@
     "descriptionProfile": "Descripción del perfil"
   },
   "admin": {
-    "title": "Panel de Administración",
-    "description": "Gestiona mocklab desde aquí",
-    "prompts": "Prompts",
-    "noPrompts": "No hay prompts disponibles",
+    "title": "Mis GPTs",
+    "description": "Gestiona tus gpts personalizados.",
+    "prompts": "Gpt´s",
+    "noPrompts": "No hay gpts disponibles",
     "actions": "Acciones",
-    "addPrompt": "Añadir Prompt",
-    "editPrompt": "Editar Prompt",
-    "createPrompt": "Crear Prompt",
-    "promptTitle": "Título del Prompt",
-    "promptDescription": "Descripción del Prompt",
-    "confirmDeletePrompt": "¿Estás seguro de que deseas eliminar este prompt? Esta acción no se puede deshacer."
+    "addPrompt": "Añadir Gpt",
+    "editPrompt": "Editar Gpt",
+    "createPrompt": "Crear Gpt",
+    "promptTitle": "Título del Gpt",
+    "promptDescription": "Descripción del Gpt",
+    "confirmDeletePrompt": "¿Estás seguro de que deseas eliminar este Gpt? Esta acción no se puede deshacer."
   },
   "footer": {
     "allRightsReserved": "Todos los derechos reservados.",

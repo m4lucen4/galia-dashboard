@@ -12,7 +12,10 @@ import { SelectField } from "../../../components/shared/ui/SelectField";
 import { CancelIcon } from "../../../components/icons";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { fetchPrompts } from "../../../redux/actions/AdminActions";
+import {
+  fetchPrompts,
+  fetchPromptsByUser,
+} from "../../../redux/actions/AdminActions";
 import { validateImageFiles } from "../../../helpers";
 
 interface ProjectsFormProps {
@@ -63,8 +66,12 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    dispatch(fetchPrompts());
-  }, [dispatch]);
+    if (user?.role === "admin") {
+      dispatch(fetchPrompts());
+    } else if (user?.uid) {
+      dispatch(fetchPromptsByUser({ userUid: user.uid }));
+    }
+  }, [dispatch, user?.role, user?.uid]);
 
   useEffect(() => {
     if (initialData) {
@@ -236,10 +243,13 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               label={t("projects.selectPrompt")}
               value={formData.prompt || ""}
               onChange={handleChange}
-              options={prompts.map((prompt) => ({
-                value: prompt.description,
-                label: prompt.title,
-              }))}
+              options={[
+                { value: "", label: t("projects.selectPromptOption") },
+                ...prompts.map((prompt) => ({
+                  value: prompt.description,
+                  label: prompt.title,
+                })),
+              ]}
             />
           </div>
         )}
