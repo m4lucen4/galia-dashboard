@@ -4,6 +4,9 @@ import { useTranslation } from "react-i18next";
 import { UpdateUserProps } from "../../../redux/actions/UserActions";
 import { UserDataProps } from "../../../types/index";
 
+import avatarDefault from "../../../assets/profile-default.png";
+import { Avatar } from "./Avatar";
+
 interface ProfileFormProps {
   formData: UpdateUserProps;
   userData: UserDataProps;
@@ -14,6 +17,8 @@ interface ProfileFormProps {
     >
   ) => void;
   onLanguageChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  avatarPreview?: string | null;
 }
 
 export const ProfileForm = ({
@@ -22,6 +27,8 @@ export const ProfileForm = ({
   isEditing,
   onChange,
   onLanguageChange,
+  onAvatarChange,
+  avatarPreview,
 }: ProfileFormProps) => {
   const { t } = useTranslation();
 
@@ -33,8 +40,26 @@ export const ProfileForm = ({
     } sm:text-sm/6`;
   };
 
+  const displayAvatar = avatarPreview || formData.avatar_url || avatarDefault;
+
   return (
     <div className="mt-6 border-t border-gray-100">
+      <div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Avatar
+          displayAvatar={displayAvatar}
+          isEditing={isEditing}
+          onAvatarChange={onAvatarChange}
+        />
+        <InputField
+          id="description"
+          label={t("profile.descriptionProfile")}
+          type="textarea"
+          disabled={!isEditing}
+          value={formData.description ?? ""}
+          onChange={onChange}
+          className={getInputClassName(isEditing)}
+        />
+      </div>
       <div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-4">
         <InputField
           id="first_name"

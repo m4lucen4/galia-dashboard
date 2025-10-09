@@ -261,7 +261,9 @@
     "titleChangePassword": "¿Quieres cambiar tu contraseña?",
     "descriptionChangePassword": "Por favor, introduce tu nueva contraseña y confírmala",
     "newPassword": "Nueva contraseña",
-    "confirmPassword": "Confirmar contraseña"
+    "confirmPassword": "Confirmar contraseña",
+    "changeAvatar": "Cambiar avatar",
+    "descriptionProfile": "Descripción del perfil"
   },
   "admin": {
     "title": "Panel de Administración",

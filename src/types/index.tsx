@@ -13,11 +13,13 @@ export type UserDataProps = {
   updated_at: string;
   uid: string;
   active: boolean;
+  avatar_url: string;
   first_name: string;
   last_name: string;
   email: string;
   phone: string;
   company: string;
+  description: string;
   vat: string;
   role: string;
   language?: string;

@@ -42,6 +42,8 @@ export const Profile = () => {
     handleCancel,
     handleChangePassword,
     handlePasswordAlertCancel,
+    avatarPreview,
+    handleAvatarChange,
   } = useProfileHandlers({
     formData,
     setFormData,
@@ -61,11 +63,13 @@ export const Profile = () => {
       setFormData({
         id: userData.id,
         uid: userData.uid,
+        avatar_url: userData.avatar_url || "",
         first_name: userData.first_name || "",
         last_name: userData.last_name || "",
         phone: userData.phone || "",
         company: userData.company || "",
         vat: userData.vat || "",
+        description: userData.description || "",
         active: userData.active,
         role: userData.role,
         password: "",
@@ -87,7 +91,7 @@ export const Profile = () => {
       <h3 className="text-base/7 font-semibold text-gray-900">
         {t("profile.title")}
       </h3>
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-4">
         <p className="mt-1 max-w-2xl text-sm/6 text-gray-500">
           {t("profile.description")}
         </p>
@@ -101,18 +105,20 @@ export const Profile = () => {
       {formData && userData && (
         <div>
           <form onSubmit={handleSubmit}>
+            <FormButtons
+              isEditing={isEditing}
+              isLoading={userUpdateRequest?.inProgress || false}
+              onEdit={handleEdit}
+              onCancel={handleCancel}
+            />
             <ProfileForm
               formData={formData}
               userData={userData}
               isEditing={isEditing}
               onChange={handleChange}
               onLanguageChange={handleLanguageChange}
-            />
-            <FormButtons
-              isEditing={isEditing}
-              isLoading={userUpdateRequest?.inProgress || false}
-              onEdit={handleEdit}
-              onCancel={handleCancel}
+              onAvatarChange={handleAvatarChange}
+              avatarPreview={avatarPreview}
             />
           </form>
         </div>

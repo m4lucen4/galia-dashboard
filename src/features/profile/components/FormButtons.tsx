@@ -18,7 +18,7 @@ export const FormButtons = ({
 
   if (isEditing) {
     return (
-      <div className="flex space-x-3 mt-4">
+      <div className="flex space-x-3">
         <Button title={t("profile.save")} type="submit" disabled={isLoading} />
         <Button
           title={t("profile.cancel")}

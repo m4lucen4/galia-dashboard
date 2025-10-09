@@ -73,6 +73,7 @@ const authSlice = createSlice({
           state.user = {
             id: action.payload.user.id,
             uid: action.payload.user.id,
+            avatar_url: action.payload.userData?.avatar_url || "",
             first_name: action.payload.userData?.first_name || "",
             last_name: action.payload.userData?.last_name || "",
             email: action.payload.userData?.email || "",
@@ -81,6 +82,7 @@ const authSlice = createSlice({
             phone: action.payload.userData?.phone || "",
             company: action.payload.userData?.company || "",
             vat: action.payload.userData?.vat || "",
+            description: action.payload.userData?.description || "",
             role: action.payload.userData?.role || "",
             language: action.payload.userData?.language || "",
             updated_at: action.payload.userData?.updated_at || "",
@@ -114,6 +116,7 @@ const authSlice = createSlice({
           state.user = {
             id: action.payload.user.id,
             uid: action.payload.user.id,
+            avatar_url: action.payload.userData?.avatar_url || "",
             first_name: action.payload.userData?.first_name || "",
             last_name: action.payload.userData?.last_name || "",
             email: action.payload.userData?.email || "",
@@ -122,6 +125,7 @@ const authSlice = createSlice({
             phone: action.payload.userData?.phone || "",
             company: action.payload.userData?.company || "",
             vat: action.payload.userData?.vat || "",
+            description: action.payload.userData?.description || "",
             role: action.payload.userData?.role || "",
             updated_at: action.payload.userData?.updated_at || "",
             language: action.payload.userData?.language || "",

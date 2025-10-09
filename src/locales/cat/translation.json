@@ -261,7 +261,9 @@
     "titleChangePassword": "Vols canviar la teva contrasenya?",
     "descriptionChangePassword": "Si us plau, introdueix la teva nova contrasenya i confirma-la",
     "newPassword": "Nova contrasenya",
-    "confirmPassword": "Confirmar contrasenya"
+    "confirmPassword": "Confirmar contrasenya",
+    "changeAvatar": "Canviar avatar",
+    "descriptionProfile": "Descripció del perfil"
   },
   "admin": {
     "title": "Panell d'Administració",

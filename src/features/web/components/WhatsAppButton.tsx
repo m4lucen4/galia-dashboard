@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 const WhatsAppButton: React.FC = () => {
-  const phoneNumber = "659610321";
+  const phoneNumber = "624643737";
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [message, setMessage] = useState(
     "Hola, me gustaría obtener más información sobre mocklab."

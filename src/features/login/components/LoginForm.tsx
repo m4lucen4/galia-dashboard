@@ -74,13 +74,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             type="password"
             value={formData.password}
           />
-          <div className="flex row items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0">
             <Button
               title={t("login.button")}
               disabled={loginRequest.inProgress}
               type="submit"
+              fullWidth
             />
-            <span className="text-sm cursor-pointer" onClick={onForgotPassword}>
+            <span
+              className="text-sm cursor-pointer text-center"
+              onClick={onForgotPassword}
+            >
               {t("login.recoveryPassword")}
             </span>
           </div>

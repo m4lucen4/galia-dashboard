@@ -14,6 +14,7 @@ export type UpdateUserProps = {
   uid: string;
 } & Partial<Omit<UserDataProps, "id" | "created_at" | "updated_at">> & {
     password?: string;
+    avatarFile?: File;
   };
 
 export const fetchUsers = createAsyncThunk(
@@ -143,12 +144,14 @@ export const addUser = createAsyncThunk(
       const { error: dbError } = await supabase.from("userData").insert({
         uid: authData.user.id,
         active: userData.active,
+        avatar_url: userData.avatar_url,
         first_name: userData.first_name,
         last_name: userData.last_name,
         email: userData.email,
         phone: userData.phone,
         company: userData.company,
         vat: userData.vat,
+        description: userData.description,
         role: userData.role,
       });
 
@@ -230,6 +233,8 @@ export const updateUser = createAsyncThunk(
         updated_at: new Date().toISOString(),
       };
 
+      if (userData.avatar_url !== undefined)
+        updateData.avatar_url = userData.avatar_url;
       if (userData.first_name !== undefined)
         updateData.first_name = userData.first_name;
       if (userData.last_name !== undefined)
@@ -238,6 +243,8 @@ export const updateUser = createAsyncThunk(
       if (userData.phone !== undefined) updateData.phone = userData.phone;
       if (userData.company !== undefined) updateData.company = userData.company;
       if (userData.vat !== undefined) updateData.vat = userData.vat;
+      if (userData.description !== undefined)
+        updateData.description = userData.description;
       if (userData.role !== undefined) updateData.role = userData.role;
       if (userData.language !== undefined)
         updateData.language = userData.language;
@@ -299,12 +306,50 @@ export const updateProfile = createAsyncThunk(
         }
       }
 
+      let uploadedAvatarUrl: string | undefined;
+      if (userData.avatarFile) {
+        try {
+          const { data: authUser } = await supabase.auth.getUser();
+          if (!authUser?.user) {
+            return rejectWithValue({
+              message: "Not authenticated",
+              status: 401,
+            });
+          }
+          const fileExt = userData.avatarFile.name.split(".").pop() || "jpg";
+          const filePath = `${userData.uid}/avatar.${fileExt}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from("profile-avatar")
+            .upload(filePath, userData.avatarFile, {
+              upsert: true,
+              contentType: userData.avatarFile.type || `image/${fileExt}`,
+            });
+
+          if (uploadError) {
+            console.error("Error uploading avatar:", uploadError);
+          } else {
+            const { data: publicUrlData } = supabase.storage
+              .from("profile-avatar")
+              .getPublicUrl(filePath);
+            uploadedAvatarUrl = publicUrlData.publicUrl;
+          }
+        } catch (storageError) {
+          console.error("Unexpected error uploading avatar:", storageError);
+        }
+      }
+
       const updateData: Partial<
         Omit<UserDataProps, "id" | "created_at" | "uid">
       > = {
         updated_at: new Date().toISOString(),
       };
 
+      if (uploadedAvatarUrl) {
+        updateData.avatar_url = uploadedAvatarUrl;
+      } else if (userData.avatar_url !== undefined) {
+        updateData.avatar_url = userData.avatar_url;
+      }
       if (userData.first_name !== undefined)
         updateData.first_name = userData.first_name;
       if (userData.last_name !== undefined)
@@ -313,6 +358,8 @@ export const updateProfile = createAsyncThunk(
       if (userData.phone !== undefined) updateData.phone = userData.phone;
       if (userData.company !== undefined) updateData.company = userData.company;
       if (userData.vat !== undefined) updateData.vat = userData.vat;
+      if (userData.description !== undefined)
+        updateData.description = userData.description;
       if (userData.role !== undefined) updateData.role = userData.role;
 
       const { error: dbError } = await supabase

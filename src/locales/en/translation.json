@@ -260,7 +260,9 @@
     "titleChangePassword": "Do you want to change your password?",
     "descriptionChangePassword": "Please enter and confirm your new password",
     "newPassword": "New password",
-    "confirmPassword": "Confirm password"
+    "confirmPassword": "Confirm password",
+    "changeAvatar": "Change avatar",
+    "descriptionProfile": "Profile description"
   },
   "admin": {
     "title": "Admin Panel",

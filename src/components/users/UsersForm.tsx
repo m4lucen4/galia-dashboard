@@ -20,6 +20,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const defaultFormData: CreateUserProps = {
+    avatar_url: "",
     first_name: "",
     last_name: "",
     email: "",
@@ -28,6 +29,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
     phone: "",
     company: "",
     vat: "",
+    description: "",
     role: "customer",
   };
 
@@ -145,6 +147,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
           value={formData.role}
           onChange={handleChange}
           options={[
+            { value: "basic", label: t("users.basic") },
             { value: "customer", label: t("users.customer") },
             { value: "publisher", label: t("users.publisher") },
             { value: "admin", label: t("users.admin") },

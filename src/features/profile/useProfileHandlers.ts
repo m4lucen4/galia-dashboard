@@ -4,6 +4,7 @@ import {
   updateUser,
   UpdateUserProps,
   fetchUserByUid,
+  updateProfile,
 } from "../../redux/actions/UserActions";
 import { changePassword } from "../../redux/actions/AuthActions";
 import { useTranslation } from "react-i18next";
@@ -31,6 +32,7 @@ export const useProfileHandlers = ({
   const [showPasswordAlert, setShowPasswordAlert] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -65,6 +67,25 @@ export const useProfileHandlers = ({
     setPasswordError("");
   };
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!formData) return;
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      setFormData({ ...formData, avatarFile: file });
+      const url = URL.createObjectURL(file);
+      setAvatarPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
+    } else {
+      setFormData({ ...formData, avatarFile: undefined });
+      setAvatarPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
+    }
+  };
+
   const handlePasswordAlertAccept = () => {
     if (newPassword.length < 6) {
       setPasswordError("Password must be at least 6 characters");
@@ -90,13 +111,18 @@ export const useProfileHandlers = ({
       delete dataToSubmit.password;
     }
 
-    dispatch(updateUser(dataToSubmit))
+    const thunk = dataToSubmit.avatarFile ? updateProfile : updateUser;
+    dispatch(thunk(dataToSubmit as UpdateUserProps))
       .unwrap()
       .then(() => {
         if (user?.uid) {
           dispatch(fetchUserByUid(user.uid));
         }
         setIsEditing(false);
+        setAvatarPreview((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return null;
+        });
       });
   };
 
@@ -115,16 +141,22 @@ export const useProfileHandlers = ({
 
   const handleCancel = () => {
     setIsEditing(false);
+    setAvatarPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
 
     if (userData) {
       setFormData({
         id: userData.id,
         uid: userData.uid,
+        avatar_url: userData.avatar_url || "",
         first_name: userData.first_name || "",
         last_name: userData.last_name || "",
         phone: userData.phone || "",
         company: userData.company || "",
         vat: userData.vat || "",
+        description: userData.description || "",
         active: userData.active,
         role: userData.role,
         password: "",
@@ -150,9 +182,11 @@ export const useProfileHandlers = ({
     showPasswordAlert,
     newPassword,
     repeatPassword,
+    avatarPreview,
 
     // Handlers
     handleChange,
+    handleAvatarChange,
     handlePasswordChange,
     handlePasswordAlertAccept,
     handleSubmit,

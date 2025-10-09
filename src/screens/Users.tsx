@@ -57,12 +57,14 @@ export const Users = () => {
       const updateData: UpdateUserProps = {
         id: userData.id,
         uid: userData.uid,
+        avatar_url: formData.avatar_url,
         first_name: formData.first_name,
         last_name: formData.last_name,
         active: formData.active,
         phone: formData.phone,
         company: formData.company,
         vat: formData.vat,
+        description: formData.description,
         role: formData.role,
       };
 
@@ -86,6 +88,7 @@ export const Users = () => {
     if (!userData) return undefined;
 
     return {
+      avatar_url: userData.avatar_url || "",
       first_name: userData.first_name,
       last_name: userData.last_name,
       email: userData.email,
@@ -93,6 +96,7 @@ export const Users = () => {
       active: userData.active,
       phone: userData.phone || "",
       company: userData.company || "",
+      description: userData.description || "",
       vat: userData.vat || "",
       role: userData.role,
     };
