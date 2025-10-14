@@ -7,7 +7,6 @@ import Features from "../components/Features";
 import Hero from "../components/Hero";
 import HowWorks from "../components/HowWorks";
 import Membership from "../components/Membership";
-import Team from "../components/Team";
 
 export const Web = () => {
   return (
@@ -25,9 +24,6 @@ export const Web = () => {
         <Collaborators />
         <div id="precios">
           <Membership />
-        </div>
-        <div id="equipo">
-          <Team />
         </div>
         <div id="contacto">
           <Contact />

@@ -27,7 +27,6 @@ export default function NavbarWeb() {
     { name: "Características", href: "#caracteristicas" },
     { name: "FAQ", href: "#faq" },
     { name: "Precios", href: "#precios" },
-    { name: "Equipo", href: "#equipo" },
     { name: "Contacto", href: "#contacto" },
   ];
 
