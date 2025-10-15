@@ -198,7 +198,8 @@
     "deleteProject": "Delete project",
     "launchProject": "Launch project",
     "recoveryProject": "Recover project",
-    "selectPromptOption": "Select a GPT"
+    "selectPromptOption": "Select a GPT",
+    "assignProject": "Assign project"
   },
   "previewProjects": {
     "title": "Project Preview",

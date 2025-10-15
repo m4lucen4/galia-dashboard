@@ -3,6 +3,7 @@ export * from "./LinkedlnIcon";
 export * from "./WordpressIcon";
 export * from "./CancelIcon";
 export * from "./AddIcon";
+export * from "./AssignedTo";
 export * from "./RecoverIcon";
 export * from "./DeleteIcon";
 export * from "./LaunchIcon";

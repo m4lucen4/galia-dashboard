@@ -12,7 +12,9 @@ import {
   updateProjectPreview,
   updateProjectDraft,
   deleteProject,
+  assignProject,
 } from "../../../redux/actions/ProjectActions";
+import { fetchUsers } from "../../../redux/actions/UserActions";
 import {
   clearProjectErrors,
   clearSelectedProject,
@@ -23,6 +25,7 @@ import { WorkingInProgress } from "../../../components/shared/ui/WorkingInProgre
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ProjectsForm } from "../components/ProjectsForm";
+import { UserSearchSelector } from "../components/UserSearchSelector";
 
 export const Projects = () => {
   const { t } = useTranslation();
@@ -35,12 +38,15 @@ export const Projects = () => {
   const user = useAppSelector((state: RootState) => state.auth.user);
   const { project, projectAddRequest, projects, projectsFetchRequest } =
     useAppSelector((state: RootState) => state.project);
+  const { users } = useAppSelector((state: RootState) => state.user);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     null
   );
   const [showLaunchModal, setShowLaunchModal] = useState(false);
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
 
   const fetchProjectsData = useProjectsData(user);
   const errorMessage = errorMessages({
@@ -58,6 +64,12 @@ export const Projects = () => {
   useEffect(() => {
     fetchProjectsData();
   }, [fetchProjectsData]);
+
+  useEffect(() => {
+    if (!showAssignModal) {
+      setSelectedUser(null);
+    }
+  }, [showAssignModal]);
 
   useEffect(() => {
     if (isLoading) {
@@ -133,6 +145,41 @@ export const Projects = () => {
   const handleRecoveyProject = (projectId: string) => {
     setSelectedProjectId(projectId);
     setShowRecoveryModal(true);
+  };
+
+  const handleAssignProject = (projectId: string) => {
+    setSelectedProjectId(projectId);
+
+    // Find the project and set the currently assigned user if exists
+    const project = projects.find((p) => p.id === projectId);
+    setSelectedUser(project?.assigned || null);
+
+    setShowAssignModal(true);
+    // Fetch users when opening the modal
+    dispatch(fetchUsers());
+  };
+
+  const handleConfirmAssign = () => {
+    if (selectedProjectId && selectedUser) {
+      dispatch(
+        assignProject({
+          projectId: selectedProjectId,
+          assignedUserId: selectedUser,
+        })
+      )
+        .unwrap()
+        .then(() => {
+          console.log(
+            `Proyecto ${selectedProjectId} asignado al usuario ${selectedUser}`
+          );
+          fetchProjectsData();
+          setShowAssignModal(false);
+          setSelectedUser(null);
+        })
+        .catch((error) => {
+          console.error("Error assigning project:", error);
+        });
+    }
   };
 
   const handleConfirmLaunch = () => {
@@ -267,10 +314,12 @@ export const Projects = () => {
       <ProjectsTable
         projects={filteredProjects}
         isLoading={projectsFetchRequest.inProgress}
+        currentUserId={user.uid}
         onEditProject={handleEditProject}
         onLaunchProject={handleLaunchProject}
         onRecoveryProject={handleRecoveyProject}
         onDeleteProject={handleDeleteProject}
+        onAssignProject={handleAssignProject}
       />
       {errorMessage && (
         <Alert
@@ -302,6 +351,24 @@ export const Projects = () => {
           onAccept={handleConfirmDelete}
           onCancel={() => setShowDeleteModal(false)}
         />
+      )}
+      {showAssignModal && (
+        <Alert
+          title="Asignar Proyecto"
+          description="Busca y selecciona el usuario al que deseas asignar este proyecto:"
+          onAccept={handleConfirmAssign}
+          onCancel={() => {
+            setShowAssignModal(false);
+            setSelectedUser(null);
+          }}
+          disabledConfirmButton={!selectedUser}
+        >
+          <UserSearchSelector
+            users={users}
+            selectedUser={selectedUser}
+            onUserSelect={setSelectedUser}
+          />
+        </Alert>
       )}
     </div>
   );

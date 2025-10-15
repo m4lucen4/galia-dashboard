@@ -301,7 +301,7 @@ export const fetchProjectsByUserId = createAsyncThunk(
       const { data: projects, error } = await supabase
         .from("projects")
         .select("*")
-        .eq("user", userId)
+        .or(`user.eq.${userId},assigned.eq.${userId}`)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -320,7 +320,7 @@ export const fetchProjectsByUserId = createAsyncThunk(
 
       return {
         projects,
-        message: `${projects.length} projects found for user ${userId}`,
+        message: `${projects.length} projects found for user ${userId} (created and assigned)`,
       };
     } catch (error: unknown) {
       console.error("Error in fetchProjectsByUserId:", error);
@@ -533,6 +533,46 @@ export const deleteProject = createAsyncThunk(
       const appError: SupabaseError = {
         message:
           error instanceof Error ? error.message : "Error deleting project",
+        status: 500,
+      };
+      return rejectWithValue(appError);
+    }
+  }
+);
+
+export const assignProject = createAsyncThunk(
+  "projects/assignProject",
+  async (
+    {
+      projectId,
+      assignedUserId,
+    }: { projectId: string; assignedUserId: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const { data: updatedProject, error } = await supabase
+        .from("projects")
+        .update({ assigned: assignedUserId })
+        .eq("id", projectId)
+        .select()
+        .single();
+
+      if (error) {
+        return rejectWithValue({
+          message: `Error assigning project: ${error.message}`,
+          status: error.code,
+        });
+      }
+
+      return {
+        project: updatedProject,
+        message: "Project assigned successfully",
+      };
+    } catch (error: unknown) {
+      console.error("Error in assignProject:", error);
+      const appError: SupabaseError = {
+        message:
+          error instanceof Error ? error.message : "Error assigning project",
         status: 500,
       };
       return rejectWithValue(appError);

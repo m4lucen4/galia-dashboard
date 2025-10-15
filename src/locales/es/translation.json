@@ -199,7 +199,8 @@
     "deleteProject": "Eliminar proyecto",
     "launchProject": "Lanzar proyecto",
     "recoveryProject": "Recuperar proyecto",
-    "selectPromptOption": "Selecciona un Gpt"
+    "selectPromptOption": "Selecciona un Gpt",
+    "assignProject": "Asignar proyecto"
   },
   "previewProjects": {
     "title": "Vista previa de proyectos",

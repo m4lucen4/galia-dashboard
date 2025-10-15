@@ -21,24 +21,29 @@ import {
   LaunchIcon,
   DeleteIcon,
   PencilIcon,
+  AssignedTo,
 } from "../../../../components/icons";
 
 type ProjectsTableProps = {
   projects: ProjectDataProps[];
   isLoading: boolean;
+  currentUserId: string;
   onEditProject: () => void;
   onLaunchProject: (projectId: string) => void;
   onRecoveryProject: (projectId: string) => void;
   onDeleteProject: (projectId: string) => void;
+  onAssignProject: (projectId: string) => void;
 };
 
 export const ProjectsTable = ({
   projects,
   isLoading,
+  currentUserId,
   onEditProject,
   onLaunchProject,
   onRecoveryProject,
   onDeleteProject,
+  onAssignProject,
 }: ProjectsTableProps) => {
   const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -108,25 +113,36 @@ export const ProjectsTable = ({
       id: "actions",
       header: t("projects.actions"),
       cell: (props) => {
-        if (props.row.original.state !== "draft") {
+        const project = props.row.original;
+        const isProjectOwner = project.user === currentUserId;
+
+        if (project.state !== "draft") {
           return (
             <div className="flex space-x-2">
               <Button
                 icon={<RecoverIcon />}
                 secondary
-                onClick={() => onRecoveryProject(props.row.original.id)}
+                onClick={() => onRecoveryProject(project.id)}
                 tooltip={t("projects.recoveryProject")}
               />
               <Button
                 icon={<PencilIcon />}
                 secondary
-                onClick={() => handleEditClick(props.row.original)}
+                onClick={() => handleEditClick(project)}
                 tooltip={t("projects.editProject")}
               />
+              {isProjectOwner && (
+                <Button
+                  icon={<AssignedTo />}
+                  secondary
+                  onClick={() => onAssignProject(project.id)}
+                  tooltip={t("projects.assignProject")}
+                />
+              )}
               <Button
                 icon={<DeleteIcon />}
                 secondary
-                onClick={() => onDeleteProject(props.row.original.id)}
+                onClick={() => onDeleteProject(project.id)}
                 tooltip={t("projects.deleteProject")}
               />
             </div>
@@ -138,19 +154,27 @@ export const ProjectsTable = ({
             <Button
               icon={<LaunchIcon />}
               secondary
-              onClick={() => onLaunchProject(props.row.original.id)}
+              onClick={() => onLaunchProject(project.id)}
               tooltip={t("projects.launchProject")}
             />
             <Button
               icon={<PencilIcon />}
               secondary
-              onClick={() => handleEditClick(props.row.original)}
+              onClick={() => handleEditClick(project)}
               tooltip={t("projects.editProject")}
             />
+            {isProjectOwner && (
+              <Button
+                icon={<AssignedTo />}
+                secondary
+                onClick={() => onAssignProject(project.id)}
+                tooltip={t("projects.assignProject")}
+              />
+            )}
             <Button
               icon={<DeleteIcon />}
               secondary
-              onClick={() => onDeleteProject(props.row.original.id)}
+              onClick={() => onDeleteProject(project.id)}
               tooltip={t("projects.deleteProject")}
             />
           </div>

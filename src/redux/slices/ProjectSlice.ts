@@ -9,6 +9,7 @@ import {
   updateProjectPreview,
   updateProjectDraft,
   deleteProject,
+  assignProject,
 } from "../actions/ProjectActions";
 import { ProjectDataProps, IRequest, SupabaseError } from "../../types";
 
@@ -23,6 +24,7 @@ interface ProjectState {
   projectFetchWithGoogleMapsRequest: IRequest;
   updateProjectStateRequest: IRequest;
   deleteProjectRequest: IRequest;
+  assignProjectRequest: IRequest;
 }
 
 const initialState: ProjectState = {
@@ -64,6 +66,11 @@ const initialState: ProjectState = {
     ok: false,
   },
   deleteProjectRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
+  assignProjectRequest: {
     inProgress: false,
     messages: "",
     ok: false,
@@ -358,6 +365,46 @@ const projectSlice = createSlice({
             : errorPayload?.message || "Error desconocido";
 
         state.deleteProjectRequest = {
+          inProgress: false,
+          messages: errorMessage,
+          ok: false,
+        };
+      })
+      // Assign project cases
+      .addCase(assignProject.pending, (state) => {
+        state.assignProjectRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(assignProject.fulfilled, (state, action) => {
+        const updatedProject = action.payload.project;
+
+        // Update the project in the projects array
+        state.projects = state.projects.map((project) =>
+          project.id === updatedProject.id ? updatedProject : project
+        );
+
+        // Update the selected project if it matches
+        if (state.project?.id === updatedProject.id) {
+          state.project = updatedProject;
+        }
+
+        state.assignProjectRequest = {
+          inProgress: false,
+          messages: action.payload.message,
+          ok: true,
+        };
+      })
+      .addCase(assignProject.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage =
+          typeof errorPayload === "string"
+            ? errorPayload
+            : errorPayload?.message || "Error desconocido";
+
+        state.assignProjectRequest = {
           inProgress: false,
           messages: errorMessage,
           ok: false,

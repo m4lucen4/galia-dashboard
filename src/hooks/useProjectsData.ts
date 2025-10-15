@@ -5,6 +5,7 @@ import {
   fetchProjectsByUserId,
 } from "../redux/actions/ProjectActions";
 import { UserDataProps } from "../types";
+import { fetchUsers } from "../redux/actions/UserActions";
 
 /**
  * Custom hook to load projects based on user role
@@ -16,6 +17,8 @@ export const useProjectsData = (user: UserDataProps | null | undefined) => {
 
   const fetchProjectsData = useCallback(() => {
     if (!user) return;
+
+    dispatch(fetchUsers());
 
     if (user.role === "admin") {
       dispatch(fetchProjects());
