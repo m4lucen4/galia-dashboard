@@ -80,6 +80,7 @@ const projectSlice = createSlice({
       state.projectFetchByIdRequest = initialState.projectFetchByIdRequest;
       state.updateProjectStateRequest = initialState.updateProjectStateRequest;
       state.deleteProjectRequest = initialState.deleteProjectRequest;
+      state.assignProjectRequest = initialState.assignProjectRequest;
     },
     clearSelectedProject: (state) => {
       state.project = null;

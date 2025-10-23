@@ -36,8 +36,13 @@ export const Projects = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const user = useAppSelector((state: RootState) => state.auth.user);
-  const { project, projectAddRequest, projects, projectsFetchRequest } =
-    useAppSelector((state: RootState) => state.project);
+  const {
+    project,
+    projectAddRequest,
+    projects,
+    projectsFetchRequest,
+    assignProjectRequest,
+  } = useAppSelector((state: RootState) => state.project);
   const { users } = useAppSelector((state: RootState) => state.user);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     null
@@ -51,6 +56,7 @@ export const Projects = () => {
   const fetchProjectsData = useProjectsData(user);
   const errorMessage = errorMessages({
     addError: projectAddRequest.messages,
+    assignError: assignProjectRequest.messages,
   });
 
   const uniqueStates = Array.from(
@@ -169,9 +175,6 @@ export const Projects = () => {
       )
         .unwrap()
         .then(() => {
-          console.log(
-            `Proyecto ${selectedProjectId} asignado al usuario ${selectedUser}`
-          );
           fetchProjectsData();
           setShowAssignModal(false);
           setSelectedUser(null);
@@ -314,7 +317,7 @@ export const Projects = () => {
       <ProjectsTable
         projects={filteredProjects}
         isLoading={projectsFetchRequest.inProgress}
-        currentUserId={user.uid}
+        currentUser={user}
         onEditProject={handleEditProject}
         onLaunchProject={handleLaunchProject}
         onRecoveryProject={handleRecoveyProject}

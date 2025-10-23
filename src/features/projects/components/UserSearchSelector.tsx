@@ -114,24 +114,6 @@ export const UserSearchSelector: React.FC<UserSearchSelectorProps> = ({
           </div>
         )}
       </div>
-
-      {/* {selectedUser && (
-        <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-green-800">
-              Usuario seleccionado:{" "}
-              {users.find((u) => u.uid === selectedUser)?.first_name}{" "}
-              {users.find((u) => u.uid === selectedUser)?.last_name}
-            </p>
-            <button
-              onClick={() => onUserSelect(null)}
-              className="text-xs text-red-600 hover:text-red-800 underline"
-            >
-              Quitar asignación
-            </button>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 };

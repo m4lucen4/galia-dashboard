@@ -504,7 +504,7 @@ export const assignProject = createAsyncThunk(
     try {
       const { data: updatedProject, error } = await supabase
         .from("projects")
-        .update({ assigned: assignedUserId })
+        .update({ user: assignedUserId })
         .eq("id", projectId)
         .select()
         .single();
@@ -518,7 +518,6 @@ export const assignProject = createAsyncThunk(
 
       return {
         project: updatedProject,
-        message: "Project assigned successfully",
       };
     } catch (error: unknown) {
       console.error("Error in assignProject:", error);

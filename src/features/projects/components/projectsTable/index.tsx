@@ -8,26 +8,19 @@ import {
   useReactTable,
   SortingState,
 } from "@tanstack/react-table";
-import { ProjectDataProps } from "../../../../types";
+import { ProjectDataProps, UserDataProps } from "../../../../types";
 import { LoadingSpinner } from "../../../../components/shared/ui/LoadingSpinner";
 import { useAppDispatch } from "../../../../redux/hooks";
-import { Button } from "../../../../components/shared/ui/Button";
 import { Badge } from "../../../../components/shared/ui/Badge";
 import { fetchProjectById } from "../../../../redux/actions/ProjectActions";
 import { useTranslation } from "react-i18next";
 import { Pagination } from "../../../../components/shared/ui/Pagination";
-import {
-  RecoverIcon,
-  LaunchIcon,
-  DeleteIcon,
-  PencilIcon,
-  AssignedTo,
-} from "../../../../components/icons";
+import { ActionButtons } from "./ActionButtons";
 
 type ProjectsTableProps = {
   projects: ProjectDataProps[];
   isLoading: boolean;
-  currentUserId: string;
+  currentUser: UserDataProps;
   onEditProject: () => void;
   onLaunchProject: (projectId: string) => void;
   onRecoveryProject: (projectId: string) => void;
@@ -38,7 +31,7 @@ type ProjectsTableProps = {
 export const ProjectsTable = ({
   projects,
   isLoading,
-  currentUserId,
+  currentUser,
   onEditProject,
   onLaunchProject,
   onRecoveryProject,
@@ -47,11 +40,43 @@ export const ProjectsTable = ({
 }: ProjectsTableProps) => {
   const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const dispatch = useAppDispatch();
+  console.log("Current User in ProjectsTable:", projects);
 
-  const handleEditClick = (project: ProjectDataProps) => {
+  const handleToggleMenu = (projectId: string) => {
+    if (openMenuId === projectId) {
+      setOpenMenuId(null);
+    } else {
+      setOpenMenuId(projectId);
+    }
+  };
+
+  // Wrapper functions para que coincidan los tipos
+  const handleRecoveryProject = (project: ProjectDataProps) => {
+    onRecoveryProject(project.id);
+    setOpenMenuId(null);
+  };
+
+  const handleLaunchProject = (project: ProjectDataProps) => {
+    onLaunchProject(project.id);
+    setOpenMenuId(null);
+  };
+
+  const handleDeleteProject = (project: ProjectDataProps) => {
+    onDeleteProject(project.id);
+    setOpenMenuId(null);
+  };
+
+  const handleAssignProject = (project: ProjectDataProps) => {
+    onAssignProject(project.id);
+    setOpenMenuId(null);
+  };
+
+  const handleEditProject = (project: ProjectDataProps) => {
     dispatch(fetchProjectById(project.id));
     onEditProject();
+    setOpenMenuId(null);
   };
 
   const columnHelper = createColumnHelper<ProjectDataProps>();
@@ -114,68 +139,19 @@ export const ProjectsTable = ({
       header: t("projects.actions"),
       cell: (props) => {
         const project = props.row.original;
-        const isProjectOwner = project.user === currentUserId;
-
-        if (project.state !== "draft") {
-          return (
-            <div className="flex space-x-2">
-              <Button
-                icon={<RecoverIcon />}
-                secondary
-                onClick={() => onRecoveryProject(project.id)}
-                tooltip={t("projects.recoveryProject")}
-              />
-              <Button
-                icon={<PencilIcon />}
-                secondary
-                onClick={() => handleEditClick(project)}
-                tooltip={t("projects.editProject")}
-              />
-              {isProjectOwner && (
-                <Button
-                  icon={<AssignedTo />}
-                  secondary
-                  onClick={() => onAssignProject(project.id)}
-                  tooltip={t("projects.assignProject")}
-                />
-              )}
-              <Button
-                icon={<DeleteIcon />}
-                secondary
-                onClick={() => onDeleteProject(project.id)}
-                tooltip={t("projects.deleteProject")}
-              />
-            </div>
-          );
-        }
 
         return (
           <div className="flex space-x-2">
-            <Button
-              icon={<LaunchIcon />}
-              secondary
-              onClick={() => onLaunchProject(project.id)}
-              tooltip={t("projects.launchProject")}
-            />
-            <Button
-              icon={<PencilIcon />}
-              secondary
-              onClick={() => handleEditClick(project)}
-              tooltip={t("projects.editProject")}
-            />
-            {isProjectOwner && (
-              <Button
-                icon={<AssignedTo />}
-                secondary
-                onClick={() => onAssignProject(project.id)}
-                tooltip={t("projects.assignProject")}
-              />
-            )}
-            <Button
-              icon={<DeleteIcon />}
-              secondary
-              onClick={() => onDeleteProject(project.id)}
-              tooltip={t("projects.deleteProject")}
+            <ActionButtons
+              currentUser={currentUser}
+              project={project}
+              isOpen={openMenuId === project.id}
+              onToggleMenu={handleToggleMenu}
+              onRecoveryProject={handleRecoveryProject}
+              onLaunchProject={handleLaunchProject}
+              onEditProject={handleEditProject}
+              onDeleteProject={handleDeleteProject}
+              onAssignProject={handleAssignProject}
             />
           </div>
         );
@@ -196,7 +172,7 @@ export const ProjectsTable = ({
     columnResizeMode: "onChange",
     initialState: {
       pagination: {
-        pageSize: 5,
+        pageSize: 10,
       },
     },
   });
