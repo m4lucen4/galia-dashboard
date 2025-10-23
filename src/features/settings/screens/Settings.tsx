@@ -1,6 +1,5 @@
 import { Card } from "../../../components/shared/ui/Card";
 import { useState, useEffect } from "react";
-import { CardPreferences } from "../../../components/settings/CardPreferences";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   checkLinkedInConnection,
@@ -164,7 +163,6 @@ export const Settings = () => {
             />
           )}
         </Card>
-        <CardPreferences />
       </div>
       {showAlertDisconneted && (
         <Alert

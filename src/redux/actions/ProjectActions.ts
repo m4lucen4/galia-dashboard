@@ -336,54 +336,6 @@ export const fetchProjectsByUserId = createAsyncThunk(
   }
 );
 
-export const fetchProjectsWithGoogleMaps = createAsyncThunk(
-  "projects/fetchProjectsWithGoogleMaps",
-  async (_, { rejectWithValue }) => {
-    try {
-      const { data: projects, error } = await supabase
-        .from("projects")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        return rejectWithValue({
-          message: `Error getting projects list: ${error.message}`,
-          status: error.code,
-        });
-      }
-
-      if (!projects || projects.length === 0) {
-        return {
-          projects: [],
-          message: "Don't have any projects yet",
-        };
-      }
-
-      const projectsWithGoogleMaps = projects.filter(
-        (project) =>
-          project.googleMaps &&
-          Object.keys(project.googleMaps).length > 0 &&
-          project.showMap === true
-      );
-
-      return {
-        projects: projectsWithGoogleMaps,
-        message: `${projectsWithGoogleMaps.length} projects with Google Maps data found`,
-      };
-    } catch (error: unknown) {
-      console.error("Error in fetchProjectsWithGoogleMaps:", error);
-      const appError: SupabaseError = {
-        message:
-          error instanceof Error
-            ? error.message
-            : "Error retrieving projects with Google Maps data",
-        status: 500,
-      };
-      return rejectWithValue(appError);
-    }
-  }
-);
-
 export const updateProjectPreview = createAsyncThunk(
   "projects/updateProjectPreview",
   async (projectId: string, { rejectWithValue }) => {

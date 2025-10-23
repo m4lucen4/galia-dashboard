@@ -5,7 +5,6 @@ import {
   fetchProjectById,
   updateProject,
   fetchProjectsByUserId,
-  fetchProjectsWithGoogleMaps,
   updateProjectPreview,
   updateProjectDraft,
   deleteProject,
@@ -21,7 +20,6 @@ interface ProjectState {
   projectsFetchRequest: IRequest;
   projectFetchByIdRequest: IRequest;
   projectFetchByUserIdRequest: IRequest;
-  projectFetchWithGoogleMapsRequest: IRequest;
   updateProjectStateRequest: IRequest;
   deleteProjectRequest: IRequest;
   assignProjectRequest: IRequest;
@@ -51,11 +49,6 @@ const initialState: ProjectState = {
     ok: false,
   },
   projectFetchByUserIdRequest: {
-    inProgress: false,
-    messages: "",
-    ok: false,
-  },
-  projectFetchWithGoogleMapsRequest: {
     inProgress: false,
     messages: "",
     ok: false,
@@ -300,35 +293,6 @@ const projectSlice = createSlice({
             : errorPayload?.message || "Error desconocido";
 
         state.updateProjectStateRequest = {
-          inProgress: false,
-          messages: errorMessage,
-          ok: false,
-        };
-      });
-    builder
-      .addCase(fetchProjectsWithGoogleMaps.pending, (state) => {
-        state.projectFetchWithGoogleMapsRequest = {
-          inProgress: true,
-          messages: "",
-          ok: false,
-        };
-      })
-      .addCase(fetchProjectsWithGoogleMaps.fulfilled, (state, action) => {
-        state.projects = action.payload.projects;
-        state.projectFetchWithGoogleMapsRequest = {
-          inProgress: false,
-          messages: "",
-          ok: true,
-        };
-      })
-      .addCase(fetchProjectsWithGoogleMaps.rejected, (state, action) => {
-        const errorPayload = action.payload as SupabaseError | string;
-        const errorMessage =
-          typeof errorPayload === "string"
-            ? errorPayload
-            : errorPayload?.message || "Error desconocido";
-
-        state.projectFetchWithGoogleMapsRequest = {
           inProgress: false,
           messages: errorMessage,
           ok: false,
