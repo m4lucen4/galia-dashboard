@@ -358,7 +358,7 @@ const projectSlice = createSlice({
 
         state.assignProjectRequest = {
           inProgress: false,
-          messages: action.payload.message,
+          messages: "",
           ok: true,
         };
       })
