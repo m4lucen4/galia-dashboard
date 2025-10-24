@@ -42,7 +42,6 @@ export const ProjectsTable = ({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const dispatch = useAppDispatch();
-  console.log("Current User in ProjectsTable:", projects);
 
   const handleToggleMenu = (projectId: string) => {
     if (openMenuId === projectId) {
