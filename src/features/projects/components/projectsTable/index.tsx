@@ -87,6 +87,21 @@ export const ProjectsTable = ({
       cell: (info) => `${info.getValue()}`,
       size: 50,
     }),
+    columnHelper.display({
+      id: "userName",
+      header: t("projects.createdBy"),
+      cell: (props) => {
+        const project = props.row.original;
+        const userData = project.userData;
+
+        if (!userData || !userData.first_name || !userData.last_name) {
+          return "-";
+        }
+
+        return `${userData.last_name}, ${userData.first_name}`;
+      },
+      size: 150,
+    }),
     columnHelper.accessor("title", {
       header: t("projects.projectTitle"),
       cell: (info) => {
@@ -191,7 +206,7 @@ export const ProjectsTable = ({
 
   return (
     <div className="bg-white my-6 overflow-hidden rounded-lg shadow">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto pb-28">
         <table className="min-w-full divide-y divide-gray-200 table-fixed">
           <thead className="bg-gray-50">
             {table.getHeaderGroups().map((headerGroup) => (

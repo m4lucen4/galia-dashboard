@@ -37,7 +37,7 @@ export const ActionButtons: React.FC<ProjectMenuProps> = ({
         <EllipsisVerticalIcon className="h-5 w-5 text-gray-500" />
       </button>
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 w-60 bg-white shadow-lg rounded-md border border-gray-100 z-10">
+        <div className="absolute right-0 top-full mt-1 w-60 bg-white shadow-lg rounded-md border border-gray-100 z-50">
           <ul className="py-1">
             <li>
               {project.state !== "draft" ? (

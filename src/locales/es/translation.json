@@ -172,7 +172,8 @@
     "launchProject": "Lanzar proyecto",
     "recoveryProject": "Recuperar proyecto",
     "selectPromptOption": "Selecciona un Gpt",
-    "assignProject": "Asignar proyecto"
+    "assignProject": "Asignar proyecto",
+    "createdBy": "Usuario"
   },
   "previewProjects": {
     "title": "Vista previa de proyectos",

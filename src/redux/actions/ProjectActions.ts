@@ -221,7 +221,28 @@ export const fetchProjects = createAsyncThunk(
     try {
       const { data: projects, error } = await supabase
         .from("projects")
-        .select("*")
+        .select(
+          `
+          *,
+          userData:userData(
+            id,
+            created_at,
+            updated_at,
+            uid,
+            active,
+            avatar_url,
+            first_name,
+            last_name,
+            email,
+            phone,
+            company,
+            description,
+            vat,
+            role,
+            language
+          )
+        `
+        )
         .order("created_at", { ascending: false });
 
       if (error) {

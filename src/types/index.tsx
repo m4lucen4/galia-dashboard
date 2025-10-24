@@ -45,6 +45,7 @@ export type ProjectDataProps = {
   created_at?: string;
   updated_at?: string;
   user: string;
+  userData?: UserDataProps;
   assigned?: string;
   title: string;
   state: string;

@@ -171,7 +171,8 @@
     "launchProject": "Launch project",
     "recoveryProject": "Recover project",
     "selectPromptOption": "Select a GPT",
-    "assignProject": "Assign project"
+    "assignProject": "Assign project",
+    "createdBy": "User"
   },
   "previewProjects": {
     "title": "Project Preview",
