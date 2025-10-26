@@ -46,6 +46,7 @@ export const PreviewProjects = () => {
     linkedln: false,
   });
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const user = useAppSelector((state: RootState) => state.auth.user);
   const { userData } = useAppSelector((state: RootState) => state.user);
@@ -57,6 +58,15 @@ export const PreviewProjects = () => {
     if (selectedFilter === "all") return true;
     return project.state === selectedFilter;
   });
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleFilterChange = (filter: string) => {
+    setSelectedFilter(filter);
+    setCurrentPage(1);
+  };
 
   const handleToggleMenu = (projectId: string) => {
     if (openMenuId === projectId) {
@@ -235,7 +245,7 @@ export const PreviewProjects = () => {
       <Filters
         projects={projects}
         selectedFilter={selectedFilter}
-        onFilterChange={setSelectedFilter}
+        onFilterChange={handleFilterChange}
       />
 
       <Drawer
@@ -261,6 +271,8 @@ export const PreviewProjects = () => {
       <CardsList
         projects={filteredProjects}
         openMenuId={openMenuId}
+        currentPage={currentPage}
+        onPageChange={handlePageChange}
         handleToggleMenu={handleToggleMenu}
         handleEditPreview={handleEditPreview}
         handleDeletePreview={handleDeletePreview}
