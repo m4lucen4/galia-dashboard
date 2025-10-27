@@ -364,6 +364,53 @@ export const validateImageFiles = async (
   };
 };
 
+/**
+ * Normalizes a URL by adding protocol and www if needed
+ * @param url - The URL string to normalize
+ * @param addWww - Whether to add www if not present (default: false)
+ * @returns The normalized URL or empty string if invalid
+ */
+export const normalizeUrl = (url: string, addWww: boolean = false): string => {
+  if (!url || url.trim() === "") {
+    return "";
+  }
+
+  let normalizedUrl = url.trim().toLowerCase();
+
+  // Remove trailing slash
+  normalizedUrl = normalizedUrl.replace(/\/$/, "");
+
+  // Check if it already has a protocol
+  const hasProtocol = /^https?:\/\//.test(normalizedUrl);
+
+  if (!hasProtocol) {
+    // Add https:// if no protocol is present
+    normalizedUrl = `https://${normalizedUrl}`;
+  }
+
+  // Add www if requested and not present
+  if (
+    addWww &&
+    !normalizedUrl.includes("://www.") &&
+    !normalizedUrl.includes("://localhost")
+  ) {
+    normalizedUrl = normalizedUrl.replace("://", "://www.");
+  }
+
+  // Basic domain validation
+  try {
+    const urlObj = new URL(normalizedUrl);
+    // Check if hostname has at least one dot (basic domain check)
+    if (!urlObj.hostname.includes(".") && urlObj.hostname !== "localhost") {
+      return "";
+    }
+    return normalizedUrl;
+  } catch {
+    // If URL constructor fails, it's not a valid URL
+    return "";
+  }
+};
+
 export const openPopup = (
   url: string,
   name = "instagram_oauth",

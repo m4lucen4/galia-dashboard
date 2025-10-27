@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import step01 from "../../../assets/web/01.webp";
 import step02 from "../../../assets/web/02.webp";
 import step03 from "../../../assets/web/03.webp";
+import step04 from "../../../assets/web/04.webp";
 
 const HowWorks: React.FC = () => {
   const [modalImageIndex, setModalImageIndex] = useState<number | null>(null);
@@ -25,6 +26,12 @@ const HowWorks: React.FC = () => {
       title: "Publica en redes sociales",
       image: step03,
       alt: "Publicación en redes sociales",
+    },
+    {
+      number: "04",
+      title: "Crea tus propios GPT´s",
+      image: step04,
+      alt: "Creación de GPT´s",
     },
   ];
 
@@ -77,7 +84,7 @@ const HowWorks: React.FC = () => {
 
         <div className="border-t border-gray-200 mb-12"></div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {steps.map((step, index) => (
             <div key={index} className="text-center">
               <div className="flex items-end justify-center mb-12">

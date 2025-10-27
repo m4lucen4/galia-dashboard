@@ -16,7 +16,7 @@ import {
   fetchPrompts,
   fetchPromptsByUser,
 } from "../../../redux/actions/AdminActions";
-import { validateImageFiles } from "../../../helpers";
+import { validateImageFiles, normalizeUrl } from "../../../helpers";
 
 interface ProjectsFormProps {
   initialData?: ProjectDataProps;
@@ -184,8 +184,14 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Normalize the weblink URL if provided
+    const normalizedWeblink = formData.weblink
+      ? normalizeUrl(formData.weblink)
+      : "";
+
     const updatedFormData = {
       ...formData,
+      weblink: normalizedWeblink,
       image_data: [...(formData.image_data || [])],
     };
 
@@ -266,7 +272,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
             id="weblink"
             label={t("projects.web")}
             placeholder="https://example.com"
-            type="url"
+            type="text"
             value={formData.weblink || ""}
             onChange={handleChange}
           />
