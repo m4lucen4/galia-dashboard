@@ -40,6 +40,12 @@ export type ProjectImageData = {
   };
 };
 
+export type ProjectCollaboratorsProps = {
+  profession: string;
+  name: string;
+  website?: string;
+};
+
 export type ProjectDataProps = {
   id: string;
   created_at?: string;
@@ -65,6 +71,7 @@ export type ProjectDataProps = {
   showMap?: boolean;
   photoCredit?: string;
   photoCreditLink?: string;
+  projectCollaborators?: ProjectCollaboratorsProps[];
 };
 
 export type LinkedInPageInfo = {

@@ -35,6 +35,7 @@ export const addProject = createAsyncThunk(
           showMap: projectData.showMap,
           photoCredit: projectData.photoCredit,
           photoCreditLink: projectData.photoCreditLink,
+          projectCollaborators: projectData.projectCollaborators,
         })
         .select()
         .single();
@@ -186,6 +187,7 @@ export const updateProject = createAsyncThunk(
           showMap: projectData.showMap,
           photoCredit: projectData.photoCredit,
           photoCreditLink: projectData.photoCreditLink,
+          projectCollaborators: projectData.projectCollaborators,
         })
         .eq("id", projectData.id)
         .select()

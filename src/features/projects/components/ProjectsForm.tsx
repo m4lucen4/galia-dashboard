@@ -5,9 +5,12 @@ import {
   ProjectDataProps,
   ProjectImageData,
   UserDataProps,
+  ProjectCollaboratorsProps,
 } from "../../../types";
 import { CreateProjectProps } from "../../../redux/actions/ProjectActions";
 import { KeywordInput } from "../../../components/shared/ui/KeywordInput";
+import { Collaborators } from "../../../components/shared/ui/Collaborators";
+/* Lines 11-20 omitted */
 import { SelectField } from "../../../components/shared/ui/SelectField";
 import { CancelIcon } from "../../../components/icons";
 import { useTranslation } from "react-i18next";
@@ -53,6 +56,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
     showMap: false,
     photoCredit: "",
     photoCreditLink: "",
+    projectCollaborators: [],
   };
 
   const { prompts } = useAppSelector((state) => state.admin);
@@ -179,6 +183,12 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
 
       return newImages;
     });
+  };
+
+  const handleProjectCollaboratorsChange = (
+    collaborators: ProjectCollaboratorsProps[]
+  ) => {
+    setFormData({ ...formData, projectCollaborators: collaborators });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -448,7 +458,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               />
             </div>
           </div>
-          <div className="mb-2">
+          {/* <div className="mb-2">
             <InputField
               id="authors"
               label={t("projects.authors")}
@@ -467,8 +477,8 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               value={formData.promoter || ""}
               onChange={handleChange}
             />
-          </div>
-          <div className="mb-2">
+          </div> */}
+          {/* <div className="mb-2">
             <InputField
               id="collaborators"
               label={t("projects.collaborators")}
@@ -477,8 +487,8 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               value={formData.collaborators || ""}
               onChange={handleChange}
             />
-          </div>
-          <div className="flex space-x-4 mb-2">
+          </div> */}
+          {/* <div className="flex space-x-4 mb-2">
             <div className="flex-1">
               <InputField
                 id="photoCredit"
@@ -499,6 +509,12 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
                 onChange={handleChange}
               />
             </div>
+          </div> */}
+          <div className="mb-2">
+            <Collaborators
+              collaborators={formData.projectCollaborators || []}
+              onChange={handleProjectCollaboratorsChange}
+            />
           </div>
         </div>
       </div>

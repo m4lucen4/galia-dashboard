@@ -172,7 +172,17 @@
     "recoveryProject": "Recover project",
     "selectPromptOption": "Select a GPT",
     "assignProject": "Assign project",
-    "createdBy": "User"
+    "createdBy": "User",
+    "addCollaborator": "Add collaborator",
+    "add": "Add",
+    "collaborator": "Collaborator",
+    "removeCollaborator": "Remove collaborator",
+    "noCollaborators": "No collaborators added",
+    "profession": "Profession",
+    "professionPlaceholder": "Ex: Architect, Engineer...",
+    "collaboratorName": "Name",
+    "collaboratorNamePlaceholder": "Collaborator's name",
+    "website": "Website"
   },
   "previewProjects": {
     "title": "Project Preview",

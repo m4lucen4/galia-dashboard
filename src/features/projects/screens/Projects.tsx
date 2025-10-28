@@ -232,6 +232,7 @@ export const Projects = () => {
       showMap: project.showMap,
       photoCredit: project.photoCredit,
       photoCreditLink: project.photoCreditLink,
+      projectCollaborators: project.projectCollaborators,
     };
   };
 
