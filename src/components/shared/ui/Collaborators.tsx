@@ -105,6 +105,7 @@ export const Collaborators: React.FC<CollaboratorsProps> = ({
                       updateCollaborator(index, "profession", e.target.value)
                     }
                     options={[
+                      { value: "default", label: "Seleccione una opción" },
                       { value: "autor", label: "Autor" },
                       {
                         value: "carpinteriamadera",
