@@ -10,7 +10,6 @@ import {
 import { CreateProjectProps } from "../../../redux/actions/ProjectActions";
 import { KeywordInput } from "../../../components/shared/ui/KeywordInput";
 import { Collaborators } from "../../../components/shared/ui/Collaborators";
-/* Lines 11-20 omitted */
 import { SelectField } from "../../../components/shared/ui/SelectField";
 import { CancelIcon } from "../../../components/icons";
 import { useTranslation } from "react-i18next";
