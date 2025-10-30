@@ -63,14 +63,9 @@ export type ProjectDataProps = {
   image_data?: ProjectImageData[];
   publications?: number;
   googleMaps?: string;
-  promoter?: string;
-  collaborators?: string;
-  authors?: string;
   category?: string;
   year?: string;
   showMap?: boolean;
-  photoCredit?: string;
-  photoCreditLink?: string;
   projectCollaborators?: ProjectCollaboratorsProps[];
 };
 
@@ -143,11 +138,6 @@ export type IRequest = {
 export type SupabaseError = {
   message: string;
   status?: number;
-};
-
-export type Coordinates = {
-  lat: number;
-  lng: number;
 };
 
 export type LinkedInPage = {

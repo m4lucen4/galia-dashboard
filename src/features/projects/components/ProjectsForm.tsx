@@ -11,7 +11,10 @@ import { CreateProjectProps } from "../../../redux/actions/ProjectActions";
 import { KeywordInput } from "../../../components/shared/ui/KeywordInput";
 import { Collaborators } from "../../../components/shared/ui/Collaborators";
 import { SelectField } from "../../../components/shared/ui/SelectField";
-import { CancelIcon } from "../../../components/icons";
+import {
+  ImageDragList,
+  ImageItem,
+} from "../../../components/shared/ui/ImageDragList";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
@@ -49,12 +52,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
     image_data: [],
     publications: 1,
     googleMaps: "",
-    promoter: "",
-    collaborators: "",
-    authors: "",
     showMap: false,
-    photoCredit: "",
-    photoCreditLink: "",
     projectCollaborators: [],
   };
 
@@ -63,9 +61,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   const [formData, setFormData] = useState<CreateProjectProps>(
     initialData || defaultFormData
   );
-  const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [existingImages, setExistingImages] = useState<ProjectImageData[]>([]);
+  const [allImages, setAllImages] = useState<ImageItem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -81,27 +77,18 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
       setFormData(initialData);
 
       if (initialData.image_data && initialData.image_data.length > 0) {
-        setExistingImages(initialData.image_data);
+        const existingImageItems: ImageItem[] = initialData.image_data.map(
+          (img, index) => ({
+            id: `existing-${index}`,
+            type: "existing" as const,
+            url: img.url,
+            originalIndex: index,
+          })
+        );
+        setAllImages(existingImageItems);
       }
     }
   }, [initialData]);
-
-  useEffect(() => {
-    if (selectedImages.length > 0) {
-      const newPreviewUrls: string[] = [];
-
-      selectedImages.forEach((file) => {
-        const url = URL.createObjectURL(file);
-        newPreviewUrls.push(url);
-      });
-
-      setPreviewUrls(newPreviewUrls);
-
-      return () => {
-        newPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
-      };
-    }
-  }, [selectedImages]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -123,12 +110,13 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
       const filesArray = Array.from(e.target.files);
 
       try {
+        const currentImagesCount = allImages.length;
         const validationResult = await validateImageFiles(filesArray, {
           maxFileSize: 5 * 1024 * 1024, // 5MB
           minAspectRatio: 0.8,
           maxAspectRatio: 1.91,
           maxImages: 10,
-          existingImagesCount: existingImages.length,
+          existingImagesCount: currentImagesCount,
         });
 
         // Show size and format errors
@@ -153,11 +141,21 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
           validationResult.invalidAspectRatioFiles.length;
 
         if (totalValidFilesBeforeLimit > totalValidFiles) {
-          const maxNewImages = 10 - existingImages.length;
+          const maxNewImages = 10 - currentImagesCount;
           alert(`${t("projects.maxImagesError")} ${maxNewImages}`);
         }
 
-        setSelectedImages(validationResult.validFiles);
+        const newImageItems: ImageItem[] = validationResult.validFiles.map(
+          (file, index) => ({
+            id: `new-${Date.now()}-${index}`,
+            type: "new" as const,
+            url: URL.createObjectURL(file),
+            file,
+            originalIndex: index,
+          })
+        );
+
+        setAllImages((prev) => [...prev, ...newImageItems]);
       } catch (error) {
         console.error("Error validating images:", error);
         alert("Error al validar las imágenes. Por favor, inténtalo de nuevo.");
@@ -165,23 +163,57 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
     }
   };
 
-  const removeImage = (index: number) => {
-    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
-    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
-  };
+  const handleRemoveImage = (id: string) => {
+    setAllImages((prev) => {
+      const imageToRemove = prev.find((img) => img.id === id);
 
-  const removeExistingImage = (index: number) => {
-    setExistingImages((prev) => {
-      const newImages = [...prev];
-      newImages.splice(index, 1);
+      if (imageToRemove?.type === "new" && imageToRemove.url) {
+        URL.revokeObjectURL(imageToRemove.url);
+      }
 
-      setFormData((prevData) => ({
-        ...prevData,
-        image_data: newImages,
-      }));
+      const newImages = prev.filter((img) => img.id !== id);
+
+      if (imageToRemove?.type === "existing") {
+        const updatedExistingImages: ProjectImageData[] = newImages
+          .filter((img) => img.type === "existing")
+          .map(() => ({
+            url: imageToRemove.url,
+            status: "pending" as const,
+          }));
+
+        setFormData((prevData) => ({
+          ...prevData,
+          image_data: updatedExistingImages,
+        }));
+      }
 
       return newImages;
     });
+  };
+
+  const handleReorderImages = (reorderedImages: ImageItem[]) => {
+    setAllImages(reorderedImages);
+
+    if (initialData?.image_data) {
+      const reorderedExistingImages: ProjectImageData[] = reorderedImages
+        .filter((img) => img.type === "existing")
+        .map((img) => {
+          const originalImage = initialData.image_data?.find(
+            (original) => original.url === img.url
+          );
+          return (
+            originalImage || {
+              url: img.url,
+              status: "pending" as const,
+            }
+          );
+        });
+
+      setFormData((prevData) => ({
+        ...prevData,
+        image_data: reorderedExistingImages,
+      }));
+    }
   };
 
   const handleProjectCollaboratorsChange = (
@@ -198,6 +230,11 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
       ? normalizeUrl(formData.weblink)
       : "";
 
+    const newImages = allImages.filter((img) => img.type === "new");
+    const newImageFiles = newImages
+      .map((img) => img.file)
+      .filter(Boolean) as File[];
+
     const updatedFormData = {
       ...formData,
       weblink: normalizedWeblink,
@@ -206,13 +243,14 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
 
     const projectDataWithImages: CreateProjectProps = {
       ...updatedFormData,
-      images: selectedImages.length > 0 ? selectedImages : undefined,
+      images: newImageFiles.length > 0 ? newImageFiles : undefined,
     };
 
     onSubmit(projectDataWithImages);
   };
 
-  const totalImagesCount = existingImages.length + selectedImages.length;
+  const totalImagesCount = allImages.length;
+  const newImagesCount = allImages.filter((img) => img.type === "new").length;
 
   return (
     <form onSubmit={handleSubmit}>
@@ -299,16 +337,16 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               onChange={handleImageChange}
               className="hidden"
               id="project-images"
-              disabled={existingImages.length >= 10}
+              disabled={allImages.length >= 10}
             />
             <Button
               title={t("projects.selectImages")}
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={existingImages.length >= 10}
+              disabled={allImages.length >= 10}
             />
             <span className="ml-3 text-sm text-gray-500">
-              {selectedImages.length} {t("projects.selectedImages")}
+              {newImagesCount} {t("projects.selectedImages")}
             </span>
           </div>
 
@@ -318,60 +356,13 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
             hasta 16:9 (panorámica)
           </p>
 
-          {/* Existing Images */}
-          {existingImages.length > 0 && (
-            <>
-              <h4 className="font-medium text-sm mt-4 mb-2">
-                {t("projects.existingImages")}
-              </h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {existingImages.map((img, index) => (
-                  <div key={`existing-${index}`} className="relative group">
-                    <img
-                      src={img.url}
-                      alt={`Existing image ${index}`}
-                      className="h-24 w-full object-cover rounded-md"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeExistingImage(index)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <CancelIcon />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* Preview images */}
-          {previewUrls.length > 0 && (
-            <>
-              <h4 className="font-medium text-sm mt-4 mb-2">
-                {" "}
-                {t("projects.newImages")}
-              </h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {previewUrls.map((url, index) => (
-                  <div key={`new-${index}`} className="relative group">
-                    <img
-                      src={url}
-                      alt={`Preview ${index}`}
-                      className="h-24 w-full object-cover rounded-md"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <CancelIcon />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
+          {/* Lista de imágenes con drag and drop */}
+          <ImageDragList
+            images={allImages}
+            onReorder={handleReorderImages}
+            onRemove={handleRemoveImage}
+            maxImages={10}
+          />
 
           <div className="my-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -457,58 +448,6 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               />
             </div>
           </div>
-          {/* <div className="mb-2">
-            <InputField
-              id="authors"
-              label={t("projects.authors")}
-              placeholder={t("projects.placeholderAuthors")}
-              type="text"
-              value={formData.authors || ""}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="mb-2">
-            <InputField
-              id="promoter"
-              label={t("projects.promoter")}
-              placeholder={t("projects.placeholderPromoter")}
-              type="text"
-              value={formData.promoter || ""}
-              onChange={handleChange}
-            />
-          </div> */}
-          {/* <div className="mb-2">
-            <InputField
-              id="collaborators"
-              label={t("projects.collaborators")}
-              placeholder={t("projects.placeholderCollaborators")}
-              type="text"
-              value={formData.collaborators || ""}
-              onChange={handleChange}
-            />
-          </div> */}
-          {/* <div className="flex space-x-4 mb-2">
-            <div className="flex-1">
-              <InputField
-                id="photoCredit"
-                label={t("projects.photoCredit")}
-                placeholder={t("projects.placeholderPhotoCredit")}
-                type="text"
-                value={formData.photoCredit || ""}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="flex-1">
-              <InputField
-                id="photoCreditLink"
-                label={t("projects.photoCreditLink")}
-                placeholder={t("projects.placeholderPhotoCreditLink")}
-                type="url"
-                value={formData.photoCreditLink || ""}
-                onChange={handleChange}
-              />
-            </div>
-          </div> */}
           <div className="mb-2">
             <Collaborators
               collaborators={formData.projectCollaborators || []}

@@ -224,14 +224,9 @@ export const Projects = () => {
       image_data: project.image_data,
       publications: project.publications,
       googleMaps: project.googleMaps,
-      promoter: project.promoter,
-      collaborators: project.collaborators,
-      authors: project.authors,
       category: project.category,
       year: project.year,
       showMap: project.showMap,
-      photoCredit: project.photoCredit,
-      photoCreditLink: project.photoCreditLink,
       projectCollaborators: project.projectCollaborators,
     };
   };
