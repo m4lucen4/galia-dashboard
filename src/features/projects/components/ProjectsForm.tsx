@@ -167,19 +167,28 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
     setAllImages((prev) => {
       const imageToRemove = prev.find((img) => img.id === id);
 
+      // if image is a newly added one, revoke its object URL
       if (imageToRemove?.type === "new" && imageToRemove.url) {
         URL.revokeObjectURL(imageToRemove.url);
       }
 
       const newImages = prev.filter((img) => img.id !== id);
 
-      if (imageToRemove?.type === "existing") {
+      // if the removed image was an existing one, update formData.image_data
+      if (imageToRemove?.type === "existing" && initialData?.image_data) {
         const updatedExistingImages: ProjectImageData[] = newImages
           .filter((img) => img.type === "existing")
-          .map(() => ({
-            url: imageToRemove.url,
-            status: "pending" as const,
-          }));
+          .map((img) => {
+            const originalImage = initialData.image_data?.find(
+              (original) => original.url === img.url
+            );
+            return (
+              originalImage || {
+                url: img.url,
+                status: "pending" as const,
+              }
+            );
+          });
 
         setFormData((prevData) => ({
           ...prevData,
