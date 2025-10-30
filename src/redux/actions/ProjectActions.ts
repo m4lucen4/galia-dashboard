@@ -27,14 +27,9 @@ export const addProject = createAsyncThunk(
           image_data: [],
           publications: projectData.publications,
           googleMaps: projectData.googleMaps,
-          promoter: projectData.promoter,
-          collaborators: projectData.collaborators,
-          authors: projectData.authors,
           category: projectData.category,
           year: projectData.year,
           showMap: projectData.showMap,
-          photoCredit: projectData.photoCredit,
-          photoCreditLink: projectData.photoCreditLink,
           projectCollaborators: projectData.projectCollaborators,
         })
         .select()
@@ -179,14 +174,9 @@ export const updateProject = createAsyncThunk(
           image_data: imageData,
           publications: projectData.publications,
           googleMaps: projectData.googleMaps,
-          promoter: projectData.promoter,
-          collaborators: projectData.collaborators,
-          authors: projectData.authors,
           category: projectData.category,
           year: projectData.year,
           showMap: projectData.showMap,
-          photoCredit: projectData.photoCredit,
-          photoCreditLink: projectData.photoCreditLink,
           projectCollaborators: projectData.projectCollaborators,
         })
         .eq("id", projectData.id)
