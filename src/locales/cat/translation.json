@@ -24,7 +24,8 @@
     "publishes": "Publicacions",
     "map": "Mapa",
     "adminPanel": "Administració",
-    "gpts": "Els meus GPTs"
+    "gpts": "Els meus GPTs",
+    "wiki": "Wiki"
   },
   "login": {
     "title": "Iniciar sessió",

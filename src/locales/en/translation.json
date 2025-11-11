@@ -23,7 +23,8 @@
     "projects": "Projects",
     "publishes": "Publications",
     "map": "Map",
-    "gpts": "My GPTs"
+    "gpts": "My GPTs",
+    "wiki": "Wiki"
   },
   "login": {
     "title": "Log In",

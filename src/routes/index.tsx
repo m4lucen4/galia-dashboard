@@ -7,6 +7,7 @@ import { Settings } from "../features/settings/screens/Settings";
 import { Users } from "../screens/Users";
 import { Projects } from "../features/projects/screens/Projects";
 import { MyGpts } from "../features/adminPanel/screens/MyGpts";
+import { Documentation } from "../features/documentation/screens/Documentation";
 
 import { ProtectedRoute } from "./ProtectedRoute";
 import { PublicRoute } from "./PublicRoute";
@@ -28,6 +29,7 @@ export const AppRoutes = () => (
     <Route element={<PublicRoute />}>
       <Route path="/" element={<Web />} />
       <Route path="/privacy" element={<Privacy />} />
+      <Route path="/wiki" element={<Documentation />} />
     </Route>
     <Route element={<ProtectedRoute />}>
       <Route path="/home" element={<Home />} />

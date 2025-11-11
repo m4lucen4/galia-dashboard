@@ -7,7 +7,7 @@ import {
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import logoImage from "../../../assets/logo.webp";
 import { checkAuthState } from "../../../redux/actions/AuthActions";
@@ -21,6 +21,7 @@ function classNames(
 export default function NavbarWeb() {
   const { authenticated } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("");
 
   const navigation = [
@@ -28,17 +29,22 @@ export default function NavbarWeb() {
     { name: "FAQ", href: "#faq" },
     { name: "Precios", href: "#precios" },
     { name: "Contacto", href: "#contacto" },
+    { name: "Wiki", href: "/wiki" },
   ];
 
-  const scrollToSection = (href: string) => {
-    const sectionId = href.replace("#", "");
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-      setActiveSection(sectionId);
+  const handleNavigation = (href: string) => {
+    if (href.startsWith("#")) {
+      const sectionId = href.replace("#", "");
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+        setActiveSection(sectionId);
+      }
+    } else {
+      navigate(href);
     }
   };
 
@@ -84,7 +90,7 @@ export default function NavbarWeb() {
                 {navigation.map((item) => (
                   <button
                     key={item.name}
-                    onClick={() => scrollToSection(item.href)}
+                    onClick={() => handleNavigation(item.href)}
                     className={classNames(
                       activeSection === item.href.replace("#", "")
                         ? "text-gray-900 border-b-2 border-gray-900"
@@ -127,7 +133,7 @@ export default function NavbarWeb() {
             <DisclosureButton
               key={item.name}
               as="button"
-              onClick={() => scrollToSection(item.href)}
+              onClick={() => handleNavigation(item.href)}
               className={classNames(
                 activeSection === item.href.replace("#", "")
                   ? "bg-gray-100 text-gray-900"

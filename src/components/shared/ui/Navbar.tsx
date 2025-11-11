@@ -79,8 +79,18 @@ export default function Navbar() {
               </DisclosureButton>
             )}
           </div>
-          <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
-            <div className="flex shrink-0 items-center justify-center mr-16">
+          <div
+            className={classNames(
+              "flex flex-1 items-center sm:items-stretch sm:justify-start",
+              userData ? "justify-center" : "justify-between"
+            )}
+          >
+            <div
+              className={classNames(
+                "flex shrink-0 items-center",
+                userData ? "justify-center mr-16" : "justify-start"
+              )}
+            >
               <Link to="/">
                 <img src={logoImage} alt="Logo" className="h-8 w-auto" />
               </Link>
@@ -106,6 +116,16 @@ export default function Navbar() {
                     </Link>
                   ))}
                 </div>
+              </div>
+            )}
+            {!userData && (
+              <div className="flex sm:hidden">
+                <Link
+                  to="/login"
+                  className="bg-white text-black px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors"
+                >
+                  {t("login.title")}
+                </Link>
               </div>
             )}
           </div>
@@ -143,6 +163,14 @@ export default function Navbar() {
                     </Link>
                   </MenuItem>
                   <MenuItem>
+                    <Link
+                      to="/wiki"
+                      className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
+                    >
+                      {t("menu.wiki")}
+                    </Link>
+                  </MenuItem>
+                  <MenuItem>
                     <button
                       onClick={confirmLogout}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden hover:bg-gray-100"
@@ -153,12 +181,15 @@ export default function Navbar() {
                 </MenuItems>
               </Menu>
             ) : (
-              <Link
-                to="/login"
-                className="bg-white text-black px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors"
-              >
-                {t("login.title")}
-              </Link>
+              /* Botón de login solo en desktop cuando no hay usuario */
+              <div className="hidden sm:flex">
+                <Link
+                  to="/login"
+                  className="bg-white text-black px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors"
+                >
+                  {t("login.title")}
+                </Link>
+              </div>
             )}
           </div>
         </div>
