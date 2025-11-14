@@ -94,7 +94,7 @@ export const PreviewProjectForm = ({
     <div className="space-y-6">
       <InputField
         id="description"
-        label="Description"
+        label="Descripción"
         type="textarea"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
@@ -102,12 +102,12 @@ export const PreviewProjectForm = ({
 
       <div>
         <h4 className="text-sm font-medium text-gray-700 mb-2">
-          Project Images
+          Imágenes de la publicación
         </h4>
         <p className="text-xs text-gray-500 mb-3">
-          Select the images you want to include in the project. Unselected
-          images will not appear in posts. Drag and drop to reorder the
-          publication sequence.
+          Selecciona las imágenes que quieres incluir en la publicación. Las
+          imágenes no seleccionadas no aparecerán en las publicaciones. Arrastra
+          y suelta para reordenar la secuencia de publicación.
         </p>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -175,7 +175,7 @@ export const PreviewProjectForm = ({
       <div className="mt-6">
         <Button
           fullWidth
-          title={loading ? "Saving..." : "Edit Preview project"}
+          title={loading ? "Guardando..." : "Guardar publicación"}
           disabled={loading}
           onClick={handleSave}
         />

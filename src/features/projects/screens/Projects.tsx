@@ -301,6 +301,7 @@ export const Projects = () => {
         }
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
+        closeOnOutsideClick={false}
       >
         <ProjectsForm
           initialData={isEditMode ? getFormData() : undefined}

@@ -252,6 +252,7 @@ export const PreviewProjects = () => {
         title={getDrawerTitle()}
         isOpen={drawerOpen}
         onClose={handleCloseDrawer}
+        closeOnOutsideClick={false}
       >
         {seeInstagram && project && userData && (
           <InstagramPost project={project} user={userData} />

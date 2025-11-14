@@ -47,7 +47,7 @@ export const InputField: React.FC<InputFieldProps> = ({
 
   return (
     <div>
-      <label className="text-base text-sm text-black" htmlFor={id}>
+      <label className="text-sm text-black" htmlFor={id}>
         {label}
         {required && <span className="ml-1 text-blue-600 font-medium">*</span>}
       </label>

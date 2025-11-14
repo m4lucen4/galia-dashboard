@@ -470,7 +470,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
         <Button
           fullWidth
           title={
-            isEditMode ? t("projects.editProject") : t("projects.createProject")
+            isEditMode ? t("projects.saveChanges") : t("projects.createProject")
           }
           disabled={loading}
           type="submit"

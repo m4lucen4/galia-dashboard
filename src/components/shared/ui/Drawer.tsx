@@ -12,6 +12,7 @@ interface CardProps {
   children: React.ReactNode;
   isOpen: boolean;
   onClose: () => void;
+  closeOnOutsideClick?: boolean;
 }
 
 export const Drawer: React.FC<CardProps> = ({
@@ -19,12 +20,19 @@ export const Drawer: React.FC<CardProps> = ({
   children,
   isOpen,
   onClose,
+  closeOnOutsideClick = true,
 }) => {
+  const handleClose = () => {
+    if (closeOnOutsideClick) {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onClose={onClose} className="relative z-10">
+    <Dialog open={isOpen} onClose={handleClose} className="relative z-10">
       <DialogBackdrop
         transition
-        className="fixed inset-0 bg-gray-500/75 transition-opacity duration-500 ease-in-out data-closed:opacity-0"
+        className="fixed inset-0 bg-gray-500/90 transition-opacity duration-500 ease-in-out data-closed:opacity-0"
       />
 
       <div className="fixed inset-0 overflow-hidden">
@@ -39,7 +47,7 @@ export const Drawer: React.FC<CardProps> = ({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="relative rounded-md text-gray-300 hover:text-white focus:ring-2 focus:ring-white focus:outline-hidden"
+                    className="relative rounded-md text-white focus:ring-2 focus:ring-white focus:outline-hidden"
                   >
                     <span className="absolute -inset-2.5" />
                     <span className="sr-only">Close panel</span>
