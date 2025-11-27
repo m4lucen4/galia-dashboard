@@ -31,7 +31,6 @@ export const PreviewProjectForm = ({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
   const [isIterating, setIsIterating] = useState(false);
-  console.log("project", project);
 
   useEffect(() => {
     if (project) {
