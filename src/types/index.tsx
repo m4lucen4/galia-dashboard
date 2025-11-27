@@ -89,6 +89,12 @@ export type SocialNetworksCheck = {
   instagram?: boolean | InstagramPageInfo;
 };
 
+export type PublishVersions = {
+  id: string;
+  description: string;
+  main: boolean;
+};
+
 export type PreviewProjectDataProps = {
   id: string;
   created_at?: string;
@@ -103,6 +109,7 @@ export type PreviewProjectDataProps = {
   checkSocialNetworks?: SocialNetworksCheck;
   instagramResult?: string;
   linkedlnResult?: string;
+  versions?: PublishVersions[];
 };
 
 export type UpdateProjectPublishingProps = {
@@ -127,6 +134,7 @@ export type UpdatePreviewProjectProps = {
       metadata?: string;
     };
   }>;
+  versions?: PublishVersions[];
 };
 
 export type IRequest = {

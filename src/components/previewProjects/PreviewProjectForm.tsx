@@ -1,9 +1,15 @@
 import { useState, useEffect } from "react";
-import { useAppDispatch } from "../../redux/hooks";
-import { updatePreviewProject } from "../../redux/actions/PreviewProjectActions";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import {
+  updatePreviewProject,
+  updateMainVersion,
+  fetchPreviewProjectById,
+} from "../../redux/actions/PreviewProjectActions";
 import { PreviewProjectDataProps, ProjectImageData } from "../../types";
 import { InputField } from "../shared/ui/InputField";
 import { Button } from "../shared/ui/Button";
+import { supabase } from "../../helpers/supabase";
+import { LoadingSpinner } from "../shared/ui/LoadingSpinner";
 
 type PreviewProjectFormProps = {
   project: PreviewProjectDataProps;
@@ -17,16 +23,77 @@ export const PreviewProjectForm = ({
   onSave,
 }: PreviewProjectFormProps) => {
   const dispatch = useAppDispatch();
+  const updateMainVersionRequest = useAppSelector(
+    (state) => state.previewProject.previewProjectUpdateMainVersionRequest
+  );
   const [description, setDescription] = useState("");
   const [images, setImages] = useState<ProjectImageData[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
+  const [isIterating, setIsIterating] = useState(false);
+  console.log("project", project);
 
   useEffect(() => {
     if (project) {
-      setDescription(project.description_rich || "");
+      // If versions exist, find the main version and set it as current
+      if (project.versions && project.versions.length > 0) {
+        const mainVersionIndex = project.versions.findIndex((v) => v.main);
+        setCurrentVersionIndex(mainVersionIndex >= 0 ? mainVersionIndex : 0);
+      }
+
       setImages(project.image_data || []);
     }
   }, [project]);
+
+  // Update description when version index changes
+  useEffect(() => {
+    if (project) {
+      if (project.versions && project.versions.length > 0) {
+        const currentVersion = project.versions[currentVersionIndex];
+        setDescription(currentVersion?.description || "");
+      } else {
+        setDescription(project.description_rich || "");
+      }
+    }
+  }, [project, currentVersionIndex]);
+
+  const handlePreviousVersion = () => {
+    if (project.versions && currentVersionIndex > 0) {
+      setCurrentVersionIndex(currentVersionIndex - 1);
+    }
+  };
+
+  const handleNextVersion = () => {
+    if (project.versions && currentVersionIndex < project.versions.length - 1) {
+      setCurrentVersionIndex(currentVersionIndex + 1);
+    }
+  };
+
+  const isCurrentVersionMain = () => {
+    return project.versions?.[currentVersionIndex]?.main || false;
+  };
+
+  const handleSetAsMainVersion = async () => {
+    if (!project.versions || !project.versions[currentVersionIndex]) {
+      return;
+    }
+
+    const versionId = project.versions[currentVersionIndex].id;
+
+    try {
+      await dispatch(
+        updateMainVersion({
+          projectId: project.id,
+          versionId: versionId,
+        })
+      ).unwrap();
+
+      //Refresh to show updated data
+      //onSave();
+    } catch (error) {
+      console.error("Error setting main version:", error);
+    }
+  };
 
   const handleToggleImageSelection = (imageUrl: string) => {
     setImages((currentImages) =>
@@ -80,15 +147,91 @@ export const PreviewProjectForm = ({
   };
 
   const handleSave = async () => {
-    await dispatch(
-      updatePreviewProject({
-        projectId: project.id,
-        description_rich: description,
-        image_data: images,
-      })
-    ).unwrap();
+    // If versions exist, update the versions array
+    if (project.versions && project.versions.length > 0) {
+      const updatedVersions = project.versions.map((version, index) => {
+        if (index === currentVersionIndex) {
+          return {
+            ...version,
+            description: description,
+          };
+        }
+        return version;
+      });
+
+      await dispatch(
+        updatePreviewProject({
+          projectId: project.id,
+          image_data: images,
+          versions: updatedVersions,
+        })
+      ).unwrap();
+    } else {
+      // If no versions, update description_rich as before
+      await dispatch(
+        updatePreviewProject({
+          projectId: project.id,
+          description_rich: description,
+          image_data: images,
+        })
+      ).unwrap();
+    }
     onSave();
   };
+
+  const handleIteratePublication = async () => {
+    setIsIterating(true);
+
+    // Set timeout to stop loading after 30 seconds
+    setTimeout(() => {
+      setIsIterating(false);
+      dispatch(fetchPreviewProjectById(project.id));
+    }, 30000);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        console.error("No active session found");
+        return;
+      }
+
+      const webhookUrl = `${
+        import.meta.env.VITE_SUPABASE_FUNCTION_N8N_ITERATE_PUBLICATION
+      }?id=${project.id}`;
+      const response = await fetch(webhookUrl, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.error(
+          "Error calling iterate publication webhook:",
+          await response.text()
+        );
+      }
+    } catch (error) {
+      console.error("Failed to call iterate publication workflow:", error);
+    }
+  };
+
+  if (updateMainVersionRequest.inProgress || isIterating) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <LoadingSpinner size="large" color="primary" />
+        <p className="mt-4 text-gray-500">
+          {isIterating
+            ? "Creando nueva publicación (esto puede tardar unos 30 segundos)..."
+            : "Actualizando versión principal..."}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -98,7 +241,111 @@ export const PreviewProjectForm = ({
         type="textarea"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
+        placeholder="Escribe una descripción..."
+        disabled={
+          project.versions &&
+          project.versions.length > 0 &&
+          !isCurrentVersionMain()
+        }
       />
+
+      {/* Version Navigation */}
+      {project.versions && project.versions.length > 0 && (
+        <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <button
+            onClick={handlePreviousVersion}
+            disabled={currentVersionIndex === 0}
+            className={`p-2 rounded-md transition-colors ${
+              currentVersionIndex === 0
+                ? "text-gray-300 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-200"
+            }`}
+            aria-label="Versión anterior"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-sm font-medium text-gray-700">
+              {currentVersionIndex + 1}/{project.versions.length}
+            </span>
+            {isCurrentVersionMain() ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-blue-600 font-medium">
+                  Versión actual
+                </span>
+                {project.versions && project.versions.length < 10 && (
+                  <>
+                    <span className="text-xs text-gray-400">•</span>
+                    <button
+                      onClick={handleIteratePublication}
+                      disabled={loading}
+                      className="text-xs text-blue-600 font-medium hover:text-blue-800 underline disabled:opacity-50 cursor-pointer"
+                    >
+                      Iterar esta publicación
+                    </button>
+                  </>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={handleSetAsMainVersion}
+                disabled={loading || updateMainVersionRequest.inProgress}
+                className="text-xs text-green-600 font-medium hover:text-green-800 underline disabled:opacity-50 cursor-pointer flex items-center gap-1"
+              >
+                Establecer como versión actual
+              </button>
+            )}
+          </div>
+
+          <button
+            onClick={handleNextVersion}
+            disabled={currentVersionIndex === project.versions.length - 1}
+            className={`p-2 rounded-md transition-colors ${
+              currentVersionIndex === project.versions.length - 1
+                ? "text-gray-300 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-200"
+            }`}
+            aria-label="Versión siguiente"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* Show button outside navigator when versions don't exist */}
+      {(!project.versions || project.versions.length === 0) && (
+        <Button
+          fullWidth
+          title="Iterar publicación"
+          disabled={loading}
+          onClick={handleIteratePublication}
+        />
+      )}
 
       <div>
         <h4 className="text-sm font-medium text-gray-700 mb-2">

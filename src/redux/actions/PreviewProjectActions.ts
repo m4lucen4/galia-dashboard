@@ -231,11 +231,12 @@ export const updatePreviewProject = createAsyncThunk(
   "projectsPreview/updateProject",
   async (data: UpdatePreviewProjectProps, { rejectWithValue }) => {
     try {
-      const { projectId, description_rich, image_data } = data;
+      const { projectId, description_rich, image_data, versions } = data;
 
       const updateData: {
         description_rich?: string;
         image_data?: Array<ProjectImageData>;
+        versions?: any[];
       } = {};
 
       if (description_rich !== undefined) {
@@ -244,6 +245,10 @@ export const updatePreviewProject = createAsyncThunk(
 
       if (image_data !== undefined) {
         updateData.image_data = image_data;
+      }
+
+      if (versions !== undefined) {
+        updateData.versions = versions;
       }
 
       const { data: updatedProject, error } = await supabase
@@ -345,6 +350,72 @@ export const resetProjectToPreview = createAsyncThunk(
           error instanceof Error
             ? error.message
             : "Error resetting project to preview",
+        status: 500,
+      };
+      return rejectWithValue(appError);
+    }
+  }
+);
+
+export const updateMainVersion = createAsyncThunk(
+  "projectsPreview/updateMainVersion",
+  async (
+    { projectId, versionId }: { projectId: string; versionId: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      // First, fetch the current project to get the versions array
+      const { data: project, error: fetchError } = await supabase
+        .from("projectsPreview")
+        .select("versions")
+        .eq("id", projectId)
+        .single();
+
+      if (fetchError) {
+        return rejectWithValue({
+          message: `Error fetching project: ${fetchError.message}`,
+          status: fetchError.code,
+        });
+      }
+
+      if (!project?.versions || project.versions.length === 0) {
+        return rejectWithValue({
+          message: "No versions found for this project",
+          status: 404,
+        });
+      }
+
+      // Update the versions array: set the selected version as main and others as false
+      const updatedVersions = project.versions.map((version: any) => ({
+        ...version,
+        main: version.id === versionId,
+      }));
+
+      // Update the project with the new versions array
+      const { data: updatedProject, error: updateError } = await supabase
+        .from("projectsPreview")
+        .update({ versions: updatedVersions })
+        .eq("id", projectId)
+        .select()
+        .single();
+
+      if (updateError) {
+        return rejectWithValue({
+          message: `Error updating main version: ${updateError.message}`,
+          status: updateError.code,
+        });
+      }
+
+      return {
+        project: updatedProject,
+        message: "Main version updated successfully",
+      };
+    } catch (error: unknown) {
+      const appError: SupabaseError = {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error updating main version",
         status: 500,
       };
       return rejectWithValue(appError);

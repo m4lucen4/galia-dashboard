@@ -8,6 +8,7 @@ import {
   deletePreviewProject,
   updatePreviewProject,
   resetProjectToPreview,
+  updateMainVersion,
 } from "../actions/PreviewProjectActions";
 
 interface ProjectState {
@@ -20,6 +21,7 @@ interface ProjectState {
   previewProjectDeleteRequest: IRequest;
   previewProjectUpdateRequest: IRequest;
   previewProjectResetRequest: IRequest;
+  previewProjectUpdateMainVersionRequest: IRequest;
 }
 
 const initialState: ProjectState = {
@@ -56,6 +58,11 @@ const initialState: ProjectState = {
     ok: false,
   },
   previewProjectResetRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
+  previewProjectUpdateMainVersionRequest: {
     inProgress: false,
     messages: "",
     ok: false,
@@ -233,14 +240,24 @@ const previewProjectSlice = createSlice({
         };
       })
       .addCase(updatePreviewProject.fulfilled, (state, action) => {
-        const { projectId, description_rich, image_data } =
+        const { id, description_rich, image_data, versions } =
           action.payload.project;
         const projectIndex = state.projects.findIndex(
-          (project) => project.id === projectId
+          (project) => project.id === id
         );
         if (projectIndex !== -1) {
           state.projects[projectIndex].description_rich = description_rich;
           state.projects[projectIndex].image_data = image_data;
+          if (versions !== undefined) {
+            state.projects[projectIndex].versions = versions;
+          }
+        }
+        if (state.project && state.project.id === id) {
+          state.project.description_rich = description_rich;
+          state.project.image_data = image_data;
+          if (versions !== undefined) {
+            state.project.versions = versions;
+          }
         }
         state.previewProjectUpdateRequest = {
           inProgress: false,
@@ -295,6 +312,44 @@ const previewProjectSlice = createSlice({
             : errorPayload?.message || "Error desconocido";
 
         state.previewProjectResetRequest = {
+          inProgress: false,
+          messages: errorMessage,
+          ok: false,
+        };
+      });
+    builder
+      .addCase(updateMainVersion.pending, (state) => {
+        state.previewProjectUpdateMainVersionRequest = {
+          inProgress: true,
+          messages: "",
+          ok: false,
+        };
+      })
+      .addCase(updateMainVersion.fulfilled, (state, action) => {
+        const { id, versions } = action.payload.project;
+        const projectIndex = state.projects.findIndex(
+          (project) => project.id === id
+        );
+        if (projectIndex !== -1) {
+          state.projects[projectIndex].versions = versions;
+        }
+        if (state.project && state.project.id === id) {
+          state.project.versions = versions;
+        }
+        state.previewProjectUpdateMainVersionRequest = {
+          inProgress: false,
+          messages: "",
+          ok: true,
+        };
+      })
+      .addCase(updateMainVersion.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage =
+          typeof errorPayload === "string"
+            ? errorPayload
+            : errorPayload?.message || "Error desconocido";
+
+        state.previewProjectUpdateMainVersionRequest = {
           inProgress: false,
           messages: errorMessage,
           ok: false,
