@@ -21,7 +21,7 @@ const Membership: React.FC = () => {
     {
       name: "Básico",
       subtitle: "Versión limitada",
-      price: { monthly: 18, annual: 144 },
+      price: { monthly: 20, annual: 180 },
       buttonText: "Empezar",
       buttonStyle: "bg-gray-100 text-gray-700 hover:bg-gray-200",
       cardStyle: "bg-white border border-gray-200",
@@ -35,7 +35,7 @@ const Membership: React.FC = () => {
     {
       name: "Profesional",
       subtitle: "Versión ilimitada",
-      price: { monthly: 24, annual: 192 },
+      price: { monthly: 25, annual: 240 },
       buttonText: "Empezar",
       buttonStyle: "bg-gray-600 text-white hover:bg-gray-700",
       cardStyle: "bg-black text-white border border-gray-800",
