@@ -47,9 +47,11 @@ export const CardsList: React.FC<CardsListProps> = ({
       if (b.state === "preview") return 1;
     }
 
-    if (!a.created_at) return 1;
-    if (!b.created_at) return -1;
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    if (!a.publishDate) return 1;
+    if (!b.publishDate) return -1;
+    return (
+      new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()
+    );
   });
 
   const totalItems = sortedProjects.length;
