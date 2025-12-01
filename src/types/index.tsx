@@ -110,6 +110,7 @@ export type PreviewProjectDataProps = {
   instagramResult?: string;
   linkedlnResult?: string;
   versions?: PublishVersions[];
+  instructions?: string;
 };
 
 export type UpdateProjectPublishingProps = {

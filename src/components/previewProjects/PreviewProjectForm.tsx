@@ -31,6 +31,8 @@ export const PreviewProjectForm = ({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
   const [isIterating, setIsIterating] = useState(false);
+  const [iterationInstructions, setIterationInstructions] = useState("");
+  const MAX_INSTRUCTIONS_LENGTH = 200;
 
   useEffect(() => {
     if (project) {
@@ -197,10 +199,17 @@ export const PreviewProjectForm = ({
         return;
       }
 
-      const webhookUrl = `${
-        import.meta.env.VITE_SUPABASE_FUNCTION_N8N_ITERATE_PUBLICATION
-      }?id=${project.id}`;
-      const response = await fetch(webhookUrl, {
+      const webhookUrl = import.meta.env
+        .VITE_SUPABASE_FUNCTION_N8N_ITERATE_PUBLICATION;
+
+      // Build URL with project ID and instructions (if provided)
+      let url = `${webhookUrl}?id=${project.id}`;
+
+      if (iterationInstructions.trim()) {
+        url += `&instructions=${encodeURIComponent(iterationInstructions.trim())}`;
+      }
+
+      const response = await fetch(url, {
         method: "GET",
         headers: {
           Accept: "application/json",
@@ -214,8 +223,13 @@ export const PreviewProjectForm = ({
           await response.text()
         );
       }
+
+      // Clear instructions after iteration attempt (success or failure)
+      setIterationInstructions("");
     } catch (error) {
       console.error("Failed to call iterate publication workflow:", error);
+      // Clear instructions even on error
+      setIterationInstructions("");
     }
   };
 
@@ -250,100 +264,174 @@ export const PreviewProjectForm = ({
 
       {/* Version Navigation */}
       {project.versions && project.versions.length > 0 && (
-        <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200">
-          <button
-            onClick={handlePreviousVersion}
-            disabled={currentVersionIndex === 0}
-            className={`p-2 rounded-md transition-colors ${
-              currentVersionIndex === 0
-                ? "text-gray-300 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="Versión anterior"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
+          {/* Navigation arrows and version counter */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={handlePreviousVersion}
+              disabled={currentVersionIndex === 0}
+              className={`p-2 rounded-md transition-colors ${
+                currentVersionIndex === 0
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-700 hover:bg-gray-200"
+              }`}
+              aria-label="Versión anterior"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
 
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-sm font-medium text-gray-700">
-              {currentVersionIndex + 1}/{project.versions.length}
-            </span>
-            {isCurrentVersionMain() ? (
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-sm font-medium text-gray-700">
+                {currentVersionIndex + 1}/{project.versions.length}
+              </span>
+              {isCurrentVersionMain() && (
                 <span className="text-xs text-blue-600 font-medium">
                   Versión actual
                 </span>
-                {project.versions && project.versions.length < 10 && (
-                  <>
-                    <span className="text-xs text-gray-400">•</span>
-                    <button
-                      onClick={handleIteratePublication}
-                      disabled={loading}
-                      className="text-xs text-blue-600 font-medium hover:text-blue-800 underline disabled:opacity-50 cursor-pointer"
+              )}
+            </div>
+
+            <button
+              onClick={handleNextVersion}
+              disabled={currentVersionIndex === project.versions.length - 1}
+              className={`p-2 rounded-md transition-colors ${
+                currentVersionIndex === project.versions.length - 1
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-700 hover:bg-gray-200"
+              }`}
+              aria-label="Versión siguiente"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {/* Instructions and iterate button - only on main version */}
+          {isCurrentVersionMain() &&
+            project.versions &&
+            project.versions.length < 10 && (
+              <div className="space-y-2">
+                {/* Instructions field */}
+                <div className="w-full">
+                  <textarea
+                    value={iterationInstructions}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value.length <= MAX_INSTRUCTIONS_LENGTH) {
+                        setIterationInstructions(value);
+                      }
+                    }}
+                    placeholder="Indicaciones para la nueva versión (opcional)..."
+                    className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    rows={4}
+                  />
+                  <div className="flex justify-end mt-1">
+                    <span
+                      className={`text-xs ${
+                        iterationInstructions.length >= MAX_INSTRUCTIONS_LENGTH
+                          ? "text-red-600 font-medium"
+                          : "text-gray-500"
+                      }`}
                     >
-                      Iterar esta publicación
-                    </button>
-                  </>
-                )}
+                      {iterationInstructions.length}/{MAX_INSTRUCTIONS_LENGTH}
+                    </span>
+                  </div>
+                </div>
+                {/* Iterate button */}
+                <div className="flex justify-center">
+                  <button
+                    onClick={handleIteratePublication}
+                    disabled={loading}
+                    className="text-xs text-blue-600 font-medium hover:text-blue-800 underline disabled:opacity-50 cursor-pointer"
+                  >
+                    Iterar esta publicación
+                  </button>
+                </div>
               </div>
-            ) : (
+            )}
+
+          {/* Set as main version button - only on non-main versions */}
+          {!isCurrentVersionMain() && (
+            <div className="flex justify-center">
               <button
                 onClick={handleSetAsMainVersion}
                 disabled={loading || updateMainVersionRequest.inProgress}
                 className="text-xs text-green-600 font-medium hover:text-green-800 underline disabled:opacity-50 cursor-pointer flex items-center gap-1"
               >
-                Establecer como versión actual
+                {updateMainVersionRequest.inProgress ? (
+                  <>
+                    <LoadingSpinner size="small" color="primary" />
+                    <span>Actualizando...</span>
+                  </>
+                ) : (
+                  "Establecer como versión actual"
+                )}
               </button>
-            )}
-          </div>
-
-          <button
-            onClick={handleNextVersion}
-            disabled={currentVersionIndex === project.versions.length - 1}
-            className={`p-2 rounded-md transition-colors ${
-              currentVersionIndex === project.versions.length - 1
-                ? "text-gray-300 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-200"
-            }`}
-            aria-label="Versión siguiente"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Show button outside navigator when versions don't exist */}
+      {/* Instructions and button when versions don't exist */}
       {(!project.versions || project.versions.length === 0) && (
-        <Button
-          fullWidth
-          title="Iterar publicación"
-          disabled={loading}
-          onClick={handleIteratePublication}
-        />
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
+          {/* Instructions field */}
+          <div className="w-full">
+            <textarea
+              value={iterationInstructions}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value.length <= MAX_INSTRUCTIONS_LENGTH) {
+                  setIterationInstructions(value);
+                }
+              }}
+              placeholder="Indicaciones para la nueva versión (opcional)..."
+              className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              rows={4}
+            />
+            <div className="flex justify-end mt-1">
+              <span
+                className={`text-xs ${
+                  iterationInstructions.length >= MAX_INSTRUCTIONS_LENGTH
+                    ? "text-red-600 font-medium"
+                    : "text-gray-500"
+                }`}
+              >
+                {iterationInstructions.length}/{MAX_INSTRUCTIONS_LENGTH}
+              </span>
+            </div>
+          </div>
+          {/* Iterate button */}
+          <Button
+            fullWidth
+            title="Iterar publicación"
+            disabled={loading}
+            onClick={handleIteratePublication}
+          />
+        </div>
       )}
 
       <div>
