@@ -48,7 +48,11 @@ export const UsersTable = ({
     }),
     columnHelper.accessor("company", {
       header: t("users.company"),
-      cell: (info) => info.getValue() || "-",
+      cell: (info) => {
+        const company = info.getValue();
+        if (!company) return "-";
+        return company.length > 15 ? `${company.substring(0, 15)}...` : company;
+      },
     }),
     columnHelper.accessor("role", {
       header: t("users.role"),
