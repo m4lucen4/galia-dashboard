@@ -41,6 +41,8 @@ export const PreviewProjects = () => {
   const [seeEditPreview, setEditSeePreview] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [publishDate, setPublishDate] = useState<string>("");
+  const [hasDateValidationError, setHasDateValidationError] = useState(false);
+  const [publishNow, setPublishNow] = useState(false);
   const [socialNetworks, setSocialNetworks] = useState<SocialNetworksCheck>({
     instagram: false,
     linkedln: false,
@@ -153,11 +155,15 @@ export const PreviewProjects = () => {
 
   const handleOpenPublishConfig = (project: PreviewProjectDataProps) => {
     if (project.publishDate) {
-      const dateOnly = project.publishDate.split("T")[0];
-      setPublishDate(dateOnly);
+      // Preserve the full timestampz format for the dateTime input
+      // Format: "2025-06-10 00:00:00+00"
+      setPublishDate(project.publishDate);
     } else {
       setPublishDate("");
     }
+
+    // Reset publishNow when opening modal
+    setPublishNow(false);
 
     setSocialNetworks({
       instagram: project.checkSocialNetworks?.instagram || false,
@@ -206,6 +212,7 @@ export const PreviewProjects = () => {
           projectId: selectedProject.id,
           publishDate,
           checkSocialNetworks: socialNetworks,
+          publishNow,
         })
       )
         .unwrap()
@@ -291,9 +298,10 @@ export const PreviewProjects = () => {
           onAccept={handlePublishProject}
           onCancel={closeAlert}
           disabledConfirmButton={
-            !socialNetworks.instagram &&
-            !socialNetworks.linkedln &&
-            !!publishDate
+            hasDateValidationError ||
+            (!socialNetworks.instagram &&
+              !socialNetworks.linkedln &&
+              !!publishDate)
           }
         >
           <ConfigPublish
@@ -301,6 +309,8 @@ export const PreviewProjects = () => {
             socialNetworks={socialNetworks}
             onDateChange={(newDate) => setPublishDate(newDate)}
             onSocialNetworkChange={handleSocialNetworkChange}
+            onValidationChange={setHasDateValidationError}
+            onPublishNowChange={setPublishNow}
           />
         </Alert>
       )}

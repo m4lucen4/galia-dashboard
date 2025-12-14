@@ -76,6 +76,35 @@ export const formatDateToDDMMYYYY = (dateString: string): string => {
 };
 
 /**
+ * Format a date and time from timestampz or ISO format to DD-MM-YYYY HH:mm
+ * @param dateString - Date in timestampz format (e.g. "2025-06-10 12:30:00+00") or ISO format (e.g. "2025-06-10T12:30:00+00:00")
+ * @returns Date and time formatted as DD-MM-YYYY HH:mm
+ */
+export const formatDateTimeToDisplay = (dateString: string): string => {
+  try {
+    // Handle both formats:
+    // - Timestampz: "YYYY-MM-DD HH:mm:ss+00"
+    // - ISO: "YYYY-MM-DDTHH:mm:ss+00:00"
+    // Parse directly without using Date() to avoid timezone conversion
+    const match = dateString.match(
+      /^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})/
+    );
+
+    if (match) {
+      const [, year, month, day, hours, minutes] = match;
+      return `${day}-${month}-${year} ${hours}:${minutes}`;
+    }
+
+    // If format doesn't match, return original string
+    console.warn("Unexpected date format:", dateString);
+    return dateString;
+  } catch (error) {
+    console.error("Error format datetime:", error);
+    return dateString;
+  }
+};
+
+/**
  * Format a date according to a custom format
  * @param dateString - Date in ISO format
  * @param format - Desired format ('dd-mm-yyyy', 'mm-dd-yyyy', etc.)

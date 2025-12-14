@@ -1,6 +1,10 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { formatDateToDDMMYYYY, getProjectStateInfo } from "../../../../helpers";
+import {
+  formatDateToDDMMYYYY,
+  formatDateTimeToDisplay,
+  getProjectStateInfo,
+} from "../../../../helpers";
 import { PreviewProjectDataProps } from "../../../../types";
 
 interface ProjectInfoProps {
@@ -25,7 +29,7 @@ export const ProjectInfo: React.FC<ProjectInfoProps> = ({ project }) => {
           {project.publishDate && (
             <span className="text-sm text-gray-500">
               {t("previewProjects.publishedAt")}{" "}
-              {formatDateToDDMMYYYY(project.publishDate)}
+              {formatDateTimeToDisplay(project.publishDate)}
             </span>
           )}
         </div>

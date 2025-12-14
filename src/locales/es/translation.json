@@ -210,6 +210,7 @@
     "messageFutureDate": "La fecha de publicación no puede ser anterior a la fecha actual",
     "messageSelectDate": "Selecciona una fecha de publicación",
     "messageCurrentDate": "Al seleccionar la fecha actual, tu proyecto se publicará inmediatamente",
+    "messageMinimumOneHour": "La fecha y hora de publicación no pueden ser inferiores a la fecha actual",
     "selectLindkedlnPage": "Selecciona donde quieres publicar",
     "noLinkedlnPages": "No hay páginas de LinkedIn disponibles",
     "personalProfile": "Perfil personal",
@@ -225,6 +226,8 @@
     "linkedlnNotSelected": "No seleccionado LinkedIn",
     "publishAgain": "Publicar de nuevo",
     "publishAgainDescription": "¿Estás seguro de que deseas volver a publicar este proyecto? Esta acción reiniciará el proceso de publicación.",
+    "publishNow": "Publicar ahora",
+    "instantPublicationMessage": "Se publicará inmediatamente al confirmar",
     "filters": {
       "all": "Todos",
       "preview": "Vista previa",

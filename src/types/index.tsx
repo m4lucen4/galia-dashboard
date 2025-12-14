@@ -117,6 +117,7 @@ export type UpdateProjectPublishingProps = {
   projectId: string;
   publishDate?: string;
   checkSocialNetworks?: SocialNetworksCheck;
+  publishNow?: boolean;
 };
 
 export type UpdatePreviewProjectProps = {

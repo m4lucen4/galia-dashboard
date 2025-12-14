@@ -141,7 +141,7 @@ export const updateProjectPublishing = createAsyncThunk(
   "projectsPreview/updateProjectPublishing",
   async (data: UpdateProjectPublishingProps, { rejectWithValue }) => {
     try {
-      const { projectId, publishDate, checkSocialNetworks } = data;
+      const { projectId, publishDate, checkSocialNetworks, publishNow } = data;
 
       const updateData: {
         publishDate?: string | null;
@@ -181,32 +181,31 @@ export const updateProjectPublishing = createAsyncThunk(
         });
       }
 
-      if (publishDate) {
-        const today = new Date().toISOString().split("T")[0];
-        const pubDate = new Date(publishDate).toISOString().split("T")[0];
+      // Only trigger instant publication webhook if publishNow is explicitly true
+      if (publishNow === true) {
+        const webhookUrl = `${
+          import.meta.env.VITE_SUPABASE_FUNCTION_N8N_INSTANT_PUBLICATION
+        }?id=${projectId}`;
 
-        if (today === pubDate) {
-          const webhookUrl = `${
-            import.meta.env.VITE_SUPABASE_FUNCTION_N8N_INSTANT_PUBLICATION
-          }?id=${projectId}`;
+        try {
+          const webhookResponse = await fetch(webhookUrl, {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+            },
+          });
 
-          try {
-            const webhookResponse = await fetch(webhookUrl, {
-              method: "GET",
-              headers: {
-                Accept: "application/json",
-              },
-            });
-
-            if (!webhookResponse.ok) {
-              console.error(
-                "Error calling LinkedIn webhook:",
-                await webhookResponse.text()
-              );
-            }
-          } catch (webhookError) {
-            console.error("Failed to call LinkedIn workflow:", webhookError);
+          if (!webhookResponse.ok) {
+            console.error(
+              "Error calling instant publication webhook:",
+              await webhookResponse.text()
+            );
           }
+        } catch (webhookError) {
+          console.error(
+            "Failed to call instant publication workflow:",
+            webhookError
+          );
         }
       }
 

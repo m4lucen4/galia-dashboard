@@ -210,6 +210,7 @@
     "messageFutureDate": "La data de publicació no pot ser anterior a la data actual",
     "messageSelectDate": "Selecciona una data de publicació",
     "messageCurrentDate": "En seleccionar la data actual, el teu projecte es publicarà immediatament",
+    "messageMinimumOneHour": "La data i hora de publicació no poden ser inferiors a la data actual",
     "selectLindkedlnPage": "Selecciona on vols publicar",
     "noLinkedlnPages": "No hi ha pàgines de LinkedIn disponibles",
     "personalProfile": "Perfil personal",
@@ -223,6 +224,8 @@
     "linkedlnPosted": "Publicat a LinkedIn",
     "linkedlnFailed": "Error a LinkedIn",
     "linkedlnNotSelected": "No seleccionat LinkedIn",
+    "publishNow": "Publicar ara",
+    "instantPublicationMessage": "Se publicarà inmediatament al confirmar",
     "publishAgain": "Publicar de nou",
     "publishAgainDescription": "Estàs segur que vols tornar a publicar aquest projecte? Aquesta acció reiniciarà el procés de publicació.",
     "filters": {
