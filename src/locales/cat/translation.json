@@ -267,6 +267,10 @@
     "createPrompt": "Crear Gpt",
     "promptTitle": "Títol del Gpt",
     "promptDescription": "Descripció del Gpt",
-    "confirmDeletePrompt": "Estàs segur que vols eliminar aquest Gpt? Aquesta acció no es pot desfer."
+    "confirmDeletePrompt": "Estàs segur que vols eliminar aquest Gpt? Aquesta acció no es pot desfer.",
+    "isPrivate": "Prompt privat",
+    "visibility": "Visibilitat",
+    "private": "Privat",
+    "public": "Públic"
   }
 }

@@ -267,7 +267,11 @@
     "createPrompt": "Crear Gpt",
     "promptTitle": "Título del Gpt",
     "promptDescription": "Descripción del Gpt",
-    "confirmDeletePrompt": "¿Estás seguro de que deseas eliminar este Gpt? Esta acción no se puede deshacer."
+    "confirmDeletePrompt": "¿Estás seguro de que deseas eliminar este Gpt? Esta acción no se puede deshacer.",
+    "isPrivate": "Prompt privado",
+    "visibility": "Visibilidad",
+    "private": "Privado",
+    "public": "Público"
   },
   "footer": {
     "allRightsReserved": "Todos los derechos reservados.",

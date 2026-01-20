@@ -55,12 +55,14 @@ export const MyGptsTable = () => {
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
-    const { id, value } = e.target;
+    const { id, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+
     setFormData((prev) => ({
       ...prev,
-      [id]: value,
+      [id]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -68,13 +70,11 @@ export const MyGptsTable = () => {
     e.preventDefault();
 
     try {
-      const isUserAdmin = user?.role === "admin";
-
       const promptData = {
         title: formData.title,
         description: formData.description,
         user: user?.uid || "",
-        isPrivate: !isUserAdmin,
+        isPrivate: formData.isPrivate,
       };
 
       if (editingPrompt) {
@@ -82,7 +82,7 @@ export const MyGptsTable = () => {
           updatePrompt({
             id: editingPrompt.id,
             ...promptData,
-          })
+          }),
         ).unwrap();
       } else {
         await dispatch(addPrompt(promptData)).unwrap();
@@ -92,7 +92,7 @@ export const MyGptsTable = () => {
         dispatch(fetchPrompts());
       } else if (user?.uid) {
         dispatch(
-          fetchPromptsByUser({ userUid: user.uid, includePublic: false })
+          fetchPromptsByUser({ userUid: user.uid, includePublic: false }),
         );
       }
 
@@ -123,7 +123,7 @@ export const MyGptsTable = () => {
           dispatch(fetchPrompts());
         } else if (user?.uid) {
           dispatch(
-            fetchPromptsByUser({ userUid: user.uid, includePublic: false })
+            fetchPromptsByUser({ userUid: user.uid, includePublic: false }),
           );
         }
       } catch (error) {
@@ -160,6 +160,24 @@ export const MyGptsTable = () => {
     columnHelper.accessor("title", {
       header: t("admin.promptTitle"),
       size: 400,
+    }),
+    columnHelper.accessor("isPrivate", {
+      header: t("admin.visibility"),
+      cell: (info) => {
+        const isPrivate = info.getValue();
+        return (
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              isPrivate
+                ? "bg-red-100 text-red-800"
+                : "bg-green-100 text-green-800"
+            }`}
+          >
+            {isPrivate ? t("admin.private") : t("admin.public")}
+          </span>
+        );
+      },
+      size: 100,
     }),
     columnHelper.display({
       id: "actions",
@@ -255,6 +273,22 @@ export const MyGptsTable = () => {
                   required
                 />
               </div>
+              {user?.role === "admin" && (
+                <div className="mb-2">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      id="isPrivate"
+                      type="checkbox"
+                      checked={formData.isPrivate}
+                      onChange={handleChange}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      {t("admin.isPrivate")}
+                    </span>
+                  </label>
+                </div>
+              )}
             </div>
 
             <div className="mt-6">
@@ -293,7 +327,7 @@ export const MyGptsTable = () => {
                       <div className="flex items-center">
                         {flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                         {{
                           asc: " 🔼",
@@ -316,7 +350,7 @@ export const MyGptsTable = () => {
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </td>
                   ))}

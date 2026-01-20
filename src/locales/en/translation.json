@@ -266,6 +266,10 @@
     "createPrompt": "Create Gpt",
     "promptTitle": "Gpt Title",
     "promptDescription": "Gpt Description",
-    "confirmDeletePrompt": "Are you sure you want to delete this gpt?"
+    "confirmDeletePrompt": "Are you sure you want to delete this gpt?",
+    "isPrivate": "Private prompt",
+    "visibility": "Visibility",
+    "private": "Private",
+    "public": "Public"
   }
 }

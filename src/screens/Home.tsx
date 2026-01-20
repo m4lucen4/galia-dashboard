@@ -9,13 +9,11 @@ import { InstagramIcon, LinkedInIcon } from "@/components/icons";
 export const Home = () => {
   const userData = useAppSelector((state: RootState) => state.auth.user);
   const { projects, projectsFetchRequest } = useAppSelector(
-    (state: RootState) => state.project
+    (state: RootState) => state.project,
   );
   const { projects: previewProjects } = useAppSelector(
-    (state: RootState) => state.previewProject
+    (state: RootState) => state.previewProject,
   );
-
-  console.log("Projects Data:", previewProjects);
 
   const fetchProjectsData = useProjectsData(userData);
   const fetchPreviewProjectsData = usePreviewProjectsData(userData);
@@ -36,10 +34,10 @@ export const Home = () => {
 
     const totalProjects = projects.length;
     const draftProjects = projects.filter(
-      (project) => project.state === "draft"
+      (project) => project.state === "draft",
     ).length;
     const publishedInGuide = projects.filter(
-      (project) => project.showMap === true
+      (project) => project.showMap === true,
     ).length;
 
     return {
@@ -60,19 +58,19 @@ export const Home = () => {
     }
 
     const draftPublications = previewProjects.filter(
-      (publication) => publication.state === "preview"
+      (publication) => publication.state === "preview",
     ).length;
 
     const instagramPublications = previewProjects.filter(
       (publication) =>
         publication.state === "published" &&
-        publication.instagramResult === "true"
+        publication.instagramResult === "true",
     ).length;
 
     const linkedinPublications = previewProjects.filter(
       (publication) =>
         publication.state === "published" &&
-        publication.linkedlnResult === "true"
+        publication.linkedlnResult === "true",
     ).length;
 
     return {
