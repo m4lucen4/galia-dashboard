@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   updatePreviewProject,
@@ -24,49 +24,52 @@ export const PreviewProjectForm = ({
 }: PreviewProjectFormProps) => {
   const dispatch = useAppDispatch();
   const updateMainVersionRequest = useAppSelector(
-    (state) => state.previewProject.previewProjectUpdateMainVersionRequest
+    (state) => state.previewProject.previewProjectUpdateMainVersionRequest,
   );
-  const [description, setDescription] = useState("");
-  const [images, setImages] = useState<ProjectImageData[]>([]);
+  // Initialize description from project data
+  const [description, setDescription] = useState(() => {
+    if (project?.versions && project.versions.length > 0) {
+      const mainVersionIndex = project.versions.findIndex((v) => v.main);
+      const currentVersion =
+        project.versions[mainVersionIndex >= 0 ? mainVersionIndex : 0];
+      return currentVersion?.description || "";
+    }
+    return project?.description_rich || "";
+  });
+  // Initialize images from project data
+  const [images, setImages] = useState<ProjectImageData[]>(
+    () => project?.image_data || [],
+  );
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
+  // Initialize currentVersionIndex by finding the main version
+  const [currentVersionIndex, setCurrentVersionIndex] = useState(() => {
+    if (project?.versions && project.versions.length > 0) {
+      const mainVersionIndex = project.versions.findIndex((v) => v.main);
+      return mainVersionIndex >= 0 ? mainVersionIndex : 0;
+    }
+    return 0;
+  });
   const [isIterating, setIsIterating] = useState(false);
   const [iterationInstructions, setIterationInstructions] = useState("");
   const MAX_INSTRUCTIONS_LENGTH = 200;
 
-  useEffect(() => {
-    if (project) {
-      // If versions exist, find the main version and set it as current
-      if (project.versions && project.versions.length > 0) {
-        const mainVersionIndex = project.versions.findIndex((v) => v.main);
-        setCurrentVersionIndex(mainVersionIndex >= 0 ? mainVersionIndex : 0);
-      }
-
-      setImages(project.image_data || []);
-    }
-  }, [project]);
-
-  // Update description when version index changes
-  useEffect(() => {
-    if (project) {
-      if (project.versions && project.versions.length > 0) {
-        const currentVersion = project.versions[currentVersionIndex];
-        setDescription(currentVersion?.description || "");
-      } else {
-        setDescription(project.description_rich || "");
-      }
-    }
-  }, [project, currentVersionIndex]);
-
   const handlePreviousVersion = () => {
     if (project.versions && currentVersionIndex > 0) {
-      setCurrentVersionIndex(currentVersionIndex - 1);
+      const newIndex = currentVersionIndex - 1;
+      setCurrentVersionIndex(newIndex);
+      // Update description when navigating to a different version
+      const currentVersion = project.versions[newIndex];
+      setDescription(currentVersion?.description || "");
     }
   };
 
   const handleNextVersion = () => {
     if (project.versions && currentVersionIndex < project.versions.length - 1) {
-      setCurrentVersionIndex(currentVersionIndex + 1);
+      const newIndex = currentVersionIndex + 1;
+      setCurrentVersionIndex(newIndex);
+      // Update description when navigating to a different version
+      const currentVersion = project.versions[newIndex];
+      setDescription(currentVersion?.description || "");
     }
   };
 
@@ -86,7 +89,7 @@ export const PreviewProjectForm = ({
         updateMainVersion({
           projectId: project.id,
           versionId: versionId,
-        })
+        }),
       ).unwrap();
 
       //Refresh to show updated data
@@ -108,7 +111,7 @@ export const PreviewProjectForm = ({
           };
         }
         return img;
-      })
+      }),
     );
   };
 
@@ -165,7 +168,7 @@ export const PreviewProjectForm = ({
           projectId: project.id,
           image_data: images,
           versions: updatedVersions,
-        })
+        }),
       ).unwrap();
     } else {
       // If no versions, update description_rich as before
@@ -174,7 +177,7 @@ export const PreviewProjectForm = ({
           projectId: project.id,
           description_rich: description,
           image_data: images,
-        })
+        }),
       ).unwrap();
     }
     onSave();
@@ -220,7 +223,7 @@ export const PreviewProjectForm = ({
       if (!response.ok) {
         console.error(
           "Error calling iterate publication webhook:",
-          await response.text()
+          await response.text(),
         );
       }
 
@@ -481,7 +484,7 @@ export const PreviewProjectForm = ({
               <img
                 src={image.url}
                 alt={`Imagen ${index + 1}`}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 onError={(e) => {
                   console.error(`Error cargando imagen: ${image.url}`);
                   e.currentTarget.src =

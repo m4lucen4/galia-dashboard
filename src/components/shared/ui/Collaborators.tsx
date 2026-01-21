@@ -38,10 +38,10 @@ export const Collaborators: React.FC<CollaboratorsProps> = ({
   const updateCollaborator = (
     index: number,
     field: keyof ProjectCollaboratorsProps,
-    value: string
+    value: string,
   ) => {
     const updatedCollaborators = collaborators.map((collaborator, i) =>
-      i === index ? { ...collaborator, [field]: value } : collaborator
+      i === index ? { ...collaborator, [field]: value } : collaborator,
     );
     onChange(updatedCollaborators);
   };
@@ -50,7 +50,9 @@ export const Collaborators: React.FC<CollaboratorsProps> = ({
     // Normalize URL when user finishes editing
     const normalizedValue = value ? normalizeUrl(value) : value;
     const updatedCollaborators = collaborators.map((collaborator, i) =>
-      i === index ? { ...collaborator, website: normalizedValue } : collaborator
+      i === index
+        ? { ...collaborator, website: normalizedValue }
+        : collaborator,
     );
     onChange(updatedCollaborators);
   };
@@ -107,6 +109,10 @@ export const Collaborators: React.FC<CollaboratorsProps> = ({
                     options={[
                       { value: "default", label: "Seleccione una opción" },
                       { value: "autor", label: "Autor" },
+                      {
+                        value: "arquitectotecnico",
+                        label: "Arquitecto técnico",
+                      },
                       {
                         value: "carpinteriamadera",
                         label: "Carpintería en madera",
