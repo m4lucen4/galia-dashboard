@@ -80,7 +80,7 @@ export const ProjectsTable = ({
 
   const columnHelper = createColumnHelper<ProjectDataProps>();
 
-  const columns = [
+  const allColumns = [
     columnHelper.accessor("id", {
       header: "ID",
       cell: (info) => `${info.getValue()}`,
@@ -173,6 +173,12 @@ export const ProjectsTable = ({
     }),
   ];
 
+  // Filter columns based on user role - only show userName column for admin users
+  const columns =
+    currentUser.role === "admin"
+      ? allColumns
+      : allColumns.filter((col) => col.id !== "userName");
+
   const table = useReactTable({
     data: projects,
     columns,
@@ -220,7 +226,7 @@ export const ProjectsTable = ({
                     <div className="flex items-center">
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                       {{
                         asc: " 🔼",

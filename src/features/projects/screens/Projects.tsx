@@ -21,6 +21,7 @@ import {
 } from "../../../redux/slices/ProjectSlice";
 import { ProjectsTable } from "../components/projectsTable";
 import { useProjectsData } from "../../../hooks/useProjectsData";
+import { useProjectPreviewRealtime } from "../../../hooks/useProjectPreviewRealtime";
 import { WorkingInProgress } from "../../../components/shared/ui/WorkingInProgress";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -31,7 +32,11 @@ export const Projects = () => {
   const { t } = useTranslation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [processingProjectId, setProcessingProjectId] = useState<string | null>(
+    null,
+  );
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showTimeoutError, setShowTimeoutError] = useState(false);
   const [stateFilter, setStateFilter] = useState<string>("");
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -45,7 +50,7 @@ export const Projects = () => {
   } = useAppSelector((state: RootState) => state.project);
   const { users } = useAppSelector((state: RootState) => state.user);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-    null
+    null,
   );
   const [showLaunchModal, setShowLaunchModal] = useState(false);
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
@@ -59,8 +64,12 @@ export const Projects = () => {
     assignError: assignProjectRequest.messages,
   });
 
+  // Subscribe to realtime updates for project preview creation
+  const { isCompleted, recordCount } =
+    useProjectPreviewRealtime(processingProjectId);
+
   const uniqueStates = Array.from(
-    new Set(projects.map((project) => project.state))
+    new Set(projects.map((project) => project.state)),
   ).filter(Boolean) as string[];
 
   const filteredProjects = stateFilter
@@ -71,23 +80,32 @@ export const Projects = () => {
     fetchProjectsData();
   }, [fetchProjectsData]);
 
+  // Handle workflow completion via realtime
   useEffect(() => {
-    if (!showAssignModal) {
-      setSelectedUser(null);
+    if (isCompleted && processingProjectId) {
+      // Use setTimeout to move state updates out of the synchronous effect
+      setTimeout(() => {
+        setProcessingProjectId(null);
+        setShowSuccessAlert(true);
+        fetchProjectsData();
+      }, 0);
     }
-  }, [showAssignModal]);
+  }, [isCompleted, processingProjectId, recordCount, fetchProjectsData]);
 
+  // Fallback timeout: if workflow doesn't complete in 3 minutes, show error
   useEffect(() => {
-    if (isLoading) {
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-        dispatch(clearProjectErrors());
-        navigate("/preview-projects");
-      }, 10000);
+    if (!processingProjectId) return;
 
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, navigate, dispatch]);
+    const timeoutId = setTimeout(
+      () => {
+        setProcessingProjectId(null);
+        setShowTimeoutError(true);
+      },
+      3 * 60 * 1000,
+    ); // 3 minutes (180 seconds)
+
+    return () => clearTimeout(timeoutId);
+  }, [processingProjectId]);
 
   const handleOpenDrawer = () => {
     setIsEditMode(false);
@@ -171,7 +189,7 @@ export const Projects = () => {
         assignProject({
           projectId: selectedProjectId,
           assignedUserId: selectedUser,
-        })
+        }),
       )
         .unwrap()
         .then(() => {
@@ -192,7 +210,12 @@ export const Projects = () => {
         .then(() => {
           fetchProjectsData();
           setShowLaunchModal(false);
-          setIsLoading(true);
+          // Start listening for realtime updates
+          setProcessingProjectId(selectedProjectId);
+        })
+        .catch((error) => {
+          console.error("Error launching project:", error);
+          setShowLaunchModal(false);
         });
     }
   };
@@ -239,7 +262,7 @@ export const Projects = () => {
     return;
   }
 
-  if (isLoading) {
+  if (processingProjectId) {
     return (
       <div className="flex items-center justify-center h-screen">
         <WorkingInProgress
@@ -369,6 +392,23 @@ export const Projects = () => {
             onUserSelect={setSelectedUser}
           />
         </Alert>
+      )}
+      {showSuccessAlert && (
+        <Alert
+          title="¡Éxito!"
+          description={`El proyecto se ha procesado correctamente y está listo para preview.`}
+          onAccept={() => {
+            setShowSuccessAlert(false);
+            navigate("/preview-projects");
+          }}
+        />
+      )}
+      {showTimeoutError && (
+        <Alert
+          title="Timeout"
+          description="El procesamiento está tardando más de lo esperado. Por favor, verifica el estado del proyecto más tarde o contacta soporte si el problema persiste."
+          onAccept={() => setShowTimeoutError(false)}
+        />
       )}
     </div>
   );
