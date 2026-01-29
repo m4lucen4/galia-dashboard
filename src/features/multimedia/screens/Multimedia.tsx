@@ -1,0 +1,195 @@
+import { useEffect, useState } from "react";
+import { useAppSelector, useAppDispatch } from "../../../redux/hooks";
+import { RootState } from "../../../redux/store";
+import {
+  fetchMediaItems,
+  createFolder,
+  uploadFiles,
+  deleteItems,
+} from "../../../redux/actions/MultimediaActions";
+import {
+  setCurrentPath,
+  toggleSelectItem,
+} from "../../../redux/slices/MultimediaSlice";
+import { FileItem as FileItemType } from "../../../types";
+
+import { Breadcrumbs } from "../components/Breadcrumbs";
+import { Toolbar } from "../components/Toolbar";
+import { FileGrid } from "../components/FileGrid";
+import { FileUploader } from "../components/FileUploader";
+import { ImagePreviewModal } from "../components/ImagePreviewModal";
+import { CreateFolderModal } from "../components/CreateFolderModal";
+import { useTranslation } from "react-i18next";
+
+export const Multimedia = () => {
+  const dispatch = useAppDispatch();
+  const { t } = useTranslation();
+  const user = useAppSelector((state: RootState) => state.auth.user);
+  const {
+    currentPath,
+    files,
+    folders,
+    selectedItems,
+    loading,
+    error,
+    createFolderLoading,
+    uploadLoading,
+    deleteLoading,
+  } = useAppSelector((state: RootState) => state.multimedia);
+
+  const [showUploader, setShowUploader] = useState(false);
+  const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const [previewFile, setPreviewFile] = useState<FileItemType | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchMediaItems({ userId: user.id, path: currentPath }));
+    }
+  }, [dispatch, user, currentPath]);
+
+  if (!user) {
+    return null;
+  }
+
+  const handleNavigate = (path: string) => {
+    dispatch(setCurrentPath(path));
+  };
+
+  const handleSelectItem = (path: string) => {
+    dispatch(toggleSelectItem(path));
+  };
+
+  const handleOpenFolder = (path: string) => {
+    dispatch(setCurrentPath(path));
+  };
+
+  const handleOpenFile = (file: FileItemType) => {
+    setPreviewFile(file);
+  };
+
+  const handleCreateFolder = async (folderName: string) => {
+    const result = await dispatch(
+      createFolder({ userId: user.id, path: currentPath, folderName }),
+    );
+    if (createFolder.fulfilled.match(result)) {
+      setShowCreateFolder(false);
+    }
+  };
+
+  const handleUploadFiles = async (selectedFiles: File[]) => {
+    const result = await dispatch(
+      uploadFiles({ userId: user.id, path: currentPath, files: selectedFiles }),
+    );
+    if (uploadFiles.fulfilled.match(result)) {
+      setShowUploader(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(`Delete ${selectedItems.length} item(s)?`)) {
+      return;
+    }
+
+    const itemsToDelete = selectedItems.map((path) => {
+      const file = files.find((f) => f.path === path);
+      return {
+        path,
+        type: file ? ("file" as const) : ("folder" as const),
+      };
+    });
+
+    await dispatch(deleteItems({ userId: user.id, items: itemsToDelete }));
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      <div className="mb-6">
+        <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+          {t("multimedia.title")}
+        </h3>
+        <p className="text-sm text-gray-500">{t("multimedia.description")}</p>
+      </div>
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <Toolbar
+          selectedCount={selectedItems.length}
+          onCreateFolder={() => setShowCreateFolder(true)}
+          onDelete={handleDelete}
+          onUpload={() => setShowUploader(true)}
+          deleteLoading={deleteLoading}
+        />
+
+        <div className="p-4 border-b">
+          <Breadcrumbs currentPath={currentPath} onNavigate={handleNavigate} />
+        </div>
+
+        {showUploader && (
+          <div className="p-4 border-b bg-gray-50">
+            <FileUploader
+              onFilesSelected={handleUploadFiles}
+              disabled={uploadLoading}
+            />
+            {uploadLoading && (
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600">Uploading images...</p>
+              </div>
+            )}
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => setShowUploader(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                disabled={uploadLoading}
+              >
+                {t("multimedia.close")}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="p-6">
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading...</p>
+              </div>
+            </div>
+          ) : (
+            <FileGrid
+              files={files}
+              folders={folders}
+              selectedItems={selectedItems}
+              onSelectItem={handleSelectItem}
+              onOpenFolder={handleOpenFolder}
+              onOpenFile={handleOpenFile}
+              onContextMenu={handleContextMenu}
+            />
+          )}
+        </div>
+      </div>
+
+      <CreateFolderModal
+        isOpen={showCreateFolder}
+        onClose={() => setShowCreateFolder(false)}
+        onCreateFolder={handleCreateFolder}
+        loading={createFolderLoading}
+      />
+
+      <ImagePreviewModal
+        isOpen={!!previewFile}
+        onClose={() => setPreviewFile(null)}
+        file={previewFile}
+      />
+    </div>
+  );
+};

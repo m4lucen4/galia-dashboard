@@ -25,7 +25,8 @@
     "map": "Mapa",
     "adminPanel": "Administración",
     "gpts": "Mis GPTs",
-    "wiki": "Wiki"
+    "wiki": "Wiki",
+    "multimedia": "Multimedia"
   },
   "login": {
     "title": "Iniciar sesión",
@@ -278,5 +279,30 @@
     "documentation": "Documentación",
     "privacyPolicy": "Política de privacidad",
     "legalAdvice": "Aviso legal"
+  },
+  "multimedia": {
+    "title": "Multimedia",
+    "description": "Gestiona tus archivos multimedia.",
+    "newFolder": "Nueva carpeta",
+    "upload": "Subir",
+    "selected": "Seleccionados",
+    "delete": "Eliminar",
+    "deleting": "Eliminando...",
+    "size": "Tamaño",
+    "type": "Tipo",
+    "uploaded": "Subido",
+    "home": "Inicio",
+    "createNewFolder": "Crear nueva carpeta",
+    "folderName": "Nombre de la carpeta",
+    "folderNamePlaceholder": "p.ej. MiCarpeta123",
+    "errorNameFolder": "Sólo números y letras están permitidos (sin espacios, acentos o símbolos)",
+    "create": "Crear",
+    "creating": "Creando...",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "folderRequired": "Sólo se permiten letras y números. Máximo 20 caracteres. Sin espacios ni caracteres especiales",
+    "dropImages": "Arrastra las imágenes aquí...",
+    "dropImagesDescription": "Hasta 25 imágenes, máx 5MB cada una",
+    "noFilesOrFolder": "No hay archivos ni carpetas en esta ubicación"
   }
 }

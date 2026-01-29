@@ -5,6 +5,7 @@ import projectReducer from "./slices/ProjectSlice";
 import previewProjectReducer from "./slices/PreviewProjectSlice";
 import socialNetworksReducer from "./slices/SocialNetworksSlice";
 import adminReducer from "./slices/AdminSlice";
+import multimediaReducer from "./slices/MultimediaSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     previewProject: previewProjectReducer,
     socialNetworks: socialNetworksReducer,
     admin: adminReducer,
+    multimedia: multimediaReducer,
   },
 });
 

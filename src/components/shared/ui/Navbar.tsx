@@ -37,6 +37,12 @@ export default function Navbar() {
     { name: t("menu.home"), href: "/home", current: false },
     { name: t("menu.users"), href: "/users", current: false, adminOnly: true },
     { name: t("menu.projects"), href: "/projects", current: false },
+    {
+      name: t("menu.multimedia"),
+      href: "/multimedia",
+      current: false,
+      adminOnly: true,
+    },
     { name: t("menu.publishes"), href: "/preview-projects", current: false },
     { name: t("menu.gpts"), href: "/my-gpts", current: false },
   ];
@@ -55,7 +61,7 @@ export default function Navbar() {
   };
 
   const filteredNavigation = navigation.filter(
-    (item) => !item.adminOnly || userData?.role === "admin"
+    (item) => !item.adminOnly || userData?.role === "admin",
   );
 
   return (
@@ -82,13 +88,13 @@ export default function Navbar() {
           <div
             className={classNames(
               "flex flex-1 items-center sm:items-stretch sm:justify-start",
-              userData ? "justify-center" : "justify-between"
+              userData ? "justify-center" : "justify-between",
             )}
           >
             <div
               className={classNames(
                 "flex shrink-0 items-center",
-                userData ? "justify-center mr-16" : "justify-start"
+                userData ? "justify-center mr-16" : "justify-start",
               )}
             >
               <Link to="/">
@@ -109,7 +115,7 @@ export default function Navbar() {
                         item.href === currentPath
                           ? "bg-gray-900 text-white"
                           : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                        "rounded-md px-3 py-2 text-sm font-medium"
+                        "rounded-md px-3 py-2 text-sm font-medium",
                       )}
                     >
                       {item.name}
@@ -216,7 +222,7 @@ export default function Navbar() {
                   item.href === currentPath
                     ? "bg-gray-900 text-white"
                     : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                  "block rounded-md px-3 py-2 text-base font-medium"
+                  "block rounded-md px-3 py-2 text-base font-medium",
                 )}
               >
                 {item.name}

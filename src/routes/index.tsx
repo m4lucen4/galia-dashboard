@@ -20,6 +20,7 @@ import { InstagramCallback } from "../features/settings/screens/InstagramCallbac
 import { LinkedInCallback } from "../features/settings/screens/LinkedInCallback";
 import { PreviewProjects } from "../features/postPreview/screens/PreviewProjects";
 import { NonAuthenticatedRoute } from "./NonAuthenticatedRoute";
+import { Multimedia } from "@/features/multimedia/screens/Multimedia";
 
 export const AppRoutes = () => (
   <Routes>
@@ -36,6 +37,7 @@ export const AppRoutes = () => (
       <Route path="/profile" element={<Profile />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/projects" element={<Projects />} />
+      <Route path="/multimedia" element={<Multimedia />} />
       <Route path="/preview-projects" element={<PreviewProjects />} />
       <Route path="/my-gpts" element={<MyGpts />} />
       <Route path="/auth/linkedin/callback" element={<LinkedInCallback />} />

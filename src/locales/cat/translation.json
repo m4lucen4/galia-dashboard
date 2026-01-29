@@ -25,7 +25,8 @@
     "map": "Mapa",
     "adminPanel": "Administració",
     "gpts": "Els meus GPTs",
-    "wiki": "Wiki"
+    "wiki": "Wiki",
+    "Multimedia": "Multimedia"
   },
   "login": {
     "title": "Iniciar sessió",
@@ -272,5 +273,30 @@
     "visibility": "Visibilitat",
     "private": "Privat",
     "public": "Públic"
+  },
+  "multimedia": {
+    "title": "Multimèdia",
+    "description": "Gestiona els teus arxius multimèdia.",
+    "newFolder": "Nova carpeta",
+    "upload": "Puja",
+    "selected": "Seleccionats",
+    "delete": "Elimina",
+    "deleting": "Eliminant...",
+    "size": "Mida",
+    "type": "Tipus",
+    "uploaded": "Pujat",
+    "home": "Inici",
+    "createNewFolder": "Crea una nova carpeta",
+    "folderName": "Nom de la carpeta",
+    "folderNamePlaceholder": "p.ex. LaMevaCarpeta123",
+    "errorNameFolder": "Només es permeten números i lletres (sense espais, accents ni símbols)",
+    "create": "Crea",
+    "creating": "Creant...",
+    "cancel": "Cancel·la",
+    "close": "Tanca",
+    "folderRequired": "Només es permeten lletres i números. Màxim 20 caràcters. Sense espais ni caràcters especials",
+    "dropImages": "Arrossega les imatges aquí...",
+    "dropImagesDescription": "Fins a 25 imatges, màx. 5MB cadascuna",
+    "noFilesOrFolder": "No hi ha arxius ni carpetes en aquesta ubicació"
   }
 }

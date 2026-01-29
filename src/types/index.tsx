@@ -202,3 +202,47 @@ export type PromptsProps = {
   user: string;
   isPrivate: boolean;
 };
+
+export type MultimediaItemType = "file" | "folder";
+
+export type MultimediaItem = {
+  id: string;
+  name: string;
+  type: MultimediaItemType;
+  path: string;
+  created_at: string;
+  updated_at: string;
+  size?: number;
+  user_id: string;
+};
+
+export type FileItem = MultimediaItem & {
+  type: "file";
+  size: number;
+  mime_type: string;
+  url: string;
+  thumbnail_url?: string;
+};
+
+export type FolderItem = MultimediaItem & {
+  type: "folder";
+  parent_path: string | null;
+};
+
+export type UploadProgress = {
+  file: File;
+  progress: number;
+  status: "pending" | "uploading" | "success" | "error";
+  error?: string;
+  url?: string;
+};
+
+export type MultimediaState = {
+  currentPath: string;
+  files: FileItem[];
+  folders: FolderItem[];
+  uploads: UploadProgress[];
+  selectedItems: string[];
+  loading: boolean;
+  error: string | null;
+};
