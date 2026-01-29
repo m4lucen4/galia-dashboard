@@ -296,6 +296,8 @@
     "folderRequired": "Only letters and numbers allowed. Maximum 20 characters. No spaces or special characters",
     "dropImages": "Drag images here...",
     "dropImagesDescription": "Up to 25 images, max 5MB each",
-    "noFilesOrFolder": "No files or folders in this location"
+    "noFilesOrFolder": "No files or folders in this location",
+    "deleteConfirmTitle": "Delete items?",
+    "deleteConfirmDescription": "You are about to delete {{count}} item(s). This action cannot be undone. Do you want to continue?"
   }
 }

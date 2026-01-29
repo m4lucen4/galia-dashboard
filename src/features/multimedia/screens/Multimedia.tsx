@@ -20,6 +20,9 @@ import { FileUploader } from "../components/FileUploader";
 import { ImagePreviewModal } from "../components/ImagePreviewModal";
 import { CreateFolderModal } from "../components/CreateFolderModal";
 import { useTranslation } from "react-i18next";
+import { SocialMediaPreset } from "../../../helpers/imageOptimizer";
+import { Alert } from "../../../components/shared/ui/Alert";
+import { TrashIcon } from "@heroicons/react/24/outline";
 
 export const Multimedia = () => {
   const dispatch = useAppDispatch();
@@ -40,6 +43,9 @@ export const Multimedia = () => {
   const [showUploader, setShowUploader] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileItemType | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [optimizationPreset, setOptimizationPreset] =
+    useState<SocialMediaPreset>("social");
 
   useEffect(() => {
     if (user) {
@@ -85,11 +91,11 @@ export const Multimedia = () => {
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm(`Delete ${selectedItems.length} item(s)?`)) {
-      return;
-    }
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
 
+  const handleDeleteConfirm = async () => {
     const itemsToDelete = selectedItems.map((path) => {
       const file = files.find((f) => f.path === path);
       return {
@@ -99,6 +105,11 @@ export const Multimedia = () => {
     });
 
     await dispatch(deleteItems({ userId: user.id, items: itemsToDelete }));
+    setShowDeleteConfirm(false);
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(false);
   };
 
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -124,7 +135,7 @@ export const Multimedia = () => {
         <Toolbar
           selectedCount={selectedItems.length}
           onCreateFolder={() => setShowCreateFolder(true)}
-          onDelete={handleDelete}
+          onDelete={handleDeleteClick}
           onUpload={() => setShowUploader(true)}
           deleteLoading={deleteLoading}
         />
@@ -135,9 +146,45 @@ export const Multimedia = () => {
 
         {showUploader && (
           <div className="p-4 border-b bg-gray-50">
+            {/* Preset Selector */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Optimizar para:
+              </label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setOptimizationPreset("social")}
+                  className={`px-6 py-2 text-sm font-medium rounded-md transition-colors ${
+                    optimizationPreset === "social"
+                      ? "bg-blue-600 text-white"
+                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  📱 Redes Sociales
+                </button>
+                <button
+                  onClick={() => setOptimizationPreset("web")}
+                  className={`px-6 py-2 text-sm font-medium rounded-md transition-colors ${
+                    optimizationPreset === "web"
+                      ? "bg-blue-600 text-white"
+                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  🌐 Web
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-gray-500">
+                {optimizationPreset === "social" &&
+                  "Optimizado a 1200px, máx 4.5MB - Perfecto para Instagram, LinkedIn, Facebook"}
+                {optimizationPreset === "web" &&
+                  "Optimizado a 1920px, máx 3MB - Ideal para sitios web y carga rápida"}
+              </p>
+            </div>
+
             <FileUploader
               onFilesSelected={handleUploadFiles}
               disabled={uploadLoading}
+              preset={optimizationPreset}
             />
             {uploadLoading && (
               <div className="mt-4 text-center">
@@ -190,6 +237,20 @@ export const Multimedia = () => {
         onClose={() => setPreviewFile(null)}
         file={previewFile}
       />
+
+      {showDeleteConfirm && (
+        <Alert
+          title={t("multimedia.deleteConfirmTitle")}
+          description={t("multimedia.deleteConfirmDescription", {
+            count: selectedItems.length,
+          })}
+          onAccept={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+          icon={TrashIcon}
+          iconClassName="size-6 text-white"
+          disabledConfirmButton={deleteLoading}
+        />
+      )}
     </div>
   );
 };

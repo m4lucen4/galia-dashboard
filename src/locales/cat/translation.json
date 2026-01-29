@@ -297,6 +297,8 @@
     "folderRequired": "Només es permeten lletres i números. Màxim 20 caràcters. Sense espais ni caràcters especials",
     "dropImages": "Arrossega les imatges aquí...",
     "dropImagesDescription": "Fins a 25 imatges, màx. 5MB cadascuna",
-    "noFilesOrFolder": "No hi ha arxius ni carpetes en aquesta ubicació"
+    "noFilesOrFolder": "No hi ha arxius ni carpetes en aquesta ubicació",
+    "deleteConfirmTitle": "Eliminar elements?",
+    "deleteConfirmDescription": "Estàs a punt d'eliminar {{count}} element(s). Aquesta acció no es pot desfer. Vols continuar?"
   }
 }

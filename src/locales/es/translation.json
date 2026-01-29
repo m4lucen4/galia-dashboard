@@ -303,6 +303,8 @@
     "folderRequired": "Sólo se permiten letras y números. Máximo 20 caracteres. Sin espacios ni caracteres especiales",
     "dropImages": "Arrastra las imágenes aquí...",
     "dropImagesDescription": "Hasta 25 imágenes, máx 5MB cada una",
-    "noFilesOrFolder": "No hay archivos ni carpetas en esta ubicación"
+    "noFilesOrFolder": "No hay archivos ni carpetas en esta ubicación",
+    "deleteConfirmTitle": "¿Eliminar elementos?",
+    "deleteConfirmDescription": "Estás a punto de eliminar {{count}} elemento(s). Esta acción no se puede deshacer. ¿Deseas continuar?"
   }
 }
