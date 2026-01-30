@@ -75,7 +75,7 @@ export const Multimedia = () => {
 
   const handleCreateFolder = async (folderName: string) => {
     const result = await dispatch(
-      createFolder({ userId: user.id, path: currentPath, folderName }),
+      createFolder({ userId: user.id, path: currentPath, folderName })
     );
     if (createFolder.fulfilled.match(result)) {
       setShowCreateFolder(false);
