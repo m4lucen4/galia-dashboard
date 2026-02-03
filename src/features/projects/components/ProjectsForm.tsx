@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useLayoutEffect } from "react";
 import { InputField } from "../../../components/shared/ui/InputField";
 import { Button } from "../../../components/shared/ui/Button";
 import {
@@ -6,6 +6,7 @@ import {
   ProjectImageData,
   UserDataProps,
   ProjectCollaboratorsProps,
+  FileItem as FileItemType,
 } from "../../../types";
 import { CreateProjectProps } from "../../../redux/actions/ProjectActions";
 import { KeywordInput } from "../../../components/shared/ui/KeywordInput";
@@ -21,7 +22,9 @@ import {
   fetchPrompts,
   fetchPromptsByUser,
 } from "../../../redux/actions/AdminActions";
-import { validateImageFiles, normalizeUrl } from "../../../helpers";
+import { normalizeUrl } from "../../../helpers";
+import { MediaGallerySelector } from "./MediaGallerySelector";
+import { PhotoIcon } from "@heroicons/react/24/outline";
 
 interface ProjectsFormProps {
   initialData?: ProjectDataProps;
@@ -59,10 +62,10 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   const { prompts } = useAppSelector((state) => state.admin);
 
   const [formData, setFormData] = useState<CreateProjectProps>(
-    initialData || defaultFormData
+    initialData || defaultFormData,
   );
   const [allImages, setAllImages] = useState<ImageItem[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showGallerySelector, setShowGallerySelector] = useState(false);
 
   useEffect(() => {
     if (user?.role === "admin") {
@@ -72,7 +75,12 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
     }
   }, [dispatch, user?.role, user?.uid]);
 
-  useEffect(() => {
+  // This effect is necessary to sync initialData prop changes to local state
+  // when editing different projects. While React discourages this pattern,
+  // it's required here because the form needs to maintain local state for
+  // user edits while also responding to prop changes when switching projects.
+  /* eslint-disable */
+  useLayoutEffect(() => {
     if (initialData) {
       setFormData(initialData);
 
@@ -83,17 +91,20 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
             type: "existing" as const,
             url: img.url,
             originalIndex: index,
-          })
+          }),
         );
         setAllImages(existingImageItems);
+      } else {
+        setAllImages([]);
       }
     }
   }, [initialData]);
+  /* eslint-enable */
 
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value, type } = e.target as HTMLInputElement;
 
@@ -105,62 +116,27 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
     }
   };
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const filesArray = Array.from(e.target.files);
+  const handleGallerySelect = (selectedFiles: FileItemType[]) => {
+    // Convert FileItem[] to ImageItem[] with type "existing"
+    const newImageItems: ImageItem[] = selectedFiles.map((file, index) => ({
+      id: `gallery-${file.id}`,
+      type: "existing" as const,
+      url: file.url,
+      originalIndex: allImages.length + index,
+    }));
 
-      try {
-        const currentImagesCount = allImages.length;
-        const validationResult = await validateImageFiles(filesArray, {
-          maxFileSize: 5 * 1024 * 1024, // 5MB
-          minAspectRatio: 0.8,
-          maxAspectRatio: 1.91,
-          maxImages: 10,
-          existingImagesCount: currentImagesCount,
-        });
+    setAllImages((prev) => [...prev, ...newImageItems]);
 
-        // Show size and format errors
-        if (validationResult.invalidFiles.length > 0) {
-          alert(
-            `${t("projects.imageSizeError")}:\n${validationResult.invalidFiles.join("\n")}\n\n${t("projects.maxSizeAllowed")}: 5MB`
-          );
-        }
+    // Also update formData.image_data to maintain the database structure
+    const newImageData: ProjectImageData[] = selectedFiles.map((file) => ({
+      url: file.url,
+      status: "pending" as const,
+    }));
 
-        // Show aspect ratio errors
-        if (validationResult.invalidAspectRatioFiles.length > 0) {
-          alert(
-            `${t("projects.imageAspectRatioError")}:\n${validationResult.invalidAspectRatioFiles.join("\n")}`
-          );
-        }
-
-        // Check if we had to limit the number of files
-        const totalValidFiles = validationResult.validFiles.length;
-        const totalValidFilesBeforeLimit =
-          filesArray.length -
-          validationResult.invalidFiles.length -
-          validationResult.invalidAspectRatioFiles.length;
-
-        if (totalValidFilesBeforeLimit > totalValidFiles) {
-          const maxNewImages = 10 - currentImagesCount;
-          alert(`${t("projects.maxImagesError")} ${maxNewImages}`);
-        }
-
-        const newImageItems: ImageItem[] = validationResult.validFiles.map(
-          (file, index) => ({
-            id: `new-${Date.now()}-${index}`,
-            type: "new" as const,
-            url: URL.createObjectURL(file),
-            file,
-            originalIndex: index,
-          })
-        );
-
-        setAllImages((prev) => [...prev, ...newImageItems]);
-      } catch (error) {
-        console.error("Error validating images:", error);
-        alert("Error al validar las imágenes. Por favor, inténtalo de nuevo.");
-      }
-    }
+    setFormData((prev) => ({
+      ...prev,
+      image_data: [...(prev.image_data || []), ...newImageData],
+    }));
   };
 
   const handleRemoveImage = (id: string) => {
@@ -180,7 +156,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
           .filter((img) => img.type === "existing")
           .map((img) => {
             const originalImage = initialData.image_data?.find(
-              (original) => original.url === img.url
+              (original) => original.url === img.url,
             );
             return (
               originalImage || {
@@ -208,7 +184,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
         .filter((img) => img.type === "existing")
         .map((img) => {
           const originalImage = initialData.image_data?.find(
-            (original) => original.url === img.url
+            (original) => original.url === img.url,
           );
           return (
             originalImage || {
@@ -226,7 +202,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   };
 
   const handleProjectCollaboratorsChange = (
-    collaborators: ProjectCollaboratorsProps[]
+    collaborators: ProjectCollaboratorsProps[],
   ) => {
     setFormData({ ...formData, projectCollaborators: collaborators });
   };
@@ -239,27 +215,16 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
       ? normalizeUrl(formData.weblink)
       : "";
 
-    const newImages = allImages.filter((img) => img.type === "new");
-    const newImageFiles = newImages
-      .map((img) => img.file)
-      .filter(Boolean) as File[];
-
     const updatedFormData = {
       ...formData,
       weblink: normalizedWeblink,
       image_data: [...(formData.image_data || [])],
     };
 
-    const projectDataWithImages: CreateProjectProps = {
-      ...updatedFormData,
-      images: newImageFiles.length > 0 ? newImageFiles : undefined,
-    };
-
-    onSubmit(projectDataWithImages);
+    onSubmit(updatedFormData);
   };
 
   const totalImagesCount = allImages.length;
-  const newImagesCount = allImages.filter((img) => img.type === "new").length;
 
   return (
     <form onSubmit={handleSubmit}>
@@ -337,32 +302,20 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-1">
             {t("projects.projectImages")} ({totalImagesCount}/10)
           </label>
-          <div className="mt-1 flex items-center">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageChange}
-              className="hidden"
-              id="project-images"
-              disabled={allImages.length >= 10}
-            />
-            <Button
-              title={t("projects.selectImages")}
+          <div className="mt-1">
+            <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => setShowGallerySelector(true)}
               disabled={allImages.length >= 10}
-            />
-            <span className="ml-3 text-sm text-gray-500">
-              {newImagesCount} {t("projects.selectedImages")}
-            </span>
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <PhotoIcon className="h-5 w-5 mr-2" />
+              {t("projects.selectFromGallery")}
+            </button>
           </div>
 
-          <p className="text-xs text-gray-500 mt-1">
-            {t("projects.imageLimit")}: 10 {t("projects.maxImages")}, 5MB{" "}
-            {t("projects.maxSizePerImage")}, proporciones desde 4:5 (vertical)
-            hasta 16:9 (panorámica)
+          <p className="text-xs text-gray-500 mt-2">
+            {t("projects.selectFromGalleryHelp")}
           </p>
 
           {/* Lista de imágenes con drag and drop */}
@@ -476,6 +429,14 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
           type="submit"
         />
       </div>
+
+      <MediaGallerySelector
+        isOpen={showGallerySelector}
+        onClose={() => setShowGallerySelector(false)}
+        onSelect={handleGallerySelect}
+        maxSelection={10}
+        currentSelectionCount={allImages.length}
+      />
     </form>
   );
 };

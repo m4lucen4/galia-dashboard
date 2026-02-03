@@ -186,7 +186,13 @@
     "professionPlaceholder": "Ej: Arquitecto, Ingeniero...",
     "collaboratorName": "Nombre",
     "collaboratorNamePlaceholder": "Nombre del colaborador",
-    "website": "Sitio web"
+    "website": "Sitio web",
+    "selectFromGallery": "Seleccionar de la galería",
+    "selectFromGalleryHelp": "Selecciona hasta 10 imágenes desde tu galería multimedia. Si necesitas subir más imágenes, ve primero a la sección Multimedia.",
+    "cancel": "Cancelar",
+    "addSelected": "Añadir seleccionadas",
+    "imagesSelected": "imágenes seleccionadas",
+    "selectImages": "Selecciona imágenes"
   },
   "previewProjects": {
     "title": "Vista previa de proyectos",
@@ -305,6 +311,8 @@
     "dropImagesDescription": "Hasta 25 imágenes, máx 5MB cada una",
     "noFilesOrFolder": "No hay archivos ni carpetas en esta ubicación",
     "deleteConfirmTitle": "¿Eliminar elementos?",
-    "deleteConfirmDescription": "Estás a punto de eliminar {{count}} elemento(s). Esta acción no se puede deshacer. ¿Deseas continuar?"
+    "deleteConfirmDescription": "Estás a punto de eliminar {{count}} elemento(s). Esta acción no se puede deshacer. ¿Deseas continuar?",
+    "noImages": "No hay imágenes disponibles",
+    "uploadImagesFirst": "Sube imágenes primero en la sección Multimedia"
   }
 }

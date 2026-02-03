@@ -186,7 +186,13 @@
     "professionPlaceholder": "Ex: Arquitecte, Enginyer...",
     "collaboratorName": "Nom",
     "collaboratorNamePlaceholder": "Nom del col·laborador",
-    "website": "Lloc web"
+    "website": "Lloc web",
+    "selectFromGallery": "Seleccionar de la galeria",
+    "selectFromGalleryHelp": "Selecciona fins a 10 imatges des de la teva galeria multimèdia. Si necessites pujar més imatges, ves primer a la secció Multimèdia.",
+    "cancel": "Cancel·lar",
+    "addSelected": "Afegir seleccionades",
+    "imagesSelected": "imatges seleccionades",
+    "selectImages": "Selecciona imatges"
   },
   "previewProjects": {
     "title": "Vista prèvia de projectes",
@@ -299,6 +305,8 @@
     "dropImagesDescription": "Fins a 25 imatges, màx. 5MB cadascuna",
     "noFilesOrFolder": "No hi ha arxius ni carpetes en aquesta ubicació",
     "deleteConfirmTitle": "Eliminar elements?",
-    "deleteConfirmDescription": "Estàs a punt d'eliminar {{count}} element(s). Aquesta acció no es pot desfer. Vols continuar?"
+    "deleteConfirmDescription": "Estàs a punt d'eliminar {{count}} element(s). Aquesta acció no es pot desfer. Vols continuar?",
+    "noImages": "No hi ha imatges disponibles",
+    "uploadImagesFirst": "Puja imatges primer a la secció Multimèdia"
   }
 }

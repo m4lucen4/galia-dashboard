@@ -41,7 +41,6 @@ export default function Navbar() {
       name: t("menu.multimedia"),
       href: "/multimedia",
       current: false,
-      adminOnly: true,
     },
     { name: t("menu.publishes"), href: "/preview-projects", current: false },
     { name: t("menu.gpts"), href: "/my-gpts", current: false },

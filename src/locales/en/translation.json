@@ -185,7 +185,13 @@
     "professionPlaceholder": "Ex: Architect, Engineer...",
     "collaboratorName": "Name",
     "collaboratorNamePlaceholder": "Collaborator's name",
-    "website": "Website"
+    "website": "Website",
+    "selectFromGallery": "Select from gallery",
+    "selectFromGalleryHelp": "Select up to 10 images from your multimedia gallery. If you need to upload more images, go to the Multimedia section first.",
+    "cancel": "Cancel",
+    "addSelected": "Add selected",
+    "imagesSelected": "images selected",
+    "selectImages": "Select images"
   },
   "previewProjects": {
     "title": "Project Preview",
@@ -298,6 +304,8 @@
     "dropImagesDescription": "Up to 25 images, max 5MB each",
     "noFilesOrFolder": "No files or folders in this location",
     "deleteConfirmTitle": "Delete items?",
-    "deleteConfirmDescription": "You are about to delete {{count}} item(s). This action cannot be undone. Do you want to continue?"
+    "deleteConfirmDescription": "You are about to delete {{count}} item(s). This action cannot be undone. Do you want to continue?",
+    "noImages": "No images available",
+    "uploadImagesFirst": "Upload images first in the Multimedia section"
   }
 }
