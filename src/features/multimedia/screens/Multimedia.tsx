@@ -75,7 +75,7 @@ export const Multimedia = () => {
 
   const handleCreateFolder = async (folderName: string) => {
     const result = await dispatch(
-      createFolder({ userId: user.id, path: currentPath, folderName })
+      createFolder({ userId: user.id, path: currentPath, folderName }),
     );
     if (createFolder.fulfilled.match(result)) {
       setShowCreateFolder(false);
@@ -175,7 +175,7 @@ export const Multimedia = () => {
               </div>
               <p className="mt-2 text-xs text-gray-500">
                 {optimizationPreset === "social" &&
-                  "Optimizado a 1200px, máx 4.5MB - Perfecto para Instagram, LinkedIn, Facebook"}
+                  "Optimizado a 2080px, máx 4.5MB - Perfecto para Instagram, LinkedIn, Facebook"}
                 {optimizationPreset === "web" &&
                   "Optimizado a 1920px, máx 3MB - Ideal para sitios web y carga rápida"}
               </p>

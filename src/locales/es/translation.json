@@ -91,7 +91,20 @@
     "posts": "Publicaciones",
     "viaFacebookPage": "Vía página de Facebook",
     "instagramDescription": "Para publicar en Instagram, debes conectar tu cuenta de Facebook y tener una página de empresa.",
-    "noInstagramConnection": "No hay conexión con Instagram"
+    "noInstagramConnection": "No hay conexión con Instagram",
+    "disconnectSynology": "¿Quieres desconectar tu cuenta de Synology?",
+    "disconnectSynologyDescription": "Al desconectar tu cuenta, ya no podrás gestionar tus archivos en Synology.",
+    "connectedSince": "Conectado desde",
+    "connecting": "Conectando...",
+    "synology": {
+      "connectTitle": "Conectar con Synology",
+      "connectDescription": "Crea tu cuenta de usuario en Synology para almacenar archivos de alta resolución.",
+      "username": "Nombre de usuario",
+      "usernamePlaceholder": "Introduce tu nombre de usuario",
+      "password": "Contraseña",
+      "passwordPlaceholder": "Introduce tu contraseña",
+      "createAndConnect": "Crear cuenta y conectar"
+    }
   },
   "publications": {
     "noPublications": "No hay publicaciones disponibles.",
@@ -191,8 +204,7 @@
     "selectFromGalleryHelp": "Selecciona hasta 10 imágenes desde tu galería multimedia. Si necesitas subir más imágenes, ve primero a la sección Multimedia.",
     "cancel": "Cancelar",
     "addSelected": "Añadir seleccionadas",
-    "imagesSelected": "imágenes seleccionadas",
-    "selectImages": "Selecciona imágenes"
+    "imagesSelected": "imágenes seleccionadas"
   },
   "previewProjects": {
     "title": "Vista previa de proyectos",

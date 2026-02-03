@@ -22,7 +22,7 @@ interface PresetConfig {
 const PRESETS: Record<SocialMediaPreset, PresetConfig> = {
   social: {
     maxSizeMB: 4.5, // Optimizado para Instagram, LinkedIn, Facebook
-    maxWidthOrHeight: 1200, // Balance entre Instagram (1080) y LinkedIn (1200)
+    maxWidthOrHeight: 2080, // Balance entre Instagram (1080) y LinkedIn (1200)
     quality: 0.85, // Buena calidad visual
     fileType: "image/jpeg",
   },
@@ -40,7 +40,7 @@ const PRESETS: Record<SocialMediaPreset, PresetConfig> = {
 export async function optimizeImage(
   file: File,
   preset: SocialMediaPreset = "web",
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
 ): Promise<File> {
   const config = PRESETS[preset];
 
@@ -73,7 +73,7 @@ export async function optimizeImage(
 export async function optimizeImages(
   files: File[],
   preset: SocialMediaPreset = "web",
-  onProgressUpdate?: (progress: OptimizationProgress[]) => void
+  onProgressUpdate?: (progress: OptimizationProgress[]) => void,
 ): Promise<File[]> {
   const progressMap = new Map<string, OptimizationProgress>();
 
@@ -157,7 +157,7 @@ export function formatFileSize(bytes: number): string {
  */
 export function calculateReduction(
   originalSize: number,
-  optimizedSize: number
+  optimizedSize: number,
 ): number {
   const reduction = ((originalSize - optimizedSize) / originalSize) * 100;
   return Math.round(reduction);
