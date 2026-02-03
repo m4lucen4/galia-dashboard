@@ -53,7 +53,7 @@ export const PreviewProjects = () => {
   const user = useAppSelector((state: RootState) => state.auth.user);
   const { userData } = useAppSelector((state: RootState) => state.user);
   const { projects, project, previewProjectUpdateRequest } = useAppSelector(
-    (state: RootState) => state.previewProject
+    (state: RootState) => state.previewProject,
   );
 
   const filteredProjects = projects.filter((project) => {
@@ -175,7 +175,7 @@ export const PreviewProjects = () => {
 
   const handleSocialNetworkChange = (
     network: "instagram" | "linkedln",
-    pageInfo?: LinkedInPageInfo | InstagramPageInfo
+    pageInfo?: LinkedInPageInfo | InstagramPageInfo,
   ) => {
     if (network === "instagram") {
       if (pageInfo) {
@@ -213,7 +213,7 @@ export const PreviewProjects = () => {
           publishDate,
           checkSocialNetworks: socialNetworks,
           publishNow,
-        })
+        }),
       )
         .unwrap()
         .then(() => {
@@ -259,7 +259,6 @@ export const PreviewProjects = () => {
         title={getDrawerTitle()}
         isOpen={drawerOpen}
         onClose={handleCloseDrawer}
-        closeOnOutsideClick={false}
       >
         {seeInstagram && project && userData && (
           <InstagramPost project={project} user={userData} />
