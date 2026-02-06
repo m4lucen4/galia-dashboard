@@ -34,13 +34,10 @@ export const Multimedia = () => {
     folders,
     selectedItems,
     loading,
-    error,
     createFolderLoading,
     uploadLoading,
     deleteLoading,
   } = useAppSelector((state: RootState) => state.multimedia);
-
-  console.log("Error", error);
 
   const [showUploader, setShowUploader] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);

@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { CalendarDaysIcon } from "@heroicons/react/24/outline";
+import {
+  CalendarDaysIcon,
+  Squares2X2Icon,
+  ListBulletIcon,
+} from "@heroicons/react/24/outline";
 
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { RootState } from "../../../redux/store";
@@ -49,6 +53,7 @@ export const PreviewProjects = () => {
   });
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const user = useAppSelector((state: RootState) => state.auth.user);
   const { userData } = useAppSelector((state: RootState) => state.user);
@@ -249,11 +254,37 @@ export const PreviewProjects = () => {
         </p>
       </div>
 
-      <Filters
-        projects={projects}
-        selectedFilter={selectedFilter}
-        onFilterChange={handleFilterChange}
-      />
+      <div className="flex items-center justify-between mb-4">
+        <Filters
+          projects={projects}
+          selectedFilter={selectedFilter}
+          onFilterChange={handleFilterChange}
+        />
+        <div className="hidden md:flex gap-2 ml-4">
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`p-2 rounded-md transition-colors ${
+              viewMode === "grid"
+                ? "bg-black text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+            title="Vista de cuadrícula"
+          >
+            <Squares2X2Icon className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={`p-2 rounded-md transition-colors ${
+              viewMode === "list"
+                ? "bg-black text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+            title="Vista de lista"
+          >
+            <ListBulletIcon className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
 
       <Drawer
         title={getDrawerTitle()}
@@ -279,6 +310,7 @@ export const PreviewProjects = () => {
         projects={filteredProjects}
         openMenuId={openMenuId}
         currentPage={currentPage}
+        viewMode={viewMode}
         onPageChange={handlePageChange}
         handleToggleMenu={handleToggleMenu}
         handleEditPreview={handleEditPreview}
