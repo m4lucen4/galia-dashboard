@@ -40,10 +40,14 @@ export const Multimedia = () => {
     deleteLoading,
   } = useAppSelector((state: RootState) => state.multimedia);
 
+  console.log("Error", error);
+
   const [showUploader, setShowUploader] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileItemType | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showUploadError, setShowUploadError] = useState(false);
+  const [uploadErrorFileName, setUploadErrorFileName] = useState<string>("");
   const [optimizationPreset, setOptimizationPreset] =
     useState<SocialMediaPreset>("social");
 
@@ -88,6 +92,12 @@ export const Multimedia = () => {
     );
     if (uploadFiles.fulfilled.match(result)) {
       setShowUploader(false);
+    } else if (uploadFiles.rejected.match(result)) {
+      // Extract the file name from the first file that failed
+      const fileName = selectedFiles[0]?.name || "desconocido";
+      setUploadErrorFileName(fileName);
+      setShowUploadError(true);
+      setShowUploader(false);
     }
   };
 
@@ -124,12 +134,6 @@ export const Multimedia = () => {
         </h3>
         <p className="text-sm text-gray-500">{t("multimedia.description")}</p>
       </div>
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600">{error}</p>
-        </div>
-      )}
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <Toolbar
@@ -249,6 +253,14 @@ export const Multimedia = () => {
           icon={TrashIcon}
           iconClassName="size-6 text-white"
           disabledConfirmButton={deleteLoading}
+        />
+      )}
+
+      {showUploadError && (
+        <Alert
+          title="Error en la subida de imagen"
+          description={`Hay un problema en la subida de la imagen ${uploadErrorFileName}, asegúrese que tiene un tamaño válido y el nombre del archivo no tiene caracteres especiales`}
+          onAccept={() => setShowUploadError(false)}
         />
       )}
     </div>
