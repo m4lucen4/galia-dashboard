@@ -9,7 +9,8 @@
     "to": "de",
     "of": "de",
     "results": "resultats",
-    "page": "Pàgina"
+    "page": "Pàgina",
+    "itemsPerPage": "Elements per pàgina"
   },
   "menu": {
     "confirm": "Confirmar",

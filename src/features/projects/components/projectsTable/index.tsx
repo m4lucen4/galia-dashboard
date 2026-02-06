@@ -111,19 +111,11 @@ export const ProjectsTable = ({
         return (
           <div className="flex flex-col gap-2">
             <span>{info.getValue()}</span>
-            {hasGoogleMaps && (
+            {hasGoogleMaps && project.showMap && (
               <Badge
-                title={
-                  project.showMap
-                    ? t("projects.extraInfoPublished")
-                    : t("projects.extraInfoPending")
-                }
-                primaryColor={project.showMap ? "green" : "yellow"}
-                url={
-                  project.showMap
-                    ? `https://guiadearquitectura.com/project/${project.id}`
-                    : undefined
-                }
+                title={t("projects.extraInfoPublished")}
+                primaryColor="green"
+                url={`https://guiadearquitectura.com/project/${project.id}`}
               />
             )}
           </div>

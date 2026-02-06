@@ -6,6 +6,7 @@ type CardsPaginationProps = {
   totalItems: number;
   itemsPerPage: number;
   onPageChange: (page: number) => void;
+  onItemsPerPageChange?: (itemsPerPage: number) => void;
 };
 
 export const CardsPagination = ({
@@ -14,6 +15,7 @@ export const CardsPagination = ({
   totalItems,
   itemsPerPage,
   onPageChange,
+  onItemsPerPageChange,
 }: CardsPaginationProps) => {
   const { t } = useTranslation();
 
@@ -76,7 +78,7 @@ export const CardsPagination = ({
         </button>
       </div>
       <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-        <div>
+        <div className="flex items-center gap-4">
           <p className="text-sm text-gray-700">
             {t("shared.showing")}{" "}
             <span className="font-medium">{startItem}</span> {t("shared.to")}{" "}
@@ -85,6 +87,26 @@ export const CardsPagination = ({
             <span className="font-medium">{totalItems}</span>{" "}
             {t("shared.results")}
           </p>
+          {onItemsPerPageChange && (
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="items-per-page"
+                className="text-sm text-gray-700 whitespace-nowrap"
+              >
+                {t("shared.itemsPerPage")}:
+              </label>
+              <select
+                id="items-per-page"
+                value={itemsPerPage}
+                onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+                className="block rounded-md border-gray-300 py-1.5 px-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+              >
+                <option value={6}>6</option>
+                <option value={12}>12</option>
+                <option value={24}>24</option>
+              </select>
+            </div>
+          )}
         </div>
         <div>
           <nav

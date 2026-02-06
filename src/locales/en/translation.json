@@ -9,7 +9,8 @@
     "to": "to",
     "of": "of",
     "results": "results",
-    "page": "Page"
+    "page": "Page",
+    "itemsPerPage": "Items per page"
   },
   "menu": {
     "confirm": "Confirm",

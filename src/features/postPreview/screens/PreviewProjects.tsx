@@ -54,6 +54,7 @@ export const PreviewProjects = () => {
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [itemsPerPage, setItemsPerPage] = useState<number>(6);
 
   const user = useAppSelector((state: RootState) => state.auth.user);
   const { userData } = useAppSelector((state: RootState) => state.user);
@@ -72,6 +73,11 @@ export const PreviewProjects = () => {
 
   const handleFilterChange = (filter: string) => {
     setSelectedFilter(filter);
+    setCurrentPage(1);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
     setCurrentPage(1);
   };
 
@@ -311,7 +317,9 @@ export const PreviewProjects = () => {
         openMenuId={openMenuId}
         currentPage={currentPage}
         viewMode={viewMode}
+        itemsPerPage={itemsPerPage}
         onPageChange={handlePageChange}
+        onItemsPerPageChange={handleItemsPerPageChange}
         handleToggleMenu={handleToggleMenu}
         handleEditPreview={handleEditPreview}
         handleDeletePreview={handleDeletePreview}

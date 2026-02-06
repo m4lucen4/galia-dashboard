@@ -16,7 +16,9 @@ interface CardsListProps {
   openMenuId: string | null;
   currentPage: number;
   viewMode: "grid" | "list";
+  itemsPerPage: number;
   onPageChange: (page: number) => void;
+  onItemsPerPageChange: (itemsPerPage: number) => void;
   handleToggleMenu: (projectId: string) => void;
   handleEditPreview: (project: PreviewProjectDataProps) => void;
   handleDeletePreview: (project: PreviewProjectDataProps) => void;
@@ -31,7 +33,9 @@ export const CardsList: React.FC<CardsListProps> = ({
   openMenuId,
   currentPage,
   viewMode,
+  itemsPerPage,
   onPageChange,
+  onItemsPerPageChange,
   handleToggleMenu,
   handleEditPreview,
   handleDeletePreview,
@@ -41,7 +45,6 @@ export const CardsList: React.FC<CardsListProps> = ({
   handlePublishAgain,
 }) => {
   const { t } = useTranslation();
-  const itemsPerPage = 6;
 
   const sortedProjects = [...projects].sort((a, b) => {
     if (a.state !== b.state) {
@@ -145,6 +148,7 @@ export const CardsList: React.FC<CardsListProps> = ({
           totalItems={totalItems}
           itemsPerPage={itemsPerPage}
           onPageChange={onPageChange}
+          onItemsPerPageChange={onItemsPerPageChange}
         />
       </div>
     );
@@ -162,7 +166,7 @@ export const CardsList: React.FC<CardsListProps> = ({
             >
               {/* Imagen a la izquierda */}
               {project.image_data && project.image_data.length > 0 ? (
-                <div className="w-full md:w-64 h-48 overflow-hidden flex-shrink-0">
+                <div className="w-full md:w-64 h-48 overflow-hidden shrink-0">
                   <img
                     src={
                       project.image_data.find(
@@ -174,7 +178,7 @@ export const CardsList: React.FC<CardsListProps> = ({
                   />
                 </div>
               ) : (
-                <div className="w-full md:w-64 h-48 bg-gray-200 flex items-center justify-center flex-shrink-0">
+                <div className="w-full md:w-64 h-48 bg-gray-200 flex items-center justify-center shrink-0">
                   <DocumentTextIcon className="w-12 h-12 text-gray-400" />
                 </div>
               )}
@@ -239,6 +243,7 @@ export const CardsList: React.FC<CardsListProps> = ({
         totalItems={totalItems}
         itemsPerPage={itemsPerPage}
         onPageChange={onPageChange}
+        onItemsPerPageChange={onItemsPerPageChange}
       />
     </div>
   );
