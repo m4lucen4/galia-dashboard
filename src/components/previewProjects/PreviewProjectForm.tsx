@@ -3,7 +3,6 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   updatePreviewProject,
   updateMainVersion,
-  fetchPreviewProjectById,
 } from "../../redux/actions/PreviewProjectActions";
 import { PreviewProjectDataProps, ProjectImageData } from "../../types";
 import { InputField } from "../shared/ui/InputField";
@@ -15,12 +14,14 @@ type PreviewProjectFormProps = {
   project: PreviewProjectDataProps;
   loading: boolean;
   onSave: () => void;
+  onIterateStart: () => void;
 };
 
 export const PreviewProjectForm = ({
   project,
   loading,
   onSave,
+  onIterateStart,
 }: PreviewProjectFormProps) => {
   const dispatch = useAppDispatch();
   const updateMainVersionRequest = useAppSelector(
@@ -49,7 +50,6 @@ export const PreviewProjectForm = ({
     }
     return 0;
   });
-  const [isIterating, setIsIterating] = useState(false);
   const [iterationInstructions, setIterationInstructions] = useState("");
   const MAX_INSTRUCTIONS_LENGTH = 200;
 
@@ -184,13 +184,8 @@ export const PreviewProjectForm = ({
   };
 
   const handleIteratePublication = async () => {
-    setIsIterating(true);
-
-    // Set timeout to stop loading after 30 seconds
-    setTimeout(() => {
-      setIsIterating(false);
-      dispatch(fetchPreviewProjectById(project.id));
-    }, 30000);
+    // Notify parent to close drawer and show full-screen loading
+    onIterateStart();
 
     try {
       const {
@@ -236,15 +231,11 @@ export const PreviewProjectForm = ({
     }
   };
 
-  if (updateMainVersionRequest.inProgress || isIterating) {
+  if (updateMainVersionRequest.inProgress) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <LoadingSpinner size="large" color="primary" />
-        <p className="mt-4 text-gray-500">
-          {isIterating
-            ? "Creando nueva publicación (esto puede tardar unos 30 segundos)..."
-            : "Actualizando versión principal..."}
-        </p>
+        <p className="mt-4 text-gray-500">Actualizando versión principal...</p>
       </div>
     );
   }
