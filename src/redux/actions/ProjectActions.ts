@@ -24,7 +24,7 @@ export const addProject = createAsyncThunk(
           prompt: projectData.prompt,
           user: projectData.user,
           weblink: projectData.weblink,
-          image_data: [],
+          image_data: projectData.image_data || [],
           publications: projectData.publications,
           googleMaps: projectData.googleMaps,
           category: projectData.category,
@@ -42,7 +42,25 @@ export const addProject = createAsyncThunk(
         });
       }
 
-      const imageData: ProjectImageData[] = [];
+      // Call n8n webhook to create project in Odoo
+      // if (newProject.id) {
+      //   const webhookUrl = `${
+      //     import.meta.env.VITE_N8N_CREATE_PROJECT_WEBHOOK
+      //   }?id=${newProject.id}`;
+
+      //   fetch(webhookUrl, {
+      //     method: "GET",
+      //     headers: {
+      //       Accept: "application/json",
+      //     },
+      //   }).catch((error) => {
+      //     console.error("Error calling n8n webhook:", error);
+      //     // Do not block project creation if webhook fails
+      //   });
+      // }
+
+      // Start with existing image_data from gallery selection
+      const imageData: ProjectImageData[] = [...(projectData.image_data || [])];
 
       if (
         projectData.images &&
@@ -109,14 +127,14 @@ export const addProject = createAsyncThunk(
       };
       return rejectWithValue(appError);
     }
-  }
+  },
 );
 
 export const updateProject = createAsyncThunk(
   "projects/updateProject",
   async (
     projectData: CreateProjectProps & { id: string },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const imageData = projectData.image_data || [];
@@ -124,7 +142,7 @@ export const updateProject = createAsyncThunk(
       if (projectData.images && projectData.images.length > 0) {
         const imagesToUpload = projectData.images.slice(
           0,
-          10 - imageData.length
+          10 - imageData.length,
         );
 
         for (const [index, image] of imagesToUpload.entries()) {
@@ -190,6 +208,23 @@ export const updateProject = createAsyncThunk(
         });
       }
 
+      // Call n8n webhook to update project in Odoo
+      // if (updatedProject.id) {
+      //   const webhookUrl = `${
+      //     import.meta.env.VITE_N8N_CREATE_PROJECT_WEBHOOK
+      //   }?id=${updatedProject.id}`;
+
+      //   fetch(webhookUrl, {
+      //     method: "GET",
+      //     headers: {
+      //       Accept: "application/json",
+      //     },
+      //   }).catch((error) => {
+      //     console.error("Error calling n8n webhook:", error);
+      //     // Do not block project update if webhook fails
+      //   });
+      // }
+
       return {
         project: updatedProject,
         message: "Project updated successfully",
@@ -204,7 +239,7 @@ export const updateProject = createAsyncThunk(
       };
       return rejectWithValue(appError);
     }
-  }
+  },
 );
 
 export const fetchProjects = createAsyncThunk(
@@ -233,7 +268,7 @@ export const fetchProjects = createAsyncThunk(
             role,
             language
           )
-        `
+        `,
         )
         .order("created_at", { ascending: false });
 
@@ -264,7 +299,7 @@ export const fetchProjects = createAsyncThunk(
       };
       return rejectWithValue(appError);
     }
-  }
+  },
 );
 
 export const fetchProjectById = createAsyncThunk(
@@ -304,7 +339,7 @@ export const fetchProjectById = createAsyncThunk(
       };
       return rejectWithValue(appError);
     }
-  }
+  },
 );
 
 export const fetchProjectsByUserId = createAsyncThunk(
@@ -346,7 +381,7 @@ export const fetchProjectsByUserId = createAsyncThunk(
       };
       return rejectWithValue(appError);
     }
-  }
+  },
 );
 
 export const updateProjectPreview = createAsyncThunk(
@@ -402,7 +437,7 @@ export const updateProjectPreview = createAsyncThunk(
       };
       return rejectWithValue(appError);
     }
-  }
+  },
 );
 
 export const updateProjectDraft = createAsyncThunk(
@@ -440,7 +475,7 @@ export const updateProjectDraft = createAsyncThunk(
       };
       return rejectWithValue(appError);
     }
-  }
+  },
 );
 
 export const deleteProject = createAsyncThunk(
@@ -502,7 +537,7 @@ export const deleteProject = createAsyncThunk(
       };
       return rejectWithValue(appError);
     }
-  }
+  },
 );
 
 export const assignProject = createAsyncThunk(
@@ -512,7 +547,7 @@ export const assignProject = createAsyncThunk(
       projectId,
       assignedUserId,
     }: { projectId: string; assignedUserId: string },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const { data: updatedProject, error } = await supabase
@@ -541,5 +576,5 @@ export const assignProject = createAsyncThunk(
       };
       return rejectWithValue(appError);
     }
-  }
+  },
 );

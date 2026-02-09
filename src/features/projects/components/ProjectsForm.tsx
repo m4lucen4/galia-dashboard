@@ -150,25 +150,30 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
 
       const newImages = prev.filter((img) => img.id !== id);
 
-      // if the removed image was an existing one, update formData.image_data
-      if (imageToRemove?.type === "existing" && initialData?.image_data) {
-        const updatedExistingImages: ProjectImageData[] = newImages
+      // Update formData.image_data for existing images (both from edit mode and gallery-selected)
+      if (imageToRemove?.type === "existing") {
+        const updatedImageData: ProjectImageData[] = newImages
           .filter((img) => img.type === "existing")
           .map((img) => {
-            const originalImage = initialData.image_data?.find(
-              (original) => original.url === img.url,
-            );
-            return (
-              originalImage || {
-                url: img.url,
-                status: "pending" as const,
+            // Try to find original image data if in edit mode
+            if (initialData?.image_data) {
+              const originalImage = initialData.image_data.find(
+                (original) => original.url === img.url,
+              );
+              if (originalImage) {
+                return originalImage;
               }
-            );
+            }
+            // For gallery-selected images, create basic image data
+            return {
+              url: img.url,
+              status: "pending" as const,
+            };
           });
 
         setFormData((prevData) => ({
           ...prevData,
-          image_data: updatedExistingImages,
+          image_data: updatedImageData,
         }));
       }
 
@@ -179,26 +184,30 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   const handleReorderImages = (reorderedImages: ImageItem[]) => {
     setAllImages(reorderedImages);
 
-    if (initialData?.image_data) {
-      const reorderedExistingImages: ProjectImageData[] = reorderedImages
-        .filter((img) => img.type === "existing")
-        .map((img) => {
-          const originalImage = initialData.image_data?.find(
+    // Update formData.image_data with reordered images
+    const reorderedImageData: ProjectImageData[] = reorderedImages
+      .filter((img) => img.type === "existing")
+      .map((img) => {
+        // If we have initialData, try to find the original image data
+        if (initialData?.image_data) {
+          const originalImage = initialData.image_data.find(
             (original) => original.url === img.url,
           );
-          return (
-            originalImage || {
-              url: img.url,
-              status: "pending" as const,
-            }
-          );
-        });
+          if (originalImage) {
+            return originalImage;
+          }
+        }
+        // For gallery-selected images or new images, create basic image data
+        return {
+          url: img.url,
+          status: "pending" as const,
+        };
+      });
 
-      setFormData((prevData) => ({
-        ...prevData,
-        image_data: reorderedExistingImages,
-      }));
-    }
+    setFormData((prevData) => ({
+      ...prevData,
+      image_data: reorderedImageData,
+    }));
   };
 
   const handleProjectCollaboratorsChange = (
