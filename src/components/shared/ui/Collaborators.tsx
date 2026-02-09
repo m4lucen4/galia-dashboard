@@ -73,13 +73,36 @@ const SortableCollaboratorItem: React.FC<SortableCollaboratorItemProps> = ({
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
-      className={`border border-gray-200 rounded-lg p-4 bg-gray-50 cursor-move hover:border-gray-300 transition-colors ${isDragging ? "z-50" : ""}`}
+      className={`border border-gray-200 rounded-lg p-4 bg-gray-50 hover:border-gray-300 transition-colors ${isDragging ? "z-50" : ""}`}
     >
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-medium text-gray-700">
-          {t("projects.collaborator")} {index + 1}
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 transition-colors p-1"
+            title="Arrastrar para reordenar"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <span className="text-sm font-medium text-gray-700">
+            {t("projects.collaborator")} {index + 1}
+          </span>
+        </div>
         <button
           type="button"
           onClick={(e) => {
