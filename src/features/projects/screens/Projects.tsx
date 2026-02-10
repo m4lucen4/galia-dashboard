@@ -205,13 +205,19 @@ export const Projects = () => {
 
   const handleConfirmLaunch = () => {
     if (selectedProjectId) {
+      const project = projects.find((p) => p.id === selectedProjectId);
+
       dispatch(updateProjectPreview(selectedProjectId))
         .unwrap()
         .then(() => {
           fetchProjectsData();
           setShowLaunchModal(false);
-          // Start listening for realtime updates
-          setProcessingProjectId(selectedProjectId);
+
+          if (project?.requiredAI) {
+            setProcessingProjectId(selectedProjectId);
+          } else {
+            setShowSuccessAlert(true);
+          }
         })
         .catch((error) => {
           console.error("Error launching project:", error);
