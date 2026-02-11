@@ -4,11 +4,20 @@ import {
   updatePreviewProject,
   updateMainVersion,
 } from "../../redux/actions/PreviewProjectActions";
-import { PreviewProjectDataProps, ProjectImageData } from "../../types";
+import {
+  PreviewProjectDataProps,
+  ProjectImageData,
+  FileItem as FileItemType,
+} from "../../types";
 import { InputField } from "../shared/ui/InputField";
 import { Button } from "../shared/ui/Button";
 import { supabase } from "../../helpers/supabase";
 import { LoadingSpinner } from "../shared/ui/LoadingSpinner";
+import { MediaGallerySelector } from "../../features/projects/components/MediaGallerySelector";
+import {
+  PhotoIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 
 type PreviewProjectFormProps = {
   project: PreviewProjectDataProps;
@@ -16,6 +25,8 @@ type PreviewProjectFormProps = {
   onSave: () => void;
   onIterateStart: () => void;
 };
+
+const MAX_IMAGES = 10;
 
 export const PreviewProjectForm = ({
   project,
@@ -52,6 +63,7 @@ export const PreviewProjectForm = ({
   });
   const [iterationInstructions, setIterationInstructions] = useState("");
   const MAX_INSTRUCTIONS_LENGTH = 200;
+  const [showGallerySelector, setShowGallerySelector] = useState(false);
 
   const handlePreviousVersion = () => {
     if (project.versions && currentVersionIndex > 0) {
@@ -113,6 +125,20 @@ export const PreviewProjectForm = ({
         return img;
       }),
     );
+  };
+
+  const handleRemoveImage = (imageUrl: string) => {
+    setImages((currentImages) =>
+      currentImages.filter((img) => img.url !== imageUrl),
+    );
+  };
+
+  const handleGallerySelect = (selectedFiles: FileItemType[]) => {
+    const newImageData: ProjectImageData[] = selectedFiles.map((file) => ({
+      url: file.url,
+      status: "pending" as const,
+    }));
+    setImages((prev) => [...prev, ...newImageData]);
   };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -429,9 +455,20 @@ export const PreviewProjectForm = ({
       )}
 
       <div>
-        <h4 className="text-sm font-medium text-gray-700 mb-2">
-          Imágenes de la publicación
-        </h4>
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-sm font-medium text-gray-700">
+            Imágenes de la publicación
+          </h4>
+          {images.length < MAX_IMAGES && (
+            <button
+              onClick={() => setShowGallerySelector(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
+            >
+              <PhotoIcon className="h-4 w-4" />
+              <span>Multimedia</span>
+            </button>
+          )}
+        </div>
         <p className="text-xs text-gray-500 mb-3">
           Selecciona las imágenes que quieres incluir en la publicación. Las
           imágenes no seleccionadas no aparecerán en las publicaciones. Arrastra
@@ -442,7 +479,7 @@ export const PreviewProjectForm = ({
           {images.map((image, index) => (
             <div
               key={`${image.url}-${index}`}
-              className={`relative border rounded-md overflow-hidden cursor-move transition-all duration-200 ${
+              className={`relative group border rounded-md overflow-hidden cursor-move transition-all duration-200 ${
                 draggedIndex === index
                   ? "opacity-50 scale-95 shadow-lg"
                   : "hover:shadow-md"
@@ -471,6 +508,15 @@ export const PreviewProjectForm = ({
                   <path d="M14 6a2 2 0 110-4 2 2 0 010 4zM14 12a2 2 0 110-4 2 2 0 010 4zM14 18a2 2 0 110-4 2 2 0 010 4z" />
                 </svg>
               </div>
+
+              {/* Botón eliminar */}
+              <button
+                onClick={() => handleRemoveImage(image.url)}
+                className="absolute top-2 right-10 p-1 bg-red-500 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+                title="Eliminar imagen"
+              >
+                <XMarkIcon className="w-3.5 h-3.5" />
+              </button>
 
               <img
                 src={image.url}
@@ -508,6 +554,14 @@ export const PreviewProjectForm = ({
           onClick={handleSave}
         />
       </div>
+
+      <MediaGallerySelector
+        isOpen={showGallerySelector}
+        onClose={() => setShowGallerySelector(false)}
+        onSelect={handleGallerySelect}
+        maxSelection={MAX_IMAGES}
+        currentSelectionCount={images.length}
+      />
     </div>
   );
 };
