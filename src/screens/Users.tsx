@@ -6,8 +6,8 @@ import {
   fetchUsers,
   updateUser,
   UpdateUserProps,
+  CreateUserProps,
 } from "../redux/actions/UserActions";
-import { CreateUserProps } from "../redux/actions/UserActions";
 import { UsersTable } from "../components/users/UsersTable";
 import { Drawer } from "../components/shared/ui/Drawer";
 import { UsersForm } from "../components/users/UsersForm";
@@ -66,6 +66,14 @@ export const Users = () => {
         vat: formData.vat,
         description: formData.description,
         role: formData.role,
+        address: formData.address,
+        postal_code: formData.postal_code,
+        city: formData.city,
+        province: formData.province,
+        country: formData.country,
+        job_position: formData.job_position,
+        web: formData.web,
+        tags: formData.tags,
       };
 
       dispatch(updateUser(updateData))
@@ -99,6 +107,14 @@ export const Users = () => {
       description: userData.description || "",
       vat: userData.vat || "",
       role: userData.role,
+      address: userData.address || "",
+      postal_code: userData.postal_code || "",
+      city: userData.city || "",
+      province: userData.province || "",
+      country: userData.country || "",
+      job_position: userData.job_position || "",
+      web: userData.web || "",
+      tags: userData.tags || "",
     };
   };
 

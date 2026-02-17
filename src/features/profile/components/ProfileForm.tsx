@@ -100,6 +100,64 @@ export const ProfileForm = ({
           />
         </div>
       </div>
+      {/* Separador */}
+      <div className="my-6 border-t border-gray-300"></div>
+
+      {/* Bloque: Información Adicional */}
+      <div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="md:col-span-2">
+          <InputField
+            id="address"
+            label={t("profile.address")}
+            type="text"
+            disabled={!isEditing}
+            value={formData.address ?? ""}
+            onChange={onChange}
+            className={getInputClassName(isEditing)}
+          />
+        </div>
+        <InputField
+          id="city"
+          label={t("profile.city")}
+          type="text"
+          disabled={!isEditing}
+          value={formData.city ?? ""}
+          onChange={onChange}
+          className={getInputClassName(isEditing)}
+        />
+        <InputField
+          id="postal_code"
+          label={t("profile.postalCode")}
+          type="text"
+          disabled={!isEditing}
+          value={formData.postal_code ?? ""}
+          onChange={onChange}
+          className={getInputClassName(isEditing)}
+        />
+        <InputField
+          id="province"
+          label={t("profile.province")}
+          type="text"
+          disabled={!isEditing}
+          value={formData.province ?? ""}
+          onChange={onChange}
+          className={getInputClassName(isEditing)}
+        />
+        <InputField
+          id="country"
+          label={t("profile.country")}
+          type="text"
+          disabled={!isEditing}
+          value={formData.country ?? ""}
+          onChange={onChange}
+          className={getInputClassName(isEditing)}
+        />
+      </div>
+
+      {/* Separador */}
+      <div className="my-6 border-t border-gray-300"></div>
+
+      {/* Bloque: Información Empresarial */}
       <div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-4">
         <InputField
           id="company"
@@ -108,7 +166,15 @@ export const ProfileForm = ({
           disabled={!isEditing}
           value={formData.company ?? ""}
           onChange={onChange}
-          required
+          className={getInputClassName(isEditing)}
+        />
+        <InputField
+          id="job_position"
+          label={t("profile.jobPosition")}
+          type="text"
+          disabled={!isEditing}
+          value={formData.job_position ?? ""}
+          onChange={onChange}
           className={getInputClassName(isEditing)}
         />
         <InputField
@@ -118,10 +184,31 @@ export const ProfileForm = ({
           disabled={!isEditing}
           value={formData.vat ?? ""}
           onChange={onChange}
-          required
+          className={getInputClassName(isEditing)}
+        />
+        <InputField
+          id="web"
+          label={t("profile.web")}
+          type="url"
+          disabled={!isEditing}
+          value={formData.web ?? ""}
+          onChange={onChange}
+          className={getInputClassName(isEditing)}
+        />
+        <InputField
+          id="tags"
+          label={t("profile.tags")}
+          type="text"
+          disabled={!isEditing}
+          value={formData.tags ?? ""}
+          onChange={onChange}
           className={getInputClassName(isEditing)}
         />
       </div>
+
+      {/* Separador */}
+      <div className="my-6 border-t border-gray-300"></div>
+
       <div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-4">
         <SelectField
           id="language"

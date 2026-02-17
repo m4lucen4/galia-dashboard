@@ -60,7 +60,16 @@
     "inactive": "Inactive",
     "state": "Status",
     "actions": "Actions",
-    "edit": "Edit"
+    "edit": "Edit",
+    "address": "Address",
+    "postalCode": "Postal Code",
+    "city": "City",
+    "province": "Province",
+    "country": "Country",
+    "jobPosition": "Job Position",
+    "web": "Website",
+    "tags": "Tags",
+    "addTag": "Type and press Enter to add"
   },
   "settings": {
     "title": "Settings",
@@ -261,7 +270,15 @@
     "newPassword": "New password",
     "confirmPassword": "Confirm password",
     "changeAvatar": "Change avatar",
-    "descriptionProfile": "Profile description"
+    "descriptionProfile": "Profile description",
+    "address": "Address",
+    "postalCode": "Postal Code",
+    "city": "City",
+    "province": "Province",
+    "country": "Country",
+    "jobPosition": "Job Position",
+    "web": "Website",
+    "tags": "Tags"
   },
   "admin": {
     "title": "My GPTs",

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { CreateUserProps } from "../../redux/actions/UserActions";
 import { InputField } from "../shared/ui/InputField";
 import { Button } from "../shared/ui/Button";
@@ -31,24 +31,26 @@ export const UsersForm: React.FC<UsersFormProps> = ({
     vat: "",
     description: "",
     role: "customer",
+    address: "",
+    postal_code: "",
+    city: "",
+    province: "",
+    country: "",
+    job_position: "",
+    web: "",
+    tags: "",
   };
 
   const [formData, setFormData] = useState<CreateUserProps>(
-    initialData || defaultFormData
+    initialData ?? defaultFormData,
   );
 
   const [passwordError, setPasswordError] = useState("");
 
-  useEffect(() => {
-    if (initialData) {
-      setFormData(initialData);
-    }
-  }, [initialData]);
-
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value, type } = e.target as HTMLInputElement;
 
@@ -82,6 +84,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit}>
+      {/* Bloque 1: Información Principal */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <InputField
           id="first_name"
@@ -116,20 +119,6 @@ export const UsersForm: React.FC<UsersFormProps> = ({
           onChange={handleChange}
           required
         />
-        <InputField
-          id="company"
-          label={t("users.company")}
-          type="text"
-          value={formData.company}
-          onChange={handleChange}
-        />
-        <InputField
-          id="vat"
-          label={t("users.vat")}
-          type="text"
-          value={formData.vat}
-          onChange={handleChange}
-        />
         {isEditMode ? null : (
           <InputField
             id="password"
@@ -155,6 +144,92 @@ export const UsersForm: React.FC<UsersFormProps> = ({
           required
           className="mb-2"
         />
+      </div>
+
+      {/* Separador */}
+      <div className="my-6 border-t border-gray-300"></div>
+
+      {/* Bloque 2: Información Adicional */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="md:col-span-2">
+          <InputField
+            id="address"
+            label={t("users.address")}
+            type="text"
+            value={formData.address || ""}
+            onChange={handleChange}
+          />
+        </div>
+        <InputField
+          id="city"
+          label={t("users.city")}
+          type="text"
+          value={formData.city || ""}
+          onChange={handleChange}
+        />
+        <InputField
+          id="postal_code"
+          label={t("users.postalCode")}
+          type="text"
+          value={formData.postal_code || ""}
+          onChange={handleChange}
+        />
+        <InputField
+          id="province"
+          label={t("users.province")}
+          type="text"
+          value={formData.province || ""}
+          onChange={handleChange}
+        />
+        <InputField
+          id="country"
+          label={t("users.country")}
+          type="text"
+          value={formData.country || ""}
+          onChange={handleChange}
+        />
+      </div>
+
+      {/* Separador */}
+      <div className="my-6 border-t border-gray-300"></div>
+
+      {/* Bloque 3: Información Empresarial */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <InputField
+          id="company"
+          label={t("users.company")}
+          type="text"
+          value={formData.company}
+          onChange={handleChange}
+        />
+        <InputField
+          id="job_position"
+          label={t("users.jobPosition")}
+          type="text"
+          value={formData.job_position || ""}
+          onChange={handleChange}
+        />
+        <InputField
+          id="vat"
+          label={t("users.vat")}
+          type="text"
+          value={formData.vat}
+          onChange={handleChange}
+        />
+        <InputField
+          id="web"
+          label={t("users.web")}
+          type="url"
+          value={formData.web || ""}
+          onChange={handleChange}
+        />
+        <InputField
+          id="tags"
+          label={t("users.tags")}
+          type="text"
+          value={formData.tags || ""}
+          onChange={handleChange}
+        />
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -169,6 +244,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
           </label>
         </div>
       </div>
+
       <div className="mt-6">
         <Button
           fullWidth

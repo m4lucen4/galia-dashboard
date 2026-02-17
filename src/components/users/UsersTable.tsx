@@ -30,8 +30,8 @@ export const UsersTable = ({
   const [sorting, setSorting] = useState<SortingState>([]);
   const dispatch = useAppDispatch();
 
-  const handleEditClick = (user: UserDataProps) => {
-    dispatch(fetchUserByUid(user.uid));
+  const handleEditClick = async (user: UserDataProps) => {
+    await dispatch(fetchUserByUid(user.uid)).unwrap();
     onEditUser();
   };
 

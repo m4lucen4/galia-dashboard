@@ -153,6 +153,14 @@ export const addUser = createAsyncThunk(
         vat: userData.vat,
         description: userData.description,
         role: userData.role,
+        address: userData.address,
+        postal_code: userData.postal_code,
+        city: userData.city,
+        province: userData.province,
+        country: userData.country,
+        job_position: userData.job_position,
+        web: userData.web,
+        tags: userData.tags,
       });
 
       if (dbError) {
@@ -248,6 +256,17 @@ export const updateUser = createAsyncThunk(
       if (userData.role !== undefined) updateData.role = userData.role;
       if (userData.language !== undefined)
         updateData.language = userData.language;
+      if (userData.address !== undefined) updateData.address = userData.address;
+      if (userData.postal_code !== undefined)
+        updateData.postal_code = userData.postal_code;
+      if (userData.city !== undefined) updateData.city = userData.city;
+      if (userData.province !== undefined)
+        updateData.province = userData.province;
+      if (userData.country !== undefined) updateData.country = userData.country;
+      if (userData.job_position !== undefined)
+        updateData.job_position = userData.job_position;
+      if (userData.web !== undefined) updateData.web = userData.web;
+      if (userData.tags !== undefined) updateData.tags = userData.tags;
 
       const { error: dbError } = await supabase
         .from("userData")
@@ -361,6 +380,17 @@ export const updateProfile = createAsyncThunk(
       if (userData.description !== undefined)
         updateData.description = userData.description;
       if (userData.role !== undefined) updateData.role = userData.role;
+      if (userData.address !== undefined) updateData.address = userData.address;
+      if (userData.postal_code !== undefined)
+        updateData.postal_code = userData.postal_code;
+      if (userData.city !== undefined) updateData.city = userData.city;
+      if (userData.province !== undefined)
+        updateData.province = userData.province;
+      if (userData.country !== undefined) updateData.country = userData.country;
+      if (userData.job_position !== undefined)
+        updateData.job_position = userData.job_position;
+      if (userData.web !== undefined) updateData.web = userData.web;
+      if (userData.tags !== undefined) updateData.tags = userData.tags;
 
       const { error: dbError } = await supabase
         .from("userData")

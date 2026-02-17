@@ -61,7 +61,16 @@
     "inactive": "Inactiu",
     "state": "Estat",
     "actions": "Accions",
-    "edit": "Editar"
+    "edit": "Editar",
+    "address": "Adreça",
+    "postalCode": "Codi Postal",
+    "city": "Ciutat",
+    "province": "Província",
+    "country": "País",
+    "jobPosition": "Càrrec",
+    "web": "Web",
+    "tags": "Etiquetes",
+    "addTag": "Escriu i prem Enter per afegir"
   },
   "settings": {
     "title": "Configuració",
@@ -262,7 +271,15 @@
     "newPassword": "Nova contrasenya",
     "confirmPassword": "Confirmar contrasenya",
     "changeAvatar": "Canviar avatar",
-    "descriptionProfile": "Descripció del perfil"
+    "descriptionProfile": "Descripció del perfil",
+    "address": "Adreça",
+    "postalCode": "Codi Postal",
+    "city": "Ciutat",
+    "province": "Província",
+    "country": "País",
+    "jobPosition": "Càrrec",
+    "web": "Web",
+    "tags": "Etiquetes"
   },
   "admin": {
     "title": "Els meus GPTs",

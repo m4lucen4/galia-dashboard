@@ -161,6 +161,14 @@ export const useProfileHandlers = ({
         role: userData.role,
         password: "",
         language: userData.language || "",
+        address: userData.address || "",
+        postal_code: userData.postal_code || "",
+        city: userData.city || "",
+        province: userData.province || "",
+        country: userData.country || "",
+        job_position: userData.job_position || "",
+        web: userData.web || "",
+        tags: userData.tags || "",
       });
     }
   };

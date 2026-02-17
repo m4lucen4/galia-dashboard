@@ -23,6 +23,14 @@ export type UserDataProps = {
   vat: string;
   role: string;
   language?: string;
+  address?: string;
+  postal_code?: string;
+  city?: string;
+  province?: string;
+  country?: string;
+  job_position?: string;
+  web?: string;
+  tags?: string;
 };
 
 export type ProjectImageData = {
