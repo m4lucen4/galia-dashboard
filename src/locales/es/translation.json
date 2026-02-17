@@ -93,19 +93,8 @@
     "viaFacebookPage": "Vía página de Facebook",
     "instagramDescription": "Para publicar en Instagram, debes conectar tu cuenta de Facebook y tener una página de empresa.",
     "noInstagramConnection": "No hay conexión con Instagram",
-    "disconnectSynology": "¿Quieres desconectar tu cuenta de Synology?",
-    "disconnectSynologyDescription": "Al desconectar tu cuenta, ya no podrás gestionar tus archivos en Synology.",
     "connectedSince": "Conectado desde",
-    "connecting": "Conectando...",
-    "synology": {
-      "connectTitle": "Conectar con Synology",
-      "connectDescription": "Crea tu cuenta de usuario en Synology para almacenar archivos de alta resolución.",
-      "username": "Nombre de usuario",
-      "usernamePlaceholder": "Introduce tu nombre de usuario",
-      "password": "Contraseña",
-      "passwordPlaceholder": "Introduce tu contraseña",
-      "createAndConnect": "Crear cuenta y conectar"
-    }
+    "connecting": "Conectando..."
   },
   "publications": {
     "noPublications": "No hay publicaciones disponibles.",

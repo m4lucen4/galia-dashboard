@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   createColumnHelper,
-  flexRender,
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
@@ -14,7 +13,7 @@ import { useAppDispatch } from "../../redux/hooks";
 import { fetchUserByUid } from "../../redux/actions/UserActions";
 import { Button } from "../shared/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Pagination } from "../shared/ui/Pagination";
+import { Table } from "../shared/ui/Table";
 
 type UsersTableProps = {
   users: UserDataProps[];
@@ -111,63 +110,17 @@ export const UsersTable = ({
     columnResizeMode: "onChange",
     initialState: {
       pagination: {
-        pageSize: 5,
+        pageSize: 10,
       },
     },
   });
 
-  if (isLoading) {
-    return <LoadingSpinner fullPage />;
-  }
-
-  if (!users.length) {
-    return (
-      <div className="text-center py-8 text-gray-500">No registered users</div>
-    );
-  }
-
   return (
-    <div className="bg-white my-6 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer bg-gray-100"
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    <div className="flex items-center">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {{
-                        asc: " 🔼",
-                        desc: " 🔽",
-                      }[header.column.getIsSorted() as string] || null}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <Pagination table={table} />
-    </div>
+    <Table
+      table={table}
+      isLoading={isLoading}
+      emptyMessage="No registered users"
+      LoadingComponent={LoadingSpinner}
+    />
   );
 };
