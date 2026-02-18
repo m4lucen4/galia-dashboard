@@ -52,7 +52,7 @@ export const fetchUsers = createAsyncThunk(
       };
       return rejectWithValue(appError);
     }
-  }
+  },
 );
 
 export const fetchUserByUid = createAsyncThunk(
@@ -93,7 +93,7 @@ export const fetchUserByUid = createAsyncThunk(
       };
       return rejectWithValue(appError);
     }
-  }
+  },
 );
 
 export const addUser = createAsyncThunk(
@@ -216,7 +216,21 @@ export const addUser = createAsyncThunk(
         console.error("Network error sending welcome email:", emailError);
       }
 
-      // 7. Return the created user data
+      // 7. Call n8n webhook with user id
+
+      const webhookUrl = import.meta.env.VITE_N8N_CREATE_PROJECT_WEBHOOK;
+      if (webhookUrl && userRecord.id) {
+        fetch(`${webhookUrl}?id=${userRecord.id}`, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        }).catch((webhookError) => {
+          console.error("Error calling n8n webhook:", webhookError);
+        });
+      }
+
+      // 8. Return the created user data
       return {
         user: userRecord,
         message: "User created successfully",
@@ -228,7 +242,7 @@ export const addUser = createAsyncThunk(
       };
       return rejectWithValue(appError);
     }
-  }
+  },
 );
 
 export const updateUser = createAsyncThunk(
@@ -305,7 +319,7 @@ export const updateUser = createAsyncThunk(
       };
       return rejectWithValue(appError);
     }
-  }
+  },
 );
 
 export const updateProfile = createAsyncThunk(
@@ -433,5 +447,5 @@ export const updateProfile = createAsyncThunk(
       };
       return rejectWithValue(appError);
     }
-  }
+  },
 );

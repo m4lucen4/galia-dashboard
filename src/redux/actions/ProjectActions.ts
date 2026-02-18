@@ -42,23 +42,6 @@ export const addProject = createAsyncThunk(
         });
       }
 
-      // Call n8n webhook to create project in Odoo
-      // if (newProject.id) {
-      //   const webhookUrl = `${
-      //     import.meta.env.VITE_N8N_CREATE_PROJECT_WEBHOOK
-      //   }?id=${newProject.id}`;
-
-      //   fetch(webhookUrl, {
-      //     method: "GET",
-      //     headers: {
-      //       Accept: "application/json",
-      //     },
-      //   }).catch((error) => {
-      //     console.error("Error calling n8n webhook:", error);
-      //     // Do not block project creation if webhook fails
-      //   });
-      // }
-
       // Start with existing image_data from gallery selection
       const imageData: ProjectImageData[] = [...(projectData.image_data || [])];
 
@@ -207,23 +190,6 @@ export const updateProject = createAsyncThunk(
           status: error.code,
         });
       }
-
-      // Call n8n webhook to update project in Odoo
-      // if (updatedProject.id) {
-      //   const webhookUrl = `${
-      //     import.meta.env.VITE_N8N_CREATE_PROJECT_WEBHOOK
-      //   }?id=${updatedProject.id}`;
-
-      //   fetch(webhookUrl, {
-      //     method: "GET",
-      //     headers: {
-      //       Accept: "application/json",
-      //     },
-      //   }).catch((error) => {
-      //     console.error("Error calling n8n webhook:", error);
-      //     // Do not block project update if webhook fails
-      //   });
-      // }
 
       return {
         project: updatedProject,
