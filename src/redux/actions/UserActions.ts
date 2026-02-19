@@ -157,6 +157,7 @@ export const addUser = createAsyncThunk(
         postal_code: userData.postal_code,
         city: userData.city,
         province: userData.province,
+        province_id: userData.province_id,
         country: userData.country,
         job_position: userData.job_position,
         web: userData.web,
@@ -276,6 +277,8 @@ export const updateUser = createAsyncThunk(
       if (userData.city !== undefined) updateData.city = userData.city;
       if (userData.province !== undefined)
         updateData.province = userData.province;
+      if (userData.province_id !== undefined)
+        updateData.province_id = userData.province_id;
       if (userData.country !== undefined) updateData.country = userData.country;
       if (userData.job_position !== undefined)
         updateData.job_position = userData.job_position;
@@ -400,6 +403,8 @@ export const updateProfile = createAsyncThunk(
       if (userData.city !== undefined) updateData.city = userData.city;
       if (userData.province !== undefined)
         updateData.province = userData.province;
+      if (userData.province_id !== undefined)
+        updateData.province_id = userData.province_id;
       if (userData.country !== undefined) updateData.country = userData.country;
       if (userData.job_position !== undefined)
         updateData.job_position = userData.job_position;

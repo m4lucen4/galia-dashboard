@@ -5,6 +5,18 @@ import { InputAutoComplete } from "../shared/ui/InputAutoComplete";
 import { Button } from "../shared/ui/Button";
 import { SelectField } from "../shared/ui/SelectField";
 import { useTranslation } from "react-i18next";
+import countriesData from "../../assets/regions/countries.json";
+import provincesData from "../../assets/regions/provinces.json";
+
+const SPAIN_ID = 68;
+const countriesOptions = countriesData.result.records.map((c) => ({
+  id: c.id,
+  name: c.name,
+}));
+const provincesOptions = provincesData.result.records.map((p) => ({
+  id: p.id,
+  name: p.name,
+}));
 
 interface UsersFormProps {
   initialData?: CreateUserProps;
@@ -36,6 +48,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
     postal_code: "",
     city: "",
     province: "",
+    province_id: null,
     country: null,
     job_position: "",
     web: "",
@@ -64,7 +77,17 @@ export const UsersForm: React.FC<UsersFormProps> = ({
   };
 
   const handleCountryChange = (id: number | null) => {
-    setFormData({ ...formData, country: id });
+    setFormData({ ...formData, country: id, province: "", province_id: null });
+  };
+
+  const handleProvinceIdChange = (id: number | null) => {
+    setFormData({ ...formData, province_id: id, province: "" });
+  };
+
+  const handleProvinceTextChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+  ) => {
+    setFormData({ ...formData, province: e.target.value, province_id: null });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -179,19 +202,32 @@ export const UsersForm: React.FC<UsersFormProps> = ({
           value={formData.postal_code || ""}
           onChange={handleChange}
         />
-        <InputField
-          id="province"
-          label={t("users.province")}
-          type="text"
-          value={formData.province || ""}
-          onChange={handleChange}
-        />
         <InputAutoComplete
           id="country"
           label={t("users.country")}
           value={formData.country ?? null}
           onChange={handleCountryChange}
+          options={countriesOptions}
         />
+        {formData.country !== null && (
+          formData.country === SPAIN_ID ? (
+            <InputAutoComplete
+              id="province_id"
+              label={t("users.province")}
+              value={formData.province_id ?? null}
+              onChange={handleProvinceIdChange}
+              options={provincesOptions}
+            />
+          ) : (
+            <InputField
+              id="province"
+              label={t("users.province")}
+              type="text"
+              value={formData.province || ""}
+              onChange={handleProvinceTextChange}
+            />
+          )
+        )}
       </div>
 
       {/* Separador */}

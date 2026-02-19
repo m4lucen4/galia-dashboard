@@ -27,6 +27,7 @@ export type UserDataProps = {
   postal_code?: string;
   city?: string;
   province?: string;
+  province_id?: number | null;
   country?: number | null;
   job_position?: string;
   web?: string;

@@ -1,19 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
-import countriesData from "../../../assets/regions/countries.json";
 
-interface Country {
+export interface AutoCompleteOption {
   id: number;
   name: string;
-  code: string;
 }
-
-const countries: Country[] = countriesData.result.records;
 
 interface InputAutoCompleteProps {
   id: string;
   label: string;
   value: number | null;
   onChange: (id: number | null) => void;
+  options: AutoCompleteOption[];
   disabled?: boolean;
   required?: boolean;
   className?: string;
@@ -24,23 +21,24 @@ export const InputAutoComplete: React.FC<InputAutoCompleteProps> = ({
   label,
   value,
   onChange,
+  options,
   disabled = false,
   required = false,
   className,
 }) => {
   const getNameById = (id: number | null): string => {
     if (id === null) return "";
-    return countries.find((c) => c.id === id)?.name || "";
+    return options.find((o) => o.id === id)?.name || "";
   };
 
   const [inputValue, setInputValue] = useState(getNameById(value));
   const [isOpen, setIsOpen] = useState(false);
-  const [filtered, setFiltered] = useState<Country[]>([]);
+  const [filtered, setFiltered] = useState<AutoCompleteOption[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setInputValue(getNameById(value));
-  }, [value]);
+  }, [value, options]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -54,7 +52,7 @@ export const InputAutoComplete: React.FC<InputAutoCompleteProps> = ({
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [value]);
+  }, [value, options]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value;
@@ -67,8 +65,8 @@ export const InputAutoComplete: React.FC<InputAutoCompleteProps> = ({
     }
 
     if (text.length >= 3) {
-      const matches = countries.filter((c) =>
-        c.name.toLowerCase().includes(text.toLowerCase()),
+      const matches = options.filter((o) =>
+        o.name.toLowerCase().includes(text.toLowerCase()),
       );
       setFiltered(matches);
       setIsOpen(true);
@@ -77,9 +75,9 @@ export const InputAutoComplete: React.FC<InputAutoCompleteProps> = ({
     }
   };
 
-  const handleSelect = (country: Country) => {
-    setInputValue(country.name);
-    onChange(country.id);
+  const handleSelect = (option: AutoCompleteOption) => {
+    setInputValue(option.name);
+    onChange(option.id);
     setIsOpen(false);
   };
 
@@ -112,13 +110,13 @@ export const InputAutoComplete: React.FC<InputAutoCompleteProps> = ({
               No hay coincidencias
             </li>
           ) : (
-            filtered.map((country) => (
+            filtered.map((option) => (
               <li
-                key={country.id}
-                onMouseDown={() => handleSelect(country)}
+                key={option.id}
+                onMouseDown={() => handleSelect(option)}
                 className="px-3 py-2 text-sm text-gray-900 cursor-pointer hover:bg-gray-100"
               >
-                {country.name}
+                {option.name}
               </li>
             ))
           )}

@@ -1,6 +1,18 @@
 import { InputField } from "../../../components/shared/ui/InputField";
 import { InputAutoComplete } from "../../../components/shared/ui/InputAutoComplete";
 import { SelectField } from "../../../components/shared/ui/SelectField";
+import countriesData from "../../../assets/regions/countries.json";
+import provincesData from "../../../assets/regions/provinces.json";
+
+const SPAIN_ID = 68;
+const countriesOptions = countriesData.result.records.map((c) => ({
+  id: c.id,
+  name: c.name,
+}));
+const provincesOptions = provincesData.result.records.map((p) => ({
+  id: p.id,
+  name: p.name,
+}));
 import { useTranslation } from "react-i18next";
 import { UpdateUserProps } from "../../../redux/actions/UserActions";
 import { UserDataProps } from "../../../types/index";
@@ -20,6 +32,7 @@ interface ProfileFormProps {
   onLanguageChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onCountryChange: (id: number | null) => void;
+  onProvinceIdChange: (id: number | null) => void;
   avatarPreview?: string | null;
 }
 
@@ -31,6 +44,7 @@ export const ProfileForm = ({
   onLanguageChange,
   onAvatarChange,
   onCountryChange,
+  onProvinceIdChange,
   avatarPreview,
 }: ProfileFormProps) => {
   const { t } = useTranslation();
@@ -137,23 +151,38 @@ export const ProfileForm = ({
           onChange={onChange}
           className={getInputClassName(isEditing)}
         />
-        <InputField
-          id="province"
-          label={t("profile.province")}
-          type="text"
-          disabled={!isEditing}
-          value={formData.province ?? ""}
-          onChange={onChange}
-          className={getInputClassName(isEditing)}
-        />
         <InputAutoComplete
           id="country"
           label={t("profile.country")}
           value={formData.country ?? null}
           onChange={onCountryChange}
+          options={countriesOptions}
           disabled={!isEditing}
           className={getInputClassName(isEditing)}
         />
+        {formData.country != null && (
+          formData.country === SPAIN_ID ? (
+            <InputAutoComplete
+              id="province_id"
+              label={t("profile.province")}
+              value={formData.province_id ?? null}
+              onChange={onProvinceIdChange}
+              options={provincesOptions}
+              disabled={!isEditing}
+              className={getInputClassName(isEditing)}
+            />
+          ) : (
+            <InputField
+              id="province"
+              label={t("profile.province")}
+              type="text"
+              disabled={!isEditing}
+              value={formData.province ?? ""}
+              onChange={onChange}
+              className={getInputClassName(isEditing)}
+            />
+          )
+        )}
       </div>
 
       {/* Separador */}

@@ -128,7 +128,13 @@ export const useProfileHandlers = ({
 
   const handleCountryChange = (id: number | null) => {
     if (formData) {
-      setFormData({ ...formData, country: id });
+      setFormData({ ...formData, country: id, province: "", province_id: null });
+    }
+  };
+
+  const handleProvinceIdChange = (id: number | null) => {
+    if (formData) {
+      setFormData({ ...formData, province_id: id, province: "" });
     }
   };
 
@@ -171,6 +177,7 @@ export const useProfileHandlers = ({
         postal_code: userData.postal_code || "",
         city: userData.city || "",
         province: userData.province || "",
+        province_id: userData.province_id ?? null,
         country: userData.country ?? null,
         job_position: userData.job_position || "",
         web: userData.web || "",
@@ -205,6 +212,7 @@ export const useProfileHandlers = ({
     handlePasswordAlertAccept,
     handleSubmit,
     handleCountryChange,
+    handleProvinceIdChange,
     handleLanguageChange,
     handleEdit,
     handleCancel,
