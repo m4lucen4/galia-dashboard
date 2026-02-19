@@ -37,6 +37,7 @@ export const Profile = () => {
     handlePasswordChange,
     handlePasswordAlertAccept,
     handleSubmit,
+    handleCountryChange,
     handleLanguageChange,
     handleEdit,
     handleCancel,
@@ -78,7 +79,7 @@ export const Profile = () => {
         postal_code: userData.postal_code || "",
         city: userData.city || "",
         province: userData.province || "",
-        country: userData.country || "",
+        country: userData.country ?? null,
         job_position: userData.job_position || "",
         web: userData.web || "",
         tags: userData.tags || "",
@@ -124,6 +125,7 @@ export const Profile = () => {
               userData={userData}
               isEditing={isEditing}
               onChange={handleChange}
+              onCountryChange={handleCountryChange}
               onLanguageChange={handleLanguageChange}
               onAvatarChange={handleAvatarChange}
               avatarPreview={avatarPreview}

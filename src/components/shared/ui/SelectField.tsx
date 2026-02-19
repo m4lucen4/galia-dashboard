@@ -34,7 +34,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   const selectClassName = className || baseSelectClassName;
   return (
     <div className="flex flex-col space-y-1">
-      <label className="text-base text-sm text-black" htmlFor={id}>
+      <label className="text-base text-black" htmlFor={id}>
         {label}
         {required && <span className="ml-1 text-blue-600 font-medium">*</span>}
       </label>

@@ -1,4 +1,5 @@
 import { InputField } from "../../../components/shared/ui/InputField";
+import { InputAutoComplete } from "../../../components/shared/ui/InputAutoComplete";
 import { SelectField } from "../../../components/shared/ui/SelectField";
 import { useTranslation } from "react-i18next";
 import { UpdateUserProps } from "../../../redux/actions/UserActions";
@@ -18,6 +19,7 @@ interface ProfileFormProps {
   ) => void;
   onLanguageChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onCountryChange: (id: number | null) => void;
   avatarPreview?: string | null;
 }
 
@@ -28,6 +30,7 @@ export const ProfileForm = ({
   onChange,
   onLanguageChange,
   onAvatarChange,
+  onCountryChange,
   avatarPreview,
 }: ProfileFormProps) => {
   const { t } = useTranslation();
@@ -143,13 +146,12 @@ export const ProfileForm = ({
           onChange={onChange}
           className={getInputClassName(isEditing)}
         />
-        <InputField
+        <InputAutoComplete
           id="country"
           label={t("profile.country")}
-          type="text"
+          value={formData.country ?? null}
+          onChange={onCountryChange}
           disabled={!isEditing}
-          value={formData.country ?? ""}
-          onChange={onChange}
           className={getInputClassName(isEditing)}
         />
       </div>

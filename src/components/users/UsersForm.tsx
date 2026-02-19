@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { CreateUserProps } from "../../redux/actions/UserActions";
 import { InputField } from "../shared/ui/InputField";
+import { InputAutoComplete } from "../shared/ui/InputAutoComplete";
 import { Button } from "../shared/ui/Button";
 import { SelectField } from "../shared/ui/SelectField";
 import { useTranslation } from "react-i18next";
@@ -35,7 +36,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
     postal_code: "",
     city: "",
     province: "",
-    country: "",
+    country: null,
     job_position: "",
     web: "",
     tags: "",
@@ -60,6 +61,10 @@ export const UsersForm: React.FC<UsersFormProps> = ({
     } else {
       setFormData({ ...formData, [name]: value });
     }
+  };
+
+  const handleCountryChange = (id: number | null) => {
+    setFormData({ ...formData, country: id });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -181,12 +186,11 @@ export const UsersForm: React.FC<UsersFormProps> = ({
           value={formData.province || ""}
           onChange={handleChange}
         />
-        <InputField
+        <InputAutoComplete
           id="country"
           label={t("users.country")}
-          type="text"
-          value={formData.country || ""}
-          onChange={handleChange}
+          value={formData.country ?? null}
+          onChange={handleCountryChange}
         />
       </div>
 

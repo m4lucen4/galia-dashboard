@@ -126,6 +126,12 @@ export const useProfileHandlers = ({
       });
   };
 
+  const handleCountryChange = (id: number | null) => {
+    if (formData) {
+      setFormData({ ...formData, country: id });
+    }
+  };
+
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedLanguage = e.target.value;
     i18n.changeLanguage(selectedLanguage);
@@ -165,7 +171,7 @@ export const useProfileHandlers = ({
         postal_code: userData.postal_code || "",
         city: userData.city || "",
         province: userData.province || "",
-        country: userData.country || "",
+        country: userData.country ?? null,
         job_position: userData.job_position || "",
         web: userData.web || "",
         tags: userData.tags || "",
@@ -198,6 +204,7 @@ export const useProfileHandlers = ({
     handlePasswordChange,
     handlePasswordAlertAccept,
     handleSubmit,
+    handleCountryChange,
     handleLanguageChange,
     handleEdit,
     handleCancel,
