@@ -33,7 +33,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -79,7 +79,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               title={t("login.button")}
               disabled={loginRequest.inProgress}
               type="submit"
-              fullWidth
             />
             <span
               className="text-sm cursor-pointer text-center"

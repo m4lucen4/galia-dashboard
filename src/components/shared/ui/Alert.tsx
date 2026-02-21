@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import {
   Dialog,
@@ -60,7 +58,7 @@ export const Alert: React.FC<AlertProps> = ({
       />
 
       <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
           <DialogPanel
             transition
             className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
@@ -85,20 +83,26 @@ export const Alert: React.FC<AlertProps> = ({
               </div>
             </div>
             <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:py-4">
-              <div className="flex flex-col-reverse gap-2 sm:flex-row-reverse sm:gap-2">
-                {onCancel && (
+              <div className="flex w-full gap-2 sm:justify-end">
+                <div className="w-full sm:w-auto">
                   <Button
-                    title={t("shared.cancel")}
-                    secondary
-                    onClick={handleCancel}
+                    title={t("shared.confirm")}
+                    disabled={disabledConfirmButton}
+                    fullWidth
+                    onClick={handleAccept}
                   />
-                )}
+                </div>
 
-                <Button
-                  title={t("shared.confirm")}
-                  disabled={disabledConfirmButton}
-                  onClick={handleAccept}
-                />
+                {onCancel && (
+                  <div className="w-full sm:w-auto">
+                    <Button
+                      title={t("shared.cancel")}
+                      secondary
+                      fullWidth
+                      onClick={handleCancel}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </DialogPanel>

@@ -24,7 +24,9 @@ export const Button: React.FC<ButtonProps> = ({
   tooltip,
 }) => {
   return (
-    <div className="relative inline-block group">
+    <div
+      className={`relative group ${fullWidth ? "block w-full" : "inline-block"}`}
+    >
       <button
         type={type}
         disabled={disabled}
