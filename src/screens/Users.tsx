@@ -8,9 +8,9 @@ import {
   UpdateUserProps,
   CreateUserProps,
 } from "../redux/actions/UserActions";
-import { UsersTable } from "../components/users/UsersTable";
+import { UsersTable } from "../features/users/components/UsersTable";
 import { Drawer } from "../components/shared/ui/Drawer";
-import { UsersForm } from "../components/users/UsersForm";
+import { UsersForm } from "../features/users/components/UsersForm";
 import { Alert } from "../components/shared/ui/Alert";
 import { clearErrors } from "../redux/slices/UserSlice";
 import { Button } from "../components/shared/ui/Button";

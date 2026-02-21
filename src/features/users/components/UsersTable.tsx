@@ -7,13 +7,13 @@ import {
   SortingState,
   getPaginationRowModel,
 } from "@tanstack/react-table";
-import { UserDataProps } from "../../types";
-import { LoadingSpinner } from "../shared/ui/LoadingSpinner";
-import { useAppDispatch } from "../../redux/hooks";
-import { fetchUserByUid } from "../../redux/actions/UserActions";
-import { Button } from "../shared/ui/Button";
+import { UserDataProps } from "../../../types";
+import { LoadingSpinner } from "../../../components/shared/ui/LoadingSpinner";
+import { useAppDispatch } from "../../../redux/hooks";
+import { fetchUserByUid } from "../../../redux/actions/UserActions";
+import { Button } from "../../../components/shared/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Table } from "../shared/ui/Table";
+import { Table } from "../../../components/shared/ui/Table";
 
 type UsersTableProps = {
   users: UserDataProps[];
