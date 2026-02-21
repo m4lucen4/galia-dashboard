@@ -5,9 +5,11 @@ import type { RootState } from "../store";
 
 function getInitials(firstName: string, lastName: string): string {
   return `${firstName} ${lastName}`
+    .normalize("NFD")
+    .replaceAll(/[\u0300-\u036f]/g, "")
     .split(" ")
-    .filter(Boolean)
-    .map((word) => word[0].toUpperCase())
+    .filter((word): word is string => Boolean(word))
+    .map((word: string) => word[0].toUpperCase())
     .join("");
 }
 
@@ -117,17 +119,19 @@ export const addProject = createAsyncThunk(
           currentUser.last_name,
         );
         const folderName = `${newProject.id}-${currentUser.odoo_id}-${initials}`;
+        const synologyFunctionUrl = import.meta.env
+          .VITE_SUPABASE_FUNCTION_SYNOLOGY_CREATE_FOLDER;
 
-        supabase.functions
-          .invoke("synology-create-folder", { body: { folderName } })
-          .then(({ error: fnError }) => {
-            if (fnError) {
-              console.error("Synology folder creation failed:", fnError);
-            }
-          })
-          .catch((err) => {
-            console.error("Error invoking synology-create-folder:", err);
-          });
+        fetch(synologyFunctionUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ folderName }),
+        }).catch((err) => {
+          console.error("Error creating Synology folder:", err);
+        });
       }
 
       return {

@@ -93,7 +93,7 @@ export const ProjectsTable = ({
         const project = props.row.original;
         const userData = project.userData;
 
-        if (!userData || !userData.first_name || !userData.last_name) {
+        if (!userData?.first_name || !userData?.last_name) {
           return "-";
         }
 
