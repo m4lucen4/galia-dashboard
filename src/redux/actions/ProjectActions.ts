@@ -1,6 +1,15 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ProjectDataProps, SupabaseError, ProjectImageData } from "../../types";
 import { supabase } from "../../helpers/supabase";
+import type { RootState } from "../store";
+
+function getInitials(firstName: string, lastName: string): string {
+  return `${firstName} ${lastName}`
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word[0].toUpperCase())
+    .join("");
+}
 
 export type CreateProjectProps = Omit<
   ProjectDataProps,
@@ -11,7 +20,7 @@ export type CreateProjectProps = Omit<
 
 export const addProject = createAsyncThunk(
   "projects/addProject",
-  async (projectData: CreateProjectProps, { rejectWithValue }) => {
+  async (projectData: CreateProjectProps, { rejectWithValue, getState }) => {
     try {
       const { data: newProject, error } = await supabase
         .from("projects")
@@ -94,6 +103,31 @@ export const addProject = createAsyncThunk(
             newProject.image_data = imageData;
           }
         }
+      }
+
+      // Create Synology folder for photographer users (non-blocking)
+      const currentUser = (getState() as RootState).auth.user;
+      if (
+        currentUser?.role === "photographer" &&
+        currentUser.odoo_id != null &&
+        newProject.id
+      ) {
+        const initials = getInitials(
+          currentUser.first_name,
+          currentUser.last_name,
+        );
+        const folderName = `${newProject.id}-${currentUser.odoo_id}-${initials}`;
+
+        supabase.functions
+          .invoke("synology-create-folder", { body: { folderName } })
+          .then(({ error: fnError }) => {
+            if (fnError) {
+              console.error("Synology folder creation failed:", fnError);
+            }
+          })
+          .catch((err) => {
+            console.error("Error invoking synology-create-folder:", err);
+          });
       }
 
       return {

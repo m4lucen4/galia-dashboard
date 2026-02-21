@@ -32,6 +32,7 @@ export type UserDataProps = {
   job_position?: string;
   web?: string;
   tags?: string;
+  odoo_id?: number;
 };
 
 export type ProjectImageData = {

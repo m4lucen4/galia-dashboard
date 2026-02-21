@@ -85,7 +85,9 @@ export const UsersForm: React.FC<UsersFormProps> = ({
   };
 
   const handleProvinceTextChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => {
     setFormData({ ...formData, province: e.target.value, province_id: null });
   };
@@ -164,8 +166,8 @@ export const UsersForm: React.FC<UsersFormProps> = ({
           value={formData.role}
           onChange={handleChange}
           options={[
-            { value: "basic", label: t("users.basic") },
             { value: "customer", label: t("users.customer") },
+            { value: "photographer", label: t("users.photographer") },
             { value: "publisher", label: t("users.publisher") },
             { value: "admin", label: t("users.admin") },
           ]}
@@ -209,8 +211,8 @@ export const UsersForm: React.FC<UsersFormProps> = ({
           onChange={handleCountryChange}
           options={countriesOptions}
         />
-        {formData.country !== null && (
-          formData.country === SPAIN_ID ? (
+        {formData.country !== null &&
+          (formData.country === SPAIN_ID ? (
             <InputAutoComplete
               id="province_id"
               label={t("users.province")}
@@ -226,8 +228,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
               value={formData.province || ""}
               onChange={handleProvinceTextChange}
             />
-          )
-        )}
+          ))}
       </div>
 
       {/* Separador */}

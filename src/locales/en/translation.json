@@ -55,6 +55,7 @@
     "role": "Role",
     "admin": "Administrator",
     "customer": "Customer",
+    "photographer": "Photographer",
     "publisher": "Publisher",
     "active": "Active",
     "inactive": "Inactive",

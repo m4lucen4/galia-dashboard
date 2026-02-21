@@ -64,6 +64,8 @@ export const UsersTable = ({
             return t("users.customer");
           case "publisher":
             return t("users.publisher");
+          case "photographer":
+            return t("users.photographer");
           default:
             return role;
         }
