@@ -6,6 +6,7 @@ type TableProps<TData> = {
   isLoading?: boolean;
   emptyMessage?: string;
   LoadingComponent?: React.ComponentType<{ fullPage?: boolean }>;
+  getRowClassName?: (row: TData) => string;
 };
 
 export const Table = <TData,>({
@@ -13,6 +14,7 @@ export const Table = <TData,>({
   isLoading = false,
   emptyMessage = "No data available",
   LoadingComponent,
+  getRowClassName,
 }: TableProps<TData>) => {
   if (isLoading && LoadingComponent) {
     return <LoadingComponent fullPage />;
@@ -54,7 +56,10 @@ export const Table = <TData,>({
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {rows.map((row) => (
-              <tr key={row.id}>
+              <tr
+                key={row.id}
+                className={getRowClassName?.(row.original) ?? ""}
+              >
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

@@ -30,7 +30,7 @@ export const LoginScreen = () => {
   const { loginRequest } = useSelector((state: RootState) => state.auth);
 
   const authenticated = useSelector(
-    (state: RootState) => state.auth.authenticated
+    (state: RootState) => state.auth.authenticated,
   );
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export const LoginScreen = () => {
   const handleRecoveryEmailChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     setRecoveryEmail(e.target.value);
   };
@@ -93,14 +93,25 @@ export const LoginScreen = () => {
           loginRequest={loginRequest}
           onForgotPassword={handleShowRecoveryModal}
         />
-        {loginRequest.messages && loginRequest.messages.length > 0 && (
+        {loginRequest.messages && loginRequest.messages === "inactive_user" ? (
           <Alert
-            title={loginRequest.messages}
-            description={t("login.descriptionLoginError")}
+            title={t("login.titleInactiveUser")}
+            description={t("login.descriptionInactiveUser")}
             onAccept={() => {
               dispatch(clearLoginErrors());
             }}
           />
+        ) : (
+          loginRequest.messages &&
+          loginRequest.messages.length > 0 && (
+            <Alert
+              title={loginRequest.messages}
+              description={t("login.descriptionLoginError")}
+              onAccept={() => {
+                dispatch(clearLoginErrors());
+              }}
+            />
+          )
         )}
         {showRecoveryModal && (
           <Alert

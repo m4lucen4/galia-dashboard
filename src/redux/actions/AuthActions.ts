@@ -40,6 +40,11 @@ export const login = createAsyncThunk(
         };
       }
 
+      if (userData?.active === false) {
+        await supabase.auth.signOut();
+        return rejectWithValue("inactive_user");
+      }
+
       if (userData?.language) {
         i18n.changeLanguage(userData.language);
       }
@@ -54,7 +59,7 @@ export const login = createAsyncThunk(
       };
       return rejectWithValue(appError.message);
     }
-  }
+  },
 );
 
 export const checkAuthState = createAsyncThunk(
@@ -104,7 +109,7 @@ export const checkAuthState = createAsyncThunk(
       };
       return rejectWithValue(appError.message);
     }
-  }
+  },
 );
 
 export const logout = createAsyncThunk(
@@ -124,7 +129,7 @@ export const logout = createAsyncThunk(
       };
       return rejectWithValue(appError.message);
     }
-  }
+  },
 );
 
 export const resetPassword = createAsyncThunk(
@@ -149,7 +154,7 @@ export const resetPassword = createAsyncThunk(
       };
       return rejectWithValue(appError.message);
     }
-  }
+  },
 );
 
 export const changePassword = createAsyncThunk(
@@ -174,5 +179,5 @@ export const changePassword = createAsyncThunk(
       };
       return rejectWithValue(appError.message);
     }
-  }
+  },
 );

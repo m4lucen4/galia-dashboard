@@ -71,20 +71,7 @@ export const UsersTable = ({
         }
       },
     }),
-    columnHelper.accessor("active", {
-      header: t("users.state"),
-      cell: (info) => (
-        <span
-          className={`px-2 py-1 text-xs font-semibold rounded-full ${
-            info.getValue()
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
-        >
-          {info.getValue() ? t("users.active") : t("users.inactive")}
-        </span>
-      ),
-    }),
+
     columnHelper.display({
       id: "actions",
       header: t("users.actions"),
@@ -123,6 +110,7 @@ export const UsersTable = ({
       isLoading={isLoading}
       emptyMessage="No registered users"
       LoadingComponent={LoadingSpinner}
+      getRowClassName={(user) => (user.active ? "" : "bg-red-100")}
     />
   );
 };
