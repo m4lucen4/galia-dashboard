@@ -22,9 +22,12 @@ import {
   fetchPrompts,
   fetchPromptsByUser,
 } from "../../../redux/actions/AdminActions";
+import { nasFetchFiles } from "../../../redux/actions/NasActions";
+import { clearNasFiles } from "../../../redux/slices/NasSlice";
 import { normalizeUrl } from "../../../helpers";
 import { MediaGallerySelector } from "./MediaGallerySelector";
-import { PhotoIcon } from "@heroicons/react/24/outline";
+import { NasFilesModal } from "./NasFilesModal";
+import { PhotoIcon, FolderOpenIcon } from "@heroicons/react/24/outline";
 
 interface ProjectsFormProps {
   initialData?: ProjectDataProps;
@@ -32,6 +35,7 @@ interface ProjectsFormProps {
   loading: boolean;
   isEditMode?: boolean;
   user: UserDataProps;
+  nasFolder?: string;
 }
 
 export const ProjectsForm: React.FC<ProjectsFormProps> = ({
@@ -40,9 +44,12 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   loading,
   isEditMode = false,
   user,
+  nasFolder,
 }) => {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
+  const [showNasModal, setShowNasModal] = useState(false);
+  const { files: nasFiles } = useAppSelector((state) => state.nas);
   const defaultFormData: CreateProjectProps = {
     user: user?.uid,
     title: "",
@@ -74,6 +81,15 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
       dispatch(fetchPromptsByUser({ userUid: user.uid }));
     }
   }, [dispatch, user?.role, user?.uid]);
+
+  useEffect(() => {
+    if (nasFolder) {
+      dispatch(nasFetchFiles(nasFolder));
+    }
+    return () => {
+      dispatch(clearNasFiles());
+    };
+  }, [dispatch, nasFolder]);
 
   // This effect is necessary to sync initialData prop changes to local state
   // when editing different projects. While React discourages this pattern,
@@ -428,6 +444,22 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
         </div>
       </div>
 
+      {nasFolder && (
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => setShowNasModal(true)}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+          >
+            <FolderOpenIcon className="h-5 w-5 text-gray-500" />
+            Archivos en NAS
+            <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+              {nasFiles.filter((f) => !f.isDirectory).length}
+            </span>
+          </button>
+        </div>
+      )}
+
       <div className="mt-6">
         <Button
           fullWidth
@@ -446,6 +478,14 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
         maxSelection={10}
         currentSelectionCount={allImages.length}
       />
+
+      {nasFolder && (
+        <NasFilesModal
+          isOpen={showNasModal}
+          onClose={() => setShowNasModal(false)}
+          folderPath={nasFolder}
+        />
+      )}
     </form>
   );
 };

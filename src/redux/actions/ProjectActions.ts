@@ -3,7 +3,7 @@ import { ProjectDataProps, SupabaseError, ProjectImageData } from "../../types";
 import { supabase } from "../../helpers/supabase";
 import type { RootState } from "../store";
 
-function getInitials(firstName: string, lastName: string): string {
+export function getInitials(firstName: string, lastName: string): string {
   return `${firstName} ${lastName}`
     .normalize("NFD")
     .replaceAll(/[\u0300-\u036f]/g, "")
@@ -122,13 +122,15 @@ export const addProject = createAsyncThunk(
         const synologyFunctionUrl = import.meta.env
           .VITE_SUPABASE_FUNCTION_SYNOLOGY_CREATE_FOLDER;
 
+        const emailPrefix = currentUser.email.split("@")[0];
+
         fetch(synologyFunctionUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           },
-          body: JSON.stringify({ folderName }),
+          body: JSON.stringify({ folderName, emailPrefix }),
         }).catch((err) => {
           console.error("Error creating Synology folder:", err);
         });
