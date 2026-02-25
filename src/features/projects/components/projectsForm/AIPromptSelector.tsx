@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { SelectField } from "../../../../components/shared/ui/SelectField";
+import { Checkbox } from "../../../../components/shared/ui/Checkbox";
 
 interface PromptOption {
   title: string;
@@ -26,22 +27,13 @@ export const AIPromptSelector: React.FC<AIPromptSelectorProps> = ({
 
   return (
     <>
-      <div className="flex items-center mb-2">
-        <input
-          type="checkbox"
-          id="requiredAI"
-          name="requiredAI"
-          checked={requiredAI}
-          onChange={(e) => onAIChange(e.target.checked)}
-          className="h-4 w-4 text-black focus:ring-gray-400 border-gray-300 rounded"
-        />
-        <label
-          htmlFor="requiredAI"
-          className="ml-2 block text-sm text-gray-700"
-        >
-          {t("projects.requiredAI")}
-        </label>
-      </div>
+      <Checkbox
+        id="requiredAI"
+        label={t("projects.requiredAI")}
+        checked={requiredAI}
+        onChange={onAIChange}
+        className="mb-2"
+      />
 
       {requiredAI && (
         <div className="flex items-center mb-2">

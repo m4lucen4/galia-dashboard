@@ -1,21 +1,12 @@
-import React, { useEffect, useState, useLayoutEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { InputField } from "../../../components/shared/ui/InputField";
 import { Button } from "../../../components/shared/ui/Button";
-import {
-  ProjectDataProps,
-  ProjectImageData,
-  UserDataProps,
-  ProjectCollaboratorsProps,
-  FileItem as FileItemType,
-} from "../../../types";
+import { ProjectDataProps, UserDataProps } from "../../../types";
 import { CreateProjectProps } from "../../../redux/actions/ProjectActions";
 import { KeywordInput } from "../../../components/shared/ui/KeywordInput";
 import { Collaborators } from "../../../components/shared/ui/Collaborators";
 import { SelectField } from "../../../components/shared/ui/SelectField";
-import {
-  ImageDragList,
-  ImageItem,
-} from "../../../components/shared/ui/ImageDragList";
+import { ImageDragList } from "../../../components/shared/ui/ImageDragList";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
@@ -24,11 +15,12 @@ import {
 } from "../../../redux/actions/AdminActions";
 import { nasFetchFiles } from "../../../redux/actions/NasActions";
 import { clearNasFiles } from "../../../redux/slices/NasSlice";
-import { normalizeUrl } from "../../../helpers";
 import { MediaGallerySelector } from "./MediaGallerySelector";
 import { AIPromptSelector } from "./projectsForm/AIPromptSelector";
+import { ShowGoogleMaps } from "./projectsForm/ShowGoogleMaps";
 import { NasFilesModal } from "./NasFilesModal";
 import { PhotoIcon, FolderOpenIcon } from "@heroicons/react/24/outline";
+import { useProjectsForm } from "../hooks/useProjectsForm";
 
 interface ProjectsFormProps {
   initialData?: ProjectDataProps;
@@ -51,28 +43,21 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   const { t } = useTranslation();
   const [showNasModal, setShowNasModal] = useState(false);
   const { files: nasFiles } = useAppSelector((state) => state.nas);
-  const defaultFormData: CreateProjectProps = {
-    user: user?.uid,
-    title: "",
-    state: "draft",
-    description: "",
-    requiredAI: false,
-    prompt: "",
-    keywords: "",
-    weblink: "",
-    image_data: [],
-    publications: 1,
-    googleMaps: "",
-    showMap: false,
-    projectCollaborators: [],
-  };
-
   const { prompts } = useAppSelector((state) => state.admin);
 
-  const [formData, setFormData] = useState<CreateProjectProps>(
-    initialData || defaultFormData,
-  );
-  const [allImages, setAllImages] = useState<ImageItem[]>([]);
+  const {
+    formData,
+    setFormData,
+    allImages,
+    totalImagesCount,
+    handleChange,
+    handleSubmit,
+    handleGallerySelect,
+    handleRemoveImage,
+    handleReorderImages,
+    handleProjectCollaboratorsChange,
+  } = useProjectsForm({ initialData, user, onSubmit });
+
   const [showGallerySelector, setShowGallerySelector] = useState(false);
 
   useEffect(() => {
@@ -91,166 +76,6 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
       dispatch(clearNasFiles());
     };
   }, [dispatch, nasFolder]);
-
-  // This effect is necessary to sync initialData prop changes to local state
-  // when editing different projects. While React discourages this pattern,
-  // it's required here because the form needs to maintain local state for
-  // user edits while also responding to prop changes when switching projects.
-  /* eslint-disable */
-  useLayoutEffect(() => {
-    if (initialData) {
-      setFormData(initialData);
-
-      if (initialData.image_data && initialData.image_data.length > 0) {
-        const existingImageItems: ImageItem[] = initialData.image_data.map(
-          (img, index) => ({
-            id: `existing-${index}`,
-            type: "existing" as const,
-            url: img.url,
-            originalIndex: index,
-          }),
-        );
-        setAllImages(existingImageItems);
-      } else {
-        setAllImages([]);
-      }
-    }
-  }, [initialData]);
-  /* eslint-enable */
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >,
-  ) => {
-    const { name, value, type } = e.target as HTMLInputElement;
-
-    if (type === "checkbox") {
-      const { checked } = e.target as HTMLInputElement;
-      setFormData({ ...formData, [name]: checked });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
-  };
-
-  const handleGallerySelect = (selectedFiles: FileItemType[]) => {
-    // Convert FileItem[] to ImageItem[] with type "existing"
-    const newImageItems: ImageItem[] = selectedFiles.map((file, index) => ({
-      id: `gallery-${file.id}`,
-      type: "existing" as const,
-      url: file.url,
-      originalIndex: allImages.length + index,
-    }));
-
-    setAllImages((prev) => [...prev, ...newImageItems]);
-
-    // Also update formData.image_data to maintain the database structure
-    const newImageData: ProjectImageData[] = selectedFiles.map((file) => ({
-      url: file.url,
-      status: "pending" as const,
-    }));
-
-    setFormData((prev) => ({
-      ...prev,
-      image_data: [...(prev.image_data || []), ...newImageData],
-    }));
-  };
-
-  const handleRemoveImage = (id: string) => {
-    setAllImages((prev) => {
-      const imageToRemove = prev.find((img) => img.id === id);
-
-      // if image is a newly added one, revoke its object URL
-      if (imageToRemove?.type === "new" && imageToRemove.url) {
-        URL.revokeObjectURL(imageToRemove.url);
-      }
-
-      const newImages = prev.filter((img) => img.id !== id);
-
-      // Update formData.image_data for existing images (both from edit mode and gallery-selected)
-      if (imageToRemove?.type === "existing") {
-        const updatedImageData: ProjectImageData[] = newImages
-          .filter((img) => img.type === "existing")
-          .map((img) => {
-            // Try to find original image data if in edit mode
-            if (initialData?.image_data) {
-              const originalImage = initialData.image_data.find(
-                (original) => original.url === img.url,
-              );
-              if (originalImage) {
-                return originalImage;
-              }
-            }
-            // For gallery-selected images, create basic image data
-            return {
-              url: img.url,
-              status: "pending" as const,
-            };
-          });
-
-        setFormData((prevData) => ({
-          ...prevData,
-          image_data: updatedImageData,
-        }));
-      }
-
-      return newImages;
-    });
-  };
-
-  const handleReorderImages = (reorderedImages: ImageItem[]) => {
-    setAllImages(reorderedImages);
-
-    // Update formData.image_data with reordered images
-    const reorderedImageData: ProjectImageData[] = reorderedImages
-      .filter((img) => img.type === "existing")
-      .map((img) => {
-        // If we have initialData, try to find the original image data
-        if (initialData?.image_data) {
-          const originalImage = initialData.image_data.find(
-            (original) => original.url === img.url,
-          );
-          if (originalImage) {
-            return originalImage;
-          }
-        }
-        // For gallery-selected images or new images, create basic image data
-        return {
-          url: img.url,
-          status: "pending" as const,
-        };
-      });
-
-    setFormData((prevData) => ({
-      ...prevData,
-      image_data: reorderedImageData,
-    }));
-  };
-
-  const handleProjectCollaboratorsChange = (
-    collaborators: ProjectCollaboratorsProps[],
-  ) => {
-    setFormData({ ...formData, projectCollaborators: collaborators });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Normalize the weblink URL if provided
-    const normalizedWeblink = formData.weblink
-      ? normalizeUrl(formData.weblink)
-      : "";
-
-    const updatedFormData = {
-      ...formData,
-      weblink: normalizedWeblink,
-      image_data: [...(formData.image_data || [])],
-    };
-
-    onSubmit(updatedFormData);
-  };
-
-  const totalImagesCount = allImages.length;
 
   return (
     <form onSubmit={handleSubmit}>
@@ -373,36 +198,15 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               ))}
             </div>
           </div>
-          <div className="flex items-end space-x-4 mb-2">
-            <div className="flex-1">
-              <InputField
-                id="googleMaps"
-                label={t("projects.googleMaps")}
-                placeholder={t("projects.placeholderGoogleMaps")}
-                type="url"
-                value={formData.googleMaps || ""}
-                onChange={handleChange}
-              />
-            </div>
-            {user?.role === "admin" && (
-              <div className="flex items-center pb-1">
-                <input
-                  type="checkbox"
-                  id="showMap"
-                  name="showMap"
-                  checked={formData.showMap}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-black focus:ring-gray-400 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="showMap"
-                  className="ml-2 block text-sm text-gray-700 whitespace-nowrap"
-                >
-                  Mostrar?
-                </label>
-              </div>
-            )}
-          </div>
+          <ShowGoogleMaps
+            googleMaps={formData.googleMaps || ""}
+            showMap={!!formData.showMap}
+            isAdmin={user?.role === "admin"}
+            onGoogleMapsChange={handleChange}
+            onShowMapChange={(checked) =>
+              setFormData({ ...formData, showMap: checked })
+            }
+          />
           <div className="flex space-x-4 mb-2">
             <div className="flex-1">
               <SelectField
