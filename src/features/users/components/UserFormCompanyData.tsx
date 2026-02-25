@@ -10,11 +10,13 @@ interface UserFormCompanyDataProps {
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >,
   ) => void;
+  isAdmin?: boolean;
 }
 
 export const UserFormCompanyData: React.FC<UserFormCompanyDataProps> = ({
   formData,
   handleChange,
+  isAdmin = false,
 }) => {
   const { t } = useTranslation();
 
@@ -68,6 +70,21 @@ export const UserFormCompanyData: React.FC<UserFormCompanyDataProps> = ({
           {t("users.active")}
         </label>
       </div>
+      {isAdmin && (
+        <div className="md:col-span-2">
+          <InputField
+            id="folder_nas"
+            label="Carpeta NAS"
+            placeholder="/emailusuario/carpeta"
+            type="text"
+            value={formData.folder_nas || ""}
+            onChange={handleChange}
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Ruta de la carpeta en el NAS asignada a este usuario. Solo visible para administradores.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

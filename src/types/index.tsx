@@ -33,6 +33,7 @@ export type UserDataProps = {
   web?: string;
   tags?: string;
   odoo_id?: number;
+  folder_nas?: string;
 };
 
 export type ProjectImageData = {

@@ -4,7 +4,7 @@ import { RecoveryPasswordScreen } from "../screens/RecoveryPassword";
 import { Home } from "../screens/Home";
 import { Profile } from "../features/profile/screens/Profile";
 import { Settings } from "../features/settings/screens/Settings";
-import { Users } from "../screens/Users";
+import { Users } from "../features/users/screens/Users";
 import { Projects } from "../features/projects/screens/Projects";
 import { MyGpts } from "../features/adminPanel/screens/MyGpts";
 import { Documentation } from "../features/documentation/screens/Documentation";

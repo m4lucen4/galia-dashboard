@@ -1,20 +1,20 @@
 import { useEffect, useState } from "react";
-import { useAppSelector, useAppDispatch } from "../redux/hooks";
-import { RootState } from "../redux/store";
+import { useAppSelector, useAppDispatch } from "../../../redux/hooks";
+import { RootState } from "../../../redux/store";
 import {
   addUser,
   fetchUsers,
   updateUser,
   UpdateUserProps,
   CreateUserProps,
-} from "../redux/actions/UserActions";
-import { UsersTable } from "../features/users/components/UsersTable";
-import { Drawer } from "../components/shared/ui/Drawer";
-import { UsersForm } from "../features/users/components/UsersForm";
-import { Alert } from "../components/shared/ui/Alert";
-import { clearErrors } from "../redux/slices/UserSlice";
-import { Button } from "../components/shared/ui/Button";
-import { errorMessages } from "../helpers";
+} from "../../../redux/actions/UserActions";
+import { UsersTable } from "../components/UsersTable";
+import { Drawer } from "../../../components/shared/ui/Drawer";
+import { UsersForm } from "../components/UsersForm";
+import { Alert } from "../../../components/shared/ui/Alert";
+import { clearErrors } from "../../../redux/slices/UserSlice";
+import { Button } from "../../../components/shared/ui/Button";
+import { errorMessages } from "../../../helpers";
 import { useTranslation } from "react-i18next";
 
 export const Users = () => {
@@ -75,6 +75,7 @@ export const Users = () => {
         job_position: formData.job_position,
         web: formData.web,
         tags: formData.tags,
+        folder_nas: formData.folder_nas,
       };
 
       dispatch(updateUser(updateData))
@@ -117,6 +118,7 @@ export const Users = () => {
       job_position: userData.job_position || "",
       web: userData.web || "",
       tags: userData.tags || "",
+      folder_nas: userData.folder_nas || "",
     };
   };
 
@@ -141,6 +143,7 @@ export const Users = () => {
           onSubmit={handleUserSubmit}
           loading={userAddRequest.inProgress}
           isEditMode={isEditMode}
+          isAdmin
         />
       </Drawer>
       <UsersTable

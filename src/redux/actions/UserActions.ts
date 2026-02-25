@@ -162,6 +162,7 @@ export const addUser = createAsyncThunk(
         job_position: userData.job_position,
         web: userData.web,
         tags: userData.tags,
+        folder_nas: userData.folder_nas,
       });
 
       if (dbError) {
@@ -284,6 +285,8 @@ export const updateUser = createAsyncThunk(
         updateData.job_position = userData.job_position;
       if (userData.web !== undefined) updateData.web = userData.web;
       if (userData.tags !== undefined) updateData.tags = userData.tags;
+      if (userData.folder_nas !== undefined)
+        updateData.folder_nas = userData.folder_nas;
 
       const { error: dbError } = await supabase
         .from("userData")

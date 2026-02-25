@@ -12,6 +12,7 @@ interface UsersFormProps {
   onSubmit: (userData: CreateUserProps) => void;
   loading: boolean;
   isEditMode?: boolean;
+  isAdmin?: boolean;
 }
 
 export const UsersForm: React.FC<UsersFormProps> = ({
@@ -19,6 +20,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
   onSubmit,
   loading,
   isEditMode = false,
+  isAdmin = false,
 }) => {
   const { t } = useTranslation();
   const defaultFormData: CreateUserProps = {
@@ -42,6 +44,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
     job_position: "",
     web: "",
     tags: "",
+    folder_nas: "",
   };
 
   const [formData, setFormData] = useState<CreateUserProps>(
@@ -114,7 +117,11 @@ export const UsersForm: React.FC<UsersFormProps> = ({
 
       <div className="my-6 border-t border-gray-300" />
 
-      <UserFormCompanyData formData={formData} handleChange={handleChange} />
+      <UserFormCompanyData
+        formData={formData}
+        handleChange={handleChange}
+        isAdmin={isAdmin}
+      />
 
       <div className="mt-6">
         <Button
