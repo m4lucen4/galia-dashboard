@@ -71,7 +71,7 @@ export const Projects = () => {
 
   const uniqueStates = Array.from(
     new Set(projects.map((project) => project.state)),
-  ).filter(Boolean) as string[];
+  ).filter((s): s is string => Boolean(s));
 
   const filteredProjects = stateFilter
     ? projects.filter((project) => project.state === stateFilter)
@@ -293,6 +293,16 @@ export const Projects = () => {
     setStateFilter("");
   };
 
+  const getStateLabel = (state: string): string => {
+    const stateLabels: Record<string, string> = {
+      draft: "Draft",
+      preview: "Preview",
+      inProgress: "In progress",
+      launched: "Launched",
+    };
+    return stateLabels[state] ?? state;
+  };
+
   if (!user) {
     return;
   }
@@ -334,15 +344,7 @@ export const Projects = () => {
             <option value="">{t("projects.allStates")}</option>
             {uniqueStates.map((state) => (
               <option key={state} value={state}>
-                {state === "draft"
-                  ? "Draft"
-                  : state === "preview"
-                    ? "Preview"
-                    : state === "inProgress"
-                      ? "In progress"
-                      : state === "launched"
-                        ? "Launched"
-                        : state}
+                {getStateLabel(state)}
               </option>
             ))}
           </select>
@@ -366,7 +368,7 @@ export const Projects = () => {
           loading={projectAddRequest.inProgress}
           isEditMode={isEditMode}
           user={user}
-          nasFolder={isEditMode ? getNasFolder() ?? undefined : undefined}
+          nasFolder={isEditMode ? (getNasFolder() ?? undefined) : undefined}
         />
       </Drawer>
       <ProjectsTable

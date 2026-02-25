@@ -26,6 +26,7 @@ import { nasFetchFiles } from "../../../redux/actions/NasActions";
 import { clearNasFiles } from "../../../redux/slices/NasSlice";
 import { normalizeUrl } from "../../../helpers";
 import { MediaGallerySelector } from "./MediaGallerySelector";
+import { AIPromptSelector } from "./projectsForm/AIPromptSelector";
 import { NasFilesModal } from "./NasFilesModal";
 import { PhotoIcon, FolderOpenIcon } from "@heroicons/react/24/outline";
 
@@ -275,54 +276,52 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
             required
           />
         </div>
-        <div className="flex items-center mb-2">
-          <input
-            type="checkbox"
-            id="requiredAI"
-            name="requiredAI"
-            checked={formData.requiredAI}
-            onChange={handleChange}
-            className="h-4 w-4 text-black focus:ring-gray-400 border-gray-300 rounded"
-          />
-          <label htmlFor="active" className="ml-2 block text-sm text-gray-700">
-            {t("projects.requiredAI")}
-          </label>
-        </div>
-        {formData.requiredAI && (
-          <div className="flex items-center mb-2">
-            <SelectField
-              id="prompt"
-              label={t("projects.selectPrompt")}
-              value={formData.prompt || ""}
-              onChange={handleChange}
-              options={[
-                { value: "", label: t("projects.selectPromptOption") },
-                ...prompts.map((prompt) => ({
-                  value: prompt.description,
-                  label: prompt.title,
-                })),
-              ]}
+        <AIPromptSelector
+          requiredAI={!!formData.requiredAI}
+          prompt={formData.prompt || ""}
+          prompts={prompts}
+          onAIChange={(checked) =>
+            setFormData({ ...formData, requiredAI: checked })
+          }
+          onPromptChange={handleChange}
+        />
+        <div className="flex gap-4 mb-2">
+          <div className="flex-1">
+            <KeywordInput
+              id="keywords"
+              label={t("projects.keywords")}
+              value={formData.keywords || ""}
+              onChange={(value) =>
+                setFormData({ ...formData, keywords: value })
+              }
             />
           </div>
+          <div className="flex-1">
+            <InputField
+              id="weblink"
+              label={t("projects.web")}
+              placeholder="https://example.com"
+              type="text"
+              value={formData.weblink || ""}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
+        {nasFolder && (
+          <div className="my-4">
+            <button
+              type="button"
+              onClick={() => setShowNasModal(true)}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+            >
+              <FolderOpenIcon className="h-5 w-5 text-gray-500" />
+              Archivos en NAS
+              <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                {nasFiles.filter((f) => !f.isDirectory).length}
+              </span>
+            </button>
+          </div>
         )}
-        <div className="mb-2">
-          <KeywordInput
-            id="keywords"
-            label={t("projects.keywords")}
-            value={formData.keywords || ""}
-            onChange={(value) => setFormData({ ...formData, keywords: value })}
-          />
-        </div>
-        <div className="mb-2">
-          <InputField
-            id="weblink"
-            label={t("projects.web")}
-            placeholder="https://example.com"
-            type="text"
-            value={formData.weblink || ""}
-            onChange={handleChange}
-          />
-        </div>
         <div className="col-span-2 mb-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             {t("projects.projectImages")} ({totalImagesCount}/10)
@@ -443,22 +442,6 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
           </div>
         </div>
       </div>
-
-      {nasFolder && (
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={() => setShowNasModal(true)}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
-          >
-            <FolderOpenIcon className="h-5 w-5 text-gray-500" />
-            Archivos en NAS
-            <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-              {nasFiles.filter((f) => !f.isDirectory).length}
-            </span>
-          </button>
-        </div>
-      )}
 
       <div className="mt-6">
         <Button
