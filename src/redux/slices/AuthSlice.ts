@@ -87,6 +87,7 @@ const authSlice = createSlice({
             language: action.payload.userData?.language || "",
             updated_at: action.payload.userData?.updated_at || "",
             odoo_id: action.payload.userData?.odoo_id || "",
+            folder_nas: action.payload.userData?.folder_nas || "",
           };
         }
         state.token = action.payload.session?.access_token;
@@ -131,6 +132,7 @@ const authSlice = createSlice({
             updated_at: action.payload.userData?.updated_at || "",
             language: action.payload.userData?.language || "",
             odoo_id: action.payload.userData?.odoo_id || "",
+            folder_nas: action.payload.userData?.folder_nas || "",
           };
           state.token = action.payload.session?.access_token;
           state.authenticated = true;

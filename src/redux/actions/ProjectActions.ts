@@ -112,6 +112,7 @@ export const addProject = createAsyncThunk(
       if (
         currentUser?.role === "photographer" &&
         currentUser.odoo_id != null &&
+        currentUser.folder_nas &&
         newProject.id
       ) {
         const initials = getInitials(
@@ -122,15 +123,13 @@ export const addProject = createAsyncThunk(
         const synologyFunctionUrl = import.meta.env
           .VITE_SUPABASE_FUNCTION_SYNOLOGY_CREATE_FOLDER;
 
-        const emailPrefix = currentUser.email.split("@")[0];
-
         fetch(synologyFunctionUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           },
-          body: JSON.stringify({ folderName, emailPrefix }),
+          body: JSON.stringify({ folderName, emailPrefix: currentUser.folder_nas }),
         }).catch((err) => {
           console.error("Error creating Synology folder:", err);
         });
