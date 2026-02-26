@@ -313,7 +313,28 @@ export const fetchProjectById = createAsyncThunk(
     try {
       const { data: project, error } = await supabase
         .from("projects")
-        .select("*")
+        .select(
+          `
+          *,
+          userData:userData(
+            id,
+            uid,
+            active,
+            avatar_url,
+            first_name,
+            last_name,
+            email,
+            phone,
+            company,
+            description,
+            vat,
+            role,
+            language,
+            odoo_id,
+            folder_nas
+          )
+        `,
+        )
         .eq("id", projectId)
         .single();
 
@@ -566,6 +587,41 @@ export const assignProject = createAsyncThunk(
         return rejectWithValue({
           message: `Error assigning project: ${error.message}`,
           status: error.code,
+        });
+      }
+
+      // Crear carpeta en Synology si el usuario destino es fotógrafo con odoo_id y folder_nas
+      const { data: assignedUser } = await supabase
+        .from("userData")
+        .select("role, odoo_id, folder_nas, first_name, last_name")
+        .eq("uid", assignedUserId)
+        .single();
+
+      if (
+        assignedUser?.role === "photographer" &&
+        assignedUser.odoo_id != null &&
+        assignedUser.folder_nas
+      ) {
+        const initials = getInitials(
+          assignedUser.first_name,
+          assignedUser.last_name,
+        );
+        const folderName = `${projectId}-${assignedUser.odoo_id}-${initials}`;
+        const synologyFunctionUrl = import.meta.env
+          .VITE_SUPABASE_FUNCTION_SYNOLOGY_CREATE_FOLDER;
+
+        fetch(synologyFunctionUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            folderName,
+            emailPrefix: assignedUser.folder_nas,
+          }),
+        }).catch((err) => {
+          console.error("Error creating Synology folder on assign:", err);
         });
       }
 

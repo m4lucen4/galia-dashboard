@@ -16,7 +16,9 @@ export const UserSearchSelector: React.FC<UserSearchSelectorProps> = ({
 
   // Filter users based on search term and show selected user always
   const filteredUsers = (() => {
-    const customerUsers = users.filter((user) => user.role === "customer");
+    const customerUsers = users.filter(
+      (user) => user.role === "customer" || user.role === "photographer",
+    );
 
     if (searchTerm.length >= 3) {
       // Show search results
@@ -25,7 +27,7 @@ export const UserSearchSelector: React.FC<UserSearchSelectorProps> = ({
         (user) =>
           user.first_name.toLowerCase().includes(searchLower) ||
           user.last_name.toLowerCase().includes(searchLower) ||
-          user.email.toLowerCase().includes(searchLower)
+          user.email.toLowerCase().includes(searchLower),
       );
     } else if (selectedUser) {
       // Show only the selected user if no search is active
@@ -85,9 +87,14 @@ export const UserSearchSelector: React.FC<UserSearchSelectorProps> = ({
                   {user.company && (
                     <p className="text-xs text-gray-400">{user.company}</p>
                   )}
+                  {user.folder_nas && (
+                    <p className="text-xs text-red-400">
+                      Carpeta NAS: {user.folder_nas}
+                    </p>
+                  )}
                 </div>
                 {selectedUser === user.uid && (
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
                       <svg
                         className="w-2 h-2 text-white"
