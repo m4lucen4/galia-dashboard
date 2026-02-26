@@ -249,7 +249,7 @@ export const Projects = () => {
     ) {
       const initials = getInitials(user.first_name, user.last_name);
       const folderName = `${project.id}-${user.odoo_id}-${initials}`;
-      return `/${user.folder_nas}/${folderName}`;
+      return `/${user.folder_nas}/${folderName}/${project.id}_alta`;
     }
 
     // Admin editando proyecto de un fotógrafo: usar userData del proyecto
@@ -263,7 +263,7 @@ export const Projects = () => {
         project.userData.last_name,
       );
       const folderName = `${project.id}-${project.userData.odoo_id}-${initials}`;
-      return `/${project.userData.folder_nas}/${folderName}`;
+      return `/${project.userData.folder_nas}/${folderName}/${project.id}_alta`;
     }
 
     return null;
