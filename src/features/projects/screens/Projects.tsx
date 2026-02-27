@@ -242,27 +242,26 @@ export const Projects = () => {
     if (!project) return null;
 
     // El fotógrafo edita su propio proyecto: usar datos del usuario autenticado
-    if (
-      user?.role === "photographer" &&
-      user.odoo_id != null &&
-      user.folder_nas
-    ) {
+    if (user?.role === "photographer" && user.folder_nas) {
       const initials = getInitials(user.first_name, user.last_name);
-      const folderName = `${project.id}-${user.odoo_id}-${initials}`;
+      const folderName = user.odoo_id
+        ? `${project.id}-${user.odoo_id}-${initials}`
+        : `${project.id}-${initials}`;
       return `/${user.folder_nas}/${folderName}/${project.id}_alta`;
     }
 
     // Admin editando proyecto de un fotógrafo: usar userData del proyecto
     if (
       project.userData?.role === "photographer" &&
-      project.userData.odoo_id != null &&
       project.userData.folder_nas
     ) {
       const initials = getInitials(
         project.userData.first_name,
         project.userData.last_name,
       );
-      const folderName = `${project.id}-${project.userData.odoo_id}-${initials}`;
+      const folderName = project.userData.odoo_id
+        ? `${project.id}-${project.userData.odoo_id}-${initials}`
+        : `${project.id}-${initials}`;
       return `/${project.userData.folder_nas}/${folderName}/${project.id}_alta`;
     }
 
