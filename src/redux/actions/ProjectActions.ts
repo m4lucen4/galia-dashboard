@@ -111,7 +111,6 @@ export const addProject = createAsyncThunk(
       const currentUser = (getState() as RootState).auth.user;
       if (
         currentUser?.role === "photographer" &&
-        currentUser.odoo_id != null &&
         currentUser.folder_nas &&
         newProject.id
       ) {
@@ -119,7 +118,9 @@ export const addProject = createAsyncThunk(
           currentUser.first_name,
           currentUser.last_name,
         );
-        const folderName = `${newProject.id}-${currentUser.odoo_id}-${initials}`;
+        const folderName = currentUser.odoo_id
+          ? `${newProject.id}-${currentUser.odoo_id}-${initials}`
+          : `${newProject.id}-${initials}`;
         const synologyFunctionUrl = import.meta.env
           .VITE_SUPABASE_FUNCTION_SYNOLOGY_CREATE_FOLDER;
 
@@ -129,7 +130,10 @@ export const addProject = createAsyncThunk(
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           },
-          body: JSON.stringify({ folderName, emailPrefix: currentUser.folder_nas }),
+          body: JSON.stringify({
+            folderName,
+            emailPrefix: currentUser.folder_nas,
+          }),
         }).catch((err) => {
           console.error("Error creating Synology folder:", err);
         });
@@ -597,16 +601,14 @@ export const assignProject = createAsyncThunk(
         .eq("uid", assignedUserId)
         .single();
 
-      if (
-        assignedUser?.role === "photographer" &&
-        assignedUser.odoo_id != null &&
-        assignedUser.folder_nas
-      ) {
+      if (assignedUser?.role === "photographer" && assignedUser.folder_nas) {
         const initials = getInitials(
           assignedUser.first_name,
           assignedUser.last_name,
         );
-        const folderName = `${projectId}-${assignedUser.odoo_id}-${initials}`;
+        const folderName = assignedUser.odoo_id
+          ? `${projectId}-${assignedUser.odoo_id}-${initials}`
+          : `${projectId}-${initials}`;
         const synologyFunctionUrl = import.meta.env
           .VITE_SUPABASE_FUNCTION_SYNOLOGY_CREATE_FOLDER;
 
