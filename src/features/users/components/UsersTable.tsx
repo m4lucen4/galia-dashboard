@@ -14,6 +14,7 @@ import { fetchUserByUid } from "../../../redux/actions/UserActions";
 import { Button } from "../../../components/shared/ui/Button";
 import { useTranslation } from "react-i18next";
 import { Table } from "../../../components/shared/ui/Table";
+import { OdooIcon } from "../../../components/icons/OdooIcon";
 
 type UsersTableProps = {
   users: UserDataProps[];
@@ -40,7 +41,12 @@ export const UsersTable = ({
   const columns = [
     columnHelper.accessor("first_name", {
       header: t("users.firstName"),
-      cell: (info) => `${info.getValue()} ${info.row.original.last_name}`,
+      cell: (info) => (
+        <div className="flex items-center gap-1.5">
+          {info.row.original.odoo_id && <OdooIcon size={18} />}
+          <span>{`${info.getValue()} ${info.row.original.last_name}`}</span>
+        </div>
+      ),
     }),
     columnHelper.accessor("email", {
       header: t("users.email"),

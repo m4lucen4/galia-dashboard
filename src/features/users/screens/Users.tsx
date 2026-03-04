@@ -75,6 +75,7 @@ export const Users = () => {
         job_position: formData.job_position,
         web: formData.web,
         tags: formData.tags,
+        odoo_id: formData.odoo_id,
         folder_nas: formData.folder_nas,
       };
 
@@ -118,6 +119,7 @@ export const Users = () => {
       job_position: userData.job_position || "",
       web: userData.web || "",
       tags: userData.tags || "",
+      odoo_id: userData.odoo_id,
       folder_nas: userData.folder_nas || "",
     };
   };

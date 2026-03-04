@@ -11,12 +11,14 @@ interface UserFormCompanyDataProps {
     >,
   ) => void;
   isAdmin?: boolean;
+  isEditMode?: boolean;
 }
 
 export const UserFormCompanyData: React.FC<UserFormCompanyDataProps> = ({
   formData,
   handleChange,
   isAdmin = false,
+  isEditMode = false,
 }) => {
   const { t } = useTranslation();
 
@@ -71,18 +73,36 @@ export const UserFormCompanyData: React.FC<UserFormCompanyDataProps> = ({
         </label>
       </div>
       {isAdmin && (
-        <div className="md:col-span-2">
-          <InputField
-            id="folder_nas"
-            label="Carpeta NAS"
-            placeholder="/emailusuario/carpeta"
-            type="text"
-            value={formData.folder_nas || ""}
-            onChange={handleChange}
-          />
-          <p className="text-xs text-gray-400 mt-1">
-            Ruta de la carpeta en el NAS asignada a este usuario. Solo visible para administradores.
-          </p>
+        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <InputField
+              id="folder_nas"
+              label="Carpeta NAS"
+              placeholder="/emailusuario/carpeta"
+              type="text"
+              value={formData.folder_nas || ""}
+              onChange={handleChange}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Ruta de la carpeta en el NAS asignada a este usuario. Solo visible
+              para administradores.
+            </p>
+          </div>
+          {isEditMode && (
+            <div>
+              <InputField
+                id="odoo_id"
+                label="Odoo ID"
+                type="number"
+                value={formData.odoo_id == null ? "" : String(formData.odoo_id)}
+                onChange={handleChange}
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Identificador del usuario en Odoo. Solo visible para
+                administradores.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

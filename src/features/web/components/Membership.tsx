@@ -20,7 +20,7 @@ const Membership: React.FC = () => {
   const plans = [
     {
       name: "Estudiante",
-      subtitle: "Versión limitada",
+      subtitle: "Versión ilimitada",
       price: { monthly: 2, annual: 16.8 },
       buttonText: "Empezar",
       buttonStyle: "bg-gray-100 text-gray-700 hover:bg-gray-200",
@@ -28,7 +28,7 @@ const Membership: React.FC = () => {
       bottomText: "* Bajo acreditación universitaria",
       features: [
         "Hasta 10 publicaciones al mes",
-        "Integración OpenAI",
+        "Integración modelos de IA",
         "Instagram",
         "Linkedin",
       ],
@@ -43,7 +43,7 @@ const Membership: React.FC = () => {
       featured: true,
       features: [
         "Publicaciones ilimitadas",
-        "Integración OpenAI",
+        "Integración modelos de IA",
         "Instagram",
         "Linkedin",
       ],

@@ -65,6 +65,9 @@ export const UsersForm: React.FC<UsersFormProps> = ({
     if (type === "checkbox") {
       const { checked } = e.target as HTMLInputElement;
       setFormData({ ...formData, [name]: checked });
+    } else if (type === "number") {
+      const numValue = value === "" ? undefined : Number(value);
+      setFormData({ ...formData, [name]: numValue });
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -121,6 +124,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
         formData={formData}
         handleChange={handleChange}
         isAdmin={isAdmin}
+        isEditMode={isEditMode}
       />
 
       <div className="mt-6">

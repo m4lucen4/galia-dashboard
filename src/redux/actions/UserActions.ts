@@ -162,6 +162,7 @@ export const addUser = createAsyncThunk(
         job_position: userData.job_position,
         web: userData.web,
         tags: userData.tags,
+        odoo_id: userData.odoo_id,
         folder_nas: userData.folder_nas,
       });
 
@@ -285,6 +286,7 @@ export const updateUser = createAsyncThunk(
         updateData.job_position = userData.job_position;
       if (userData.web !== undefined) updateData.web = userData.web;
       if (userData.tags !== undefined) updateData.tags = userData.tags;
+      if (userData.odoo_id !== undefined) updateData.odoo_id = userData.odoo_id;
       if (userData.folder_nas !== undefined)
         updateData.folder_nas = userData.folder_nas;
 
