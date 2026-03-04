@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 const Membership: React.FC = () => {
   const [billingType, setBillingType] = useState<"monthly" | "annual">(
-    "annual"
+    "annual",
   );
   const [postsPerMonth, setPostsPerMonth] = useState(15);
   const [pricePerHour, setPricePerHour] = useState(20);
@@ -19,12 +19,13 @@ const Membership: React.FC = () => {
 
   const plans = [
     {
-      name: "Básico",
+      name: "Estudiante",
       subtitle: "Versión limitada",
-      price: { monthly: 20, annual: 180 },
+      price: { monthly: 2, annual: 16.8 },
       buttonText: "Empezar",
       buttonStyle: "bg-gray-100 text-gray-700 hover:bg-gray-200",
       cardStyle: "bg-white border border-gray-200",
+      bottomText: "* Bajo acreditación universitaria",
       features: [
         "Hasta 10 publicaciones al mes",
         "Integración OpenAI",
@@ -35,7 +36,7 @@ const Membership: React.FC = () => {
     {
       name: "Profesional",
       subtitle: "Versión ilimitada",
-      price: { monthly: 25, annual: 240 },
+      price: { monthly: 25, annual: 210 },
       buttonText: "Empezar",
       buttonStyle: "bg-gray-600 text-white hover:bg-gray-700",
       cardStyle: "bg-black text-white border border-gray-800",
@@ -123,7 +124,7 @@ const Membership: React.FC = () => {
                     <span className="text-4xl font-bold">
                       {billingType === "monthly"
                         ? plan.price.monthly
-                        : Math.floor(plan.price.annual / 12)}
+                        : (plan.price.annual / 12).toFixed(2)}
                       €
                     </span>
                     <span
@@ -168,6 +169,15 @@ const Membership: React.FC = () => {
                   </li>
                 ))}
               </ul>
+
+              {/* Anotación inferior */}
+              {plan.bottomText && (
+                <p
+                  className={`text-xs mt-4 ${plan.cardStyle.includes("black") ? "text-gray-500" : "text-gray-400"}`}
+                >
+                  {plan.bottomText}
+                </p>
+              )}
             </div>
           ))}
         </div>
