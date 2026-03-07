@@ -15,7 +15,7 @@ const Footer: React.FC = () => {
           </div>
           <div className="flex space-x-6 text-sm">
             <Link
-              to="/documentation"
+              to="/wiki"
               className="text-gray-600 hover:text-gray-900 transition-colors duration-200"
             >
               {t("footer.documentation")}
@@ -25,12 +25,6 @@ const Footer: React.FC = () => {
               className="text-gray-600 hover:text-gray-900 transition-colors duration-200"
             >
               {t("footer.privacyPolicy")}
-            </Link>
-            <Link
-              to="/legal"
-              className="text-gray-600 hover:text-gray-900 transition-colors duration-200"
-            >
-              {t("footer.legalAdvice")}
             </Link>
           </div>
         </div>

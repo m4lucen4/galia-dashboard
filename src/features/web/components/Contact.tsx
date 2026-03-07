@@ -16,7 +16,7 @@ const Contact: React.FC = () => {
   >("idle");
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value, type, checked } = e.target as HTMLInputElement;
     setFormData((prev) => ({
@@ -86,9 +86,9 @@ const Contact: React.FC = () => {
             {submitStatus === "error" && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
                 <p className="text-red-800">
-                  {!formData.politicaPrivacidad
-                    ? "Debes aceptar la política de privacidad para continuar."
-                    : "Error al enviar el mensaje. Por favor, inténtalo de nuevo."}
+                  {formData.politicaPrivacidad
+                    ? "Error al enviar el mensaje. Por favor, inténtalo de nuevo."
+                    : "Debes aceptar la política de privacidad para continuar."}
                 </p>
               </div>
             )}
@@ -198,17 +198,29 @@ const Contact: React.FC = () => {
                   />
                 </div>
                 <div className="ml-3 text-sm">
-                  <label htmlFor="politicaPrivacidad" className="text-gray-600">
-                    He leído y acepto la{" "}
-                    <a
-                      href="/privacy"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-900 underline hover:text-gray-700"
-                    >
-                      política de privacidad
-                    </a>{" "}
-                    *
+                  <label
+                    htmlFor="politicaPrivacidad"
+                    className="flex flex-col text-gray-600"
+                  >
+                    <span>
+                      He leído y acepto la{" "}
+                      <a
+                        href="/privacy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-900 underline hover:text-gray-700"
+                      >
+                        política de privacidad y el Aviso Legal de mocklab.app
+                      </a>{" "}
+                      *
+                    </span>
+                    <span className="text-xs text-gray-500 mt-1">
+                      Acepto las Condiciones de Publicación, declaro bajo mi
+                      total responsabilidad que poseo todos los derechos legales
+                      sobre el contenido multimedia aportado, y autorizo su
+                      publicación por Nacho Villegas SL en
+                      www.guiadearquitectura.com y sus redes sociales.
+                    </span>
                   </label>
                 </div>
               </div>
@@ -245,7 +257,7 @@ const Contact: React.FC = () => {
             <div className="space-y-6">
               {/* Dirección */}
               <div className="flex items-start">
-                <div className="flex-shrink-0 mr-4">
+                <div className="shrink-0 mr-4">
                   <svg
                     className="w-6 h-6 text-gray-600"
                     fill="none"
@@ -276,7 +288,7 @@ const Contact: React.FC = () => {
 
               {/* Teléfono */}
               <div className="flex items-start">
-                <div className="flex-shrink-0 mr-4">
+                <div className="shrink-0 mr-4">
                   <svg
                     className="w-6 h-6 text-gray-600"
                     fill="none"
@@ -302,7 +314,7 @@ const Contact: React.FC = () => {
 
               {/* Email */}
               <div className="flex items-start">
-                <div className="flex-shrink-0 mr-4">
+                <div className="shrink-0 mr-4">
                   <svg
                     className="w-6 h-6 text-gray-600"
                     fill="none"
