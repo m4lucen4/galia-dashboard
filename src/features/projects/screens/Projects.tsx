@@ -4,6 +4,7 @@ import { RootState } from "../../../redux/store";
 import { Drawer } from "../../../components/shared/ui/Drawer";
 import { Alert } from "../../../components/shared/ui/Alert";
 import { Button } from "../../../components/shared/ui/Button";
+import { DropdownButton } from "../../../components/shared/ui/DropdownButton";
 import { errorMessages } from "../../../helpers";
 import {
   addProject,
@@ -336,7 +337,19 @@ export const Projects = () => {
         </p>
       </div>
       <div className="flex justify-between items-center mb-4">
-        <Button title={t("projects.create")} onClick={handleOpenDrawer} />
+        <DropdownButton
+          title={t("projects.create")}
+          options={[
+            {
+              label: t("projects.createFromScratch"),
+              onClick: handleOpenDrawer,
+            },
+            {
+              label: t("projects.createFromMultimedia"),
+              onClick: () => console.log("Crear desde multimedia"),
+            },
+          ]}
+        />
         <div className="flex items-center space-x-2">
           <select
             value={stateFilter}

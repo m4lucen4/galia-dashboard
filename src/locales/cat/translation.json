@@ -125,6 +125,8 @@
     "saveChanges": "Guardar canvis",
     "createProject": "Crear projecte",
     "create": "Crear",
+    "createFromScratch": "Creació des de zero",
+    "createFromMultimedia": "Crear des de multimèdia",
     "cleanFilters": "Netejar filtres",
     "allStates": "Tots els estats",
     "stage1": "Preparant les teves publicacions...",

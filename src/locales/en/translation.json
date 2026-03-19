@@ -124,6 +124,8 @@
     "saveChanges": "Save changes",
     "createProject": "Create project",
     "create": "Create",
+    "createFromScratch": "Create from scratch",
+    "createFromMultimedia": "Create from multimedia",
     "cleanFilters": "Clear filters",
     "allStates": "All statuses",
     "stage1": "Preparing your publications...",

@@ -127,6 +127,8 @@
     "saveChanges": "Guardar cambios",
     "createProject": "Crear proyecto",
     "create": "Crear",
+    "createFromScratch": "Creación desde cero",
+    "createFromMultimedia": "Crear desde multimedia",
     "cleanFilters": "Limpiar filtros",
     "allStates": "Todos los estados",
     "stage1": "Preparando tus publicaciones...",
