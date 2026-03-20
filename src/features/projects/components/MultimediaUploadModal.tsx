@@ -9,7 +9,9 @@ import {
   FolderArrowDownIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
+  XCircleIcon,
 } from "@heroicons/react/24/outline";
+import { usePhotoProcessor } from "../hooks/usePhotoProcessor";
 
 const NAS_URL = import.meta.env.VITE_NAS_PROXY_URL;
 const NAS_KEY = import.meta.env.VITE_NAS_PROXY_API_KEY;
@@ -37,7 +39,7 @@ interface MultimediaUploadModalProps {
   userNasFolder: string;
 }
 
-type ModalState = "idle" | "uploading" | "done";
+type ModalState = "idle" | "uploading" | "processing" | "done";
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return "0 B";
@@ -93,8 +95,20 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
   const [summary, setSummary] = useState<UploadSummary | null>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
+  const { processorState, processorMessage, startProcessing } =
+    usePhotoProcessor();
+
+  // Derived state — avoids setState inside useEffect
+  const processingComplete =
+    modalState === "processing" &&
+    (processorState === "done" || processorState === "error");
+  const isDone = modalState === "done" || processingComplete;
+  const isLocked =
+    modalState === "uploading" ||
+    (modalState === "processing" && processorState === "processing");
+
   const handleClose = () => {
-    if (modalState === "uploading") return;
+    if (isLocked) return;
     setModalState("idle");
     setUploads([]);
     setSummary(null);
@@ -195,9 +209,7 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
             if (ev.lengthComputable) {
               const progress = Math.round((ev.loaded / ev.total) * 100);
               setUploads((prev) =>
-                prev.map((u) =>
-                  u.id === uploadId ? { ...u, progress } : u,
-                ),
+                prev.map((u) => (u.id === uploadId ? { ...u, progress } : u)),
               );
             }
           };
@@ -247,13 +259,17 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
       }
 
       setSummary({ ...summaryData });
-      setModalState("done");
-    },
-    [userNasFolder],
-  );
 
-  const isUploading = modalState === "uploading";
-  const isDone = modalState === "done";
+      // Only trigger processing if all files uploaded successfully
+      if (summaryData.errorCount === 0) {
+        setModalState("processing");
+        startProcessing(`${userNasFolder}/${folderName}`);
+      } else {
+        setModalState("done");
+      }
+    },
+    [userNasFolder, startProcessing],
+  );
 
   return (
     <Dialog open={isOpen} onClose={handleClose} className="relative z-60">
@@ -278,7 +294,10 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
                     Crear desde multimedia
                   </DialogTitle>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    Arrastra una carpeta con tus fotografías para crear un proyecto. Se mantendrá la estructura de carpetas dentro del proyecto. Solo se aceptan archivos dentro de una carpeta, no archivos sueltos.
+                    Arrastra una carpeta con tus fotografías para crear un
+                    proyecto. Se mantendrá la estructura de carpetas dentro del
+                    proyecto. Solo se aceptan archivos dentro de una carpeta, no
+                    archivos sueltos.
                   </p>
                 </div>
               </div>
@@ -322,10 +341,12 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
                 </>
               )}
 
-              {/* Upload progress + summary */}
-              {(isUploading || isDone) && (
+              {/* Upload progress */}
+              {(modalState === "uploading" ||
+                modalState === "processing" ||
+                isDone) && (
                 <div className="space-y-4">
-                  {isUploading && (
+                  {modalState === "uploading" && (
                     <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-100 rounded-md">
                       <ExclamationTriangleIcon className="h-4 w-4 text-amber-500 shrink-0" />
                       <p className="text-xs text-amber-700 font-medium">
@@ -335,7 +356,7 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
                     </div>
                   )}
 
-                  <div className="max-h-64 overflow-y-auto pr-1 space-y-2">
+                  <div className="max-h-48 overflow-y-auto pr-1 space-y-2">
                     {uploads.map((upload) => (
                       <div key={upload.id} className="text-xs">
                         <div className="flex items-center justify-between mb-0.5">
@@ -371,37 +392,132 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
                     ))}
                   </div>
 
-                  {isDone && summary && (
-                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 space-y-2">
-                      <div className="flex items-center gap-2 mb-3">
-                        <CheckCircleIcon className="h-5 w-5 text-green-600" />
-                        <span className="text-sm font-semibold text-gray-900">
-                          Subida completada
-                        </span>
+                  {/* Processing spinner */}
+                  {modalState === "processing" && processorState === "processing" && (
+                    <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
+                      <svg
+                        className="animate-spin h-5 w-5 text-gray-600 shrink-0"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">
+                          Procesando imágenes...
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          Generando versiones de alta, baja y miniaturas. No
+                          cierres este modal.
+                        </p>
                       </div>
-                      <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-                        <dt className="text-gray-500">Carpeta</dt>
-                        <dd className="font-mono text-gray-800 font-medium">
-                          {summary.folderName}
-                        </dd>
-                        <dt className="text-gray-500">Archivos subidos</dt>
-                        <dd className="text-gray-800 font-medium">
-                          {summary.successCount} / {summary.totalFiles}
-                        </dd>
-                        <dt className="text-gray-500">Tamaño total</dt>
-                        <dd className="text-gray-800 font-medium">
-                          {formatBytes(summary.totalSize)}
-                        </dd>
-                        {summary.errorCount > 0 && (
-                          <>
-                            <dt className="text-red-500">Errores</dt>
-                            <dd className="text-red-600 font-medium">
-                              {summary.errorCount} archivo
-                              {summary.errorCount !== 1 ? "s" : ""}
-                            </dd>
-                          </>
-                        )}
-                      </dl>
+                    </div>
+                  )}
+
+                  {/* Summary */}
+                  {isDone && summary && (
+                    <div className="space-y-3">
+                      {/* Upload summary */}
+                      <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                          Subida
+                        </p>
+                        <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                          <dt className="text-gray-500">Carpeta</dt>
+                          <dd className="font-mono text-gray-800 font-medium">
+                            {summary.folderName}
+                          </dd>
+                          <dt className="text-gray-500">Archivos subidos</dt>
+                          <dd className="text-gray-800 font-medium">
+                            {summary.successCount} / {summary.totalFiles}
+                          </dd>
+                          <dt className="text-gray-500">Tamaño total</dt>
+                          <dd className="text-gray-800 font-medium">
+                            {formatBytes(summary.totalSize)}
+                          </dd>
+                          {summary.errorCount > 0 && (
+                            <>
+                              <dt className="text-red-500">Errores</dt>
+                              <dd className="text-red-600 font-medium">
+                                {summary.errorCount} archivo
+                                {summary.errorCount !== 1 ? "s" : ""}
+                              </dd>
+                            </>
+                          )}
+                        </dl>
+                      </div>
+
+                      {/* Processing result */}
+                      {processorState !== "idle" && (
+                        <div
+                          className={`border rounded-lg p-4 ${
+                            processorState === "done"
+                              ? "border-green-200 bg-green-50"
+                              : "border-red-200 bg-red-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            {processorState === "done" ? (
+                              <CheckCircleIcon className="h-5 w-5 text-green-600 shrink-0" />
+                            ) : (
+                              <XCircleIcon className="h-5 w-5 text-red-500 shrink-0" />
+                            )}
+                            <div>
+                              <p
+                                className={`text-sm font-semibold ${
+                                  processorState === "done"
+                                    ? "text-green-800"
+                                    : "text-red-700"
+                                }`}
+                              >
+                                {processorState === "done"
+                                  ? "Procesado completado"
+                                  : "Error en el procesado"}
+                              </p>
+                              {processorMessage && (
+                                <p
+                                  className={`text-xs mt-0.5 ${
+                                    processorState === "done"
+                                      ? "text-green-700"
+                                      : "text-red-600"
+                                  }`}
+                                >
+                                  {processorMessage}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Upload errors without processing (errorCount > 0) */}
+                      {summary.errorCount > 0 && processorState === "idle" && (
+                        <div className="border border-red-200 bg-red-50 rounded-lg p-4">
+                          <div className="flex items-center gap-2">
+                            <XCircleIcon className="h-5 w-5 text-red-500 shrink-0" />
+                            <p className="text-sm font-semibold text-red-700">
+                              Procesado omitido
+                            </p>
+                          </div>
+                          <p className="text-xs text-red-600 mt-1 ml-7">
+                            Algunos archivos no se subieron correctamente. Revisa
+                            los errores y vuelve a intentarlo.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -413,10 +529,14 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
               <button
                 type="button"
                 onClick={handleClose}
-                disabled={isUploading}
+                disabled={isLocked}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isUploading ? "Subiendo..." : "Cerrar"}
+                {modalState === "uploading"
+                  ? "Subiendo..."
+                  : modalState === "processing" && processorState === "processing"
+                    ? "Procesando..."
+                    : "Cerrar"}
               </button>
             </div>
           </DialogPanel>
