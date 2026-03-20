@@ -29,6 +29,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ProjectsForm } from "../components/ProjectsForm";
 import { UserSearchSelector } from "../components/UserSearchSelector";
+import { MultimediaUploadModal } from "../components/MultimediaUploadModal";
 
 export const Projects = () => {
   const { t } = useTranslation();
@@ -59,6 +60,7 @@ export const Projects = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [showMultimediaModal, setShowMultimediaModal] = useState(false);
 
   const fetchProjectsData = useProjectsData(user);
   const errorMessage = errorMessages({
@@ -346,7 +348,7 @@ export const Projects = () => {
             },
             {
               label: t("projects.createFromMultimedia"),
-              onClick: () => console.log("Crear desde multimedia"),
+              onClick: () => setShowMultimediaModal(true),
             },
           ]}
         />
@@ -460,6 +462,13 @@ export const Projects = () => {
           title="Timeout"
           description="El procesamiento está tardando más de lo esperado. Por favor, verifica el estado del proyecto más tarde o contacta soporte si el problema persiste."
           onAccept={() => setShowTimeoutError(false)}
+        />
+      )}
+      {user.folder_nas && (
+        <MultimediaUploadModal
+          isOpen={showMultimediaModal}
+          onClose={() => setShowMultimediaModal(false)}
+          userNasFolder={user.folder_nas}
         />
       )}
     </div>

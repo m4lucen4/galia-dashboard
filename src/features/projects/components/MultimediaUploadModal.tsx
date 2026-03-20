@@ -1,0 +1,427 @@
+import { useState, useCallback, useRef } from "react";
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogPanel,
+  DialogTitle,
+} from "@headlessui/react";
+import {
+  FolderArrowDownIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+} from "@heroicons/react/24/outline";
+
+const NAS_URL = import.meta.env.VITE_NAS_PROXY_URL;
+const NAS_KEY = import.meta.env.VITE_NAS_PROXY_API_KEY;
+
+interface FileUploadItem {
+  id: string;
+  relativePath: string;
+  progress: number;
+  status: "pending" | "uploading" | "success" | "error";
+  error?: string;
+  size: number;
+}
+
+interface UploadSummary {
+  folderName: string;
+  totalFiles: number;
+  totalSize: number;
+  successCount: number;
+  errorCount: number;
+}
+
+interface MultimediaUploadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  userNasFolder: string;
+}
+
+type ModalState = "idle" | "uploading" | "done";
+
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+}
+
+async function readAllFiles(
+  dirEntry: FileSystemDirectoryEntry,
+  basePath = "",
+): Promise<{ file: File; relativePath: string }[]> {
+  const results: { file: File; relativePath: string }[] = [];
+  const reader = dirEntry.createReader();
+  const readBatch = (): Promise<FileSystemEntry[]> =>
+    new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+
+  let entries: FileSystemEntry[] = [];
+  let batch: FileSystemEntry[];
+  do {
+    batch = await readBatch();
+    entries = entries.concat(batch);
+  } while (batch.length > 0);
+
+  for (const entry of entries) {
+    const entryPath = basePath ? `${basePath}/${entry.name}` : entry.name;
+    if (entry.isFile) {
+      const file = await new Promise<File>((resolve, reject) =>
+        (entry as FileSystemFileEntry).file(resolve, reject),
+      );
+      results.push({ file, relativePath: entryPath });
+    } else if (entry.isDirectory) {
+      const subFiles = await readAllFiles(
+        entry as FileSystemDirectoryEntry,
+        entryPath,
+      );
+      results.push(...subFiles);
+    }
+  }
+  return results;
+}
+
+export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
+  isOpen,
+  onClose,
+  userNasFolder,
+}) => {
+  const [modalState, setModalState] = useState<ModalState>("idle");
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [dragError, setDragError] = useState<string | null>(null);
+  const [uploads, setUploads] = useState<FileUploadItem[]>([]);
+  const [summary, setSummary] = useState<UploadSummary | null>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
+
+  const handleClose = () => {
+    if (modalState === "uploading") return;
+    setModalState("idle");
+    setUploads([]);
+    setSummary(null);
+    setDragError(null);
+    onClose();
+  };
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDraggingOver(false);
+      setDragError(null);
+
+      const items = Array.from(e.dataTransfer.items);
+
+      if (items.length !== 1) {
+        setDragError("Solo puedes subir una carpeta a la vez.");
+        return;
+      }
+
+      const entry = items[0].webkitGetAsEntry();
+
+      if (!entry || !entry.isDirectory) {
+        setDragError("Debes arrastrar una carpeta, no archivos sueltos.");
+        return;
+      }
+
+      const dirEntry = entry as FileSystemDirectoryEntry;
+      const folderName = dirEntry.name;
+
+      let allFiles: { file: File; relativePath: string }[];
+      try {
+        allFiles = await readAllFiles(dirEntry);
+      } catch {
+        setDragError("Error leyendo la carpeta. Inténtalo de nuevo.");
+        return;
+      }
+
+      if (allFiles.length === 0) {
+        setDragError("La carpeta está vacía.");
+        return;
+      }
+
+      const uploadItems: FileUploadItem[] = allFiles.map(
+        ({ file, relativePath }, i) => ({
+          id: `${Date.now()}-${i}`,
+          relativePath,
+          progress: 0,
+          status: "pending",
+          size: file.size,
+        }),
+      );
+
+      setUploads(uploadItems);
+      setModalState("uploading");
+
+      const summaryData: UploadSummary = {
+        folderName,
+        totalFiles: allFiles.length,
+        totalSize: allFiles.reduce((acc, { file }) => acc + file.size, 0),
+        successCount: 0,
+        errorCount: 0,
+      };
+
+      for (let i = 0; i < allFiles.length; i++) {
+        const { file, relativePath } = allFiles[i];
+        const uploadId = uploadItems[i].id;
+
+        const relDir = relativePath.includes("/")
+          ? relativePath.substring(0, relativePath.lastIndexOf("/"))
+          : "";
+        const destPath = relDir
+          ? `/${userNasFolder}/${folderName}/${relDir}`
+          : `/${userNasFolder}/${folderName}`;
+
+        setUploads((prev) =>
+          prev.map((u) =>
+            u.id === uploadId ? { ...u, status: "uploading" } : u,
+          ),
+        );
+
+        await new Promise<void>((resolve) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          const xhr = new XMLHttpRequest();
+
+          xhr.upload.onprogress = (ev) => {
+            if (ev.lengthComputable) {
+              const progress = Math.round((ev.loaded / ev.total) * 100);
+              setUploads((prev) =>
+                prev.map((u) =>
+                  u.id === uploadId ? { ...u, progress } : u,
+                ),
+              );
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              setUploads((prev) =>
+                prev.map((u) =>
+                  u.id === uploadId
+                    ? { ...u, status: "success", progress: 100 }
+                    : u,
+                ),
+              );
+              summaryData.successCount++;
+            } else {
+              setUploads((prev) =>
+                prev.map((u) =>
+                  u.id === uploadId
+                    ? { ...u, status: "error", error: "Error al subir" }
+                    : u,
+                ),
+              );
+              summaryData.errorCount++;
+            }
+            resolve();
+          };
+
+          xhr.onerror = () => {
+            setUploads((prev) =>
+              prev.map((u) =>
+                u.id === uploadId
+                  ? { ...u, status: "error", error: "Error al subir" }
+                  : u,
+              ),
+            );
+            summaryData.errorCount++;
+            resolve();
+          };
+
+          xhr.open(
+            "POST",
+            `${NAS_URL}/upload?path=${encodeURIComponent(destPath)}`,
+          );
+          xhr.setRequestHeader("x-api-key", NAS_KEY);
+          xhr.send(formData);
+        });
+      }
+
+      setSummary({ ...summaryData });
+      setModalState("done");
+    },
+    [userNasFolder],
+  );
+
+  const isUploading = modalState === "uploading";
+  const isDone = modalState === "done";
+
+  return (
+    <Dialog open={isOpen} onClose={handleClose} className="relative z-60">
+      <DialogBackdrop
+        transition
+        className="fixed inset-0 bg-gray-500/75 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+      />
+      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
+          <DialogPanel
+            transition
+            className="relative transform rounded-lg bg-white text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 w-full sm:max-w-2xl"
+          >
+            {/* Header */}
+            <div className="px-6 pt-5 pb-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gray-800">
+                  <FolderArrowDownIcon className="size-5 text-white" />
+                </div>
+                <div>
+                  <DialogTitle className="text-base font-semibold text-gray-900">
+                    Crear desde multimedia
+                  </DialogTitle>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Arrastra una carpeta con tus fotografías para crear un proyecto. Se mantendrá la estructura de carpetas dentro del proyecto. Solo se aceptan archivos dentro de una carpeta, no archivos sueltos.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-6 space-y-4">
+              {/* Drop zone */}
+              {modalState === "idle" && (
+                <>
+                  <div
+                    ref={dropZoneRef}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg py-14 px-6 transition-colors ${
+                      isDraggingOver
+                        ? "border-black bg-gray-50"
+                        : "border-gray-300 bg-white"
+                    }`}
+                  >
+                    <FolderArrowDownIcon
+                      className={`h-12 w-12 mb-3 transition-colors ${
+                        isDraggingOver ? "text-black" : "text-gray-300"
+                      }`}
+                    />
+                    <p className="text-sm font-medium text-gray-700">
+                      Arrastra aquí tu carpeta
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Solo se admite una carpeta. No se aceptan archivos
+                      sueltos.
+                    </p>
+                  </div>
+                  {dragError && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-100 rounded-md">
+                      <ExclamationTriangleIcon className="h-4 w-4 text-red-500 shrink-0" />
+                      <p className="text-xs text-red-600">{dragError}</p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Upload progress + summary */}
+              {(isUploading || isDone) && (
+                <div className="space-y-4">
+                  {isUploading && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-100 rounded-md">
+                      <ExclamationTriangleIcon className="h-4 w-4 text-amber-500 shrink-0" />
+                      <p className="text-xs text-amber-700 font-medium">
+                        Subida en curso. No cierres este modal hasta que
+                        finalice.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="max-h-64 overflow-y-auto pr-1 space-y-2">
+                    {uploads.map((upload) => (
+                      <div key={upload.id} className="text-xs">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-gray-600 truncate max-w-sm font-mono">
+                            {upload.relativePath}
+                          </span>
+                          <span
+                            className={`ml-2 shrink-0 ${
+                              upload.status === "success"
+                                ? "text-green-600 font-medium"
+                                : upload.status === "error"
+                                  ? "text-red-600"
+                                  : "text-gray-500"
+                            }`}
+                          >
+                            {upload.status === "success"
+                              ? "✓"
+                              : upload.status === "error"
+                                ? `✗ ${upload.error}`
+                                : `${upload.progress}%`}
+                          </span>
+                        </div>
+                        {(upload.status === "uploading" ||
+                          upload.status === "pending") && (
+                          <div className="w-full bg-gray-200 rounded-full h-1">
+                            <div
+                              className="bg-black h-1 rounded-full transition-all duration-200"
+                              style={{ width: `${upload.progress}%` }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {isDone && summary && (
+                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 space-y-2">
+                      <div className="flex items-center gap-2 mb-3">
+                        <CheckCircleIcon className="h-5 w-5 text-green-600" />
+                        <span className="text-sm font-semibold text-gray-900">
+                          Subida completada
+                        </span>
+                      </div>
+                      <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                        <dt className="text-gray-500">Carpeta</dt>
+                        <dd className="font-mono text-gray-800 font-medium">
+                          {summary.folderName}
+                        </dd>
+                        <dt className="text-gray-500">Archivos subidos</dt>
+                        <dd className="text-gray-800 font-medium">
+                          {summary.successCount} / {summary.totalFiles}
+                        </dd>
+                        <dt className="text-gray-500">Tamaño total</dt>
+                        <dd className="text-gray-800 font-medium">
+                          {formatBytes(summary.totalSize)}
+                        </dd>
+                        {summary.errorCount > 0 && (
+                          <>
+                            <dt className="text-red-500">Errores</dt>
+                            <dd className="text-red-600 font-medium">
+                              {summary.errorCount} archivo
+                              {summary.errorCount !== 1 ? "s" : ""}
+                            </dd>
+                          </>
+                        )}
+                      </dl>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-50 px-6 py-3 flex justify-end rounded-b-lg">
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={isUploading}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isUploading ? "Subiendo..." : "Cerrar"}
+              </button>
+            </div>
+          </DialogPanel>
+        </div>
+      </div>
+    </Dialog>
+  );
+};
