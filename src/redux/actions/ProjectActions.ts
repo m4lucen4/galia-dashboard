@@ -42,6 +42,7 @@ export const addProject = createAsyncThunk(
           year: projectData.year,
           showMap: projectData.showMap,
           projectCollaborators: projectData.projectCollaborators,
+          nas_folder: projectData.nas_folder ?? null,
         })
         .select()
         .single();

@@ -5,6 +5,7 @@ const NAS_KEY = import.meta.env.VITE_NAS_PROXY_API_KEY;
 
 export type NasFile = {
   name: string;
+  path: string;
   size: number;
   isDirectory: boolean;
   modified: string;

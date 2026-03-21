@@ -13,6 +13,19 @@ import {
   ExclamationTriangleIcon,
   FolderOpenIcon,
 } from "@heroicons/react/24/outline";
+
+const IMAGE_EXTENSIONS = new Set([
+  "jpg", "jpeg", "png", "gif", "webp", "tiff", "tif", "bmp", "heic",
+]);
+
+function isImage(filename: string): boolean {
+  const ext = filename.split(".").pop()?.toLowerCase() ?? "";
+  return IMAGE_EXTENSIONS.has(ext);
+}
+
+function thumbnailUrl(filePath: string): string {
+  return `${NAS_URL}/serve?path=${encodeURIComponent(filePath)}&apikey=${NAS_KEY}`;
+}
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { nasFetchFiles, nasDeleteFile } from "../../../redux/actions/NasActions";
 
@@ -299,30 +312,52 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
                   <p className="text-xs text-gray-500 mb-2">
                     {fileList.length} archivo{fileList.length !== 1 ? "s" : ""}
                   </p>
-                  <ul className="divide-y divide-gray-100 max-h-72 overflow-y-auto pr-1">
+                  <ul className="grid grid-cols-3 gap-2 max-h-72 overflow-y-auto pr-1">
                     {fileList.map((file) => (
-                      <li
-                        key={file.name}
-                        className="flex items-center justify-between py-2"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <DocumentIcon className="h-4 w-4 text-gray-400 shrink-0" />
-                          <span className="text-sm text-gray-700 truncate">
-                            {file.name}
-                          </span>
-                          <span className="text-xs text-gray-400 shrink-0">
-                            {formatBytes(file.size)}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(file.name)}
-                          disabled={deletingFile === file.name}
-                          className="ml-2 p-1 text-gray-400 hover:text-red-500 rounded shrink-0 disabled:opacity-50"
-                          title="Eliminar"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
+                      <li key={file.name} className="relative group">
+                        {isImage(file.name) ? (
+                          <>
+                            <img
+                              src={thumbnailUrl(file.path)}
+                              alt={file.name}
+                              loading="lazy"
+                              className="h-24 w-full object-cover rounded-md bg-gray-100"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(file.name)}
+                              disabled={deletingFile === file.name}
+                              className="absolute top-1 right-1 p-1 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 disabled:opacity-50 transition-opacity"
+                              title="Eliminar"
+                            >
+                              <TrashIcon className="h-3.5 w-3.5" />
+                            </button>
+                            <p className="text-xs text-gray-500 truncate mt-0.5 px-0.5">
+                              {file.name}
+                            </p>
+                          </>
+                        ) : (
+                          <div className="flex items-center justify-between py-2 col-span-3">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <DocumentIcon className="h-4 w-4 text-gray-400 shrink-0" />
+                              <span className="text-sm text-gray-700 truncate">
+                                {file.name}
+                              </span>
+                              <span className="text-xs text-gray-400 shrink-0">
+                                {formatBytes(file.size)}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(file.name)}
+                              disabled={deletingFile === file.name}
+                              className="ml-2 p-1 text-gray-400 hover:text-red-500 rounded shrink-0 disabled:opacity-50"
+                              title="Eliminar"
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
                       </li>
                     ))}
                   </ul>

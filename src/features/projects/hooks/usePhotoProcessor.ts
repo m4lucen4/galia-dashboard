@@ -3,17 +3,40 @@ import { useState, useEffect, useRef, useCallback } from "react";
 const PROCESSOR_URL = import.meta.env.VITE_PHOTO_PROCESSOR_URL;
 const PROCESSOR_TOKEN = import.meta.env.VITE_PHOTO_PROCESSOR_TOKEN;
 
+export interface FotoTag {
+  filename: string;
+  descripcion_corta: string;
+  iluminacion: string[];
+  tipo_plano: string[];
+  atmosfera_mood: string[];
+  materiales_visibles: string[];
+  elementos_arquitectonicos: string[];
+  rating: string;
+}
+
+export interface ProcessorAnalysis {
+  ok: boolean;
+  titulo: string;
+  descripcion: string;
+  tags: string[];
+  web?: string | null;
+  anio?: string;
+  foto_tags: FotoTag[];
+}
+
 export type ProcessorState = "idle" | "processing" | "done" | "error";
 
 export interface UsePhotoProcessorResult {
   processorState: ProcessorState;
   processorMessage: string;
+  analysis: ProcessorAnalysis | null;
   startProcessing: (folder: string) => void;
 }
 
 export const usePhotoProcessor = (): UsePhotoProcessorResult => {
   const [processorState, setProcessorState] = useState<ProcessorState>("idle");
   const [processorMessage, setProcessorMessage] = useState("");
+  const [analysis, setAnalysis] = useState<ProcessorAnalysis | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const folderRef = useRef<string>("");
 
@@ -37,6 +60,7 @@ export const usePhotoProcessor = (): UsePhotoProcessorResult => {
       if (!data.inProgress) {
         stopPolling();
         if (data.ok) {
+          setAnalysis(data.analysis ?? null);
           setProcessorState("done");
           setProcessorMessage(data.message);
         } else {
@@ -56,6 +80,7 @@ export const usePhotoProcessor = (): UsePhotoProcessorResult => {
       folderRef.current = folder;
       setProcessorState("processing");
       setProcessorMessage("");
+      setAnalysis(null);
 
       try {
         const res = await fetch(`${PROCESSOR_URL}/process`, {
@@ -83,5 +108,5 @@ export const usePhotoProcessor = (): UsePhotoProcessorResult => {
     [checkStatus],
   );
 
-  return { processorState, processorMessage, startProcessing };
+  return { processorState, processorMessage, analysis, startProcessing };
 };

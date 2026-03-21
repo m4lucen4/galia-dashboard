@@ -78,6 +78,7 @@ export type ProjectDataProps = {
   year?: string;
   showMap?: boolean;
   projectCollaborators?: ProjectCollaboratorsProps[];
+  nas_folder?: string;
 };
 
 export type LinkedInPageInfo = {

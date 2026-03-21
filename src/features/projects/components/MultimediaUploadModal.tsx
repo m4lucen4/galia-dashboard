@@ -11,7 +11,10 @@ import {
   CheckCircleIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
-import { usePhotoProcessor } from "../hooks/usePhotoProcessor";
+import {
+  usePhotoProcessor,
+  type ProcessorAnalysis,
+} from "../hooks/usePhotoProcessor";
 
 const NAS_URL = import.meta.env.VITE_NAS_PROXY_URL;
 const NAS_KEY = import.meta.env.VITE_NAS_PROXY_API_KEY;
@@ -37,9 +40,21 @@ interface MultimediaUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   userNasFolder: string;
+  onCreateProject?: (analysis: ProcessorAnalysis, folderPath: string) => void;
 }
 
 type ModalState = "idle" | "uploading" | "processing" | "done";
+
+function normalizeFolderName(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")   // remove diacritics (tildes, accents)
+    .toLowerCase()
+    .replace(/\s+/g, "_")              // spaces → underscores
+    .replace(/[^a-z0-9_-]/g, "")      // remove anything not allowed
+    .replace(/_{2,}/g, "_")            // collapse consecutive underscores
+    .replace(/^[-_]+|[-_]+$/g, "");    // trim leading/trailing - or _
+}
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return "0 B";
@@ -87,15 +102,21 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
   isOpen,
   onClose,
   userNasFolder,
+  onCreateProject,
 }) => {
   const [modalState, setModalState] = useState<ModalState>("idle");
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [dragError, setDragError] = useState<string | null>(null);
   const [uploads, setUploads] = useState<FileUploadItem[]>([]);
   const [summary, setSummary] = useState<UploadSummary | null>(null);
+  const [normalizedName, setNormalizedName] = useState<{
+    original: string;
+    result: string;
+  } | null>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
+  const uploadedFolderPathRef = useRef<string>("");
 
-  const { processorState, processorMessage, startProcessing } =
+  const { processorState, processorMessage, analysis, startProcessing } =
     usePhotoProcessor();
 
   // Derived state — avoids setState inside useEffect
@@ -113,6 +134,7 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
     setUploads([]);
     setSummary(null);
     setDragError(null);
+    setNormalizedName(null);
     onClose();
   };
 
@@ -147,7 +169,19 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
       }
 
       const dirEntry = entry as FileSystemDirectoryEntry;
-      const folderName = dirEntry.name;
+      const originalName = dirEntry.name;
+      const folderName = normalizeFolderName(originalName);
+
+      if (!folderName) {
+        setDragError(
+          "El nombre de la carpeta no contiene caracteres válidos tras la normalización. Renómbrala e inténtalo de nuevo.",
+        );
+        return;
+      }
+
+      if (originalName !== folderName) {
+        setNormalizedName({ original: originalName, result: folderName });
+      }
 
       let allFiles: { file: File; relativePath: string }[];
       try {
@@ -262,8 +296,10 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
 
       // Only trigger processing if all files uploaded successfully
       if (summaryData.errorCount === 0) {
+        const folderPath = `${userNasFolder}/${folderName}`;
+        uploadedFolderPathRef.current = folderPath;
         setModalState("processing");
-        startProcessing(`${userNasFolder}/${folderName}`);
+        startProcessing(folderPath);
       } else {
         setModalState("done");
       }
@@ -339,6 +375,23 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
                     </div>
                   )}
                 </>
+              )}
+
+              {/* Normalization notice — shown once uploading starts */}
+              {normalizedName && (
+                <div className="flex items-start gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-md">
+                  <ExclamationTriangleIcon className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+                  <p className="text-xs text-blue-700">
+                    El nombre de la carpeta ha sido normalizado:{" "}
+                    <span className="font-mono line-through text-blue-400">
+                      {normalizedName.original}
+                    </span>{" "}
+                    →{" "}
+                    <span className="font-mono font-semibold">
+                      {normalizedName.result}
+                    </span>
+                  </p>
+                </div>
               )}
 
               {/* Upload progress */}
@@ -525,7 +578,7 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="bg-gray-50 px-6 py-3 flex justify-end rounded-b-lg">
+            <div className="bg-gray-50 px-6 py-3 flex justify-end gap-2 rounded-b-lg">
               <button
                 type="button"
                 onClick={handleClose}
@@ -538,6 +591,18 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
                     ? "Procesando..."
                     : "Cerrar"}
               </button>
+              {isDone && processorState === "done" && analysis && onCreateProject && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onCreateProject(analysis, uploadedFolderPathRef.current);
+                    handleClose();
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-white bg-black border border-transparent rounded-md shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                >
+                  Crear proyecto
+                </button>
+              )}
             </div>
           </DialogPanel>
         </div>

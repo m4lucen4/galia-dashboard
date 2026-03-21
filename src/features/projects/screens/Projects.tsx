@@ -30,6 +30,12 @@ import { useTranslation } from "react-i18next";
 import { ProjectsForm } from "../components/ProjectsForm";
 import { UserSearchSelector } from "../components/UserSearchSelector";
 import { MultimediaUploadModal } from "../components/MultimediaUploadModal";
+import {
+  type ProcessorAnalysis,
+  type FotoTag,
+} from "../hooks/usePhotoProcessor";
+import { addProjectPhotos } from "../../../redux/actions/ProjectPhotoActions";
+import { ProjectDataProps } from "../../../types";
 
 export const Projects = () => {
   const { t } = useTranslation();
@@ -61,6 +67,14 @@ export const Projects = () => {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [showMultimediaModal, setShowMultimediaModal] = useState(false);
+  const [multimediaPreFill, setMultimediaPreFill] =
+    useState<ProjectDataProps | null>(null);
+  const [pendingFotoTags, setPendingFotoTags] = useState<FotoTag[] | null>(
+    null,
+  );
+  const [multimediaMinFolder, setMultimediaMinFolder] = useState<string | null>(
+    null,
+  );
 
   const fetchProjectsData = useProjectsData(user);
   const errorMessage = errorMessages({
@@ -113,6 +127,32 @@ export const Projects = () => {
 
   const handleOpenDrawer = () => {
     setIsEditMode(false);
+    setMultimediaPreFill(null);
+    setPendingFotoTags(null);
+    setMultimediaMinFolder(null);
+    setDrawerOpen(true);
+  };
+
+  const handleCreateFromMultimedia = (
+    analysis: ProcessorAnalysis,
+    folderPath: string,
+  ) => {
+    const preFill: ProjectDataProps = {
+      id: "",
+      user: user!.uid,
+      title: analysis.titulo,
+      description: analysis.descripcion,
+      keywords: analysis.tags.join(", "),
+      weblink: analysis.web || "",
+      year: analysis.anio || "",
+      state: "draft",
+      nas_folder: folderPath,
+    };
+    setMultimediaPreFill(preFill);
+    setPendingFotoTags(analysis.foto_tags);
+    setMultimediaMinFolder(`/${folderPath}/min`);
+    setIsEditMode(false);
+    dispatch(clearSelectedProject());
     setDrawerOpen(true);
   };
 
@@ -158,9 +198,20 @@ export const Projects = () => {
     } else {
       dispatch(addProject(formData))
         .unwrap()
-        .then(() => {
+        .then((result) => {
           fetchProjectsData();
           setDrawerOpen(false);
+          if (pendingFotoTags && result.project?.id) {
+            dispatch(
+              addProjectPhotos({
+                projectId: result.project.id,
+                fotoTags: pendingFotoTags,
+              }),
+            );
+          }
+          setMultimediaPreFill(null);
+          setPendingFotoTags(null);
+          setMultimediaMinFolder(null);
         });
     }
   };
@@ -244,6 +295,11 @@ export const Projects = () => {
   const getNasFolder = (): string | null => {
     if (!project) return null;
 
+    // Proyecto creado desde multimedia: usar la carpeta guardada + min/
+    if (project.nas_folder) {
+      return `/${project.nas_folder}/min`;
+    }
+
     // El fotógrafo edita su propio proyecto: usar datos del usuario autenticado
     if (user?.role === "photographer" && user.folder_nas) {
       const initials = getInitials(user.first_name, user.last_name);
@@ -291,6 +347,7 @@ export const Projects = () => {
       year: project.year,
       showMap: project.showMap,
       projectCollaborators: project.projectCollaborators,
+      nas_folder: project.nas_folder,
     };
   };
 
@@ -377,15 +434,24 @@ export const Projects = () => {
           isEditMode ? t("projects.editProject") : t("projects.createProject")
         }
         isOpen={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={() => {
+          setDrawerOpen(false);
+          setMultimediaPreFill(null);
+          setPendingFotoTags(null);
+          setMultimediaMinFolder(null);
+        }}
       >
         <ProjectsForm
-          initialData={isEditMode ? getFormData() : undefined}
+          initialData={isEditMode ? getFormData() : (multimediaPreFill ?? undefined)}
           onSubmit={handleProjectSubmit}
           loading={projectAddRequest.inProgress}
           isEditMode={isEditMode}
           user={user}
-          nasFolder={isEditMode ? (getNasFolder() ?? undefined) : undefined}
+          nasFolder={
+            isEditMode
+              ? (getNasFolder() ?? undefined)
+              : (multimediaMinFolder ?? undefined)
+          }
         />
       </Drawer>
       <ProjectsTable
@@ -469,6 +535,10 @@ export const Projects = () => {
           isOpen={showMultimediaModal}
           onClose={() => setShowMultimediaModal(false)}
           userNasFolder={user.folder_nas}
+          onCreateProject={(analysis, folderPath) => {
+            setShowMultimediaModal(false);
+            handleCreateFromMultimedia(analysis, folderPath);
+          }}
         />
       )}
     </div>
