@@ -19,7 +19,8 @@ function classNames(
 }
 
 export default function NavbarWeb() {
-  const { authenticated } = useSelector((state: RootState) => state.auth);
+  const { authenticated, user } = useSelector((state: RootState) => state.auth);
+  const isAdmin = user?.role === "admin";
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("");
@@ -67,18 +68,18 @@ export default function NavbarWeb() {
               <span className="sr-only">Abrir menú principal</span>
               <Bars3Icon
                 aria-hidden="true"
-                className="block h-6 w-6 group-data-[open]:hidden"
+                className="block h-6 w-6 group-data-open:hidden"
               />
               <XMarkIcon
                 aria-hidden="true"
-                className="hidden h-6 w-6 group-data-[open]:block"
+                className="hidden h-6 w-6 group-data-open:block"
               />
             </DisclosureButton>
           </div>
 
           {/* Logo */}
           <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start ">
-            <div className="flex flex-shrink-0 items-center">
+            <div className="flex shrink-0 items-center">
               <Link to="/" className="flex items-center">
                 <img src={logoImage} alt="Mocklab" className="h-8 w-auto" />
               </Link>
@@ -106,7 +107,15 @@ export default function NavbarWeb() {
           </div>
 
           {/* Auth buttons */}
-          <div className="hidden sm:flex items-center sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+          <div className="hidden sm:flex items-center gap-3 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+            {isAdmin && (
+              <Link
+                to="/archivo"
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200"
+              >
+                Archivo
+              </Link>
+            )}
             {authenticated ? (
               <Link
                 to="/home"
@@ -147,6 +156,14 @@ export default function NavbarWeb() {
 
           {/* Mobile auth button */}
           <div className="pt-4 pb-2 border-t border-gray-200 mt-4">
+            {isAdmin && (
+              <Link
+                to="/archivo"
+                className="block w-full text-left px-3 py-2 text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-colors duration-200 mb-2"
+              >
+                Archivo
+              </Link>
+            )}
             {authenticated ? (
               <Link
                 to="/home"

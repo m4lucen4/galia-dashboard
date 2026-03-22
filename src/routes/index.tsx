@@ -13,6 +13,7 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { PublicRoute } from "./PublicRoute";
 import { PasswordResetRoute } from "./PasswordResetRoute";
 import { AdminRoute } from "./AdminRoute";
+import { AdminWebRoute } from "./AdminWebRoute";
 
 import { Web } from "../features/web/screen/Web";
 import { Privacy } from "../screens/public/Privacy";
@@ -46,6 +47,8 @@ export const AppRoutes = () => (
     </Route>
     <Route element={<AdminRoute />}>
       <Route path="/users" element={<Users />} />
+    </Route>
+    <Route element={<AdminWebRoute />}>
       <Route path="/archivo" element={<Archive />} />
     </Route>
     <Route element={<PasswordResetRoute />}>

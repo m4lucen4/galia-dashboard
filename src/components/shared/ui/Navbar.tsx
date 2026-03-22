@@ -36,7 +36,6 @@ export default function Navbar() {
   const navigation = [
     { name: t("menu.home"), href: "/home", current: false },
     { name: t("menu.users"), href: "/users", current: false, adminOnly: true },
-    { name: t("menu.archive"), href: "/archivo", current: false, adminOnly: true },
     { name: t("menu.projects"), href: "/projects", current: false },
     {
       name: t("menu.multimedia"),
