@@ -31,7 +31,11 @@ export const deleteProjectPhoto = createAsyncThunk(
 export const addProjectPhotos = createAsyncThunk(
   "projectPhotos/add",
   async (
-    { projectId, fotoTags }: { projectId: string; fotoTags: FotoTag[] },
+    {
+      projectId,
+      fotoTags,
+      nasBasePath,
+    }: { projectId: string; fotoTags: FotoTag[]; nasBasePath?: string },
     { rejectWithValue },
   ) => {
     const rows = fotoTags.map((ft) => ({
@@ -46,6 +50,7 @@ export const addProjectPhotos = createAsyncThunk(
         ...ft.elementos_arquitectonicos,
       ],
       rating: ratingToNumber(ft.rating),
+      nas_base_path: nasBasePath ?? null,
     }));
 
     const { error } = await supabase.from("project_photos").insert(rows);

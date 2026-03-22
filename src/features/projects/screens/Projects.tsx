@@ -262,6 +262,7 @@ export const Projects = () => {
                     addProjectPhotos({
                       projectId: newProjectId,
                       fotoTags: translatedTags,
+                      nasBasePath: newFolderPath,
                     }),
                   );
                 }

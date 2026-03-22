@@ -26,7 +26,8 @@
     "map": "Map",
     "gpts": "My GPTs",
     "wiki": "Wiki",
-    "multimedia": "Multimedia"
+    "multimedia": "Multimedia",
+    "archive": "Archive"
   },
   "login": {
     "title": "Log In",

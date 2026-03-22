@@ -102,7 +102,11 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
   useEffect(() => {
     if (processorState === "done" && addPhotosResult?.foto_tags && projectId) {
       dispatch(
-        addProjectPhotos({ projectId, fotoTags: addPhotosResult.foto_tags }),
+        addProjectPhotos({
+          projectId,
+          fotoTags: addPhotosResult.foto_tags,
+          nasBasePath: baseFolder,
+        }),
       );
       dispatch(nasFetchFiles(folderPath));
     }

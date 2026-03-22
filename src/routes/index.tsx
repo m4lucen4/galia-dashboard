@@ -21,6 +21,7 @@ import { LinkedInCallback } from "../features/settings/screens/LinkedInCallback"
 import { PreviewProjects } from "../features/postPreview/screens/PreviewProjects";
 import { NonAuthenticatedRoute } from "./NonAuthenticatedRoute";
 import { Multimedia } from "@/features/multimedia/screens/Multimedia";
+import { Archive } from "../features/archive/screens/Archive";
 
 export const AppRoutes = () => (
   <Routes>
@@ -45,6 +46,7 @@ export const AppRoutes = () => (
     </Route>
     <Route element={<AdminRoute />}>
       <Route path="/users" element={<Users />} />
+      <Route path="/archivo" element={<Archive />} />
     </Route>
     <Route element={<PasswordResetRoute />}>
       <Route path="/reset-password" element={<RecoveryPasswordScreen />} />

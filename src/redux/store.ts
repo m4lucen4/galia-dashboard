@@ -7,6 +7,7 @@ import socialNetworksReducer from "./slices/SocialNetworksSlice";
 import adminReducer from "./slices/AdminSlice";
 import multimediaReducer from "./slices/MultimediaSlice";
 import nasReducer from "./slices/NasSlice";
+import archiveReducer from "./slices/ArchiveSlice";
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     admin: adminReducer,
     multimedia: multimediaReducer,
     nas: nasReducer,
+    archive: archiveReducer,
   },
 });
 

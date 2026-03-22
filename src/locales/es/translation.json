@@ -27,7 +27,8 @@
     "adminPanel": "Administración",
     "gpts": "Mis GPTs",
     "wiki": "Wiki",
-    "multimedia": "Multimedia"
+    "multimedia": "Multimedia",
+    "archive": "Archivo"
   },
   "login": {
     "title": "Iniciar sesión",
