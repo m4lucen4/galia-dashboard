@@ -6,7 +6,6 @@ import type {
 } from "../actions/ArchiveActions";
 import {
   fetchArchivePhotos,
-  fetchMoreArchivePhotos,
   fetchArchiveTags,
   fetchArchiveAuthors,
 } from "../actions/ArchiveActions";
@@ -16,7 +15,6 @@ interface ArchiveState {
   hasMore: boolean;
   page: number;
   loading: boolean;
-  loadingMore: boolean;
   error: string | null;
   allTags: string[];
   tagsLoading: boolean;
@@ -38,7 +36,6 @@ const initialState: ArchiveState = {
   hasMore: true,
   page: 0,
   loading: false,
-  loadingMore: false,
   error: null,
   allTags: [],
   tagsLoading: false,
@@ -75,25 +72,12 @@ const archiveSlice = createSlice({
         state.loading = false;
         state.photos = action.payload.photos;
         state.hasMore = action.payload.hasMore;
-        state.page = 1;
+        state.page = action.payload.page;
       })
       .addCase(fetchArchivePhotos.rejected, (state, action) => {
         state.loading = false;
         state.error =
           (action.payload as { message: string })?.message ?? "Error";
-      })
-      // fetchMoreArchivePhotos
-      .addCase(fetchMoreArchivePhotos.pending, (state) => {
-        state.loadingMore = true;
-      })
-      .addCase(fetchMoreArchivePhotos.fulfilled, (state, action) => {
-        state.loadingMore = false;
-        state.photos = [...state.photos, ...action.payload.photos];
-        state.hasMore = action.payload.hasMore;
-        state.page += 1;
-      })
-      .addCase(fetchMoreArchivePhotos.rejected, (state) => {
-        state.loadingMore = false;
       })
       // fetchArchiveTags
       .addCase(fetchArchiveTags.pending, (state) => {

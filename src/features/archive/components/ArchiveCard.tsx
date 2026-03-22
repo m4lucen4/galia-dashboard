@@ -4,7 +4,7 @@ const NAS_URL = import.meta.env.VITE_NAS_PROXY_URL;
 const NAS_KEY = import.meta.env.VITE_NAS_PROXY_API_KEY;
 
 export function thumbnailUrl(photo: ArchivePhoto): string {
-  const path = `/${photo.nas_base_path}/${photo.project_id}_min/${photo.filename}`;
+  const path = `/${photo.nas_base_path}/${photo.project_id}_baja_ma/${photo.filename}`;
   return `${NAS_URL}/serve?path=${encodeURIComponent(path)}&apikey=${NAS_KEY}`;
 }
 

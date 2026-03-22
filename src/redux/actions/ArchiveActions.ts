@@ -31,7 +31,7 @@ export interface ArchiveAuthor {
   name: string;
 }
 
-export const PAGE_SIZE = 24;
+export const PAGE_SIZE = 16;
 
 function buildQuery(filters: ArchiveFilters, from: number, to: number) {
   let query = supabase
@@ -92,16 +92,6 @@ function mapRow(row: any): ArchivePhoto {
 
 export const fetchArchivePhotos = createAsyncThunk(
   "archive/fetchPhotos",
-  async (filters: ArchiveFilters, { rejectWithValue }) => {
-    const { data, error } = await buildQuery(filters, 0, PAGE_SIZE - 1);
-    if (error) return rejectWithValue({ message: error.message });
-    const photos = (data ?? []).map(mapRow);
-    return { photos, hasMore: photos.length === PAGE_SIZE };
-  },
-);
-
-export const fetchMoreArchivePhotos = createAsyncThunk(
-  "archive/fetchMore",
   async (
     { filters, page }: { filters: ArchiveFilters; page: number },
     { rejectWithValue },
@@ -111,7 +101,7 @@ export const fetchMoreArchivePhotos = createAsyncThunk(
     const { data, error } = await buildQuery(filters, from, to);
     if (error) return rejectWithValue({ message: error.message });
     const photos = (data ?? []).map(mapRow);
-    return { photos, hasMore: photos.length === PAGE_SIZE };
+    return { photos, hasMore: photos.length === PAGE_SIZE, page };
   },
 );
 
