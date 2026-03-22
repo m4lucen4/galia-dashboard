@@ -81,6 +81,8 @@ export const Projects = () => {
   const [multimediaMinFolder, setMultimediaMinFolder] = useState<string | null>(
     null,
   );
+  const [multimediaTargetUser, setMultimediaTargetUser] =
+    useState<(typeof users)[0] | null>(null);
 
   const fetchProjectsData = useProjectsData(user);
   const errorMessage = errorMessages({
@@ -102,7 +104,10 @@ export const Projects = () => {
 
   useEffect(() => {
     fetchProjectsData();
-  }, [fetchProjectsData]);
+    if (user?.role === "admin") {
+      dispatch(fetchUsers());
+    }
+  }, [fetchProjectsData, dispatch, user?.role]);
 
   // Handle workflow completion via realtime
   useEffect(() => {
@@ -142,10 +147,16 @@ export const Projects = () => {
   const handleCreateFromMultimedia = (
     analysis: ProcessorAnalysis,
     folderPath: string,
+    targetUserId?: string,
   ) => {
+    const targetUser = targetUserId
+      ? (users.find((u) => u.uid === targetUserId) ?? null)
+      : null;
+    setMultimediaTargetUser(targetUser);
+
     const preFill: ProjectDataProps = {
       id: "",
-      user: user!.uid,
+      user: targetUserId ?? user!.uid,
       title: analysis.titulo,
       description: analysis.descripcion,
       keywords: analysis.tags.join(", "),
@@ -218,14 +229,15 @@ export const Projects = () => {
 
           const newProjectId = result.project?.id;
           const nasFolder = multimediaPreFill?.nas_folder;
+          const nasUser = multimediaTargetUser ?? user;
 
-          if (newProjectId && nasFolder && user) {
-            const initials = getInitials(user.first_name, user.last_name);
-            const odooId = String(user.odoo_id ?? "");
+          if (newProjectId && nasFolder && nasUser?.folder_nas) {
+            const initials = getInitials(nasUser.first_name, nasUser.last_name);
+            const odooId = String(nasUser.odoo_id ?? "");
             const newFolderName = odooId
               ? `${newProjectId}-${odooId}-${initials}`
               : `${newProjectId}-${initials}`;
-            const newFolderPath = `${user.folder_nas}/${newFolderName}`;
+            const newFolderPath = `${nasUser.folder_nas}/${newFolderName}`;
 
             // Sequential: rename → restructure → save photos
             dispatch(nasRenameFolder({ from: nasFolder, to: newFolderPath }))
@@ -262,6 +274,7 @@ export const Projects = () => {
           setMultimediaPreFill(null);
           setPendingFotoTags(null);
           setMultimediaMinFolder(null);
+          setMultimediaTargetUser(null);
         });
     }
   };
@@ -465,7 +478,8 @@ export const Projects = () => {
         </p>
       </div>
       <div className="flex justify-between items-center mb-4">
-        {user?.role === "photographer" && user.odoo_id ? (
+        {(user?.role === "admin" ||
+          (user?.role === "photographer" && user.odoo_id)) ? (
           <DropdownButton
             title={t("projects.create")}
             options={[
@@ -512,6 +526,7 @@ export const Projects = () => {
           setMultimediaPreFill(null);
           setPendingFotoTags(null);
           setMultimediaMinFolder(null);
+          setMultimediaTargetUser(null);
         }}
       >
         <ProjectsForm
@@ -615,10 +630,17 @@ export const Projects = () => {
         <MultimediaUploadModal
           isOpen={showMultimediaModal}
           onClose={() => setShowMultimediaModal(false)}
-          userNasFolder={user.folder_nas}
-          onCreateProject={(analysis, folderPath) => {
+          userNasFolder={user.folder_nas ?? ""}
+          photographers={
+            user.role === "admin"
+              ? users.filter(
+                  (u) => u.role === "photographer" && u.folder_nas && u.odoo_id,
+                )
+              : undefined
+          }
+          onCreateProject={(analysis, folderPath, targetUserId) => {
             setShowMultimediaModal(false);
-            handleCreateFromMultimedia(analysis, folderPath);
+            handleCreateFromMultimedia(analysis, folderPath, targetUserId);
           }}
         />
       )}

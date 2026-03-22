@@ -15,6 +15,8 @@ import {
   usePhotoProcessor,
   type ProcessorAnalysis,
 } from "../hooks/usePhotoProcessor";
+import type { UserDataProps } from "../../../types";
+import { UserSearchSelector } from "./UserSearchSelector";
 
 const NAS_URL = import.meta.env.VITE_NAS_PROXY_URL;
 const NAS_KEY = import.meta.env.VITE_NAS_PROXY_API_KEY;
@@ -40,7 +42,12 @@ interface MultimediaUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   userNasFolder: string;
-  onCreateProject?: (analysis: ProcessorAnalysis, folderPath: string) => void;
+  photographers?: UserDataProps[];
+  onCreateProject?: (
+    analysis: ProcessorAnalysis,
+    folderPath: string,
+    targetUserId?: string,
+  ) => void;
 }
 
 type ModalState = "idle" | "uploading" | "processing" | "done";
@@ -102,6 +109,7 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
   isOpen,
   onClose,
   userNasFolder,
+  photographers,
   onCreateProject,
 }) => {
   const [modalState, setModalState] = useState<ModalState>("idle");
@@ -113,8 +121,13 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
     original: string;
     result: string;
   } | null>(null);
+  const [selectedPhotographer, setSelectedPhotographer] =
+    useState<UserDataProps | null>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const uploadedFolderPathRef = useRef<string>("");
+
+  const isAdminMode = !!photographers;
+  const activeNasFolder = selectedPhotographer?.folder_nas ?? userNasFolder;
 
   const { processorState, processorMessage, analysis, startProcessing } =
     usePhotoProcessor();
@@ -135,6 +148,7 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
     setSummary(null);
     setDragError(null);
     setNormalizedName(null);
+    setSelectedPhotographer(null);
     onClose();
   };
 
@@ -225,8 +239,8 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
           ? relativePath.substring(0, relativePath.lastIndexOf("/"))
           : "";
         const destPath = relDir
-          ? `/${userNasFolder}/${folderName}/${relDir}`
-          : `/${userNasFolder}/${folderName}`;
+          ? `/${activeNasFolder}/${folderName}/${relDir}`
+          : `/${activeNasFolder}/${folderName}`;
 
         setUploads((prev) =>
           prev.map((u) =>
@@ -296,7 +310,7 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
 
       // Only trigger processing if all files uploaded successfully
       if (summaryData.errorCount === 0) {
-        const folderPath = `${userNasFolder}/${folderName}`;
+        const folderPath = `${activeNasFolder}/${folderName}`;
         uploadedFolderPathRef.current = folderPath;
         setModalState("processing");
         startProcessing(folderPath);
@@ -304,7 +318,7 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
         setModalState("done");
       }
     },
-    [userNasFolder, startProcessing],
+    [activeNasFolder, startProcessing],
   );
 
   return (
@@ -344,15 +358,30 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
               {/* Drop zone */}
               {modalState === "idle" && (
                 <>
+                  {/* Photographer selector — admin mode only */}
+                  {isAdminMode && (
+                    <UserSearchSelector
+                      users={photographers!}
+                      selectedUser={selectedPhotographer?.uid ?? null}
+                      onUserSelect={(uid) =>
+                        setSelectedPhotographer(
+                          photographers!.find((p) => p.uid === uid) ?? null,
+                        )
+                      }
+                    />
+                  )}
+
                   <div
                     ref={dropZoneRef}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
+                    onDragOver={isAdminMode && !selectedPhotographer ? undefined : handleDragOver}
+                    onDragLeave={isAdminMode && !selectedPhotographer ? undefined : handleDragLeave}
+                    onDrop={isAdminMode && !selectedPhotographer ? undefined : handleDrop}
                     className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg py-14 px-6 transition-colors ${
-                      isDraggingOver
-                        ? "border-black bg-gray-50"
-                        : "border-gray-300 bg-white"
+                      isAdminMode && !selectedPhotographer
+                        ? "border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"
+                        : isDraggingOver
+                          ? "border-black bg-gray-50"
+                          : "border-gray-300 bg-white"
                     }`}
                   >
                     <FolderArrowDownIcon
@@ -595,7 +624,11 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    onCreateProject(analysis, uploadedFolderPathRef.current);
+                    onCreateProject(
+                      analysis,
+                      uploadedFolderPathRef.current,
+                      selectedPhotographer?.uid,
+                    );
                     handleClose();
                   }}
                   className="px-4 py-2 text-sm font-medium text-white bg-black border border-transparent rounded-md shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
