@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
+import { supabase } from "../../../helpers/supabase";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { AppDispatch, RootState } from "../../../redux/store";
 import { useAppSelector } from "../../../redux/hooks";
@@ -22,10 +23,14 @@ export function Archive() {
 
   const [lightboxPhoto, setLightboxPhoto] = useState<ArchivePhoto | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number>(-1);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchArchiveTagCategories());
     dispatch(fetchArchiveAuthors());
+    supabase.auth.getSession().then(({ data }) => {
+      setToken(data.session?.access_token ?? null);
+    });
   }, [dispatch]);
 
   useEffect(() => {
@@ -96,7 +101,7 @@ export function Archive() {
         </div>
 
         {/* Grid */}
-        {loading ? (
+        {loading || token === null ? (
           <div className="flex items-center justify-center py-40">
             <div className="w-7 h-7 border-2 border-gray-200 border-t-gray-500 rounded-full animate-spin" />
           </div>
@@ -111,6 +116,7 @@ export function Archive() {
                 <ArchiveCard
                   key={photo.id}
                   photo={photo}
+                  token={token!}
                   onClick={() => openLightbox(photo, index)}
                 />
               ))}
@@ -151,6 +157,7 @@ export function Archive() {
       {/* Lightbox */}
       <ArchiveLightbox
         photo={lightboxPhoto}
+        token={token ?? ""}
         onClose={closeLightbox}
         onPrev={prevPhoto}
         onNext={nextPhoto}

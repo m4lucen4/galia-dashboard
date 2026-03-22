@@ -1,24 +1,18 @@
 import type { ArchivePhoto } from "../../../redux/actions/ArchiveActions";
 
-const NAS_URL = import.meta.env.VITE_NAS_PROXY_URL;
-const NAS_KEY = import.meta.env.VITE_NAS_PROXY_API_KEY;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-export function thumbnailUrl(photo: ArchivePhoto): string {
-  const path = `/${photo.nas_base_path}/${photo.project_id}_baja_ma/${photo.filename}`;
-  return `${NAS_URL}/serve?path=${encodeURIComponent(path)}&apikey=${NAS_KEY}`;
-}
-
-export function mediumUrl(photo: ArchivePhoto): string {
-  const path = `/${photo.nas_base_path}/${photo.project_id}_baja_ma/${photo.filename}`;
-  return `${NAS_URL}/serve?path=${encodeURIComponent(path)}&apikey=${NAS_KEY}`;
+export function photoUrl(photo: ArchivePhoto, token: string, size = "baja_ma"): string {
+  return `${SUPABASE_URL}/functions/v1/serve-photo?id=${photo.id}&size=${size}&token=${token}`;
 }
 
 interface ArchiveCardProps {
   photo: ArchivePhoto;
+  token: string;
   onClick: () => void;
 }
 
-export function ArchiveCard({ photo, onClick }: ArchiveCardProps) {
+export function ArchiveCard({ photo, token, onClick }: ArchiveCardProps) {
   return (
     <button
       type="button"
@@ -28,7 +22,7 @@ export function ArchiveCard({ photo, onClick }: ArchiveCardProps) {
       {/* Thumbnail */}
       <div className="relative overflow-hidden rounded-xl bg-gray-100 aspect-[4/3] border border-gray-200 shadow-sm group-hover:shadow-md transition-shadow duration-300">
         <img
-          src={thumbnailUrl(photo)}
+          src={photoUrl(photo, token)}
           alt={photo.filename}
           loading="lazy"
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"

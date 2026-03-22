@@ -6,10 +6,11 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import type { ArchivePhoto } from "../../../redux/actions/ArchiveActions";
-import { mediumUrl } from "./ArchiveCard";
+import { photoUrl } from "./ArchiveCard";
 
 interface ArchiveLightboxProps {
   photo: ArchivePhoto | null;
+  token: string;
   onClose: () => void;
   onPrev: () => void;
   onNext: () => void;
@@ -27,6 +28,7 @@ function TagChip({ tag }: { tag: string }) {
 
 export function ArchiveLightbox({
   photo,
+  token,
   onClose,
   onPrev,
   onNext,
@@ -75,7 +77,7 @@ export function ArchiveLightbox({
                   </div>
                 )}
                 <img
-                  src={mediumUrl(photo)}
+                  src={photoUrl(photo, token)}
                   alt={photo.filename}
                   onLoad={() => setImgLoaded(true)}
                   className={`max-h-full max-w-full object-contain transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
