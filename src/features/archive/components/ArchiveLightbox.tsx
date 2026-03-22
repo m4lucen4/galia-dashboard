@@ -177,19 +177,27 @@ export function ArchiveLightbox({
                   )}
                 </div>
 
-                {/* Tags */}
-                {photo.tags.length > 0 && (
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">
-                      Etiquetas
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {photo.tags.map((tag) => (
-                        <TagChip key={tag} tag={tag} />
-                      ))}
+                {/* Tags por categoría */}
+                {[
+                  { label: "Iluminación", tags: photo.iluminacion },
+                  { label: "Tipo de plano", tags: photo.tipo_plano },
+                  { label: "Atmósfera", tags: photo.atmosfera_mood },
+                  { label: "Materiales", tags: photo.materiales_visibles },
+                  { label: "Elementos", tags: photo.elementos_arquitectonicos },
+                ]
+                  .filter((s) => s.tags.length > 0)
+                  .map((s) => (
+                    <div key={s.label}>
+                      <p className="text-xs text-gray-500 uppercase tracking-widest mb-1.5">
+                        {s.label}
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {s.tags.map((tag) => (
+                          <TagChip key={tag} tag={tag} />
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  ))}
 
                 {/* Filename */}
                 <div>
