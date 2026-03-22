@@ -35,6 +35,73 @@ export const nasFetchFiles = createAsyncThunk(
   },
 );
 
+export const nasRenameFolder = createAsyncThunk(
+  "nas/renameFolder",
+  async (
+    { from, to }: { from: string; to: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await fetch(`${NAS_URL}/rename`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": NAS_KEY,
+        },
+        body: JSON.stringify({ from, to }),
+      });
+      if (!response.ok) {
+        return rejectWithValue({
+          message: `Error renombrando carpeta: ${response.status}`,
+        });
+      }
+      return await response.json();
+    } catch (error) {
+      return rejectWithValue({
+        message:
+          error instanceof Error ? error.message : "Error renombrando carpeta",
+      });
+    }
+  },
+);
+
+export const nasRestructure = createAsyncThunk(
+  "nas/restructure",
+  async (
+    {
+      folder,
+      projectId,
+      odooId,
+    }: { folder: string; projectId: string; odooId: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await fetch(`${NAS_URL}/restructure`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": NAS_KEY,
+        },
+        body: JSON.stringify({ folder, projectId, odooId }),
+      });
+      if (!response.ok) {
+        return rejectWithValue({
+          message: `Error reestructurando carpeta: ${response.status}`,
+        });
+      }
+      const data = await response.json();
+      return data as { success: boolean; fileMapping: Record<string, string> };
+    } catch (error) {
+      return rejectWithValue({
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error reestructurando carpeta",
+      });
+    }
+  },
+);
+
 export const nasDeleteFile = createAsyncThunk(
   "nas/deleteFile",
   async (
@@ -60,6 +127,65 @@ export const nasDeleteFile = createAsyncThunk(
       return rejectWithValue({
         message:
           error instanceof Error ? error.message : "Error eliminando archivo",
+      });
+    }
+  },
+);
+
+export const nasDeleteFolder = createAsyncThunk(
+  "nas/deleteFolder",
+  async (folderPath: string, { rejectWithValue }) => {
+    try {
+      const response = await fetch(
+        `${NAS_URL}/folder?path=${encodeURIComponent(folderPath)}`,
+        {
+          method: "DELETE",
+          headers: { "x-api-key": NAS_KEY },
+        },
+      );
+      if (!response.ok) {
+        return rejectWithValue({
+          message: `Error eliminando carpeta: ${response.status}`,
+        });
+      }
+      return folderPath;
+    } catch (error) {
+      return rejectWithValue({
+        message:
+          error instanceof Error ? error.message : "Error eliminando carpeta",
+      });
+    }
+  },
+);
+
+export const nasDeletePhoto = createAsyncThunk(
+  "nas/deletePhoto",
+  async (
+    {
+      folder,
+      filename,
+      projectId,
+    }: { folder: string; filename: string; projectId: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await fetch(
+        `${NAS_URL}/photo?folder=${encodeURIComponent(folder)}&filename=${encodeURIComponent(filename)}&projectId=${encodeURIComponent(projectId)}`,
+        {
+          method: "DELETE",
+          headers: { "x-api-key": NAS_KEY },
+        },
+      );
+      if (!response.ok) {
+        return rejectWithValue({
+          message: `Error eliminando foto: ${response.status}`,
+        });
+      }
+      return filename;
+    } catch (error) {
+      return rejectWithValue({
+        message:
+          error instanceof Error ? error.message : "Error eliminando foto",
       });
     }
   },

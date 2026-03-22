@@ -24,19 +24,30 @@ export interface ProcessorAnalysis {
   foto_tags: FotoTag[];
 }
 
+export interface AddPhotosAnalysis {
+  ok: boolean;
+  message: string;
+  fileMapping: Record<string, string>;
+  foto_tags: FotoTag[];
+}
+
 export type ProcessorState = "idle" | "processing" | "done" | "error";
 
 export interface UsePhotoProcessorResult {
   processorState: ProcessorState;
   processorMessage: string;
   analysis: ProcessorAnalysis | null;
+  addPhotosResult: AddPhotosAnalysis | null;
   startProcessing: (folder: string) => void;
+  startAddPhotos: (folder: string, projectId: string, odooId: string) => void;
 }
 
 export const usePhotoProcessor = (): UsePhotoProcessorResult => {
   const [processorState, setProcessorState] = useState<ProcessorState>("idle");
   const [processorMessage, setProcessorMessage] = useState("");
   const [analysis, setAnalysis] = useState<ProcessorAnalysis | null>(null);
+  const [addPhotosResult, setAddPhotosResult] =
+    useState<AddPhotosAnalysis | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const folderRef = useRef<string>("");
 
@@ -60,7 +71,11 @@ export const usePhotoProcessor = (): UsePhotoProcessorResult => {
       if (!data.inProgress) {
         stopPolling();
         if (data.ok) {
-          setAnalysis(data.analysis ?? null);
+          if (folderRef.current.startsWith("add:")) {
+            setAddPhotosResult(data.analysis ?? null);
+          } else {
+            setAnalysis(data.analysis ?? null);
+          }
           setProcessorState("done");
           setProcessorMessage(data.message);
         } else {
@@ -108,5 +123,45 @@ export const usePhotoProcessor = (): UsePhotoProcessorResult => {
     [checkStatus],
   );
 
-  return { processorState, processorMessage, analysis, startProcessing };
+  const startAddPhotos = useCallback(
+    async (folder: string, projectId: string, odooId: string) => {
+      folderRef.current = `add:${folder}`;
+      setProcessorState("processing");
+      setProcessorMessage("");
+      setAddPhotosResult(null);
+
+      try {
+        const res = await fetch(`${PROCESSOR_URL}/add-photos`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${PROCESSOR_TOKEN}`,
+          },
+          body: JSON.stringify({ folder, projectId, odooId }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          setProcessorState("error");
+          setProcessorMessage(data.message ?? "Error al iniciar el procesado.");
+          return;
+        }
+
+        pollingRef.current = setInterval(checkStatus, 3000);
+      } catch {
+        setProcessorState("error");
+        setProcessorMessage("Error al conectar con el procesador.");
+      }
+    },
+    [checkStatus],
+  );
+
+  return {
+    processorState,
+    processorMessage,
+    analysis,
+    addPhotosResult,
+    startProcessing,
+    startAddPhotos,
+  };
 };

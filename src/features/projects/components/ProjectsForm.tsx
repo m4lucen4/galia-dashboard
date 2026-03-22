@@ -29,6 +29,8 @@ interface ProjectsFormProps {
   isEditMode?: boolean;
   user: UserDataProps;
   nasFolder?: string;
+  projectId?: string;
+  odooId?: string;
 }
 
 export const ProjectsForm: React.FC<ProjectsFormProps> = ({
@@ -38,6 +40,8 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   isEditMode = false,
   user,
   nasFolder,
+  projectId,
+  odooId,
 }) => {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
@@ -271,6 +275,8 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
           isOpen={showNasModal}
           onClose={() => setShowNasModal(false)}
           folderPath={nasFolder}
+          projectId={projectId}
+          odooId={odooId}
         />
       )}
     </form>

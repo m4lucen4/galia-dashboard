@@ -8,6 +8,26 @@ function ratingToNumber(rating: string): number | null {
   return null;
 }
 
+export const deleteProjectPhoto = createAsyncThunk(
+  "projectPhotos/delete",
+  async (
+    { projectId, filename }: { projectId: string; filename: string },
+    { rejectWithValue },
+  ) => {
+    const { error } = await supabase
+      .from("project_photos")
+      .delete()
+      .eq("project_id", projectId)
+      .eq("filename", filename);
+
+    if (error) {
+      return rejectWithValue({ message: error.message });
+    }
+
+    return filename;
+  },
+);
+
 export const addProjectPhotos = createAsyncThunk(
   "projectPhotos/add",
   async (

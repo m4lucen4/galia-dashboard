@@ -35,6 +35,11 @@ import {
   type FotoTag,
 } from "../hooks/usePhotoProcessor";
 import { addProjectPhotos } from "../../../redux/actions/ProjectPhotoActions";
+import {
+  nasRenameFolder,
+  nasRestructure,
+  nasDeleteFolder,
+} from "../../../redux/actions/NasActions";
 import { ProjectDataProps } from "../../../types";
 
 export const Projects = () => {
@@ -61,6 +66,7 @@ export const Projects = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     null,
   );
+  const [pendingNasFolder, setPendingNasFolder] = useState<string | null>(null);
   const [showLaunchModal, setShowLaunchModal] = useState(false);
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -163,7 +169,10 @@ export const Projects = () => {
   };
 
   const handleDeleteProject = (projectId: string) => {
+    const proj = projects.find((p) => String(p.id) === projectId);
+    const nasFolder = proj ? getNasParentFolder(proj) : null;
     setSelectedProjectId(projectId);
+    setPendingNasFolder(nasFolder);
     setShowDeleteModal(true);
   };
 
@@ -174,10 +183,15 @@ export const Projects = () => {
         .then(() => {
           fetchProjectsData();
           setShowDeleteModal(false);
+          if (pendingNasFolder) {
+            dispatch(nasDeleteFolder(pendingNasFolder));
+          }
+          setPendingNasFolder(null);
         })
         .catch((error) => {
           console.error("Error deleting project:", error);
           setShowDeleteModal(false);
+          setPendingNasFolder(null);
         });
     }
   };
@@ -201,14 +215,50 @@ export const Projects = () => {
         .then((result) => {
           fetchProjectsData();
           setDrawerOpen(false);
-          if (pendingFotoTags && result.project?.id) {
-            dispatch(
-              addProjectPhotos({
-                projectId: result.project.id,
-                fotoTags: pendingFotoTags,
-              }),
-            );
+
+          const newProjectId = result.project?.id;
+          const nasFolder = multimediaPreFill?.nas_folder;
+
+          if (newProjectId && nasFolder && user) {
+            const initials = getInitials(user.first_name, user.last_name);
+            const odooId = String(user.odoo_id ?? "");
+            const newFolderName = odooId
+              ? `${newProjectId}-${odooId}-${initials}`
+              : `${newProjectId}-${initials}`;
+            const newFolderPath = `${user.folder_nas}/${newFolderName}`;
+
+            // Sequential: rename → restructure → save photos
+            dispatch(nasRenameFolder({ from: nasFolder, to: newFolderPath }))
+              .unwrap()
+              .then(() =>
+                dispatch(
+                  nasRestructure({
+                    folder: newFolderPath,
+                    projectId: String(newProjectId),
+                    odooId,
+                  }),
+                ).unwrap(),
+              )
+              .then((restructureResult) => {
+                if (pendingFotoTags) {
+                  const fileMapping = restructureResult.fileMapping ?? {};
+                  const translatedTags = pendingFotoTags.map((tag) => ({
+                    ...tag,
+                    filename: fileMapping[tag.filename] ?? tag.filename,
+                  }));
+                  dispatch(
+                    addProjectPhotos({
+                      projectId: newProjectId,
+                      fotoTags: translatedTags,
+                    }),
+                  );
+                }
+              })
+              .catch((err) => {
+                console.error("Error in post-create NAS operations:", err);
+              });
           }
+
           setMultimediaPreFill(null);
           setPendingFotoTags(null);
           setMultimediaMinFolder(null);
@@ -295,21 +345,19 @@ export const Projects = () => {
   const getNasFolder = (): string | null => {
     if (!project) return null;
 
-    // Proyecto creado desde multimedia: usar la carpeta guardada + min/
-    if (project.nas_folder) {
-      return `/${project.nas_folder}/min`;
-    }
+    // Multimedia projects use _min (thumbnails), traditional use _alta
+    const suffix = project.nas_folder ? `${project.id}_min` : `${project.id}_alta`;
 
-    // El fotógrafo edita su propio proyecto: usar datos del usuario autenticado
+    // Photographer editing their own project
     if (user?.role === "photographer" && user.folder_nas) {
       const initials = getInitials(user.first_name, user.last_name);
       const folderName = user.odoo_id
         ? `${project.id}-${user.odoo_id}-${initials}`
         : `${project.id}-${initials}`;
-      return `/${user.folder_nas}/${folderName}/${project.id}_alta`;
+      return `/${user.folder_nas}/${folderName}/${suffix}`;
     }
 
-    // Admin editando proyecto de un fotógrafo: usar userData del proyecto
+    // Admin editing a photographer's project
     if (
       project.userData?.role === "photographer" &&
       project.userData.folder_nas
@@ -321,9 +369,30 @@ export const Projects = () => {
       const folderName = project.userData.odoo_id
         ? `${project.id}-${project.userData.odoo_id}-${initials}`
         : `${project.id}-${initials}`;
-      return `/${project.userData.folder_nas}/${folderName}/${project.id}_alta`;
+      return `/${project.userData.folder_nas}/${folderName}/${suffix}`;
     }
 
+    return null;
+  };
+
+  const getNasParentFolder = (proj: ProjectDataProps): string | null => {
+    if (user?.role === "photographer" && user.folder_nas) {
+      const initials = getInitials(user.first_name, user.last_name);
+      const folderName = user.odoo_id
+        ? `${proj.id}-${user.odoo_id}-${initials}`
+        : `${proj.id}-${initials}`;
+      return `${user.folder_nas}/${folderName}`;
+    }
+    if (proj.userData?.role === "photographer" && proj.userData.folder_nas) {
+      const initials = getInitials(
+        proj.userData.first_name,
+        proj.userData.last_name,
+      );
+      const folderName = proj.userData.odoo_id
+        ? `${proj.id}-${proj.userData.odoo_id}-${initials}`
+        : `${proj.id}-${initials}`;
+      return `${proj.userData.folder_nas}/${folderName}`;
+    }
     return null;
   };
 
@@ -451,6 +520,14 @@ export const Projects = () => {
             isEditMode
               ? (getNasFolder() ?? undefined)
               : (multimediaMinFolder ?? undefined)
+          }
+          projectId={isEditMode && project ? String(project.id) : undefined}
+          odooId={
+            isEditMode
+              ? (user?.role === "photographer"
+                  ? (user.odoo_id ? String(user.odoo_id) : undefined)
+                  : (project?.userData?.odoo_id ? String(project.userData.odoo_id) : undefined))
+              : undefined
           }
         />
       </Drawer>

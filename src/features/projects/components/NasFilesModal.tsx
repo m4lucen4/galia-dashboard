@@ -12,6 +12,7 @@ import {
   ArrowPathIcon,
   ExclamationTriangleIcon,
   FolderOpenIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 
 const IMAGE_EXTENSIONS = new Set([
@@ -26,8 +27,15 @@ function isImage(filename: string): boolean {
 function thumbnailUrl(filePath: string): string {
   return `${NAS_URL}/serve?path=${encodeURIComponent(filePath)}&apikey=${NAS_KEY}`;
 }
+
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { nasFetchFiles, nasDeleteFile } from "../../../redux/actions/NasActions";
+import {
+  nasFetchFiles,
+  nasDeleteFile,
+  nasDeletePhoto,
+} from "../../../redux/actions/NasActions";
+import { deleteProjectPhoto, addProjectPhotos } from "../../../redux/actions/ProjectPhotoActions";
+import { usePhotoProcessor } from "../hooks/usePhotoProcessor";
 
 const NAS_URL = import.meta.env.VITE_NAS_PROXY_URL;
 const NAS_KEY = import.meta.env.VITE_NAS_PROXY_API_KEY;
@@ -44,6 +52,8 @@ interface NasFilesModalProps {
   isOpen: boolean;
   onClose: () => void;
   folderPath: string;
+  projectId?: string;
+  odooId?: string;
 }
 
 function formatBytes(bytes: number): string {
@@ -58,6 +68,8 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
   isOpen,
   onClose,
   folderPath,
+  projectId,
+  odooId,
 }) => {
   const dispatch = useAppDispatch();
   const { files, loading, error } = useAppSelector((state) => state.nas);
@@ -65,9 +77,20 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
   const [deletingFile, setDeletingFile] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const { processorState, processorMessage, addPhotosResult, startAddPhotos } =
+    usePhotoProcessor();
+
+  // Base project folder (no leading slash, no suffix) — used by POST /add-photos and uploads
+  const baseFolder = folderPath.replace(/^\//, "").split("/").slice(0, -1).join("/");
+
+  // When projectId is set, uploads go to the project root so add_photos.py detects them
+  const uploadTarget = projectId ? baseFolder : folderPath;
+
   const isUploading = uploads.some(
     (u) => u.status === "uploading" || u.status === "pending",
   );
+  const isProcessing = processorState === "processing";
+  const hasSuccessfulUploads = uploads.some((u) => u.status === "success");
 
   useEffect(() => {
     if (isOpen) {
@@ -75,8 +98,18 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
     }
   }, [isOpen, folderPath, dispatch]);
 
+  // After add-photos completes, insert records and refresh thumbnails
+  useEffect(() => {
+    if (processorState === "done" && addPhotosResult?.foto_tags && projectId) {
+      dispatch(
+        addProjectPhotos({ projectId, fotoTags: addPhotosResult.foto_tags }),
+      );
+      dispatch(nasFetchFiles(folderPath));
+    }
+  }, [processorState, addPhotosResult, projectId, dispatch, folderPath]);
+
   const handleClose = () => {
-    if (isUploading) return;
+    if (isUploading || isProcessing) return;
     onClose();
   };
 
@@ -125,7 +158,11 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
               : u,
           ),
         );
-        dispatch(nasFetchFiles(folderPath));
+        // Only refresh the _min gallery if not in project mode
+        // (thumbnails won't exist until after processing)
+        if (!projectId) {
+          dispatch(nasFetchFiles(folderPath));
+        }
       } else {
         setUploads((prev) =>
           prev.map((u) =>
@@ -147,16 +184,31 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
       );
     };
 
-    xhr.open("POST", `${NAS_URL}/upload?path=${encodeURIComponent(folderPath)}`);
+    xhr.open("POST", `${NAS_URL}/upload?path=${encodeURIComponent(uploadTarget)}`);
     xhr.setRequestHeader("x-api-key", NAS_KEY);
     xhr.send(formData);
   };
 
   const handleDelete = (filename: string) => {
     setDeletingFile(filename);
-    dispatch(nasDeleteFile({ folderPath, filename }))
-      .unwrap()
-      .finally(() => setDeletingFile(null));
+
+    if (projectId) {
+      dispatch(nasDeletePhoto({ folder: baseFolder, filename, projectId }))
+        .unwrap()
+        .then(() => {
+          dispatch(deleteProjectPhoto({ projectId, filename }));
+          dispatch(nasFetchFiles(folderPath));
+        })
+        .finally(() => setDeletingFile(null));
+    } else {
+      dispatch(nasDeleteFile({ folderPath, filename }))
+        .unwrap()
+        .finally(() => setDeletingFile(null));
+    }
+  };
+
+  const handleAnalyze = () => {
+    startAddPhotos(baseFolder, projectId!, odooId ?? "");
   };
 
   const clearFinishedUploads = () => {
@@ -170,6 +222,8 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
   );
 
   const fileList = files.filter((f) => !f.isDirectory);
+
+  const isLocked = isUploading || isProcessing;
 
   return (
     <Dialog open={isOpen} onClose={handleClose} className="relative z-60">
@@ -214,7 +268,8 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                    disabled={isProcessing}
+                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ArrowUpTrayIcon className="h-4 w-4 mr-1.5" />
                     Subir archivos
@@ -236,6 +291,16 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
                 <ExclamationTriangleIcon className="h-4 w-4 text-amber-500 shrink-0" />
                 <p className="text-xs text-amber-700 font-medium">
                   Subida en curso. No cierres este modal hasta que finalice.
+                </p>
+              </div>
+            )}
+
+            {/* Warning durante procesado */}
+            {isProcessing && (
+              <div className="flex items-center gap-2 px-6 py-3 bg-blue-50 border-b border-blue-100">
+                <ArrowPathIcon className="h-4 w-4 text-blue-500 shrink-0 animate-spin" />
+                <p className="text-xs text-blue-700 font-medium">
+                  Procesando fotos... No cierres este modal hasta que finalice.
                 </p>
               </div>
             )}
@@ -295,6 +360,45 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
                       Limpiar completados
                     </button>
                   )}
+                </div>
+              )}
+
+              {/* Botón analizar fotos nuevas */}
+              {projectId && hasSuccessfulUploads && !isUploading && !isProcessing && (
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">
+                      Fotos listas para procesar
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Se generarán las versiones baja, baja_ma y min y se analizarán automáticamente.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAnalyze}
+                    className="ml-4 inline-flex items-center gap-1.5 px-3 py-2 bg-black text-white text-xs font-medium rounded-md hover:bg-gray-800 shrink-0"
+                  >
+                    <SparklesIcon className="h-3.5 w-3.5" />
+                    Analizar
+                  </button>
+                </div>
+              )}
+
+              {/* Resultado del procesado */}
+              {processorState === "done" && (
+                <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <span className="text-green-600 text-sm">✓</span>
+                  <p className="text-xs text-green-700 font-medium">
+                    {processorMessage}
+                  </p>
+                </div>
+              )}
+              {processorState === "error" && (
+                <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                  <p className="text-xs text-red-700 font-medium">
+                    {processorMessage || "Error al procesar las fotos."}
+                  </p>
                 </div>
               )}
 
@@ -370,10 +474,14 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
               <button
                 type="button"
                 onClick={handleClose}
-                disabled={isUploading}
+                disabled={isLocked}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isUploading ? "Esperando subida..." : "Cerrar"}
+                {isUploading
+                  ? "Esperando subida..."
+                  : isProcessing
+                    ? "Procesando..."
+                    : "Cerrar"}
               </button>
             </div>
           </DialogPanel>

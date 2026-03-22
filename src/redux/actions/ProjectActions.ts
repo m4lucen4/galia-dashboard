@@ -109,8 +109,11 @@ export const addProject = createAsyncThunk(
       }
 
       // Create Synology folder for photographer users (non-blocking)
+      // Skip when project comes from the multimedia pipeline — folder already
+      // exists in the NAS and will be renamed after this action resolves.
       const currentUser = (getState() as RootState).auth.user;
       if (
+        !projectData.nas_folder &&
         currentUser?.role === "photographer" &&
         currentUser.folder_nas &&
         newProject.id
@@ -276,7 +279,9 @@ export const fetchProjects = createAsyncThunk(
             description,
             vat,
             role,
-            language
+            language,
+            odoo_id,
+            folder_nas
           )
         `,
         )
