@@ -42,13 +42,11 @@ export const addProjectPhotos = createAsyncThunk(
       project_id: projectId,
       filename: ft.filename,
       description: ft.descripcion_corta,
-      tags: [
-        ...ft.iluminacion,
-        ...ft.tipo_plano,
-        ...ft.atmosfera_mood,
-        ...ft.materiales_visibles,
-        ...ft.elementos_arquitectonicos,
-      ],
+      iluminacion: ft.iluminacion,
+      tipo_plano: ft.tipo_plano,
+      atmosfera_mood: ft.atmosfera_mood,
+      materiales_visibles: ft.materiales_visibles,
+      elementos_arquitectonicos: ft.elementos_arquitectonicos,
       rating: ratingToNumber(ft.rating),
       nas_base_path: nasBasePath ?? null,
     }));

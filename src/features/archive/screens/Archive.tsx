@@ -5,7 +5,7 @@ import { AppDispatch, RootState } from "../../../redux/store";
 import { useAppSelector } from "../../../redux/hooks";
 import {
   fetchArchivePhotos,
-  fetchArchiveTags,
+  fetchArchiveTagCategories,
   fetchArchiveAuthors,
   PAGE_SIZE,
 } from "../../../redux/actions/ArchiveActions";
@@ -17,14 +17,14 @@ import { ArchiveLightbox } from "../components/ArchiveLightbox";
 
 export function Archive() {
   const dispatch = useDispatch<AppDispatch>();
-  const { photos, hasMore, page, loading, allTags, allAuthors, filters } =
+  const { photos, hasMore, page, loading, tagCategories, allAuthors, filters } =
     useAppSelector((state: RootState) => state.archive);
 
   const [lightboxPhoto, setLightboxPhoto] = useState<ArchivePhoto | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number>(-1);
 
   useEffect(() => {
-    dispatch(fetchArchiveTags());
+    dispatch(fetchArchiveTagCategories());
     dispatch(fetchArchiveAuthors());
   }, [dispatch]);
 
@@ -76,7 +76,7 @@ export function Archive() {
         </p>
         <ArchiveFilters
           filters={filters}
-          allTags={allTags}
+          tagCategories={tagCategories}
           allAuthors={allAuthors}
           onChange={(f) => dispatch(setFilters(f))}
         />

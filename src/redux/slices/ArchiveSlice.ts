@@ -3,10 +3,11 @@ import type {
   ArchivePhoto,
   ArchiveFilters,
   ArchiveAuthor,
+  TagCategories,
 } from "../actions/ArchiveActions";
 import {
   fetchArchivePhotos,
-  fetchArchiveTags,
+  fetchArchiveTagCategories,
   fetchArchiveAuthors,
 } from "../actions/ArchiveActions";
 
@@ -16,19 +17,31 @@ interface ArchiveState {
   page: number;
   loading: boolean;
   error: string | null;
-  allTags: string[];
-  tagsLoading: boolean;
+  tagCategories: TagCategories;
+  tagCategoriesLoading: boolean;
   allAuthors: ArchiveAuthor[];
   authorsLoading: boolean;
   filters: ArchiveFilters;
 }
 
 const initialFilters: ArchiveFilters = {
-  tags: [],
   category: "",
   year: "",
   rating: "",
   authorId: "",
+  iluminacion: [],
+  tipo_plano: [],
+  atmosfera_mood: [],
+  materiales_visibles: [],
+  elementos_arquitectonicos: [],
+};
+
+const emptyTagCategories: TagCategories = {
+  iluminacion: [],
+  tipo_plano: [],
+  atmosfera_mood: [],
+  materiales_visibles: [],
+  elementos_arquitectonicos: [],
 };
 
 const initialState: ArchiveState = {
@@ -37,8 +50,8 @@ const initialState: ArchiveState = {
   page: 0,
   loading: false,
   error: null,
-  allTags: [],
-  tagsLoading: false,
+  tagCategories: emptyTagCategories,
+  tagCategoriesLoading: false,
   allAuthors: [],
   authorsLoading: false,
   filters: initialFilters,
@@ -63,7 +76,6 @@ const archiveSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // fetchArchivePhotos
       .addCase(fetchArchivePhotos.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -79,18 +91,16 @@ const archiveSlice = createSlice({
         state.error =
           (action.payload as { message: string })?.message ?? "Error";
       })
-      // fetchArchiveTags
-      .addCase(fetchArchiveTags.pending, (state) => {
-        state.tagsLoading = true;
+      .addCase(fetchArchiveTagCategories.pending, (state) => {
+        state.tagCategoriesLoading = true;
       })
-      .addCase(fetchArchiveTags.fulfilled, (state, action) => {
-        state.tagsLoading = false;
-        state.allTags = action.payload;
+      .addCase(fetchArchiveTagCategories.fulfilled, (state, action) => {
+        state.tagCategoriesLoading = false;
+        state.tagCategories = action.payload;
       })
-      .addCase(fetchArchiveTags.rejected, (state) => {
-        state.tagsLoading = false;
+      .addCase(fetchArchiveTagCategories.rejected, (state) => {
+        state.tagCategoriesLoading = false;
       })
-      // fetchArchiveAuthors
       .addCase(fetchArchiveAuthors.pending, (state) => {
         state.authorsLoading = true;
       })

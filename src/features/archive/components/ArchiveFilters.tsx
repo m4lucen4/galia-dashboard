@@ -1,18 +1,19 @@
-import { useState, useRef, useEffect } from "react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { useState } from "react";
+import { XMarkIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import type {
   ArchiveFilters as Filters,
   ArchiveAuthor,
+  TagCategories,
 } from "../../../redux/actions/ArchiveActions";
 
 interface ArchiveFiltersProps {
   filters: Filters;
-  allTags: string[];
+  tagCategories: TagCategories;
   allAuthors: ArchiveAuthor[];
   onChange: (filters: Filters) => void;
 }
 
-const CATEGORIES = [
+const PROJECT_CATEGORIES = [
   { value: "", label: "Todas" },
   { value: "residencial", label: "Residencial" },
   { value: "comercial", label: "Comercial" },
@@ -26,6 +27,17 @@ const CATEGORIES = [
   { value: "interiorismo", label: "Interiorismo" },
 ];
 
+const TAG_SECTIONS: {
+  key: keyof TagCategories;
+  label: string;
+}[] = [
+  { key: "iluminacion", label: "Iluminación" },
+  { key: "tipo_plano", label: "Tipo de plano" },
+  { key: "atmosfera_mood", label: "Atmósfera" },
+  { key: "materiales_visibles", label: "Materiales" },
+  { key: "elementos_arquitectonicos", label: "Elementos" },
+];
+
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">
@@ -34,54 +46,92 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function ArchiveFilters({ filters, allTags, allAuthors, onChange }: ArchiveFiltersProps) {
-  const [tagInput, setTagInput] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+const COLLAPSED_LIMIT = 6;
 
-  const suggestions =
-    tagInput.length > 0
-      ? allTags.filter(
-          (t) =>
-            t.toLowerCase().includes(tagInput.toLowerCase()) &&
-            !filters.tags.includes(t),
-        )
-      : [];
+function TagSection({
+  label,
+  available,
+  selected,
+  onToggle,
+}: {
+  label: string;
+  available: string[];
+  selected: string[];
+  onToggle: (tag: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  if (available.length === 0) return null;
 
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setShowSuggestions(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
+  const visible = expanded ? available : available.slice(0, COLLAPSED_LIMIT);
 
-  function addTag(tag: string) {
-    if (!filters.tags.includes(tag)) {
-      onChange({ ...filters, tags: [...filters.tags, tag] });
-    }
-    setTagInput("");
-    setShowSuggestions(false);
-    inputRef.current?.focus();
-  }
+  return (
+    <div>
+      <SectionLabel>{label}</SectionLabel>
+      <div className="flex flex-col gap-0.5">
+        {visible.map((tag) => {
+          const active = selected.includes(tag);
+          return (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => onToggle(tag)}
+              className={`text-left text-xs px-2 py-1.5 rounded-lg transition-colors flex items-center justify-between gap-1 ${
+                active
+                  ? "bg-gray-900 text-white font-medium"
+                  : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+              }`}
+            >
+              <span className="truncate">{tag}</span>
+              {active && <XMarkIcon className="h-3 w-3 shrink-0 opacity-60" />}
+            </button>
+          );
+        })}
+      </div>
+      {available.length > COLLAPSED_LIMIT && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-1 flex items-center gap-0.5 text-xs text-gray-400 hover:text-gray-600 transition-colors px-2"
+        >
+          <ChevronDownIcon
+            className={`h-3 w-3 transition-transform ${expanded ? "rotate-180" : ""}`}
+          />
+          {expanded
+            ? "Ver menos"
+            : `+${available.length - COLLAPSED_LIMIT} más`}
+        </button>
+      )}
+    </div>
+  );
+}
 
-  function removeTag(tag: string) {
-    onChange({ ...filters, tags: filters.tags.filter((t) => t !== tag) });
+export function ArchiveFilters({
+  filters,
+  tagCategories,
+  allAuthors,
+  onChange,
+}: ArchiveFiltersProps) {
+  function toggleTag(key: keyof TagCategories, tag: string) {
+    const current = filters[key] as string[];
+    const updated = current.includes(tag)
+      ? current.filter((t) => t !== tag)
+      : [...current, tag];
+    onChange({ ...filters, [key]: updated });
   }
 
   const hasFilters =
-    filters.tags.length > 0 || filters.category || filters.year || filters.authorId;
+    filters.category ||
+    filters.year ||
+    filters.authorId ||
+    TAG_SECTIONS.some((s) => (filters[s.key] as string[]).length > 0);
 
   return (
     <div className="flex flex-col gap-7">
-      {/* Category */}
+      {/* Categoría de proyecto */}
       <div>
         <SectionLabel>Categoría</SectionLabel>
         <div className="flex flex-col gap-0.5">
-          {CATEGORIES.map((c) => (
+          {PROJECT_CATEGORIES.map((c) => (
             <button
               key={c.value}
               type="button"
@@ -98,7 +148,7 @@ export function ArchiveFilters({ filters, allTags, allAuthors, onChange }: Archi
         </div>
       </div>
 
-      {/* Authors */}
+      {/* Fotógrafo */}
       {allAuthors.length > 0 && (
         <div>
           <SectionLabel>Fotógrafo</SectionLabel>
@@ -132,7 +182,7 @@ export function ArchiveFilters({ filters, allTags, allAuthors, onChange }: Archi
         </div>
       )}
 
-      {/* Year */}
+      {/* Año */}
       <div>
         <SectionLabel>Año</SectionLabel>
         <input
@@ -145,69 +195,33 @@ export function ArchiveFilters({ filters, allTags, allAuthors, onChange }: Archi
         />
       </div>
 
-      {/* Tags */}
-      <div>
-        <SectionLabel>Etiquetas</SectionLabel>
-        <div className="relative" ref={dropdownRef}>
-          <input
-            ref={inputRef}
-            type="text"
-            value={tagInput}
-            onChange={(e) => {
-              setTagInput(e.target.value);
-              setShowSuggestions(true);
-            }}
-            onFocus={() => tagInput.length > 0 && setShowSuggestions(true)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && suggestions.length > 0) addTag(suggestions[0]);
-            }}
-            placeholder="Buscar etiqueta..."
-            className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 placeholder-gray-300 outline-none focus:border-gray-400 shadow-sm transition-colors"
-          />
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full mt-1 left-0 w-full z-20 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden max-h-44 overflow-y-auto">
-              {suggestions.map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onMouseDown={() => addTag(tag)}
-                  className="block w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Tag categories */}
+      {TAG_SECTIONS.map((section) => (
+        <TagSection
+          key={section.key}
+          label={section.label}
+          available={tagCategories[section.key]}
+          selected={filters[section.key] as string[]}
+          onToggle={(tag) => toggleTag(section.key, tag)}
+        />
+      ))}
 
-        {/* Tag chips */}
-        {filters.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-2.5">
-            {filters.tags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center gap-1 bg-gray-100 border border-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full"
-              >
-                {tag}
-                <button
-                  type="button"
-                  onClick={() => removeTag(tag)}
-                  className="text-gray-400 hover:text-gray-700 transition-colors"
-                >
-                  <XMarkIcon className="h-3 w-3" />
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Clear all */}
+      {/* Limpiar */}
       {hasFilters && (
         <button
           type="button"
           onClick={() =>
-            onChange({ tags: [], category: "", year: "", rating: filters.rating, authorId: "" })
+            onChange({
+              category: "",
+              year: "",
+              rating: filters.rating,
+              authorId: "",
+              iluminacion: [],
+              tipo_plano: [],
+              atmosfera_mood: [],
+              materiales_visibles: [],
+              elementos_arquitectonicos: [],
+            })
           }
           className="text-xs text-gray-400 hover:text-gray-700 text-left transition-colors"
         >
