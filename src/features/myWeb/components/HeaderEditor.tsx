@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { SiteComponentDataProps, HeaderSlideConfig } from "../../../types";
 import { SlideEditor } from "./SlideEditor";
 import { useAppDispatch } from "../../../redux/hooks";
@@ -23,11 +23,13 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({ component }) => {
   const [localSlides, setLocalSlides] = useState<HeaderSlideConfig[]>(() =>
     Array.isArray(component.config) ? component.config : [],
   );
+  // Ref always holds the latest slides so onBlur closures don't capture stale state
+  const localSlidesRef = useRef(localSlides);
 
   useEffect(() => {
-    setLocalSlides(
-      Array.isArray(component.config) ? component.config : [],
-    );
+    const slides = Array.isArray(component.config) ? component.config : [];
+    setLocalSlides(slides);
+    localSlidesRef.current = slides;
   }, [component.config]);
 
   const persistConfig = (newConfig: HeaderSlideConfig[]) => {
@@ -44,12 +46,13 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({ component }) => {
     setLocalSlides((prev) => {
       const next = [...prev];
       next[index] = updated;
+      localSlidesRef.current = next;
       return next;
     });
   };
 
   const handleSlideBlur = () => {
-    persistConfig(localSlides);
+    persistConfig(localSlidesRef.current);
   };
 
   const handleAddSlide = () => {
