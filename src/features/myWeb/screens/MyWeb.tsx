@@ -42,11 +42,11 @@ export const MyWeb: React.FC = () => {
     return name
       .toLowerCase()
       .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
+      .replaceAll(/[\u0300-\u036f]/g, "")
+      .replaceAll(/[^a-z0-9\s-]/g, "")
+      .replaceAll(/\s+/g, "-")
+      .replaceAll(/-+/g, "-")
+      .replaceAll(/^-|-$/g, "");
   };
 
   const handleCreateSite = () => {

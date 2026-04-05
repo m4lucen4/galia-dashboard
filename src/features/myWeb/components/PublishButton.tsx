@@ -21,7 +21,7 @@ export const PublishButton: React.FC<PublishButtonProps> = ({ site, onSave }) =>
     dispatch(publishSite({ siteId: site.id, published: !site.published }));
   };
 
-  const previewUrl = `${window.location.origin}/sites/${site.slug}`;
+  const previewUrl = `https://sites.mocklab.app/${site.slug}`;
 
   return (
     <div className="flex items-center justify-between p-4 border border-gray-200 rounded-md bg-white">
