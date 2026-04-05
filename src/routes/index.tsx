@@ -14,6 +14,7 @@ import { PublicRoute } from "./PublicRoute";
 import { PasswordResetRoute } from "./PasswordResetRoute";
 import { AdminRoute } from "./AdminRoute";
 import { AdminWebRoute } from "./AdminWebRoute";
+import { HasWebRoute } from "./HasWebRoute";
 
 import { Web } from "../features/web/screen/Web";
 import { Privacy } from "../screens/public/Privacy";
@@ -23,6 +24,7 @@ import { PreviewProjects } from "../features/postPreview/screens/PreviewProjects
 import { NonAuthenticatedRoute } from "./NonAuthenticatedRoute";
 import { Multimedia } from "@/features/multimedia/screens/Multimedia";
 import { Archive } from "../features/archive/screens/Archive";
+import { MyWeb } from "../features/myWeb/screens/MyWeb";
 
 export const AppRoutes = () => (
   <Routes>
@@ -50,6 +52,9 @@ export const AppRoutes = () => (
     </Route>
     <Route element={<AdminWebRoute />}>
       <Route path="/archivo" element={<Archive />} />
+    </Route>
+    <Route element={<HasWebRoute />}>
+      <Route path="/my-web" element={<MyWeb />} />
     </Route>
     <Route element={<PasswordResetRoute />}>
       <Route path="/reset-password" element={<RecoveryPasswordScreen />} />

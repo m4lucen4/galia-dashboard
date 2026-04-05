@@ -81,6 +81,7 @@
     "title": "Settings",
     "description": "Configure your social networks and preferences.",
     "socialNetworks": "Social Networks",
+    "socialNetworksAndWeb": "Social Networks & Website",
     "socialNetworksDescription": "Connect your accounts and share your projects.",
     "connected": "Connected",
     "notConnected": "Not connected",
@@ -106,7 +107,9 @@
     "posts": "Posts",
     "viaFacebookPage": "Via Facebook page",
     "instagramDescription": "To publish on Instagram, you must connect your Facebook account and have a business page.",
-    "noInstagramConnection": "No Instagram connection"
+    "noInstagramConnection": "No Instagram connection",
+    "myWeb": "My Website",
+    "goToMyWeb": "Go to my website"
   },
   "publications": {
     "noPublications": "No publications available.",

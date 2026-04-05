@@ -18,10 +18,15 @@ import { LinkedInConnect } from "../components/LinkedInConnect";
 import { LinkedInPages } from "../components/LinkedInPages";
 import { InstagramConnect } from "../components/InstagramConnect";
 import { InstagramPages } from "../components/InstagramPages";
+import { WebIcon } from "../../../components/icons/WebIcon";
+import { useNavigate } from "react-router-dom";
+import { RootState } from "../../../redux/store";
 
 export const Settings = () => {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const authUser = useAppSelector((state: RootState) => state.auth.user);
   const {
     linkedin,
     checkLinkedInRequest,
@@ -120,10 +125,27 @@ export const Settings = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         <Card
-          title={t("settings.socialNetworks")}
+          title={authUser?.has_web ? t("settings.socialNetworksAndWeb") : t("settings.socialNetworks")}
           subtitle={t("settings.socialNetworksDescription")}
         >
-          <div className="grid grid-cols-2 md:grid-cols-2 gap-4 mb-6">
+          <div className="flex flex-row justify-around mb-6">
+            {/* Mi Web */}
+            {authUser?.has_web && (
+              <div className="flex flex-col items-center">
+                <button
+                  onClick={() => navigate("/my-web")}
+                  className="p-4 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors"
+                  title={t("settings.myWeb")}
+                >
+                  <WebIcon size={32} className="text-blue-600" />
+                </button>
+                <p className="mt-3 text-sm font-medium text-gray-900">
+                  {t("settings.myWeb")}
+                </p>
+                <p className="text-xs text-blue-500">{t("settings.goToMyWeb")}</p>
+              </div>
+            )}
+
             {/* Instagram */}
             <InstagramConnect
               instagram={instagram}

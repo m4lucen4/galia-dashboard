@@ -82,6 +82,7 @@
     "title": "Configuració",
     "description": "Configura les teves xarxes socials i preferències.",
     "socialNetworks": "Xarxes Socials",
+    "socialNetworksAndWeb": "Xarxes Socials i Web",
     "socialNetworksDescription": "Connecta els teus comptes i comparteix els teus projectes.",
     "connected": "Connectat",
     "notConnected": "No connectat",
@@ -107,7 +108,9 @@
     "posts": "Publicacions",
     "viaFacebookPage": "Via pàgina de Facebook",
     "instagramDescription": "Per publicar a Instagram, has de connectar el teu compte de Facebook i tenir una pàgina d'empresa.",
-    "noInstagramConnection": "No hi ha connexió amb Instagram"
+    "noInstagramConnection": "No hi ha connexió amb Instagram",
+    "myWeb": "La meva Web",
+    "goToMyWeb": "Anar a la meva web"
   },
   "publications": {
     "noPublications": "No hi ha publicacions disponibles.",

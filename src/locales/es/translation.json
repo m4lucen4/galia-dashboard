@@ -82,6 +82,7 @@
     "title": "Ajustes",
     "description": "Configura tus redes sociales y preferencias.",
     "socialNetworks": "Redes Sociales",
+    "socialNetworksAndWeb": "Redes Sociales y Web",
     "socialNetworksDescription": "Conecta tus cuentas y comparte tus proyectos.",
     "connected": "Conectado",
     "notConnected": "No conectado",
@@ -109,7 +110,9 @@
     "instagramDescription": "Para publicar en Instagram, debes conectar tu cuenta de Facebook y tener una página de empresa.",
     "noInstagramConnection": "No hay conexión con Instagram",
     "connectedSince": "Conectado desde",
-    "connecting": "Conectando..."
+    "connecting": "Conectando...",
+    "myWeb": "Mi Web",
+    "goToMyWeb": "Ir a mi web"
   },
   "publications": {
     "noPublications": "No hay publicaciones disponibles.",

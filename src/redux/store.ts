@@ -8,6 +8,9 @@ import adminReducer from "./slices/AdminSlice";
 import multimediaReducer from "./slices/MultimediaSlice";
 import nasReducer from "./slices/NasSlice";
 import archiveReducer from "./slices/ArchiveSlice";
+import siteReducer from "./slices/SiteSlice";
+import sitePageReducer from "./slices/SitePageSlice";
+import siteComponentReducer from "./slices/SiteComponentSlice";
 
 export const store = configureStore({
   reducer: {
@@ -20,6 +23,9 @@ export const store = configureStore({
     multimedia: multimediaReducer,
     nas: nasReducer,
     archive: archiveReducer,
+    site: siteReducer,
+    sitePage: sitePageReducer,
+    siteComponent: siteComponentReducer,
   },
 });
 
