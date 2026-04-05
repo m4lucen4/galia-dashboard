@@ -27,7 +27,8 @@
     "gpts": "My GPTs",
     "wiki": "Wiki",
     "multimedia": "Multimedia",
-    "archive": "Archive"
+    "archive": "Archive",
+    "myWeb": "My Web"
   },
   "login": {
     "title": "Log In",
@@ -73,7 +74,8 @@
     "jobPosition": "Job Position",
     "web": "Website",
     "tags": "Tags",
-    "addTag": "Type and press Enter to add"
+    "addTag": "Type and press Enter to add",
+    "hasWeb": "Has website"
   },
   "settings": {
     "title": "Settings",

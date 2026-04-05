@@ -13,6 +13,7 @@ interface UserFormMainDataProps {
   ) => void;
   isEditMode: boolean;
   passwordError: string;
+  isAdmin?: boolean;
 }
 
 export const UserFormMainData: React.FC<UserFormMainDataProps> = ({
@@ -20,6 +21,7 @@ export const UserFormMainData: React.FC<UserFormMainDataProps> = ({
   handleChange,
   isEditMode,
   passwordError,
+  isAdmin = false,
 }) => {
   const { t } = useTranslation();
 
@@ -69,20 +71,37 @@ export const UserFormMainData: React.FC<UserFormMainDataProps> = ({
           error={passwordError}
         />
       )}
-      <SelectField
-        id="role"
-        label={t("users.role")}
-        value={formData.role}
-        onChange={handleChange}
-        options={[
-          { value: "customer", label: t("users.customer") },
-          { value: "photographer", label: t("users.photographer") },
-          { value: "publisher", label: t("users.publisher") },
-          { value: "admin", label: t("users.admin") },
-        ]}
-        required
-        className="mb-2"
-      />
+      <div>
+        <SelectField
+          id="role"
+          label={t("users.role")}
+          value={formData.role}
+          onChange={handleChange}
+          options={[
+            { value: "customer", label: t("users.customer") },
+            { value: "photographer", label: t("users.photographer") },
+            { value: "publisher", label: t("users.publisher") },
+            { value: "admin", label: t("users.admin") },
+          ]}
+          required
+          className="mb-2"
+        />
+        {isAdmin && (
+          <div className="flex items-center mt-2">
+            <input
+              type="checkbox"
+              id="has_web"
+              name="has_web"
+              checked={formData.has_web ?? false}
+              onChange={handleChange}
+              className="h-4 w-4 text-black focus:ring-gray-400 border-gray-300 rounded"
+            />
+            <label htmlFor="has_web" className="ml-2 block text-sm text-gray-700">
+              {t("users.hasWeb")}
+            </label>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

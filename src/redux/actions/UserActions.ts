@@ -164,6 +164,7 @@ export const addUser = createAsyncThunk(
         tags: userData.tags,
         odoo_id: userData.odoo_id,
         folder_nas: userData.folder_nas,
+        has_web: userData.has_web ?? false,
       });
 
       if (dbError) {
@@ -289,6 +290,7 @@ export const updateUser = createAsyncThunk(
       if (userData.odoo_id !== undefined) updateData.odoo_id = userData.odoo_id;
       if (userData.folder_nas !== undefined)
         updateData.folder_nas = userData.folder_nas;
+      if (userData.has_web !== undefined) updateData.has_web = userData.has_web;
 
       const { error: dbError } = await supabase
         .from("userData")

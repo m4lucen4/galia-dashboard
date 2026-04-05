@@ -28,7 +28,8 @@
     "gpts": "Els meus GPTs",
     "wiki": "Wiki",
     "Multimedia": "Multimedia",
-    "archive": "Arxiu"
+    "archive": "Arxiu",
+    "myWeb": "La meva Web"
   },
   "login": {
     "title": "Iniciar sessió",
@@ -74,7 +75,8 @@
     "jobPosition": "Càrrec",
     "web": "Web",
     "tags": "Etiquetes",
-    "addTag": "Escriu i prem Enter per afegir"
+    "addTag": "Escriu i prem Enter per afegir",
+    "hasWeb": "Té pàgina web"
   },
   "settings": {
     "title": "Configuració",

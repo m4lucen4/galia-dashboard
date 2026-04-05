@@ -45,6 +45,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
     web: "",
     tags: "",
     folder_nas: "",
+    has_web: false,
   };
 
   const [formData, setFormData] = useState<CreateUserProps>(
@@ -106,6 +107,7 @@ export const UsersForm: React.FC<UsersFormProps> = ({
         handleChange={handleChange}
         isEditMode={isEditMode}
         passwordError={passwordError}
+        isAdmin={isAdmin}
       />
 
       <div className="my-6 border-t border-gray-300" />

@@ -34,6 +34,7 @@ export type UserDataProps = {
   tags?: string;
   odoo_id?: number;
   folder_nas?: string;
+  has_web?: boolean;
 };
 
 export type ProjectImageData = {
@@ -257,4 +258,103 @@ export type MultimediaState = {
   selectedItems: string[];
   loading: boolean;
   error: string | null;
+};
+
+// Site Builder types
+
+export type HeaderSlideConfig = {
+  image_url: string;
+  title: string;
+  description: string;
+  type: 1 | 2;
+  text_button: string;
+  url_button: string;
+};
+
+export type SiteComponentType = "header" | "project_list" | "cta" | "body" | "content";
+
+export type ContentConfig = {
+  antetitulo?: string;
+  titulo?: string;
+  image?: string;
+  textoIzquierda?: string;
+  textoDerecha?: string;
+  dato1?: number;
+  leyenda1?: string;
+  dato2?: number;
+  leyenda2?: string;
+  dato3?: number;
+  leyenda3?: string;
+  dato4?: number;
+  leyenda4?: string;
+  type: 1 | 2;
+};
+
+export type BodyConfig = {
+  description: string;
+  image_1?: string;
+  image_2?: string;
+  image_3?: string;
+  type: 1 | 2 | 3 | 4;
+};
+
+export type ProjectListLayout = "grid-4" | "grid-alternating";
+
+export type ProjectListConfig = {
+  layout: ProjectListLayout;
+};
+
+export type CTAConfig = {
+  type: 1 | 2 | 3;
+  title: string;
+  description: string;
+  subtitle: string;
+  text_primary_button: string;
+  url_primary_button: string;
+  text_secondary_button: string;
+  url_secondary_button: string;
+};
+
+export type SitePageDataProps = {
+  id: string;
+  site_id: string;
+  title: string;
+  slug: string;
+  position: number;
+  visible: boolean;
+  show_in_nav: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SiteComponentDataProps = {
+  id: string;
+  page_id: string;
+  type: SiteComponentType;
+  position: number;
+  visible: boolean;
+  config: HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SiteDataProps = {
+  id: string;
+  user_id: string;
+  slug: string;
+  studio_name: string;
+  logo_url: string;
+  primary_color: string;
+  secondary_color: string;
+  font: string;
+  navbar_type: number;
+  custom_domain?: string | null;
+  favicon_url?: string | null;
+  meta_description?: string | null;
+  instagram_url?: string | null;
+  facebook_url?: string | null;
+  linkedin_url?: string | null;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
 };

@@ -77,6 +77,7 @@ export const Users = () => {
         tags: formData.tags,
         odoo_id: formData.odoo_id,
         folder_nas: formData.folder_nas,
+        has_web: formData.has_web,
       };
 
       dispatch(updateUser(updateData))
@@ -121,6 +122,7 @@ export const Users = () => {
       tags: userData.tags || "",
       odoo_id: userData.odoo_id,
       folder_nas: userData.folder_nas || "",
+      has_web: userData.has_web ?? false,
     };
   };
 

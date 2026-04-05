@@ -15,6 +15,7 @@ import { Button } from "../../../components/shared/ui/Button";
 import { useTranslation } from "react-i18next";
 import { Table } from "../../../components/shared/ui/Table";
 import { OdooIcon } from "../../../components/icons/OdooIcon";
+import { WebIcon } from "../../../components/icons/WebIcon";
 
 type UsersTableProps = {
   users: UserDataProps[];
@@ -44,6 +45,7 @@ export const UsersTable = ({
       cell: (info) => (
         <div className="flex items-center gap-1.5">
           {info.row.original.odoo_id && <OdooIcon size={18} />}
+          {info.row.original.has_web && <WebIcon size={18} />}
           <span>{`${info.getValue()} ${info.row.original.last_name}`}</span>
         </div>
       ),
