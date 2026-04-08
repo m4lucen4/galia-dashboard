@@ -41,6 +41,38 @@ export const fetchSubscription = createAsyncThunk(
   },
 );
 
+export const reactivateSubscription = createAsyncThunk(
+  "subscription/reactivateSubscription",
+  async (stripeSubscriptionId: string, { rejectWithValue }) => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+
+      const response = await fetch("/api/reactivate-subscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ stripe_subscription_id: stripeSubscriptionId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return rejectWithValue(errorData.error || "Error reactivating subscription");
+      }
+
+      return await response.json();
+    } catch (error: unknown) {
+      const appError: SupabaseError = {
+        message: error instanceof Error ? error.message : "Error reactivating subscription",
+        status: 500,
+      };
+      return rejectWithValue(appError);
+    }
+  },
+);
+
 export const cancelSubscription = createAsyncThunk(
   "subscription/cancelSubscription",
   async (stripeSubscriptionId: string, { rejectWithValue }) => {

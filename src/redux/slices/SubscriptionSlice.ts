@@ -1,11 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchSubscription, cancelSubscription } from "../actions/SubscriptionActions";
+import { fetchSubscription, cancelSubscription, reactivateSubscription } from "../actions/SubscriptionActions";
 import { SubscriptionDataProps, IRequest, SupabaseError } from "../../types";
 
 interface SubscriptionState {
   subscription: SubscriptionDataProps | null;
   fetchSubscriptionRequest: IRequest;
   cancelSubscriptionRequest: IRequest;
+  reactivateSubscriptionRequest: IRequest;
 }
 
 const initialState: SubscriptionState = {
@@ -20,6 +21,11 @@ const initialState: SubscriptionState = {
     messages: "",
     ok: false,
   },
+  reactivateSubscriptionRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
 };
 
 const subscriptionSlice = createSlice({
@@ -29,6 +35,7 @@ const subscriptionSlice = createSlice({
     clearSubscriptionErrors: (state) => {
       state.fetchSubscriptionRequest = initialState.fetchSubscriptionRequest;
       state.cancelSubscriptionRequest = initialState.cancelSubscriptionRequest;
+      state.reactivateSubscriptionRequest = initialState.reactivateSubscriptionRequest;
     },
   },
   extraReducers: (builder) => {
@@ -77,6 +84,19 @@ const subscriptionSlice = createSlice({
           ok: true,
         };
       })
+      .addCase(reactivateSubscription.pending, (state) => {
+        state.reactivateSubscriptionRequest = { inProgress: true, messages: "", ok: false };
+      })
+      .addCase(reactivateSubscription.fulfilled, (state) => {
+        state.reactivateSubscriptionRequest = { inProgress: false, messages: "", ok: true };
+      })
+      .addCase(reactivateSubscription.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage = typeof errorPayload === "string" ? errorPayload : errorPayload?.message || "Error desconocido";
+        state.reactivateSubscriptionRequest = { inProgress: false, messages: errorMessage, ok: false };
+      });
+
+    builder
       .addCase(cancelSubscription.rejected, (state, action) => {
         const errorPayload = action.payload as SupabaseError | string;
         const errorMessage =

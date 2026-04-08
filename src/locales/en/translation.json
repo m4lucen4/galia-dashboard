@@ -153,7 +153,8 @@
     "statusCancelled": "Cancelled",
     "statusPastDue": "Payment overdue",
     "statusIncomplete": "Incomplete",
-    "noSubscription": "You have no active subscription."
+    "noSubscription": "You have no active subscription.",
+    "reactivateSubscription": "Keep subscription"
   },
   "publications": {
     "noPublications": "No publications available.",

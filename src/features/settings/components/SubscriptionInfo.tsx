@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CreditCardIcon } from "@heroicons/react/24/outline";
+import { CreditCardIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { fetchSubscription, cancelSubscription } from "../../../redux/actions/SubscriptionActions";
+import { fetchSubscription, cancelSubscription, reactivateSubscription } from "../../../redux/actions/SubscriptionActions";
 import { Alert } from "../../../components/shared/ui/Alert";
 import { formatDateToDDMMYYYY } from "../../../helpers";
 
@@ -11,7 +11,7 @@ export const SubscriptionInfo = () => {
   const dispatch = useAppDispatch();
   const [showCancelAlert, setShowCancelAlert] = useState(false);
 
-  const { subscription, fetchSubscriptionRequest, cancelSubscriptionRequest } =
+  const { subscription, fetchSubscriptionRequest, cancelSubscriptionRequest, reactivateSubscriptionRequest } =
     useAppSelector((state) => state.subscription);
 
   useEffect(() => {
@@ -22,6 +22,12 @@ export const SubscriptionInfo = () => {
     if (!subscription?.stripe_subscription_id) return;
     await dispatch(cancelSubscription(subscription.stripe_subscription_id));
     setShowCancelAlert(false);
+    dispatch(fetchSubscription());
+  };
+
+  const handleReactivateSubscription = async () => {
+    if (!subscription?.stripe_subscription_id) return;
+    await dispatch(reactivateSubscription(subscription.stripe_subscription_id));
     dispatch(fetchSubscription());
   };
 
@@ -107,6 +113,18 @@ export const SubscriptionInfo = () => {
             date: formatDateToDDMMYYYY(subscription.current_period_end),
           })}
         </div>
+      )}
+
+      {subscription.cancel_at_period_end && (
+        <button
+          type="button"
+          onClick={handleReactivateSubscription}
+          disabled={reactivateSubscriptionRequest.inProgress}
+          className="flex items-center gap-2 text-sm text-green-600 hover:text-green-800 transition-colors disabled:opacity-50"
+        >
+          <ArrowPathIcon className="h-4 w-4" />
+          {t("settings.reactivateSubscription")}
+        </button>
       )}
 
       {showCancelAlert && (

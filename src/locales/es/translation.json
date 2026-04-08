@@ -156,7 +156,8 @@
     "statusCancelled": "Cancelada",
     "statusPastDue": "Pago pendiente",
     "statusIncomplete": "Incompleta",
-    "noSubscription": "No tienes una suscripción activa."
+    "noSubscription": "No tienes una suscripción activa.",
+    "reactivateSubscription": "Mantener suscripción"
   },
   "publications": {
     "noPublications": "No hay publicaciones disponibles.",
