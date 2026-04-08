@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
 import { InputField } from "../../../components/shared/ui/InputField";
@@ -24,6 +24,9 @@ export const LoginScreen = () => {
 
   const dispatch = useDispatch<AppDispatch>();
   const { t, i18n } = useTranslation();
+  const [searchParams] = useSearchParams();
+
+  const registrationSuccess = searchParams.get("registration") === "success";
 
   const navigate = useNavigate();
 
@@ -89,6 +92,11 @@ export const LoginScreen = () => {
             className="h-16 md:h-20 lg:h-24 w-auto mx-auto object-contain"
           />
         </div>
+        {registrationSuccess && (
+          <div className="rounded-md bg-green-50 border border-green-200 p-4 text-sm text-green-800">
+            {t("login.registrationSuccess")}
+          </div>
+        )}
         <LoginForm
           loginRequest={loginRequest}
           onForgotPassword={handleShowRecoveryModal}

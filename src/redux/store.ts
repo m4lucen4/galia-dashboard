@@ -11,6 +11,8 @@ import archiveReducer from "./slices/ArchiveSlice";
 import siteReducer from "./slices/SiteSlice";
 import sitePageReducer from "./slices/SitePageSlice";
 import siteComponentReducer from "./slices/SiteComponentSlice";
+import subscriptionReducer from "./slices/SubscriptionSlice";
+import registerReducer from "./slices/RegisterSlice";
 
 export const store = configureStore({
   reducer: {
@@ -26,6 +28,8 @@ export const store = configureStore({
     site: siteReducer,
     sitePage: sitePageReducer,
     siteComponent: siteComponentReducer,
+    subscription: subscriptionReducer,
+    register: registerReducer,
   },
 });
 

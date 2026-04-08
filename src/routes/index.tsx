@@ -22,6 +22,7 @@ import { InstagramCallback } from "../features/settings/screens/InstagramCallbac
 import { LinkedInCallback } from "../features/settings/screens/LinkedInCallback";
 import { PreviewProjects } from "../features/postPreview/screens/PreviewProjects";
 import { NonAuthenticatedRoute } from "./NonAuthenticatedRoute";
+import { RegisterScreen } from "../features/register/screens/Register";
 import { Multimedia } from "@/features/multimedia/screens/Multimedia";
 import { Archive } from "../features/archive/screens/Archive";
 import { MyWeb } from "../features/myWeb/screens/MyWeb";
@@ -30,6 +31,7 @@ export const AppRoutes = () => (
   <Routes>
     <Route element={<NonAuthenticatedRoute />}>
       <Route path="/login" element={<LoginScreen />} />
+      <Route path="/register" element={<RegisterScreen />} />
     </Route>
     <Route element={<PublicRoute />}>
       <Route path="/" element={<Web />} />

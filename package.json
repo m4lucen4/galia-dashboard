@@ -17,6 +17,7 @@
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-slot": "^1.2.4",
     "@reduxjs/toolkit": "^2.11.1",
+    "@stripe/stripe-js": "^9.0.1",
     "@supabase/supabase-js": "^2.87.1",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-table": "^8.21.3",
@@ -38,6 +39,7 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.10.1",
     "resend": "^6.6.0",
+    "stripe": "^22.0.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18"
   },

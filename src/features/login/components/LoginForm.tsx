@@ -89,13 +89,23 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           </div>
         </form>
       </Card>
-      <div className="mt-4 text-center">
-        <Link
-          to="/"
-          className="text-sm text-gray-400 hover:text-gray-800 cursor-pointer"
-        >
-          {t("login.goBackWeb")}
-        </Link>
+      <div className="mt-4 text-center space-y-2">
+        {/* <div>
+          <Link
+            to="/register"
+            className="text-sm text-gray-700 hover:text-gray-900 cursor-pointer font-medium"
+          >
+            {t("login.createAccount")}
+          </Link>
+        </div> */}
+        <div>
+          <Link
+            to="/"
+            className="text-sm text-gray-400 hover:text-gray-800 cursor-pointer"
+          >
+            {t("login.goBackWeb")}
+          </Link>
+        </div>
       </div>
     </>
   );

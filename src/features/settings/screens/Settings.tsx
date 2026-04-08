@@ -18,6 +18,7 @@ import { LinkedInConnect } from "../components/LinkedInConnect";
 import { LinkedInPages } from "../components/LinkedInPages";
 import { InstagramConnect } from "../components/InstagramConnect";
 import { InstagramPages } from "../components/InstagramPages";
+import { SubscriptionInfo } from "../components/SubscriptionInfo";
 import { WebIcon } from "../../../components/icons/WebIcon";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "../../../redux/store";
@@ -124,6 +125,14 @@ export const Settings = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+        {(authUser?.role === "student" || authUser?.role === "customer") && (
+          <Card
+            title={t("settings.subscription")}
+            subtitle={t("settings.subscriptionDescription")}
+          >
+            <SubscriptionInfo />
+          </Card>
+        )}
         <Card
           title={authUser?.has_web ? t("settings.socialNetworksAndWeb") : t("settings.socialNetworks")}
           subtitle={t("settings.socialNetworksDescription")}

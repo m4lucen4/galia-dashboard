@@ -260,6 +260,38 @@ export type MultimediaState = {
   error: string | null;
 };
 
+// Subscription types
+
+export type SubscriptionPlanType = "student" | "professional";
+export type BillingPeriod = "monthly" | "annual";
+export type SubscriptionStatus = "active" | "cancelled" | "past_due" | "incomplete";
+
+export type SubscriptionDataProps = {
+  id: string;
+  user_id: string;
+  stripe_customer_id: string;
+  stripe_subscription_id: string;
+  plan_type: SubscriptionPlanType;
+  billing_period: BillingPeriod;
+  status: SubscriptionStatus;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  student_card_url: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RegisterFormData = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  password: string;
+  plan_type: SubscriptionPlanType;
+  billing_period: BillingPeriod;
+  student_card?: File;
+};
+
 // Site Builder types
 
 export type HeaderSlideConfig = {
