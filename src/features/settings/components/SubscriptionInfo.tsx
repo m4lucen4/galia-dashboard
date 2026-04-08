@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { CreditCardIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { fetchSubscription, cancelSubscription, reactivateSubscription } from "../../../redux/actions/SubscriptionActions";
+import { clearSubscriptionErrors } from "../../../redux/slices/SubscriptionSlice";
 import { Alert } from "../../../components/shared/ui/Alert";
 import { formatDateToDDMMYYYY } from "../../../helpers";
 
@@ -10,6 +11,7 @@ export const SubscriptionInfo = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const [showCancelAlert, setShowCancelAlert] = useState(false);
+  const [showReactivateAlert, setShowReactivateAlert] = useState(false);
 
   const { subscription, fetchSubscriptionRequest, cancelSubscriptionRequest, reactivateSubscriptionRequest } =
     useAppSelector((state) => state.subscription);
@@ -27,6 +29,8 @@ export const SubscriptionInfo = () => {
   const handleReactivateSubscription = async () => {
     if (!subscription?.stripe_subscription_id) return;
     await dispatch(reactivateSubscription(subscription.stripe_subscription_id));
+    dispatch(clearSubscriptionErrors());
+    setShowReactivateAlert(false);
   };
 
   if (fetchSubscriptionRequest.inProgress) {
@@ -81,7 +85,7 @@ export const SubscriptionInfo = () => {
             {statusLabels[subscription.status] || subscription.status}
           </span>
         </div>
-        {subscription.current_period_end && (
+        {subscription.current_period_end && !subscription.cancel_at_period_end && (
           <div>
             <p className="text-xs text-gray-500 uppercase tracking-wide">
               {subscription.status === "cancelled" ? t("settings.activeUntil") : t("settings.nextRenewal")}
@@ -116,7 +120,7 @@ export const SubscriptionInfo = () => {
       {subscription.cancel_at_period_end && (
         <button
           type="button"
-          onClick={handleReactivateSubscription}
+          onClick={() => setShowReactivateAlert(true)}
           disabled={reactivateSubscriptionRequest.inProgress}
           className="flex items-center gap-2 text-sm text-green-600 hover:text-green-800 transition-colors disabled:opacity-50"
         >
@@ -134,6 +138,18 @@ export const SubscriptionInfo = () => {
           onAccept={handleCancelSubscription}
           onCancel={() => setShowCancelAlert(false)}
           disabledConfirmButton={cancelSubscriptionRequest.inProgress}
+        />
+      )}
+
+      {showReactivateAlert && (
+        <Alert
+          title={t("settings.reactivateSubscription")}
+          description={t("settings.reactivateSubscriptionDescription")}
+          icon={ArrowPathIcon}
+          iconClassName="size-6 text-white"
+          onAccept={handleReactivateSubscription}
+          onCancel={() => setShowReactivateAlert(false)}
+          disabledConfirmButton={reactivateSubscriptionRequest.inProgress}
         />
       )}
     </div>

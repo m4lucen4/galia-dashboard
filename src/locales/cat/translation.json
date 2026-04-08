@@ -155,7 +155,8 @@
     "statusPastDue": "Pagament pendent",
     "statusIncomplete": "Incompleta",
     "noSubscription": "No tens cap subscripció activa.",
-    "reactivateSubscription": "Mantenir subscripció"
+    "reactivateSubscription": "Mantenir subscripció",
+    "reactivateSubscriptionDescription": "La teva subscripció continuarà renovant-se automàticament. No se't cobrarà res addicional."
   },
   "publications": {
     "noPublications": "No hi ha publicacions disponibles.",

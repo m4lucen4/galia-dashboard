@@ -154,7 +154,8 @@
     "statusPastDue": "Payment overdue",
     "statusIncomplete": "Incomplete",
     "noSubscription": "You have no active subscription.",
-    "reactivateSubscription": "Keep subscription"
+    "reactivateSubscription": "Keep subscription",
+    "reactivateSubscriptionDescription": "Your subscription will continue to renew automatically. You will not be charged anything extra."
   },
   "publications": {
     "noPublications": "No publications available.",
