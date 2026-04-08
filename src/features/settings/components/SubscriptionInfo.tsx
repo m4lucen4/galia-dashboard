@@ -89,7 +89,7 @@ export const SubscriptionInfo = () => {
         )}
       </div>
 
-      {subscription.status === "active" && (
+      {subscription.status === "active" && !subscription.cancel_at_period_end && (
         <button
           type="button"
           onClick={() => setShowCancelAlert(true)}
@@ -101,7 +101,7 @@ export const SubscriptionInfo = () => {
         </button>
       )}
 
-      {cancelSubscriptionRequest.ok && subscription.current_period_end && (
+      {(subscription.cancel_at_period_end || cancelSubscriptionRequest.ok) && subscription.current_period_end && (
         <div className="rounded-md bg-yellow-50 border border-yellow-200 p-3 text-xs text-yellow-800">
           {t("settings.subscriptionCancelledDescription", {
             date: formatDateToDDMMYYYY(subscription.current_period_end),
