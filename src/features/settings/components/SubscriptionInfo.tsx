@@ -6,12 +6,14 @@ import { fetchSubscription, cancelSubscription, reactivateSubscription } from ".
 import { clearSubscriptionErrors } from "../../../redux/slices/SubscriptionSlice";
 import { Alert } from "../../../components/shared/ui/Alert";
 import { formatDateToDDMMYYYY } from "../../../helpers";
+import { supabase } from "../../../helpers/supabase";
 
 export const SubscriptionInfo = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const [showCancelAlert, setShowCancelAlert] = useState(false);
   const [showReactivateAlert, setShowReactivateAlert] = useState(false);
+  const [billingPortalLoading, setBillingPortalLoading] = useState(false);
 
   const { subscription, fetchSubscriptionRequest, cancelSubscriptionRequest, reactivateSubscriptionRequest } =
     useAppSelector((state) => state.subscription);
@@ -24,6 +26,28 @@ export const SubscriptionInfo = () => {
     if (!subscription?.stripe_subscription_id) return;
     await dispatch(cancelSubscription(subscription.stripe_subscription_id));
     setShowCancelAlert(false);
+  };
+
+  const handleBillingPortal = async () => {
+    setBillingPortalLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const response = await fetch("/api/billing-portal", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ return_url: window.location.href }),
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } finally {
+      setBillingPortalLoading(false);
+    }
   };
 
   const handleReactivateSubscription = async () => {
@@ -108,6 +132,16 @@ export const SubscriptionInfo = () => {
           {t("settings.cancelSubscription")}
         </button>
       )}
+
+      <button
+        type="button"
+        onClick={handleBillingPortal}
+        disabled={billingPortalLoading}
+        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
+      >
+        <CreditCardIcon className="h-4 w-4" />
+        {billingPortalLoading ? t("shared.loading") : t("settings.managePaymentMethod")}
+      </button>
 
       {(subscription.cancel_at_period_end || cancelSubscriptionRequest.ok) && subscription.current_period_end && (
         <div className="rounded-md bg-yellow-50 border border-yellow-200 p-3 text-xs text-yellow-800">

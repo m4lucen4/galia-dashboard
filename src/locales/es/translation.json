@@ -10,7 +10,8 @@
     "of": "de",
     "results": "resultados",
     "page": "Página",
-    "itemsPerPage": "Items por página"
+    "itemsPerPage": "Items por página",
+    "loading": "Cargando..."
   },
   "menu": {
     "confirm": "Confirmar",
@@ -158,7 +159,8 @@
     "statusIncomplete": "Incompleta",
     "noSubscription": "No tienes una suscripción activa.",
     "reactivateSubscription": "Mantener suscripción",
-    "reactivateSubscriptionDescription": "Tu suscripción continuará renovándose automáticamente. No se te cobrará nada adicional."
+    "reactivateSubscriptionDescription": "Tu suscripción continuará renovándose automáticamente. No se te cobrará nada adicional.",
+    "managePaymentMethod": "Gestionar método de pago"
   },
   "publications": {
     "noPublications": "No hay publicaciones disponibles.",

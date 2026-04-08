@@ -10,7 +10,8 @@
     "of": "of",
     "results": "results",
     "page": "Page",
-    "itemsPerPage": "Items per page"
+    "itemsPerPage": "Items per page",
+    "loading": "Loading..."
   },
   "menu": {
     "confirm": "Confirm",
@@ -155,7 +156,8 @@
     "statusIncomplete": "Incomplete",
     "noSubscription": "You have no active subscription.",
     "reactivateSubscription": "Keep subscription",
-    "reactivateSubscriptionDescription": "Your subscription will continue to renew automatically. You will not be charged anything extra."
+    "reactivateSubscriptionDescription": "Your subscription will continue to renew automatically. You will not be charged anything extra.",
+    "managePaymentMethod": "Manage payment method"
   },
   "publications": {
     "noPublications": "No publications available.",
