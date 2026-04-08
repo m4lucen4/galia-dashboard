@@ -78,17 +78,19 @@ const subscriptionSlice = createSlice({
         };
       })
       .addCase(cancelSubscription.fulfilled, (state) => {
-        state.cancelSubscriptionRequest = {
-          inProgress: false,
-          messages: "",
-          ok: true,
-        };
+        state.cancelSubscriptionRequest = { inProgress: false, messages: "", ok: true };
+        if (state.subscription) {
+          state.subscription.cancel_at_period_end = true;
+        }
       })
       .addCase(reactivateSubscription.pending, (state) => {
         state.reactivateSubscriptionRequest = { inProgress: true, messages: "", ok: false };
       })
       .addCase(reactivateSubscription.fulfilled, (state) => {
         state.reactivateSubscriptionRequest = { inProgress: false, messages: "", ok: true };
+        if (state.subscription) {
+          state.subscription.cancel_at_period_end = false;
+        }
       })
       .addCase(reactivateSubscription.rejected, (state, action) => {
         const errorPayload = action.payload as SupabaseError | string;

@@ -22,13 +22,11 @@ export const SubscriptionInfo = () => {
     if (!subscription?.stripe_subscription_id) return;
     await dispatch(cancelSubscription(subscription.stripe_subscription_id));
     setShowCancelAlert(false);
-    dispatch(fetchSubscription());
   };
 
   const handleReactivateSubscription = async () => {
     if (!subscription?.stripe_subscription_id) return;
     await dispatch(reactivateSubscription(subscription.stripe_subscription_id));
-    dispatch(fetchSubscription());
   };
 
   if (fetchSubscriptionRequest.inProgress) {
