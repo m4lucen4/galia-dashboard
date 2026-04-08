@@ -101,12 +101,10 @@ export const SubscriptionInfo = () => {
         </button>
       )}
 
-      {cancelSubscriptionRequest.ok && (
+      {cancelSubscriptionRequest.ok && subscription.current_period_end && (
         <div className="rounded-md bg-yellow-50 border border-yellow-200 p-3 text-xs text-yellow-800">
           {t("settings.subscriptionCancelledDescription", {
-            date: subscription.current_period_end
-              ? formatDateToDDMMYYYY(subscription.current_period_end)
-              : "",
+            date: formatDateToDDMMYYYY(subscription.current_period_end),
           })}
         </div>
       )}
