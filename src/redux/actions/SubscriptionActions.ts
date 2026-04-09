@@ -66,14 +66,21 @@ export const uploadStudentCard = createAsyncThunk(
 
       const studentCardUrl = urlData.publicUrl;
 
-      // Update subscription record with the card URL
-      const { error: updateError } = await supabase
-        .from("subscriptions")
-        .update({ student_card_url: studentCardUrl })
-        .eq("user_id", uid);
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
 
-      if (updateError) {
-        return rejectWithValue(`Error saving card URL: ${updateError.message}`);
+      const response = await fetch("/api/upload-student-card", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ student_card_url: studentCardUrl }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return rejectWithValue(errorData.error || "Error saving card URL");
       }
 
       return studentCardUrl;

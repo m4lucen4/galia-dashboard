@@ -85,6 +85,7 @@
     "description": "Gestiona los usuarios de la plataforma.",
     "createUser": "Crear Usuario",
     "editUser": "Editar Usuario",
+    "viewStudentCard": "Ver carnet universitario",
     "firstName": "Nombre",
     "lastName": "Apellidos",
     "email": "Correo Electrónico",

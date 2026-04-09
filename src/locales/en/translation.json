@@ -83,6 +83,7 @@
     "title": "Users",
     "description": "Manage platform users.",
     "createUser": "Create User",
+    "viewStudentCard": "View student card",
     "editUser": "Edit User",
     "firstName": "First Name",
     "lastName": "Last Name",

@@ -16,11 +16,14 @@ import { clearErrors } from "../../../redux/slices/UserSlice";
 import { Button } from "../../../components/shared/ui/Button";
 import { errorMessages } from "../../../helpers";
 import { useTranslation } from "react-i18next";
+import { supabase } from "../../../helpers/supabase";
+import { IdentificationIcon } from "@heroicons/react/24/outline";
 
 export const Users = () => {
   const { t } = useTranslation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [studentCardUrl, setStudentCardUrl] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const {
     userAddRequest,
@@ -47,10 +50,24 @@ export const Users = () => {
     setDrawerOpen(true);
   };
 
-  const handleEditUser = () => {
+  const handleEditUser = async () => {
     setIsEditMode(true);
+    setStudentCardUrl(null);
     setDrawerOpen(true);
   };
+
+  useEffect(() => {
+    if (isEditMode && drawerOpen && userData?.role === "student" && userData?.uid) {
+      supabase
+        .from("subscriptions")
+        .select("student_card_url")
+        .eq("user_id", userData.uid)
+        .maybeSingle()
+        .then(({ data }) => {
+          setStudentCardUrl(data?.student_card_url ?? null);
+        });
+    }
+  }, [isEditMode, drawerOpen, userData?.uid, userData?.role]);
 
   const handleUserSubmit = (formData: CreateUserProps) => {
     if (isEditMode && userData) {
@@ -142,6 +159,17 @@ export const Users = () => {
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       >
+        {isEditMode && studentCardUrl && (
+          <a
+            href={studentCardUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg border border-yellow-300 bg-yellow-50 text-sm text-yellow-800 hover:bg-yellow-100 transition-colors"
+          >
+            <IdentificationIcon className="h-5 w-5 shrink-0" />
+            {t("users.viewStudentCard")}
+          </a>
+        )}
         <UsersForm
           initialData={isEditMode ? getFormData() : undefined}
           onSubmit={handleUserSubmit}

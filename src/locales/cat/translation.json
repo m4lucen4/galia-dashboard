@@ -84,6 +84,7 @@
     "title": "Usuaris",
     "description": "Gestiona els usuaris de la plataforma.",
     "createUser": "Crear Usuari",
+    "viewStudentCard": "Veure carnet universitari",
     "editUser": "Editar Usuari",
     "firstName": "Nom",
     "lastName": "Cognoms",
