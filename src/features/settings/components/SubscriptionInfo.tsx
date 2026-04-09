@@ -112,8 +112,8 @@ export const SubscriptionInfo = () => {
     subscription.plan_type === "student" ? t("register.student") : t("register.professional");
 
   const priceMap: Record<string, Record<string, string>> = {
-    student:      { monthly: "6,05 €",   annual: "254,10 €" },
-    professional: { monthly: "30,25 €",  annual: "50,82 €" },
+    student:      { monthly: "6,05 €",   annual: "50,82 €" },
+    professional: { monthly: "30,25 €",  annual: "254,10 €" },
   };
   const price = priceMap[subscription.plan_type]?.[subscription.billing_period] ?? "";
   const periodLabel =
