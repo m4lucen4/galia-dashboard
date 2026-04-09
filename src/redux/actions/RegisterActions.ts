@@ -60,30 +60,7 @@ export const registerUser = createAsyncThunk(
         }
       }
 
-      // 4. Upload student card if applicable
-      let studentCardUrl: string | null = null;
-
-      if (formData.plan_type === "student" && formData.student_card) {
-        const file = formData.student_card;
-        const ext = file.name.split(".").pop();
-        const filePath = `${uid}/card.${ext}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("student-cards")
-          .upload(filePath, file, { upsert: true });
-
-        if (uploadError) {
-          return rejectWithValue(`Error uploading student card: ${uploadError.message}`);
-        }
-
-        const { data: urlData } = supabase.storage
-          .from("student-cards")
-          .getPublicUrl(filePath);
-
-        studentCardUrl = urlData.publicUrl;
-      }
-
-      // 5. Create Stripe Checkout Session
+      // 4. Create Stripe Checkout Session
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -95,7 +72,7 @@ export const registerUser = createAsyncThunk(
           phone: formData.phone,
           plan_type: formData.plan_type,
           billing_period: formData.billing_period,
-          student_card_url: studentCardUrl,
+          student_card_url: null,
         }),
       });
 

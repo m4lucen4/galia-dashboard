@@ -41,6 +41,52 @@ export const fetchSubscription = createAsyncThunk(
   },
 );
 
+export const uploadStudentCard = createAsyncThunk(
+  "subscription/uploadStudentCard",
+  async (file: File, { rejectWithValue, getState }) => {
+    try {
+      const state = getState() as RootState;
+      const uid = state.auth.user?.uid;
+      if (!uid) return rejectWithValue("No authenticated user");
+
+      const ext = file.name.split(".").pop();
+      const filePath = `${uid}/card.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("student-cards")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        return rejectWithValue(`Error uploading student card: ${uploadError.message}`);
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("student-cards")
+        .getPublicUrl(filePath);
+
+      const studentCardUrl = urlData.publicUrl;
+
+      // Update subscription record with the card URL
+      const { error: updateError } = await supabase
+        .from("subscriptions")
+        .update({ student_card_url: studentCardUrl })
+        .eq("user_id", uid);
+
+      if (updateError) {
+        return rejectWithValue(`Error saving card URL: ${updateError.message}`);
+      }
+
+      return studentCardUrl;
+    } catch (error: unknown) {
+      const appError: SupabaseError = {
+        message: error instanceof Error ? error.message : "Error uploading student card",
+        status: 500,
+      };
+      return rejectWithValue(appError);
+    }
+  },
+);
+
 export const startSubscription = createAsyncThunk(
   "subscription/startSubscription",
   async (

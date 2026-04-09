@@ -68,6 +68,7 @@
     "studentCard": "Valid student card",
     "uploadStudentCard": "Click to upload your student card",
     "studentCardRequired": "You must upload your student card to continue.",
+    "studentCardNotice": "As a student, you will need to upload your valid student card or enrollment certificate in Settings once payment is complete. Your access will be active immediately, but we will review it to confirm your student status.",
     "submit": "Continue to payment",
     "acceptTerms": {
       "prefix": "I have read and accept the",
@@ -163,7 +164,13 @@
     "reactivateSubscription": "Keep subscription",
     "reactivateSubscriptionDescription": "Your subscription will continue to renew automatically. You will not be charged anything extra.",
     "managePaymentMethod": "Manage payment method",
-    "activateSubscription": "Proceed to payment"
+    "activateSubscription": "Proceed to payment",
+    "studentCardSection": "Student card",
+    "studentCardSectionDescription": "Upload your valid student card or enrollment certificate so we can verify your student status.",
+    "studentCardUploaded": "Card uploaded successfully. We will review it shortly.",
+    "uploadStudentCard": "Upload card",
+    "studentCardPending": "Pending verification",
+    "studentCard": "View uploaded card"
   },
   "publications": {
     "noPublications": "No publications available.",

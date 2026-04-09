@@ -290,7 +290,6 @@ export type RegisterFormData = {
   password: string;
   plan_type: SubscriptionPlanType;
   billing_period: BillingPeriod;
-  student_card?: File;
 };
 
 // Site Builder types

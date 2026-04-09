@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CreditCardIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { fetchSubscription, cancelSubscription, reactivateSubscription, startSubscription } from "../../../redux/actions/SubscriptionActions";
+import { fetchSubscription, cancelSubscription, reactivateSubscription, startSubscription, uploadStudentCard } from "../../../redux/actions/SubscriptionActions";
 import { clearSubscriptionErrors } from "../../../redux/slices/SubscriptionSlice";
 import { Alert } from "../../../components/shared/ui/Alert";
 import { formatDateToDDMMYYYY } from "../../../helpers";
@@ -22,8 +22,11 @@ export const SubscriptionInfo = () => {
   const [studentCard, setStudentCard] = useState<File | undefined>(undefined);
   const [studentCardError, setStudentCardError] = useState("");
 
-  const { subscription, fetchSubscriptionRequest, cancelSubscriptionRequest, reactivateSubscriptionRequest, startSubscriptionRequest } =
+  const { subscription, fetchSubscriptionRequest, cancelSubscriptionRequest, reactivateSubscriptionRequest, startSubscriptionRequest, uploadStudentCardRequest } =
     useAppSelector((state) => state.subscription);
+
+  const [pendingStudentCard, setPendingStudentCard] = useState<File | undefined>(undefined);
+  const [pendingStudentCardError, setPendingStudentCardError] = useState("");
 
   useEffect(() => {
     dispatch(fetchSubscription());
@@ -170,6 +173,55 @@ export const SubscriptionInfo = () => {
           </div>
         )}
       </div>
+
+      {subscription.plan_type === "student" && (
+        <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+          <div>
+            <p className="text-sm font-medium text-gray-900">{t("settings.studentCardSection")}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{t("settings.studentCardSectionDescription")}</p>
+          </div>
+          {subscription.student_card_url ? (
+            <div className="flex items-center gap-2">
+              <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">
+                {t("settings.studentCardPending")}
+              </span>
+              <a
+                href={subscription.student_card_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-gray-500 underline hover:text-gray-700"
+              >
+                {t("settings.studentCard")}
+              </a>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <StudentCardUpload
+                file={pendingStudentCard}
+                onFileChange={(f) => { setPendingStudentCard(f); setPendingStudentCardError(""); }}
+                error={pendingStudentCardError}
+              />
+              {uploadStudentCardRequest.ok && (
+                <p className="text-sm text-green-600">{t("settings.studentCardUploaded")}</p>
+              )}
+              {uploadStudentCardRequest.messages && (
+                <p className="text-sm text-red-600">{uploadStudentCardRequest.messages}</p>
+              )}
+              <button
+                type="button"
+                disabled={!pendingStudentCard || uploadStudentCardRequest.inProgress}
+                onClick={() => {
+                  if (!pendingStudentCard) { setPendingStudentCardError(t("register.studentCardRequired")); return; }
+                  dispatch(uploadStudentCard(pendingStudentCard));
+                }}
+                className="text-sm font-medium text-gray-900 underline hover:text-gray-600 disabled:opacity-40 disabled:no-underline"
+              >
+                {uploadStudentCardRequest.inProgress ? t("shared.loading") : t("settings.uploadStudentCard")}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {subscription.status === "active" && !subscription.cancel_at_period_end && (
         <button

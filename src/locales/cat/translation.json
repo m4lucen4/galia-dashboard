@@ -69,6 +69,7 @@
     "studentCard": "Carnet universitari vigent",
     "uploadStudentCard": "Fes clic per pujar el teu carnet",
     "studentCardRequired": "Has de pujar el teu carnet universitari per continuar.",
+    "studentCardNotice": "Com a estudiant, hauràs de pujar el teu carnet universitari o matrícula vigent a Configuració un cop completat el pagament. El teu accés quedarà actiu immediatament, però ho revisarem per confirmar la teva condició d'estudiant.",
     "submit": "Continuar al pagament",
     "acceptTerms": {
       "prefix": "He llegit i accepto els",
@@ -164,7 +165,13 @@
     "reactivateSubscription": "Mantenir subscripció",
     "reactivateSubscriptionDescription": "La teva subscripció continuarà renovant-se automàticament. No se't cobrarà res addicional.",
     "managePaymentMethod": "Gestionar mètode de pagament",
-    "activateSubscription": "Procedir al pagament"
+    "activateSubscription": "Procedir al pagament",
+    "studentCardSection": "Carnet universitari",
+    "studentCardSectionDescription": "Puja el teu carnet universitari o matrícula vigent perquè puguem verificar la teva condició d'estudiant.",
+    "studentCardUploaded": "Carnet pujat correctament. Ho revisarem en breu.",
+    "uploadStudentCard": "Pujar carnet",
+    "studentCardPending": "Pendent de verificació",
+    "studentCard": "Veure carnet pujat"
   },
   "publications": {
     "noPublications": "No hi ha publicacions disponibles.",

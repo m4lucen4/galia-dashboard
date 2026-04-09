@@ -9,7 +9,7 @@ import { InputField } from "../../../components/shared/ui/InputField";
 import { Button } from "../../../components/shared/ui/Button";
 import { Card } from "../../../components/shared/ui/Card";
 import { PlanSelector } from "./PlanSelector";
-import { StudentCardUpload } from "./StudentCardUpload";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 
 interface RegisterFormProps {
   registerInProgress: boolean;
@@ -21,7 +21,6 @@ interface FormErrors {
   email?: string;
   phone?: string;
   password?: string;
-  student_card?: string;
   general?: string;
 }
 
@@ -42,9 +41,6 @@ const validateForm = (formData: RegisterFormData): FormErrors => {
   }
   if (!formData.password || formData.password.length < 6) {
     errors.password = "La contraseña debe tener al menos 6 caracteres";
-  }
-  if (formData.plan_type === "student" && !formData.student_card) {
-    errors.student_card = "El carnet de estudiante es obligatorio para este plan";
   }
 
   return errors;
@@ -79,19 +75,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
   };
 
   const handlePlanChange = (plan: SubscriptionPlanType) => {
-    setFormData((prev) => ({ ...prev, plan_type: plan, student_card: undefined }));
-    setErrors((prev) => ({ ...prev, student_card: undefined }));
+    setFormData((prev) => ({ ...prev, plan_type: plan }));
   };
 
   const handlePeriodChange = (period: BillingPeriod) => {
     setFormData((prev) => ({ ...prev, billing_period: period }));
-  };
-
-  const handleStudentCardChange = (file: File | undefined) => {
-    setFormData((prev) => ({ ...prev, student_card: file }));
-    if (errors.student_card) {
-      setErrors((prev) => ({ ...prev, student_card: undefined }));
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -212,13 +200,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
               />
             </div>
 
-            <div className={formData.plan_type !== "student" ? "invisible" : ""}>
-              <StudentCardUpload
-                file={formData.student_card}
-                onFileChange={handleStudentCardChange}
-                error={errors.student_card}
-              />
-            </div>
+            {formData.plan_type === "student" && (
+              <div className="flex gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
+                <InformationCircleIcon className="h-5 w-5 shrink-0 text-blue-500 mt-0.5" />
+                <p className="text-sm text-blue-700">{t("register.studentCardNotice")}</p>
+              </div>
+            )}
 
             {generalError && (
               <p className="text-sm text-red-600">{generalError}</p>
