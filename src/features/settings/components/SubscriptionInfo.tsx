@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CreditCardIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { fetchSubscription, cancelSubscription, reactivateSubscription } from "../../../redux/actions/SubscriptionActions";
+import { fetchSubscription, cancelSubscription, reactivateSubscription, startSubscription } from "../../../redux/actions/SubscriptionActions";
 import { clearSubscriptionErrors } from "../../../redux/slices/SubscriptionSlice";
 import { Alert } from "../../../components/shared/ui/Alert";
 import { formatDateToDDMMYYYY } from "../../../helpers";
 import { supabase } from "../../../helpers/supabase";
+import { PlanSelector } from "../../register/components/PlanSelector";
+import { StudentCardUpload } from "../../register/components/StudentCardUpload";
+import { SubscriptionPlanType, BillingPeriod } from "../../../types";
 
 export const SubscriptionInfo = () => {
   const { t } = useTranslation();
@@ -14,8 +17,12 @@ export const SubscriptionInfo = () => {
   const [showCancelAlert, setShowCancelAlert] = useState(false);
   const [showReactivateAlert, setShowReactivateAlert] = useState(false);
   const [billingPortalLoading, setBillingPortalLoading] = useState(false);
+  const [newPlan, setNewPlan] = useState<SubscriptionPlanType>("professional");
+  const [newPeriod, setNewPeriod] = useState<BillingPeriod>("monthly");
+  const [studentCard, setStudentCard] = useState<File | undefined>(undefined);
+  const [studentCardError, setStudentCardError] = useState("");
 
-  const { subscription, fetchSubscriptionRequest, cancelSubscriptionRequest, reactivateSubscriptionRequest } =
+  const { subscription, fetchSubscriptionRequest, cancelSubscriptionRequest, reactivateSubscriptionRequest, startSubscriptionRequest } =
     useAppSelector((state) => state.subscription);
 
   useEffect(() => {
@@ -66,8 +73,43 @@ export const SubscriptionInfo = () => {
   }
 
   if (!subscription) {
+    const handleStartSubscription = () => {
+      if (newPlan === "student" && !studentCard) {
+        setStudentCardError(t("register.studentCardRequired"));
+        return;
+      }
+      setStudentCardError("");
+      dispatch(startSubscription({ plan_type: newPlan, billing_period: newPeriod, student_card: studentCard }));
+    };
+
     return (
-      <p className="text-sm text-gray-500 py-4">{t("settings.noSubscription")}</p>
+      <div className="space-y-5">
+        <p className="text-sm text-gray-500">{t("settings.noSubscription")}</p>
+        <PlanSelector
+          selectedPlan={newPlan}
+          selectedPeriod={newPeriod}
+          onPlanChange={(plan) => { setNewPlan(plan); setStudentCardError(""); setStudentCard(undefined); }}
+          onPeriodChange={setNewPeriod}
+        />
+        {newPlan === "student" && (
+          <StudentCardUpload
+            file={studentCard}
+            onFileChange={setStudentCard}
+            error={studentCardError}
+          />
+        )}
+        {startSubscriptionRequest.messages && (
+          <p className="text-sm text-red-600">{startSubscriptionRequest.messages}</p>
+        )}
+        <button
+          type="button"
+          onClick={handleStartSubscription}
+          disabled={startSubscriptionRequest.inProgress}
+          className="w-full py-2 px-4 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+        >
+          {startSubscriptionRequest.inProgress ? t("shared.loading") : t("settings.activateSubscription")}
+        </button>
+      </div>
     );
   }
 

@@ -68,6 +68,7 @@
     "priceAnnual": "/any",
     "studentCard": "Carnet universitari vigent",
     "uploadStudentCard": "Fes clic per pujar el teu carnet",
+    "studentCardRequired": "Has de pujar el teu carnet universitari per continuar.",
     "submit": "Continuar al pagament",
     "acceptTerms": {
       "prefix": "He llegit i accepto els",
@@ -162,7 +163,8 @@
     "noSubscription": "No tens cap subscripció activa.",
     "reactivateSubscription": "Mantenir subscripció",
     "reactivateSubscriptionDescription": "La teva subscripció continuarà renovant-se automàticament. No se't cobrarà res addicional.",
-    "managePaymentMethod": "Gestionar mètode de pagament"
+    "managePaymentMethod": "Gestionar mètode de pagament",
+    "activateSubscription": "Procedir al pagament"
   },
   "publications": {
     "noPublications": "No hi ha publicacions disponibles.",

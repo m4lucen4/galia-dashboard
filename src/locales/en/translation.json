@@ -67,6 +67,7 @@
     "priceAnnual": "/yr",
     "studentCard": "Valid student card",
     "uploadStudentCard": "Click to upload your student card",
+    "studentCardRequired": "You must upload your student card to continue.",
     "submit": "Continue to payment",
     "acceptTerms": {
       "prefix": "I have read and accept the",
@@ -161,7 +162,8 @@
     "noSubscription": "You have no active subscription.",
     "reactivateSubscription": "Keep subscription",
     "reactivateSubscriptionDescription": "Your subscription will continue to renew automatically. You will not be charged anything extra.",
-    "managePaymentMethod": "Manage payment method"
+    "managePaymentMethod": "Manage payment method",
+    "activateSubscription": "Proceed to payment"
   },
   "publications": {
     "noPublications": "No publications available.",

@@ -68,6 +68,7 @@
     "priceAnnual": "/año",
     "studentCard": "Carnet universitario vigente",
     "uploadStudentCard": "Haz clic para subir tu carnet",
+    "studentCardRequired": "Debes subir tu carnet universitario para continuar.",
     "submit": "Continuar al pago",
     "acceptTerms": {
       "prefix": "He leído y acepto los",
@@ -164,7 +165,8 @@
     "noSubscription": "No tienes una suscripción activa.",
     "reactivateSubscription": "Mantener suscripción",
     "reactivateSubscriptionDescription": "Tu suscripción continuará renovándose automáticamente. No se te cobrará nada adicional.",
-    "managePaymentMethod": "Gestionar método de pago"
+    "managePaymentMethod": "Gestionar método de pago",
+    "activateSubscription": "Proceder al pago"
   },
   "publications": {
     "noPublications": "No hay publicaciones disponibles.",

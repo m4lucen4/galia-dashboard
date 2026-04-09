@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { SupabaseError } from "../../types";
+import { SubscriptionPlanType, BillingPeriod, SupabaseError } from "../../types";
 import { supabase } from "../../helpers/supabase";
 import { RootState } from "../store";
 
@@ -34,6 +34,77 @@ export const fetchSubscription = createAsyncThunk(
       const appError: SupabaseError = {
         message:
           error instanceof Error ? error.message : "Error retrieving subscription",
+        status: 500,
+      };
+      return rejectWithValue(appError);
+    }
+  },
+);
+
+export const startSubscription = createAsyncThunk(
+  "subscription/startSubscription",
+  async (
+    payload: { plan_type: SubscriptionPlanType; billing_period: BillingPeriod; student_card?: File },
+    { rejectWithValue, getState }
+  ) => {
+    try {
+      const state = getState() as RootState;
+      const userData = state.user.userData;
+
+      if (!userData) {
+        return rejectWithValue("No user data available");
+      }
+
+      const { plan_type, billing_period, student_card } = payload;
+      const uid = userData.uid;
+
+      // Upload student card if applicable
+      let studentCardUrl: string | null = null;
+      if (plan_type === "student" && student_card) {
+        const ext = student_card.name.split(".").pop();
+        const filePath = `${uid}/card.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("student-cards")
+          .upload(filePath, student_card, { upsert: true });
+
+        if (uploadError) {
+          return rejectWithValue(`Error uploading student card: ${uploadError.message}`);
+        }
+
+        const { data: urlData } = supabase.storage
+          .from("student-cards")
+          .getPublicUrl(filePath);
+
+        studentCardUrl = urlData.publicUrl;
+      }
+
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid,
+          email: userData.email,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          phone: userData.phone ?? "",
+          plan_type,
+          billing_period,
+          student_card_url: studentCardUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return rejectWithValue(errorData.error || "Error creating payment session");
+      }
+
+      const { url } = await response.json();
+      window.location.href = url;
+
+      return { success: true };
+    } catch (error: unknown) {
+      const appError: SupabaseError = {
+        message: error instanceof Error ? error.message : "Error starting subscription",
         status: 500,
       };
       return rejectWithValue(appError);

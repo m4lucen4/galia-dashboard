@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchSubscription, cancelSubscription, reactivateSubscription } from "../actions/SubscriptionActions";
+import { fetchSubscription, cancelSubscription, reactivateSubscription, startSubscription } from "../actions/SubscriptionActions";
 import { SubscriptionDataProps, IRequest, SupabaseError } from "../../types";
 
 interface SubscriptionState {
@@ -7,6 +7,7 @@ interface SubscriptionState {
   fetchSubscriptionRequest: IRequest;
   cancelSubscriptionRequest: IRequest;
   reactivateSubscriptionRequest: IRequest;
+  startSubscriptionRequest: IRequest;
 }
 
 const initialState: SubscriptionState = {
@@ -22,6 +23,11 @@ const initialState: SubscriptionState = {
     ok: false,
   },
   reactivateSubscriptionRequest: {
+    inProgress: false,
+    messages: "",
+    ok: false,
+  },
+  startSubscriptionRequest: {
     inProgress: false,
     messages: "",
     ok: false,
@@ -96,6 +102,19 @@ const subscriptionSlice = createSlice({
         const errorPayload = action.payload as SupabaseError | string;
         const errorMessage = typeof errorPayload === "string" ? errorPayload : errorPayload?.message || "Error desconocido";
         state.reactivateSubscriptionRequest = { inProgress: false, messages: errorMessage, ok: false };
+      });
+
+    builder
+      .addCase(startSubscription.pending, (state) => {
+        state.startSubscriptionRequest = { inProgress: true, messages: "", ok: false };
+      })
+      .addCase(startSubscription.fulfilled, (state) => {
+        state.startSubscriptionRequest = { inProgress: false, messages: "", ok: true };
+      })
+      .addCase(startSubscription.rejected, (state, action) => {
+        const errorPayload = action.payload as SupabaseError | string;
+        const errorMessage = typeof errorPayload === "string" ? errorPayload : errorPayload?.message || "Error desconocido";
+        state.startSubscriptionRequest = { inProgress: false, messages: errorMessage, ok: false };
       });
 
     builder
