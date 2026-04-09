@@ -1,12 +1,19 @@
 import { useEffect, useMemo } from "react";
-import { useAppSelector } from "../redux/hooks";
+import { useAppSelector, useAppDispatch } from "../redux/hooks";
 import { RootState } from "../redux/store";
 
 import { useProjectsData } from "@/hooks/useProjectsData";
 import { usePreviewProjectsData } from "@/hooks/usePreviewProjectsData";
 import { InstagramIcon, LinkedInIcon } from "@/components/icons";
+import { fetchSubscription } from "../redux/actions/SubscriptionActions";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { useNavigate } from "react-router-dom";
+
+const SUBSCRIPTION_ROLES = ["student", "customer", "publisher"];
 
 export const Home = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const userData = useAppSelector((state: RootState) => state.auth.user);
   const { projects, projectsFetchRequest } = useAppSelector(
     (state: RootState) => state.project,
@@ -14,9 +21,32 @@ export const Home = () => {
   const { projects: previewProjects } = useAppSelector(
     (state: RootState) => state.previewProject,
   );
+  const { subscription, fetchSubscriptionRequest } = useAppSelector(
+    (state: RootState) => state.subscription,
+  );
 
   const fetchProjectsData = useProjectsData(userData);
   const fetchPreviewProjectsData = usePreviewProjectsData(userData);
+
+  const needsSubscriptionCheck = SUBSCRIPTION_ROLES.includes(userData?.role ?? "");
+
+  const hasValidSubscription = useMemo(() => {
+    if (!needsSubscriptionCheck) return true;
+    if (!subscription) return false;
+    const notExpired =
+      !subscription.current_period_end ||
+      new Date(subscription.current_period_end) > new Date();
+    return (
+      userData?.active === true &&
+      subscription.status === "active" &&
+      notExpired
+    );
+  }, [needsSubscriptionCheck, subscription, userData?.active]);
+
+  const showSubscriptionBanner =
+    needsSubscriptionCheck &&
+    fetchSubscriptionRequest.ok &&
+    !hasValidSubscription;
 
   // Verificar si hay error
   const hasError =
@@ -85,6 +115,12 @@ export const Home = () => {
     fetchPreviewProjectsData();
   }, [fetchProjectsData, fetchPreviewProjectsData]);
 
+  useEffect(() => {
+    if (needsSubscriptionCheck) {
+      dispatch(fetchSubscription());
+    }
+  }, [dispatch, needsSubscriptionCheck]);
+
   return (
     <div className="container mx-auto p-4">
       {/* TODO: refactor screen with components */}
@@ -116,6 +152,25 @@ export const Home = () => {
               página.
             </p>
           </div>
+        </div>
+      )}
+
+      {/* Banner suscripción inválida */}
+      {showSubscriptionBanner && (
+        <div className="flex items-start gap-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 mb-6">
+          <ExclamationTriangleIcon className="h-5 w-5 shrink-0 text-yellow-500 mt-0.5" />
+          <div className="flex-1 text-sm text-yellow-800">
+            <p className="font-medium">Este es un mensaje ahora mismo informativo. Tu suscripción no está activa</p>
+            <p className="mt-0.5">Dentro de poco para seguir disfrutando de todas las funcionalidades, deberás regularizar tu suscripción desde Ajustes.</p>
+            <p className="mt-0.5">Ahoras mismo no es necesario que hagas nada, disfruta de la plataforma.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/settings")}
+            className="shrink-0 text-sm font-medium text-yellow-800 underline hover:text-yellow-900"
+          >
+            Ir a Ajustes
+          </button>
         </div>
       )}
 
