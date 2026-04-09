@@ -101,16 +101,7 @@ export const LoginScreen = () => {
           loginRequest={loginRequest}
           onForgotPassword={handleShowRecoveryModal}
         />
-        {loginRequest.messages && loginRequest.messages === "inactive_user" ? (
-          <Alert
-            title={t("login.titleInactiveUser")}
-            description={t("login.descriptionInactiveUser")}
-            onAccept={() => {
-              dispatch(clearLoginErrors());
-            }}
-          />
-        ) : (
-          loginRequest.messages &&
+        {loginRequest.messages &&
           loginRequest.messages.length > 0 && (
             <Alert
               title={loginRequest.messages}
@@ -119,8 +110,7 @@ export const LoginScreen = () => {
                 dispatch(clearLoginErrors());
               }}
             />
-          )
-        )}
+          )}
         {showRecoveryModal && (
           <Alert
             title={t("login.titleRecoveryPassword")}

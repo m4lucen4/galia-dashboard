@@ -40,11 +40,6 @@ export const login = createAsyncThunk(
         };
       }
 
-      if (userData?.active === false) {
-        await supabase.auth.signOut();
-        return rejectWithValue("inactive_user");
-      }
-
       if (userData?.language) {
         i18n.changeLanguage(userData.language);
       }
