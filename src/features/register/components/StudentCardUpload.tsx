@@ -42,7 +42,6 @@ export const StudentCardUpload: React.FC<StudentCardUploadProps> = ({
     <div className="space-y-2">
       <label className="text-sm text-black">
         {t("register.studentCard")}
-        <span className="ml-1 text-blue-600 font-medium">*</span>
       </label>
 
       {preview ? (
@@ -50,7 +49,7 @@ export const StudentCardUpload: React.FC<StudentCardUploadProps> = ({
           <img
             src={preview}
             alt="Student card preview"
-            className="h-32 w-auto rounded-md border border-gray-300 object-cover"
+            className="h-14 w-auto rounded-md border border-gray-300 object-cover"
           />
           <button
             type="button"
@@ -67,9 +66,9 @@ export const StudentCardUpload: React.FC<StudentCardUploadProps> = ({
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors cursor-pointer bg-gray-50"
+          className="flex items-center justify-center gap-3 w-full h-14 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors cursor-pointer bg-gray-50"
         >
-          <PhotoIcon className="h-8 w-8 text-gray-400 mb-1" />
+          <PhotoIcon className="h-5 w-5 text-gray-400 shrink-0" />
           <span className="text-sm text-gray-500">{t("register.uploadStudentCard")}</span>
           <span className="text-xs text-gray-400">JPG, PNG, WEBP · máx. 5MB</span>
         </button>

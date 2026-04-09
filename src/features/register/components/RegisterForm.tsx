@@ -116,99 +116,111 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
   };
 
   return (
-    <Card title={t("register.title")} subtitle={t("register.subtitle")}>
-      <form className="space-y-5" onSubmit={handleSubmit}>
-        <div className="grid grid-cols-2 gap-3">
-          <InputField
-            label={t("register.firstName")}
-            id="first_name"
-            onChange={handleChange}
-            required
-            type="text"
-            value={formData.first_name}
-            error={errors.first_name}
-          />
-          <InputField
-            label={t("register.lastName")}
-            id="last_name"
-            onChange={handleChange}
-            required
-            type="text"
-            value={formData.last_name}
-            error={errors.last_name}
-          />
+    <Card>
+      <form onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+          {/* Left column: form fields */}
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-xl font-semibold text-gray-800">{t("register.title")}</h3>
+              <p className="text-sm text-gray-400">{t("register.subtitle")}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <InputField
+                label={t("register.firstName")}
+                id="first_name"
+                onChange={handleChange}
+                required
+                type="text"
+                value={formData.first_name}
+                error={errors.first_name}
+              />
+              <InputField
+                label={t("register.lastName")}
+                id="last_name"
+                onChange={handleChange}
+                required
+                type="text"
+                value={formData.last_name}
+                error={errors.last_name}
+              />
+            </div>
+
+            <InputField
+              label={t("register.email")}
+              id="email"
+              onChange={handleChange}
+              required
+              type="email"
+              value={formData.email}
+              error={errors.email}
+            />
+
+            <InputField
+              label={t("register.phone")}
+              id="phone"
+              onChange={handleChange}
+              required
+              type="tel"
+              value={formData.phone}
+              error={errors.phone}
+            />
+
+            <InputField
+              label={t("register.password")}
+              id="password"
+              onChange={handleChange}
+              required
+              type="password"
+              value={formData.password}
+              error={errors.password}
+            />
+          </div>
+
+          {/* Right column: plan selector + actions */}
+          <div className="flex flex-col gap-6">
+            <div className="space-y-3">
+              <label className="text-xl font-semibold text-gray-800">
+                {t("register.planType")}
+              </label>
+              <PlanSelector
+                selectedPlan={formData.plan_type}
+                selectedPeriod={formData.billing_period}
+                onPlanChange={handlePlanChange}
+                onPeriodChange={handlePeriodChange}
+              />
+            </div>
+
+            <div className={formData.plan_type !== "student" ? "invisible" : ""}>
+              <StudentCardUpload
+                file={formData.student_card}
+                onFileChange={handleStudentCardChange}
+                error={errors.student_card}
+              />
+            </div>
+
+            {generalError && (
+              <p className="text-sm text-red-600">{generalError}</p>
+            )}
+
+            <div className="mt-auto space-y-3">
+              <Button
+                title={t("register.submit")}
+                disabled={registerInProgress}
+                type="submit"
+                fullWidth
+              />
+
+              <Link
+                to="/login"
+                className="w-full flex items-center justify-center py-2 px-4 border border-black rounded-md text-sm font-medium text-black hover:bg-gray-100 transition-colors"
+              >
+                {t("register.goToLogin")}
+              </Link>
+            </div>
+          </div>
         </div>
-
-        <InputField
-          label={t("register.email")}
-          id="email"
-          onChange={handleChange}
-          required
-          type="email"
-          value={formData.email}
-          error={errors.email}
-        />
-
-        <InputField
-          label={t("register.phone")}
-          id="phone"
-          onChange={handleChange}
-          required
-          type="tel"
-          value={formData.phone}
-          error={errors.phone}
-        />
-
-        <InputField
-          label={t("register.password")}
-          id="password"
-          onChange={handleChange}
-          required
-          type="password"
-          value={formData.password}
-          error={errors.password}
-        />
-
-        <div className="space-y-2">
-          <label className="text-sm text-black">
-            {t("register.planType")}
-            <span className="ml-1 text-blue-600 font-medium">*</span>
-          </label>
-          <PlanSelector
-            selectedPlan={formData.plan_type}
-            selectedPeriod={formData.billing_period}
-            onPlanChange={handlePlanChange}
-            onPeriodChange={handlePeriodChange}
-          />
-        </div>
-
-        {formData.plan_type === "student" && (
-          <StudentCardUpload
-            file={formData.student_card}
-            onFileChange={handleStudentCardChange}
-            error={errors.student_card}
-          />
-        )}
-
-        {generalError && (
-          <p className="text-sm text-red-600">{generalError}</p>
-        )}
-
-        <Button
-          title={t("register.submit")}
-          disabled={registerInProgress}
-          type="submit"
-        />
       </form>
-
-      <div className="mt-4 text-center">
-        <Link
-          to="/login"
-          className="text-sm text-gray-400 hover:text-gray-800 cursor-pointer"
-        >
-          {t("register.goToLogin")}
-        </Link>
-      </div>
     </Card>
   );
 };
