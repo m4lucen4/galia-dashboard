@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CreditCardIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
+import { CreditCardIcon, ArrowPathIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { fetchSubscription, cancelSubscription, reactivateSubscription, startSubscription, uploadStudentCard } from "../../../redux/actions/SubscriptionActions";
 import { clearSubscriptionErrors } from "../../../redux/slices/SubscriptionSlice";
@@ -19,8 +19,6 @@ export const SubscriptionInfo = () => {
   const [billingPortalLoading, setBillingPortalLoading] = useState(false);
   const [newPlan, setNewPlan] = useState<SubscriptionPlanType>("professional");
   const [newPeriod, setNewPeriod] = useState<BillingPeriod>("monthly");
-  const [studentCard, setStudentCard] = useState<File | undefined>(undefined);
-  const [studentCardError, setStudentCardError] = useState("");
 
   const { subscription, fetchSubscriptionRequest, cancelSubscriptionRequest, reactivateSubscriptionRequest, startSubscriptionRequest, uploadStudentCardRequest } =
     useAppSelector((state) => state.subscription);
@@ -77,12 +75,7 @@ export const SubscriptionInfo = () => {
 
   if (!subscription) {
     const handleStartSubscription = () => {
-      if (newPlan === "student" && !studentCard) {
-        setStudentCardError(t("register.studentCardRequired"));
-        return;
-      }
-      setStudentCardError("");
-      dispatch(startSubscription({ plan_type: newPlan, billing_period: newPeriod, student_card: studentCard }));
+      dispatch(startSubscription({ plan_type: newPlan, billing_period: newPeriod }));
     };
 
     return (
@@ -91,15 +84,14 @@ export const SubscriptionInfo = () => {
         <PlanSelector
           selectedPlan={newPlan}
           selectedPeriod={newPeriod}
-          onPlanChange={(plan) => { setNewPlan(plan); setStudentCardError(""); setStudentCard(undefined); }}
+          onPlanChange={setNewPlan}
           onPeriodChange={setNewPeriod}
         />
         {newPlan === "student" && (
-          <StudentCardUpload
-            file={studentCard}
-            onFileChange={setStudentCard}
-            error={studentCardError}
-          />
+          <div className="flex gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
+            <InformationCircleIcon className="h-5 w-5 shrink-0 text-blue-500 mt-0.5" />
+            <p className="text-sm text-blue-700">{t("register.studentCardNotice")}</p>
+          </div>
         )}
         {startSubscriptionRequest.messages && (
           <p className="text-sm text-red-600">{startSubscriptionRequest.messages}</p>

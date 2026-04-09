@@ -90,7 +90,7 @@ export const uploadStudentCard = createAsyncThunk(
 export const startSubscription = createAsyncThunk(
   "subscription/startSubscription",
   async (
-    payload: { plan_type: SubscriptionPlanType; billing_period: BillingPeriod; student_card?: File },
+    payload: { plan_type: SubscriptionPlanType; billing_period: BillingPeriod },
     { rejectWithValue, getState }
   ) => {
     try {
@@ -101,28 +101,8 @@ export const startSubscription = createAsyncThunk(
         return rejectWithValue("No user data available");
       }
 
-      const { plan_type, billing_period, student_card } = payload;
+      const { plan_type, billing_period } = payload;
       const uid = userData.uid;
-
-      // Upload student card if applicable
-      let studentCardUrl: string | null = null;
-      if (plan_type === "student" && student_card) {
-        const ext = student_card.name.split(".").pop();
-        const filePath = `${uid}/card.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from("student-cards")
-          .upload(filePath, student_card, { upsert: true });
-
-        if (uploadError) {
-          return rejectWithValue(`Error uploading student card: ${uploadError.message}`);
-        }
-
-        const { data: urlData } = supabase.storage
-          .from("student-cards")
-          .getPublicUrl(filePath);
-
-        studentCardUrl = urlData.publicUrl;
-      }
 
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
@@ -135,7 +115,7 @@ export const startSubscription = createAsyncThunk(
           phone: userData.phone || "",
           plan_type,
           billing_period,
-          student_card_url: studentCardUrl,
+          student_card_url: null,
         }),
       });
 
