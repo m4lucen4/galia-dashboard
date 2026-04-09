@@ -174,9 +174,10 @@ export const SubscriptionInfo = () => {
           </div>
           {subscription.student_card_url ? (
             <div className="flex items-center gap-2">
-              <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">
+              {/* TODO: implementar sistema de validación y edición de documentos */}
+              {/* <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">
                 {t("settings.studentCardPending")}
-              </span>
+              </span> */}
               <a
                 href={subscription.student_card_url}
                 target="_blank"
