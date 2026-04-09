@@ -95,7 +95,7 @@ export const startSubscription = createAsyncThunk(
   ) => {
     try {
       const state = getState() as RootState;
-      const userData = state.user.userData;
+      const userData = state.auth.user;
 
       if (!userData) {
         return rejectWithValue("No user data available");
@@ -132,7 +132,7 @@ export const startSubscription = createAsyncThunk(
           email: userData.email,
           first_name: userData.first_name,
           last_name: userData.last_name,
-          phone: userData.phone ?? "",
+          phone: userData.phone || "",
           plan_type,
           billing_period,
           student_card_url: studentCardUrl,
