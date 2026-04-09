@@ -66,6 +66,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
@@ -175,6 +176,26 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
               value={formData.password}
               error={errors.password}
             />
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-black cursor-pointer"
+              />
+              <span className="text-sm text-gray-600">
+                {t("register.acceptTerms.prefix")}{" "}
+                <a
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-gray-800 hover:text-black"
+                >
+                  {t("register.acceptTerms.link")}
+                </a>
+              </span>
+            </label>
           </div>
 
           {/* Right column: plan selector + actions */}
@@ -206,7 +227,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
             <div className="mt-auto space-y-3">
               <Button
                 title={t("register.submit")}
-                disabled={registerInProgress}
+                disabled={registerInProgress || !acceptedTerms}
                 type="submit"
                 fullWidth
               />

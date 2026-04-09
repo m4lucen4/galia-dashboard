@@ -68,6 +68,10 @@
     "studentCard": "Valid student card",
     "uploadStudentCard": "Click to upload your student card",
     "submit": "Continue to payment",
+    "acceptTerms": {
+      "prefix": "I have read and accept the",
+      "link": "terms, conditions and payment policy"
+    },
     "goToLogin": "I already have an account, log in",
     "paymentCancelled": "Payment was cancelled. You can try again.",
     "emailExists": "This email address is already registered.",

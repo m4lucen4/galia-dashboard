@@ -69,6 +69,10 @@
     "studentCard": "Carnet universitari vigent",
     "uploadStudentCard": "Fes clic per pujar el teu carnet",
     "submit": "Continuar al pagament",
+    "acceptTerms": {
+      "prefix": "He llegit i accepto els",
+      "link": "termes, condicions i política de pagaments"
+    },
     "goToLogin": "Ja tinc compte, iniciar sessió",
     "paymentCancelled": "El pagament va ser cancel·lat. Pots tornar-ho a intentar.",
     "emailExists": "Aquest correu electrònic ja està registrat.",

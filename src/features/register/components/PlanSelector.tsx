@@ -9,8 +9,8 @@ interface PlanSelectorProps {
 }
 
 const PRICES = {
-  student: { monthly: "2", annual: "16,80" },
-  professional: { monthly: "25", annual: "210" },
+  student: { monthly: "6,05", annual: "50,82" },
+  professional: { monthly: "30,25", annual: "254,10" },
 };
 
 export const PlanSelector: React.FC<PlanSelectorProps> = ({
@@ -89,6 +89,11 @@ export const PlanSelector: React.FC<PlanSelectorProps> = ({
               <div className="mt-2">
                 <span className="text-xl font-bold text-gray-900">€{price}</span>
                 <span className="text-xs text-gray-500">{period}</span>
+
+              </div>
+              <div className="mt-2">
+
+                <span className="text-xs text-gray-500">Impuestos incluidos</span>
               </div>
             </button>
           );
