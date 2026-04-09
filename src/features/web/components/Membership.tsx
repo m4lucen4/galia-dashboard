@@ -21,7 +21,7 @@ const Membership: React.FC = () => {
     {
       name: "Estudiante",
       subtitle: "Versión ilimitada",
-      price: { monthly: 2, annual: 16.8 },
+      price: { monthly: 5, annual: 42 },
       buttonText: "Empezar",
       buttonStyle: "bg-gray-100 text-gray-700 hover:bg-gray-200",
       cardStyle: "bg-white border border-gray-200",
