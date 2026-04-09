@@ -73,8 +73,16 @@ export const SubscriptionInfo = () => {
 
   const planLabel =
     subscription.plan_type === "student" ? t("register.student") : t("register.professional");
+
+  const priceMap: Record<string, Record<string, string>> = {
+    student:      { monthly: "6,05 €",   annual: "254,10 €" },
+    professional: { monthly: "30,25 €",  annual: "50,82 €" },
+  };
+  const price = priceMap[subscription.plan_type]?.[subscription.billing_period] ?? "";
   const periodLabel =
-    subscription.billing_period === "monthly" ? t("register.monthly") : t("register.annual");
+    subscription.billing_period === "monthly"
+      ? `${t("register.monthly")} (${price})`
+      : `${t("register.annual")} (${price})`;
 
   const statusColors: Record<string, string> = {
     active: "bg-green-100 text-green-800",
