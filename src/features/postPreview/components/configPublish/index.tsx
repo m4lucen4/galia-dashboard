@@ -47,7 +47,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   const publishDateOnly = useMemo(() => {
     if (!publishDate) return "";
     // Extract date from "YYYY-MM-DD HH:mm:ss+00" format
-    const match = publishDate.match(/^(\d{4}-\d{2}-\d{2})/);
+    const match = new RegExp(/^(\d{4}-\d{2}-\d{2})/).exec(publishDate);
     return match ? match[1] : publishDate;
   }, [publishDate]);
 
@@ -56,9 +56,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
     if (!publishDate || publishNow) return true; // Skip validation if publishNow is checked
 
     // Parse timestampz format: "YYYY-MM-DD HH:mm:ss+00"
-    const match = publishDate.match(
-      /^(\d{4})-(\d{2})-(\d{2})\s(\d{2}):(\d{2})/
-    );
+    const match = new RegExp(/^(\d{4})-(\d{2})-(\d{2})\s(\d{2}):(\d{2})/).exec(publishDate);
     if (!match) return true; // If format doesn't match, skip validation
 
     const [, year, month, day, hours, minutes] = match;

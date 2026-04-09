@@ -371,6 +371,9 @@
     "private": "Privat",
     "public": "Públic"
   },
+  "subscription": {
+    "restrictedAction": "Necessites una subscripció activa per realitzar aquesta acció"
+  },
   "multimedia": {
     "title": "Multimèdia",
     "description": "Gestiona els teus arxius multimèdia.",

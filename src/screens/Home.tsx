@@ -8,6 +8,7 @@ import { InstagramIcon, LinkedInIcon } from "@/components/icons";
 import { fetchSubscription } from "../redux/actions/SubscriptionActions";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
+import { useHasValidSubscription } from "../hooks/useHasValidSubscription";
 
 const SUBSCRIPTION_ROLES = ["student", "customer", "publisher"];
 
@@ -21,7 +22,7 @@ export const Home = () => {
   const { projects: previewProjects } = useAppSelector(
     (state: RootState) => state.previewProject,
   );
-  const { subscription, fetchSubscriptionRequest } = useAppSelector(
+  const { fetchSubscriptionRequest } = useAppSelector(
     (state: RootState) => state.subscription,
   );
 
@@ -29,19 +30,7 @@ export const Home = () => {
   const fetchPreviewProjectsData = usePreviewProjectsData(userData);
 
   const needsSubscriptionCheck = SUBSCRIPTION_ROLES.includes(userData?.role ?? "");
-
-  const hasValidSubscription = useMemo(() => {
-    if (!needsSubscriptionCheck) return true;
-    if (!subscription) return false;
-    const notExpired =
-      !subscription.current_period_end ||
-      new Date(subscription.current_period_end) > new Date();
-    return (
-      userData?.active === true &&
-      subscription.status === "active" &&
-      notExpired
-    );
-  }, [needsSubscriptionCheck, subscription, userData?.active]);
+  const hasValidSubscription = useHasValidSubscription();
 
   const showSubscriptionBanner =
     needsSubscriptionCheck &&
@@ -160,9 +149,8 @@ export const Home = () => {
         <div className="flex items-start gap-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 mb-6">
           <ExclamationTriangleIcon className="h-5 w-5 shrink-0 text-yellow-500 mt-0.5" />
           <div className="flex-1 text-sm text-yellow-800">
-            <p className="font-medium">Este es un mensaje ahora mismo informativo. Tu suscripción no está activa</p>
-            <p className="mt-0.5">Dentro de poco para seguir disfrutando de todas las funcionalidades, deberás regularizar tu suscripción desde Ajustes.</p>
-            <p className="mt-0.5">Ahoras mismo no es necesario que hagas nada, disfruta de la plataforma.</p>
+            <p className="font-medium">Tu suscripción a Mocklab no está activa.</p>
+            <p className="mt-0.5">Para seguir disfrutando de todas las funcionalidades premium, por favor regulariza tu suscripción desde los ajustes de tu cuenta.</p>
           </div>
           <button
             type="button"

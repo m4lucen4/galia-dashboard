@@ -378,6 +378,9 @@
     "privacyPolicy": "Política de privacidad",
     "legalAdvice": "Aviso legal"
   },
+  "subscription": {
+    "restrictedAction": "Necesitas una suscripción activa para realizar esta acción"
+  },
   "multimedia": {
     "title": "Multimedia",
     "description": "Gestiona tus archivos multimedia.",

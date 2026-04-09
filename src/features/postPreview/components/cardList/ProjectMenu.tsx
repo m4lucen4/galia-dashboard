@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
 import { PreviewProjectDataProps } from "../../../../types";
 import { isDateInPast } from "../../../../helpers";
+import { useHasValidSubscription } from "../../../../hooks/useHasValidSubscription";
 
 interface ProjectMenuProps {
   project: PreviewProjectDataProps;
@@ -22,6 +23,7 @@ export const ProjectMenu: React.FC<ProjectMenuProps> = ({
   onPublishAgain,
 }) => {
   const { t } = useTranslation();
+  const hasValidSubscription = useHasValidSubscription();
 
   return (
     <div className="relative">
@@ -37,8 +39,10 @@ export const ProjectMenu: React.FC<ProjectMenuProps> = ({
             {!isDateInPast(project.publishDate) && (
               <li>
                 <button
-                  onClick={() => onEditPreview(project)}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => hasValidSubscription && onEditPreview(project)}
+                  disabled={!hasValidSubscription}
+                  title={!hasValidSubscription ? t("subscription.restrictedAction") : undefined}
+                  className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {t("previewProjects.editPreviewProject")}
                 </button>
@@ -47,8 +51,10 @@ export const ProjectMenu: React.FC<ProjectMenuProps> = ({
             {project.state === "published" && (
               <li>
                 <button
-                  onClick={() => onPublishAgain(project)}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => hasValidSubscription && onPublishAgain(project)}
+                  disabled={!hasValidSubscription}
+                  title={!hasValidSubscription ? t("subscription.restrictedAction") : undefined}
+                  className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {t("previewProjects.publishAgain")}
                 </button>

@@ -370,6 +370,9 @@
     "private": "Private",
     "public": "Public"
   },
+  "subscription": {
+    "restrictedAction": "You need an active subscription to perform this action"
+  },
   "multimedia": {
     "title": "Multimedia",
     "description": "Manage your multimedia files.",

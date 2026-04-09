@@ -1,6 +1,6 @@
 import React from "react";
 import { PreviewProjectDataProps } from "../../../../types";
-import { DocumentTextIcon } from "@heroicons/react/24/outline";
+import { DocumentTextIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { Button } from "../../../../components/shared/ui/Button";
 import { InstagramIcon, LinkedInIcon } from "../../../../components/icons";
 import { isDateInPast, truncateText } from "../../../../helpers";
@@ -10,6 +10,7 @@ import { SocialMediaResults } from "./SocialMediaResults";
 import { ProjectInfo } from "./ProjectInfo";
 import { ProjectMenu } from "./ProjectMenu";
 import { CardsPagination } from "../../../../components/shared/ui/CardsPagination";
+import { useHasValidSubscription } from "../../../../hooks/useHasValidSubscription";
 
 interface CardsListProps {
   projects: PreviewProjectDataProps[];
@@ -45,6 +46,7 @@ export const CardsList: React.FC<CardsListProps> = ({
   handlePublishAgain,
 }) => {
   const { t } = useTranslation();
+  const hasValidSubscription = useHasValidSubscription();
 
   const sortedProjects = [...projects].sort((a, b) => {
     if (a.state !== b.state) {
@@ -127,7 +129,8 @@ export const CardsList: React.FC<CardsListProps> = ({
                     </div>
                     <Button
                       title={t("previewProjects.publish")}
-                      disabled={isDateInPast(project.publishDate)}
+                      disabled={isDateInPast(project.publishDate) || !hasValidSubscription}
+                      icon={!hasValidSubscription ? <LockClosedIcon className="h-3.5 w-3.5" /> : undefined}
                       onClick={() => handleOpenPublishConfig(project)}
                     />
                   </div>
@@ -220,7 +223,8 @@ export const CardsList: React.FC<CardsListProps> = ({
                       </div>
                       <Button
                         title={t("previewProjects.publish")}
-                        disabled={isDateInPast(project.publishDate)}
+                        disabled={isDateInPast(project.publishDate) || !hasValidSubscription}
+                        icon={!hasValidSubscription ? <LockClosedIcon className="h-3.5 w-3.5" /> : undefined}                 
                         onClick={() => handleOpenPublishConfig(project)}
                       />
                     </div>
