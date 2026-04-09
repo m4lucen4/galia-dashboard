@@ -58,14 +58,15 @@ export const Users = () => {
 
   useEffect(() => {
     if (isEditMode && drawerOpen && userData?.role === "student" && userData?.uid) {
-      supabase
-        .from("subscriptions")
-        .select("student_card_url")
-        .eq("user_id", userData.uid)
-        .maybeSingle()
-        .then(({ data }) => {
-          setStudentCardUrl(data?.student_card_url ?? null);
-        });
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        const token = session?.access_token;
+        fetch(`/api/get-student-card?user_id=${userData.uid}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((r) => r.json())
+          .then(({ student_card_url }) => setStudentCardUrl(student_card_url ?? null))
+          .catch(() => setStudentCardUrl(null));
+      });
     }
   }, [isEditMode, drawerOpen, userData?.uid, userData?.role]);
 
