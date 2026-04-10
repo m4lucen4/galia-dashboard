@@ -25,7 +25,8 @@ export const useProjectsData = (user: UserDataProps | null | undefined) => {
     } else if (
       user.role === "customer" ||
       user.role === "publisher" ||
-      user.role === "photographer"
+      user.role === "photographer" ||
+      user.role === "student"
     ) {
       dispatch(fetchProjectsByUserId(user.uid));
     }

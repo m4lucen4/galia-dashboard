@@ -21,7 +21,7 @@ export const usePreviewProjectsData = (
 
     if (user.role === "admin") {
       dispatch(fetchPreviewProjects());
-    } else if (user.role === "customer") {
+    } else {
       dispatch(fetchPreviewProjectsByUserId(user.uid));
     }
   }, [dispatch, user]);
