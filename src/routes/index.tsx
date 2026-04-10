@@ -18,6 +18,7 @@ import { HasWebRoute } from "./HasWebRoute";
 
 import { Web } from "../features/web/screen/Web";
 import { Privacy } from "../screens/public/Privacy";
+import { Terms } from "../screens/public/Terms";
 import { InstagramCallback } from "../features/settings/screens/InstagramCallback";
 import { LinkedInCallback } from "../features/settings/screens/LinkedInCallback";
 import { PreviewProjects } from "../features/postPreview/screens/PreviewProjects";
@@ -36,6 +37,7 @@ export const AppRoutes = () => (
     <Route element={<PublicRoute />}>
       <Route path="/" element={<Web />} />
       <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
       <Route path="/wiki" element={<Documentation />} />
     </Route>
     <Route element={<ProtectedRoute />}>

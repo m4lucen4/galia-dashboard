@@ -44,6 +44,7 @@
     "goBackWeb": "Go back to the website",
     "titleInactiveUser": "Inactive user",
     "descriptionInactiveUser": "Your account is not active. Please contact an administrator.",
+    "noAccount": "Don't have an account yet?",
     "createAccount": "Create an account",
     "registrationSuccess": "Your account has been successfully activated. You can now log in."
   },

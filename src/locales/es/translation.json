@@ -45,6 +45,7 @@
     "goBackWeb": "Volver a la web",
     "titleInactiveUser": "Usuario inactivo",
     "descriptionInactiveUser": "Tu usuario no se encuentra activo. Por favor, contacta con un administrador.",
+    "noAccount": "¿Aún no tienes cuenta?",
     "createAccount": "Crear una cuenta",
     "registrationSuccess": "Tu cuenta ha sido activada correctamente. Ya puedes iniciar sesión."
   },

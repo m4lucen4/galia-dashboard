@@ -89,16 +89,26 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           </div>
         </form>
       </Card>
-      <div className="mt-4 text-center space-y-2">
-        {/* <div>
+      <div className="mt-6">
+        <div className="relative flex items-center gap-3 my-2">
+          <div className="flex-1 h-px bg-gray-200" />
+          <span className="text-xs text-gray-400 uppercase tracking-widest">
+            o
+          </span>
+          <div className="flex-1 h-px bg-gray-200" />
+        </div>
+        <div className="bg-white border border-black rounded-lg shadow-sm px-6 py-5 text-center">
+          <p className="text-sm text-gray-500 mb-3">
+            {t("login.noAccount")}
+          </p>
           <Link
             to="/register"
-            className="text-sm text-gray-700 hover:text-gray-900 cursor-pointer font-medium"
+            className="inline-block w-full py-2 px-4 border border-black rounded-md text-sm font-medium text-gray-900 hover:bg-black hover:text-white transition-colors duration-200"
           >
             {t("login.createAccount")}
           </Link>
-        </div> */}
-        <div>
+        </div>
+        <div className="mt-4 text-center">
           <Link
             to="/"
             className="text-sm text-gray-400 hover:text-gray-800 cursor-pointer"
