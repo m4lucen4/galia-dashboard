@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchSubscription, cancelSubscription, reactivateSubscription, startSubscription, uploadStudentCard } from "../actions/SubscriptionActions";
+import { fetchSubscription, cancelSubscription, reactivateSubscription, startSubscription } from "../actions/SubscriptionActions";
 import { SubscriptionDataProps, IRequest, SupabaseError } from "../../types";
 
 interface SubscriptionState {
@@ -8,7 +8,6 @@ interface SubscriptionState {
   cancelSubscriptionRequest: IRequest;
   reactivateSubscriptionRequest: IRequest;
   startSubscriptionRequest: IRequest;
-  uploadStudentCardRequest: IRequest;
 }
 
 const initialState: SubscriptionState = {
@@ -29,11 +28,6 @@ const initialState: SubscriptionState = {
     ok: false,
   },
   startSubscriptionRequest: {
-    inProgress: false,
-    messages: "",
-    ok: false,
-  },
-  uploadStudentCardRequest: {
     inProgress: false,
     messages: "",
     ok: false,
@@ -121,22 +115,6 @@ const subscriptionSlice = createSlice({
         const errorPayload = action.payload as SupabaseError | string;
         const errorMessage = typeof errorPayload === "string" ? errorPayload : errorPayload?.message || "Error desconocido";
         state.startSubscriptionRequest = { inProgress: false, messages: errorMessage, ok: false };
-      });
-
-    builder
-      .addCase(uploadStudentCard.pending, (state) => {
-        state.uploadStudentCardRequest = { inProgress: true, messages: "", ok: false };
-      })
-      .addCase(uploadStudentCard.fulfilled, (state, action) => {
-        state.uploadStudentCardRequest = { inProgress: false, messages: "", ok: true };
-        if (state.subscription) {
-          state.subscription.student_card_url = action.payload as string;
-        }
-      })
-      .addCase(uploadStudentCard.rejected, (state, action) => {
-        const errorPayload = action.payload as SupabaseError | string;
-        const errorMessage = typeof errorPayload === "string" ? errorPayload : errorPayload?.message || "Error desconocido";
-        state.uploadStudentCardRequest = { inProgress: false, messages: errorMessage, ok: false };
       });
 
     builder

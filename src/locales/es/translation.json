@@ -67,10 +67,6 @@
     "annualSaving": "(ahorra 30%)",
     "priceMonthly": "/mes",
     "priceAnnual": "/año",
-    "studentCard": "Carnet universitario vigente",
-    "uploadStudentCard": "Haz clic para subir tu carnet",
-    "studentCardRequired": "Debes subir tu carnet universitario para continuar.",
-    "studentCardNotice": "Como estudiante, deberás subir tu carnet universitario o matrícula vigente en Ajustes una vez completado el pago. Tu acceso quedará activo de inmediato, pero lo revisaremos para confirmar tu condición de estudiante.",
     "submit": "Continuar al pago",
     "acceptTerms": {
       "prefix": "He leído y acepto los",
@@ -86,7 +82,6 @@
     "description": "Gestiona los usuarios de la plataforma.",
     "createUser": "Crear Usuario",
     "editUser": "Editar Usuario",
-    "viewStudentCard": "Ver carnet universitario",
     "firstName": "Nombre",
     "lastName": "Apellidos",
     "email": "Correo Electrónico",
@@ -169,13 +164,7 @@
     "reactivateSubscription": "Mantener suscripción",
     "reactivateSubscriptionDescription": "Tu suscripción continuará renovándose automáticamente. No se te cobrará nada adicional.",
     "managePaymentMethod": "Gestionar método de pago",
-    "activateSubscription": "Proceder al pago",
-    "studentCardSection": "Carnet universitario",
-    "studentCardSectionDescription": "Sube tu carnet universitario o matrícula vigente para que podamos verificar tu condición de estudiante.",
-    "studentCardUploaded": "Carnet subido correctamente. Lo revisaremos en breve.",
-    "uploadStudentCard": "Subir carnet",
-    "studentCardPending": "Pendiente de verificación",
-    "studentCard": "Ver carnet subido"
+    "activateSubscription": "Proceder al pago"
   },
   "publications": {
     "noPublications": "No hay publicaciones disponibles.",

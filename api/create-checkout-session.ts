@@ -41,7 +41,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       phone,
       plan_type,
       billing_period,
-      student_card_url,
     } = req.body;
 
     if (!uid || !email || !plan_type || !billing_period) {
@@ -68,7 +67,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         phone: phone || "",
         plan_type,
         billing_period,
-        student_card_url: student_card_url || "",
       },
       success_url: `${baseUrl}/login?registration=success`,
       cancel_url: `${baseUrl}/register?payment=cancelled`,

@@ -72,7 +72,6 @@ export const registerUser = createAsyncThunk(
           phone: formData.phone,
           plan_type: formData.plan_type,
           billing_period: formData.billing_period,
-          student_card_url: null,
         }),
       });
 

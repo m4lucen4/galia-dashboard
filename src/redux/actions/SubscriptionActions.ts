@@ -41,59 +41,6 @@ export const fetchSubscription = createAsyncThunk(
   },
 );
 
-export const uploadStudentCard = createAsyncThunk(
-  "subscription/uploadStudentCard",
-  async (file: File, { rejectWithValue, getState }) => {
-    try {
-      const state = getState() as RootState;
-      const uid = state.auth.user?.uid;
-      if (!uid) return rejectWithValue("No authenticated user");
-
-      const ext = file.name.split(".").pop();
-      const filePath = `${uid}/card.${ext}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("student-cards")
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) {
-        return rejectWithValue(`Error uploading student card: ${uploadError.message}`);
-      }
-
-      const { data: urlData } = supabase.storage
-        .from("student-cards")
-        .getPublicUrl(filePath);
-
-      const studentCardUrl = urlData.publicUrl;
-
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
-      const response = await fetch("/api/upload-student-card", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ student_card_url: studentCardUrl }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        return rejectWithValue(errorData.error || "Error saving card URL");
-      }
-
-      return studentCardUrl;
-    } catch (error: unknown) {
-      const appError: SupabaseError = {
-        message: error instanceof Error ? error.message : "Error uploading student card",
-        status: 500,
-      };
-      return rejectWithValue(appError);
-    }
-  },
-);
-
 export const startSubscription = createAsyncThunk(
   "subscription/startSubscription",
   async (
@@ -122,7 +69,6 @@ export const startSubscription = createAsyncThunk(
           phone: userData.phone || "",
           plan_type,
           billing_period,
-          student_card_url: null,
         }),
       });
 

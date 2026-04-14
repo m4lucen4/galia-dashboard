@@ -9,7 +9,6 @@ import { InputField } from "../../../components/shared/ui/InputField";
 import { Button } from "../../../components/shared/ui/Button";
 import { Card } from "../../../components/shared/ui/Card";
 import { PlanSelector } from "./PlanSelector";
-import { InformationCircleIcon } from "@heroicons/react/24/outline";
 
 interface RegisterFormProps {
   registerInProgress: boolean;
@@ -200,12 +199,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
               />
             </div>
 
-            {formData.plan_type === "student" && (
-              <div className="flex gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
-                <InformationCircleIcon className="h-5 w-5 shrink-0 text-blue-500 mt-0.5" />
-                <p className="text-sm text-blue-700">{t("register.studentCardNotice")}</p>
-              </div>
-            )}
 
             {generalError && (
               <p className="text-sm text-red-600">{generalError}</p>

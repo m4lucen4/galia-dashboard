@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CreditCardIcon, ArrowPathIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
+import { CreditCardIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { fetchSubscription, cancelSubscription, reactivateSubscription, startSubscription, uploadStudentCard } from "../../../redux/actions/SubscriptionActions";
+import { fetchSubscription, cancelSubscription, reactivateSubscription, startSubscription } from "../../../redux/actions/SubscriptionActions";
 import { clearSubscriptionErrors } from "../../../redux/slices/SubscriptionSlice";
 import { Alert } from "../../../components/shared/ui/Alert";
 import { formatDateToDDMMYYYY } from "../../../helpers";
 import { supabase } from "../../../helpers/supabase";
 import { PlanSelector } from "../../register/components/PlanSelector";
-import { StudentCardUpload } from "../../register/components/StudentCardUpload";
 import { SubscriptionPlanType, BillingPeriod } from "../../../types";
 
 export const SubscriptionInfo = () => {
@@ -20,11 +19,8 @@ export const SubscriptionInfo = () => {
   const [newPlan, setNewPlan] = useState<SubscriptionPlanType>("professional");
   const [newPeriod, setNewPeriod] = useState<BillingPeriod>("monthly");
 
-  const { subscription, fetchSubscriptionRequest, cancelSubscriptionRequest, reactivateSubscriptionRequest, startSubscriptionRequest, uploadStudentCardRequest } =
+  const { subscription, fetchSubscriptionRequest, cancelSubscriptionRequest, reactivateSubscriptionRequest, startSubscriptionRequest } =
     useAppSelector((state) => state.subscription);
-
-  const [pendingStudentCard, setPendingStudentCard] = useState<File | undefined>(undefined);
-  const [pendingStudentCardError, setPendingStudentCardError] = useState("");
 
   useEffect(() => {
     dispatch(fetchSubscription());
@@ -90,7 +86,6 @@ export const SubscriptionInfo = () => {
         {newPlan === "student" && (
           <div className="flex gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
             <InformationCircleIcon className="h-5 w-5 shrink-0 text-blue-500 mt-0.5" />
-            <p className="text-sm text-blue-700">{t("register.studentCardNotice")}</p>
           </div>
         )}
         {startSubscriptionRequest.messages && (
@@ -165,56 +160,6 @@ export const SubscriptionInfo = () => {
           </div>
         )}
       </div>
-
-      {subscription.plan_type === "student" && (
-        <div className="border border-gray-200 rounded-lg p-4 space-y-3">
-          <div>
-            <p className="text-sm font-medium text-gray-900">{t("settings.studentCardSection")}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{t("settings.studentCardSectionDescription")}</p>
-          </div>
-          {subscription.student_card_url ? (
-            <div className="flex items-center gap-2">
-              {/* TODO: implementar sistema de validación y edición de documentos */}
-              {/* <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">
-                {t("settings.studentCardPending")}
-              </span> */}
-              <a
-                href={subscription.student_card_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-gray-500 underline hover:text-gray-700"
-              >
-                {t("settings.studentCard")}
-              </a>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <StudentCardUpload
-                file={pendingStudentCard}
-                onFileChange={(f) => { setPendingStudentCard(f); setPendingStudentCardError(""); }}
-                error={pendingStudentCardError}
-              />
-              {uploadStudentCardRequest.ok && (
-                <p className="text-sm text-green-600">{t("settings.studentCardUploaded")}</p>
-              )}
-              {uploadStudentCardRequest.messages && (
-                <p className="text-sm text-red-600">{uploadStudentCardRequest.messages}</p>
-              )}
-              <button
-                type="button"
-                disabled={!pendingStudentCard || uploadStudentCardRequest.inProgress}
-                onClick={() => {
-                  if (!pendingStudentCard) { setPendingStudentCardError(t("register.studentCardRequired")); return; }
-                  dispatch(uploadStudentCard(pendingStudentCard));
-                }}
-                className="text-sm font-medium text-gray-900 underline hover:text-gray-600 disabled:opacity-40 disabled:no-underline"
-              >
-                {uploadStudentCardRequest.inProgress ? t("shared.loading") : t("settings.uploadStudentCard")}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
 
       {subscription.status === "active" && !subscription.cancel_at_period_end && (
         <button
