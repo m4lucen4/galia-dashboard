@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Membership: React.FC = () => {
   const [billingType, setBillingType] = useState<"monthly" | "annual">(
@@ -6,6 +7,7 @@ const Membership: React.FC = () => {
   );
   const [postsPerMonth, setPostsPerMonth] = useState(15);
   const [pricePerHour, setPricePerHour] = useState(20);
+  const navigate = useNavigate();
 
   const scrollToContact = () => {
     const element = document.getElementById("contacto");
@@ -19,13 +21,13 @@ const Membership: React.FC = () => {
 
   const plans = [
     {
-      name: "Estudiante",
-      subtitle: "Versión ilimitada",
-      price: { monthly: 5, annual: 42 },
+      name: "Lite",
+      subtitle: "Versión limitada",
+      price: { monthly: 9, annual: 86.4 },
       buttonText: "Empezar",
+      buttonAction: "register" as const,
       buttonStyle: "bg-gray-100 text-gray-700 hover:bg-gray-200",
       cardStyle: "bg-white border border-gray-200",
-      bottomText: "* Bajo acreditación universitaria",
       features: [
         "Hasta 10 publicaciones al mes",
         "Integración modelos de IA",
@@ -36,8 +38,9 @@ const Membership: React.FC = () => {
     {
       name: "Profesional",
       subtitle: "Versión ilimitada",
-      price: { monthly: 25, annual: 210 },
+      price: { monthly: 19, annual: 182.4 },
       buttonText: "Empezar",
+      buttonAction: "register" as const,
       buttonStyle: "bg-gray-600 text-white hover:bg-gray-700",
       cardStyle: "bg-black text-white border border-gray-800",
       featured: true,
@@ -54,6 +57,7 @@ const Membership: React.FC = () => {
         "Servicios de comunicación para mejorar la imagen de tu empresa",
       price: null,
       buttonText: "Contactar",
+      buttonAction: "contact" as const,
       buttonStyle: "bg-gray-100 text-gray-700 hover:bg-gray-200",
       cardStyle: "bg-white border border-gray-200",
       features: [
@@ -77,7 +81,7 @@ const Membership: React.FC = () => {
           </h2>
         </div>
         {/* Toggle mensual/anual */}
-        <div className="flex justify-center mb-12">
+        <div className="flex flex-col items-center mb-12 gap-3">
           <div className="bg-white rounded-lg p-1 border border-gray-200">
             <button
               onClick={() => setBillingType("monthly")}
@@ -100,6 +104,11 @@ const Membership: React.FC = () => {
               Anual
             </button>
           </div>
+          {billingType === "annual" && (
+            <p className="text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-4 py-1.5">
+              Ahorra un 20% con la facturación anual
+            </p>
+          )}
         </div>
 
         {/* Grid de planes */}
@@ -139,7 +148,7 @@ const Membership: React.FC = () => {
 
                 {/* Botón */}
                 <button
-                  onClick={scrollToContact}
+                  onClick={() => plan.buttonAction === "register" ? navigate("/register") : scrollToContact()}
                   className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${plan.buttonStyle}`}
                 >
                   {plan.buttonText}
@@ -169,22 +178,13 @@ const Membership: React.FC = () => {
                   </li>
                 ))}
               </ul>
-
-              {/* Anotación inferior */}
-              {plan.bottomText && (
-                <p
-                  className={`text-xs mt-4 ${plan.cardStyle.includes("black") ? "text-gray-500" : "text-gray-400"}`}
-                >
-                  {plan.bottomText}
-                </p>
-              )}
             </div>
           ))}
         </div>
 
         {/* Nota de impuestos */}
         <p className="text-center text-sm text-gray-500 mt-8">
-          Impuestos no incluidos.
+          Impuestos incluidos.
         </p>
       </div>
 

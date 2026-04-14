@@ -9,8 +9,8 @@ interface PlanSelectorProps {
 }
 
 const PRICES = {
-  student: { monthly: "6,05", annual: "50,82" },
-  professional: { monthly: "30,25", annual: "254,10" },
+  student: { monthly: "9,00", annual: "86,40" },
+  professional: { monthly: "19,00", annual: "182,40" },
 };
 
 export const PlanSelector: React.FC<PlanSelectorProps> = ({
