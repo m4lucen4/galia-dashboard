@@ -59,6 +59,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       payment_method_types: ["card"],
       customer_email: email,
       line_items: [{ price: priceId, quantity: 1 }],
+      subscription_data: {
+        trial_period_days: 7,
+      },
       metadata: {
         uid,
         email,
