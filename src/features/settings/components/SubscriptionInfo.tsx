@@ -9,6 +9,7 @@ import { formatDateToDDMMYYYY } from "../../../helpers";
 import { supabase } from "../../../helpers/supabase";
 import { PlanSelector } from "../../register/components/PlanSelector";
 import { SubscriptionPlanType, BillingPeriod } from "../../../types";
+import { InformationCircleIcon } from "@heroicons/react/24/solid";
 
 export const SubscriptionInfo = () => {
   const { t } = useTranslation();
