@@ -160,32 +160,30 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
           />
         </div>
 
-        {slide.type === 2 && (
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-sm text-black">Texto del botón</label>
-              <input
-                type="text"
-                value={slide.text_button}
-                onChange={(e) => handleChange("text_button", e.target.value)}
-                onBlur={onBlur}
-                className={inputClass}
-                placeholder="Ver más"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-black">URL del botón</label>
-              <input
-                type="text"
-                value={slide.url_button}
-                onChange={(e) => handleChange("url_button", e.target.value)}
-                onBlur={onBlur}
-                className={inputClass}
-                placeholder="#seccion"
-              />
-            </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-sm text-black">Texto del botón</label>
+            <input
+              type="text"
+              value={slide.text_button}
+              onChange={(e) => handleChange("text_button", e.target.value)}
+              onBlur={onBlur}
+              className={inputClass}
+              placeholder="Ver más"
+            />
           </div>
-        )}
+          <div>
+            <label className="text-sm text-black">URL del botón</label>
+            <input
+              type="text"
+              value={slide.url_button}
+              onChange={(e) => handleChange("url_button", e.target.value)}
+              onBlur={onBlur}
+              className={inputClass}
+              placeholder="#seccion"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
