@@ -12,15 +12,17 @@ const FONT_OPTIONS = [
 interface FontSelectorProps {
   value: string;
   onChange: (font: string) => void;
+  label?: string;
 }
 
 export const FontSelector: React.FC<FontSelectorProps> = ({
   value,
   onChange,
+  label = "Fuente",
 }) => {
   return (
     <div>
-      <label className="text-sm text-black">Fuente</label>
+      <label className="text-sm text-black">{label}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}

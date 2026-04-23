@@ -25,7 +25,9 @@ The `myWeb` feature lets architecture studios create and publish a public portfo
   logo_url: string
   primary_color: string     // hex, default "#2D3436"
   secondary_color: string   // hex, default "#636E72"
-  font: string              // e.g. "Inter"
+  background_color: string  // hex, default "#FFFFFF"
+  font: string              // body font, e.g. "Inter"
+  title_font: string        // heading font, e.g. "Playfair Display"
   navbar_type: number       // 1 | 2 | ...
   custom_domain?: string | null
   favicon_url?: string | null
@@ -169,8 +171,8 @@ MyWeb (screen)
     ├── SiteConfigForm (forwardRef — imperative save via ref)
     │   ├── InputField × n (studio_name, slug, social URLs, meta_description)
     │   ├── ImageUploader × 2 (logo_url, favicon_url)
-    │   ├── ColorPicker × 2 (primary_color, secondary_color)
-    │   ├── FontSelector
+    │   ├── ColorPicker × 3 (primary_color, secondary_color, background_color)
+    │   ├── FontSelector × 2 (title_font, font/body)
     │   └── NavbarTypeSelector
     └── PageList
         └── [each page accordion]
@@ -197,6 +199,12 @@ MyWeb (screen)
 | `SiteConfigForm` | Imperative `save()` via `forwardRef` + `useImperativeHandle`. `PublishButton` holds the ref and calls it. |
 | `HeaderEditor` | **Blur-to-persist** — local slide state, dispatches on `onBlur`. Avoids saving on every keystroke. Uses a `useRef` to avoid stale closures. |
 | `BodyEditor` / `ContentEditor` | Explicit **"Guardar cambios"** button — user must save manually. |
+
+### Clearing images (logo / favicon)
+
+`ImageUploader` accepts an optional `onRemove` prop — when present, an `×` button appears on the image corner. The caller decides what "remove" means:
+- `logo_url` → `updateSite({ logo_url: "" })` (field is non-nullable `string`)
+- `favicon_url` → `updateSite({ favicon_url: null })` (field is `string | null`)
 
 ### Slug rules
 - Valid: `^[a-z0-9-]+$`
@@ -240,7 +248,7 @@ MyWeb (screen)
 | `src/features/myWeb/components/BodyEditor.tsx` | Image gallery layout selector + upload |
 | `src/features/myWeb/components/ContentEditor.tsx` | Rich content section (stats, two columns) |
 | `src/features/myWeb/components/ProjectsPageConfig.tsx` | Projects page layout selector |
-| `src/features/myWeb/components/ImageUploader.tsx` | Dropzone upload component |
+| `src/features/myWeb/components/ImageUploader.tsx` | Dropzone upload component (supports `onRemove` to clear the image) |
 | `src/features/myWeb/components/ColorPicker.tsx` | Hex color picker |
 | `src/features/myWeb/components/FontSelector.tsx` | Font dropdown |
 | `src/features/myWeb/components/NavbarTypeSelector.tsx` | Navbar style picker |

@@ -41,7 +41,9 @@ export const SiteConfigForm = forwardRef<
     slug: site.slug || "",
     primary_color: site.primary_color || "#2D3436",
     secondary_color: site.secondary_color || "#636E72",
+    background_color: site.background_color || "#FFFFFF",
     font: site.font || "Inter",
+    title_font: site.title_font || "Inter",
     navbar_type: site.navbar_type ?? 1,
     instagram_url: site.instagram_url || "",
     facebook_url: site.facebook_url || "",
@@ -63,7 +65,9 @@ export const SiteConfigForm = forwardRef<
       slug: site.slug || "",
       primary_color: site.primary_color || "#2D3436",
       secondary_color: site.secondary_color || "#636E72",
+      background_color: site.background_color || "#FFFFFF",
       font: site.font || "Inter",
+      title_font: site.title_font || "Inter",
       navbar_type: site.navbar_type ?? 1,
       instagram_url: site.instagram_url || "",
       facebook_url: site.facebook_url || "",
@@ -134,7 +138,9 @@ export const SiteConfigForm = forwardRef<
           slug: form.slug,
           primary_color: form.primary_color,
           secondary_color: form.secondary_color,
+          background_color: form.background_color,
           font: form.font,
+          title_font: form.title_font,
           navbar_type: form.navbar_type,
           instagram_url: form.instagram_url || null,
           facebook_url: form.facebook_url || null,
@@ -200,6 +206,7 @@ export const SiteConfigForm = forwardRef<
           label="Logo"
           currentUrl={site.logo_url}
           onUpload={(file) => handleImageUpload("logo_url", "logo.webp", file)}
+          onRemove={() => dispatch(updateSite({ siteId: site.id, updates: { logo_url: "" } }))}
           loading={uploadRequest.inProgress}
           variant="logo"
         />
@@ -209,12 +216,13 @@ export const SiteConfigForm = forwardRef<
           onUpload={(file) =>
             handleImageUpload("favicon_url", "favicon.webp", file)
           }
+          onRemove={() => dispatch(updateSite({ siteId: site.id, updates: { favicon_url: null } }))}
           loading={uploadRequest.inProgress}
           variant="logo"
         />
       </div>
 
-      {/* Colores + fuente */}
+      {/* Colores */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <ColorPicker
           label="Color primario"
@@ -230,7 +238,24 @@ export const SiteConfigForm = forwardRef<
             setForm((prev) => ({ ...prev, secondary_color: color }))
           }
         />
+        <ColorPicker
+          label="Color de fondo"
+          value={form.background_color}
+          onChange={(color) =>
+            setForm((prev) => ({ ...prev, background_color: color }))
+          }
+        />
+      </div>
+
+      {/* Fuentes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FontSelector
+          label="Fuente de títulos"
+          value={form.title_font}
+          onChange={(title_font) => setForm((prev) => ({ ...prev, title_font }))}
+        />
+        <FontSelector
+          label="Fuente de cuerpo"
           value={form.font}
           onChange={(font) => setForm((prev) => ({ ...prev, font }))}
         />

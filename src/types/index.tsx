@@ -377,7 +377,9 @@ export type SiteDataProps = {
   logo_url: string;
   primary_color: string;
   secondary_color: string;
+  background_color: string;
   font: string;
+  title_font: string;
   navbar_type: number;
   custom_domain?: string | null;
   favicon_url?: string | null;

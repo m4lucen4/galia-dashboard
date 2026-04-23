@@ -1,10 +1,11 @@
 import React, { useRef } from "react";
-import { PhotoIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
+import { PhotoIcon, ArrowPathIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 interface ImageUploaderProps {
   label: string;
   currentUrl?: string | null;
   onUpload: (file: File) => void;
+  onRemove?: () => void;
   loading?: boolean;
   accept?: string;
   variant?: "default" | "logo";
@@ -14,6 +15,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   label,
   currentUrl,
   onUpload,
+  onRemove,
   loading = false,
   accept = "image/*",
   variant = "default",
@@ -34,34 +36,45 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     return (
       <div>
         <label className="text-sm text-black">{label}</label>
-        <div
-          className="mt-1 relative flex items-center justify-center border border-gray-300 rounded-md cursor-pointer hover:border-gray-400 transition-colors bg-gray-50 overflow-hidden"
-          style={{ height: "80px" }}
-          onClick={() => inputRef.current?.click()}
-        >
-          {currentUrl ? (
-            <img
-              src={currentUrl}
-              alt={label}
-              className="max-h-full max-w-full object-contain p-2"
-            />
-          ) : (
-            <div className="flex flex-col items-center gap-1 text-gray-400">
-              <PhotoIcon className="h-7 w-7" />
-              <span className="text-xs">Subir imagen</span>
-            </div>
-          )}
-          {loading && (
-            <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
-              <ArrowPathIcon className="h-5 w-5 text-gray-400 animate-spin" />
-            </div>
-          )}
-          {currentUrl && !loading && (
-            <div className="absolute bottom-1 right-1">
-              <span className="text-xs text-gray-500 bg-white/80 px-1.5 py-0.5 rounded">
-                Cambiar
-              </span>
-            </div>
+        <div className="mt-1 relative">
+          <div
+            className="relative flex items-center justify-center border border-gray-300 rounded-md cursor-pointer hover:border-gray-400 transition-colors bg-gray-50 overflow-hidden"
+            style={{ height: "80px" }}
+            onClick={() => inputRef.current?.click()}
+          >
+            {currentUrl ? (
+              <img
+                src={currentUrl}
+                alt={label}
+                className="max-h-full max-w-full object-contain p-2"
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-1 text-gray-400">
+                <PhotoIcon className="h-7 w-7" />
+                <span className="text-xs">Subir imagen</span>
+              </div>
+            )}
+            {loading && (
+              <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                <ArrowPathIcon className="h-5 w-5 text-gray-400 animate-spin" />
+              </div>
+            )}
+            {currentUrl && !loading && (
+              <div className="absolute bottom-1 right-1">
+                <span className="text-xs text-gray-500 bg-white/80 px-1.5 py-0.5 rounded">
+                  Cambiar
+                </span>
+              </div>
+            )}
+          </div>
+          {currentUrl && !loading && onRemove && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onRemove(); }}
+              className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-0.5 text-gray-500 hover:text-red-500 hover:border-red-300 transition-colors"
+            >
+              <XMarkIcon className="h-3.5 w-3.5" />
+            </button>
           )}
         </div>
         <input
