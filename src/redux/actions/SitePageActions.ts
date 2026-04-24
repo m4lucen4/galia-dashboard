@@ -12,6 +12,7 @@ const DEFAULT_PAGES: {
   { title: "Inicio", slug: "home", position: 1, visible: true, show_in_nav: true },
   { title: "Proyectos", slug: "proyectos", position: 2, visible: true, show_in_nav: true },
   { title: "Aviso Legal y Política de Privacidad", slug: "aviso-legal", position: 3, visible: true, show_in_nav: false },
+  { title: "Política de Cookies", slug: "politica-cookies", position: 4, visible: true, show_in_nav: false },
 ];
 
 export const fetchSitePages = createAsyncThunk(

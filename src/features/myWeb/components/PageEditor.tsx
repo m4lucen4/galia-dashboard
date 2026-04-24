@@ -15,12 +15,12 @@ export const PageEditor: React.FC<PageEditorProps> = ({ page }) => {
   const { components } = useAppSelector((state) => state.siteComponent);
 
   useEffect(() => {
-    if (page.slug !== "aviso-legal") {
+    if (page.slug !== "aviso-legal" && page.slug !== "politica-cookies") {
       dispatch(fetchSiteComponents(page.id));
     }
   }, [dispatch, page.id, page.slug]);
 
-  if (page.slug === "aviso-legal") {
+  if (page.slug === "aviso-legal" || page.slug === "politica-cookies") {
     return <LegalPageEditor page={page} />;
   }
 
