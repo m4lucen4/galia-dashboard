@@ -11,6 +11,7 @@ const DEFAULT_PAGES: {
 }[] = [
   { title: "Inicio", slug: "home", position: 1, visible: true, show_in_nav: true },
   { title: "Proyectos", slug: "proyectos", position: 2, visible: true, show_in_nav: true },
+  { title: "Aviso Legal y Política de Privacidad", slug: "aviso-legal", position: 3, visible: true, show_in_nav: false },
 ];
 
 export const fetchSitePages = createAsyncThunk(
@@ -39,40 +40,65 @@ export const fetchSitePages = createAsyncThunk(
 
 export const initDefaultPages = createAsyncThunk(
   "sitePages/initDefaultPages",
-  async (siteId: string, { rejectWithValue, dispatch }) => {
+  async (siteId: string, { rejectWithValue }) => {
     try {
-      // Check if pages already exist
-      const { data: existing } = await supabase
+      // Fetch all existing pages for this site
+      const { data: existing, error: fetchError } = await supabase
         .from("site_pages")
-        .select("id")
+        .select("*")
         .eq("site_id", siteId)
-        .limit(1);
+        .order("position", { ascending: true });
 
-      if (existing && existing.length > 0) {
-        // Pages already exist, just fetch them
-        const result = await dispatch(fetchSitePages(siteId)).unwrap();
-        return result;
-      }
-
-      // Create default pages
-      const pagesToInsert = DEFAULT_PAGES.map((p) => ({
-        ...p,
-        site_id: siteId,
-      }));
-
-      const { data, error } = await supabase
-        .from("site_pages")
-        .insert(pagesToInsert)
-        .select();
-
-      if (error) {
+      if (fetchError) {
         return rejectWithValue({
-          message: `Error al crear páginas predefinidas: ${error.message}`,
-          status: error.code,
+          message: `Error al cargar páginas: ${fetchError.message}`,
+          status: fetchError.code,
         });
       }
 
-      return { pages: data as SitePageDataProps[] };
+      const existingPages = (existing ?? []) as SitePageDataProps[];
+      const existingSlugs = new Set(existingPages.map((p) => p.slug));
+      const missingPages = DEFAULT_PAGES.filter((p) => !existingSlugs.has(p.slug));
+
+      if (missingPages.length === 0) {
+        return { pages: existingPages };
+      }
+
+      // Append missing pages after the current last position
+      const maxPosition = existingPages.reduce((max, p) => Math.max(max, p.position), 0);
+
+      const pagesToInsert = missingPages.map((p, i) => ({
+        ...p,
+        site_id: siteId,
+        position: existingPages.length === 0 ? p.position : maxPosition + i + 1,
+      }));
+
+      const { error: insertError } = await supabase
+        .from("site_pages")
+        .insert(pagesToInsert);
+
+      if (insertError) {
+        return rejectWithValue({
+          message: `Error al crear páginas predefinidas: ${insertError.message}`,
+          status: insertError.code,
+        });
+      }
+
+      // Re-fetch to get the final ordered list with generated IDs
+      const { data: allPages, error: refetchError } = await supabase
+        .from("site_pages")
+        .select("*")
+        .eq("site_id", siteId)
+        .order("position", { ascending: true });
+
+      if (refetchError) {
+        return rejectWithValue({
+          message: `Error al recargar páginas: ${refetchError.message}`,
+          status: refetchError.code,
+        });
+      }
+
+      return { pages: allPages as SitePageDataProps[] };
     } catch (error) {
       return rejectWithValue("Error inesperado al inicializar páginas");
     }
@@ -87,7 +113,7 @@ export const updateSitePage = createAsyncThunk(
       updates,
     }: {
       pageId: string;
-      updates: Partial<Pick<SitePageDataProps, "visible" | "show_in_nav" | "position" | "title">>;
+      updates: Partial<Pick<SitePageDataProps, "visible" | "show_in_nav" | "position" | "title" | "content">>;
     },
     { rejectWithValue },
   ) => {

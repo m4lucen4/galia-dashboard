@@ -354,6 +354,7 @@ export type SitePageDataProps = {
   position: number;
   visible: boolean;
   show_in_nav: boolean;
+  content?: string | null;
   created_at: string;
   updated_at: string;
 };
