@@ -1,12 +1,12 @@
 import React from "react";
 
 const FONT_OPTIONS = [
-  "Inter",
-  "Playfair Display",
+  "Roboto",
+  "Open Sans",
   "Montserrat",
-  "Lora",
-  "Raleway",
-  "DM Sans",
+  "Inter",
+  "Lato",
+  "Merriweather",
 ];
 
 interface FontSelectorProps {
