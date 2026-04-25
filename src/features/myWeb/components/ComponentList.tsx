@@ -30,6 +30,7 @@ const COMPONENT_TYPES: { type: SiteComponentType; label: string; description?: s
   { type: "cta", label: "CTA" },
   { type: "body", label: "Body", description: "Bloque de imágenes con texto descriptivo" },
   { type: "content", label: "Contenido", description: "Título, columnas de texto y datos estadísticos" },
+  { type: "contact", label: "Contacto", description: "Información de contacto y dirección" },
 ];
 
 export const ComponentList: React.FC<ComponentListProps> = ({

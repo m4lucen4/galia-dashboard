@@ -4,6 +4,7 @@ import { HeaderEditor } from "./HeaderEditor";
 import { CTAEditor } from "./CTAEditor";
 import { BodyEditor } from "./BodyEditor";
 import { ContentEditor } from "./ContentEditor";
+import { ContactEditor } from "./ContactEditor";
 
 interface ComponentEditorProps {
   component: SiteComponentDataProps;
@@ -21,6 +22,8 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
       return <BodyEditor component={component} />;
     case "content":
       return <ContentEditor component={component} />;
+    case "contact":
+      return <ContactEditor component={component} />;
     default:
       return (
         <p className="text-sm text-gray-500">

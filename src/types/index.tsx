@@ -302,7 +302,7 @@ export type HeaderSlideConfig = {
   url_button: string;
 };
 
-export type SiteComponentType = "header" | "project_list" | "cta" | "body" | "content";
+export type SiteComponentType = "header" | "project_list" | "cta" | "body" | "content" | "contact";
 
 export type ContentConfig = {
   antetitulo?: string;
@@ -346,6 +346,16 @@ export type CTAConfig = {
   url_secondary_button: string;
 };
 
+export type ContactConfig = {
+  type: 1 | 2;
+  antetitulo?: string;
+  titulo: string;
+  descripcion: string;
+  direccion1: string;
+  direccion2?: string;
+  form_bg_color?: string;
+};
+
 export type SitePageDataProps = {
   id: string;
   site_id: string;
@@ -365,7 +375,7 @@ export type SiteComponentDataProps = {
   type: SiteComponentType;
   position: number;
   visible: boolean;
-  config: HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig;
+  config: HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig;
   created_at: string;
   updated_at: string;
 };

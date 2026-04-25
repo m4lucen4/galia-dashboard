@@ -9,6 +9,7 @@ import {
   CTAConfig,
   BodyConfig,
   ContentConfig,
+  ContactConfig,
 } from "../../types";
 import type { RootState } from "../store";
 
@@ -39,7 +40,7 @@ export const fetchSiteComponents = createAsyncThunk(
 function getDefaultConfig(
   type: SiteComponentType,
   options?: { layout?: ProjectListLayout },
-): HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig {
+): HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig {
   if (type === "project_list") {
     return { layout: options?.layout ?? "grid-4" };
   }
@@ -80,6 +81,17 @@ function getDefaultConfig(
       dato4: undefined,
       leyenda4: "",
       type: 1,
+    };
+  }
+  if (type === "contact") {
+    return {
+      type: 1,
+      antetitulo: "",
+      titulo: "",
+      descripcion: "",
+      direccion1: "",
+      direccion2: "",
+      form_bg_color: "#FFFFFF",
     };
   }
   return [
