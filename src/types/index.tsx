@@ -344,6 +344,7 @@ export type CTAConfig = {
   url_primary_button: string;
   text_secondary_button: string;
   url_secondary_button: string;
+  split_color?: string;
 };
 
 export type ContactConfig = {

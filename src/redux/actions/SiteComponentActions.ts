@@ -54,6 +54,7 @@ function getDefaultConfig(
       url_primary_button: "",
       text_secondary_button: "",
       url_secondary_button: "",
+      split_color: "#2D3436",
     };
   }
   if (type === "body") {
