@@ -92,6 +92,7 @@ function getDefaultConfig(
       direccion1: "",
       direccion2: "",
       form_bg_color: "#FFFFFF",
+      form_email: "",
     };
   }
   return [

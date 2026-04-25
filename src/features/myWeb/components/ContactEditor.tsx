@@ -203,7 +203,15 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
       </div>
 
       {form.type === 2 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
+          <InputField
+            id="contact-form-email"
+            type="email"
+            label="Email de destino del formulario"
+            value={form.form_email ?? ""}
+            onChange={(e) => handleChange("form_email", e.target.value)}
+            placeholder="contacto@estudio.com"
+          />
           <ColorPicker
             label="Color de fondo del formulario"
             value={form.form_bg_color ?? "#FFFFFF"}

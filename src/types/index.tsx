@@ -354,6 +354,7 @@ export type ContactConfig = {
   direccion1: string;
   direccion2?: string;
   form_bg_color?: string;
+  form_email?: string;
 };
 
 export type SitePageDataProps = {
