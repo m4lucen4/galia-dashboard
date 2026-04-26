@@ -111,3 +111,4 @@ pnpm lint      # ESLint
 Skills are supplementary documents with full context for specific features. Reference them before working on the corresponding area.
 
 - [`skills/myWeb.md`](skills/myWeb.md) — Site builder: data model, component tree, Redux state, non-obvious patterns.
+- [`skills/synology.md`](skills/synology.md) — Synology NAS integration: all services (NAS Proxy, Photo Processor), Python scripts, upload/edit/delete flows, Edge Function serve-photo, dashboard components involved.

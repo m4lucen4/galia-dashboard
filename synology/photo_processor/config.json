@@ -1,0 +1,54 @@
+{
+    "paths": {
+        "homes_base": "/volume1/homes"
+    },
+    "ignored_folders": [
+        "admin",
+        "PROCESADOS",
+        "otros",
+        "upload",
+        "mocklab"
+    ],
+    "processing": {
+        "inactivity_hours": 0.5,
+        "jpeg_quality_high": 95,
+        "jpeg_quality_web": 80,
+        "jpeg_quality_min": 40,
+        "dpi_high": 300,
+        "dpi_web": 72,
+        "web_long_edge": 2080,
+        "min_long_edge": 200,
+        "sharpening": {
+            "radius": 0.8,
+            "percent": 25,
+            "threshold": 0
+        }
+    },
+    "watermark": {
+        "font": "RobotoMono-Regular.ttf",
+        "font_size_percent": 2.5,
+        "opacity": 0.8,
+        "color": [255, 255, 255],
+        "shadow_color": [0, 0, 0],
+        "shadow_opacity": 0.5,
+        "shadow_offset": 2,
+        "margin_percent": 3.0,
+        "line1_template": "mocklab©",
+        "line2_template": "Ref: {ref}"
+    },
+    "file_extensions": {
+        "images": [".jpg", ".jpeg", ".psd", ".tif", ".tiff"],
+        "documents": [".pdf", ".doc", ".docx", ".txt", ".rtf", ".odt"]
+    },
+    "logging": {
+        "log_file": "photo_processor.log",
+        "state_file": ".processor_state.json"
+    },
+    "ai": {
+        "gemini_model": "gemini-2.5-flash",
+        "claude_model": "claude-sonnet-4-20250514"
+    },
+    "ai_logging": {
+        "log_file": "ai_analyzer.log"
+    }
+}
