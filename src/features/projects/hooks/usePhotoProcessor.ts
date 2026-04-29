@@ -12,6 +12,7 @@ export interface FotoTag {
   materiales_visibles: string[];
   elementos_arquitectonicos: string[];
   rating: string;
+  supabase_url?: string;
 }
 
 export interface ProcessorAnalysis {

@@ -36,6 +36,7 @@ import {
 } from "../../../redux/actions/NasActions";
 import { deleteProjectPhoto, addProjectPhotos } from "../../../redux/actions/ProjectPhotoActions";
 import { usePhotoProcessor } from "../hooks/usePhotoProcessor";
+import { enrichFotoTagsWithStorage } from "../utils/enrichFotoTags";
 
 const NAS_URL = import.meta.env.VITE_NAS_PROXY_URL;
 const NAS_KEY = import.meta.env.VITE_NAS_PROXY_API_KEY;
@@ -54,6 +55,7 @@ interface NasFilesModalProps {
   folderPath: string;
   projectId?: string;
   odooId?: string;
+  userId?: string;
 }
 
 function formatBytes(bytes: number): string {
@@ -70,6 +72,7 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
   folderPath,
   projectId,
   odooId,
+  userId,
 }) => {
   const dispatch = useAppDispatch();
   const { files, loading, error } = useAppSelector((state) => state.nas);
@@ -98,19 +101,27 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
     }
   }, [isOpen, folderPath, dispatch]);
 
-  // After add-photos completes, insert records and refresh thumbnails
+  // After add-photos completes, upload heroica/principal to Supabase Storage and insert records
   useEffect(() => {
-    if (processorState === "done" && addPhotosResult?.foto_tags && projectId) {
-      dispatch(
-        addProjectPhotos({
-          projectId,
-          fotoTags: addPhotosResult.foto_tags,
-          nasBasePath: baseFolder,
-        }),
-      );
+    if (processorState !== "done" || !addPhotosResult?.foto_tags || !projectId) return;
+
+    const insertPhotos = async () => {
+      const enriched = userId
+        ? await enrichFotoTagsWithStorage(
+            addPhotosResult.foto_tags,
+            baseFolder,
+            `${projectId}_baja`,
+            projectId,
+            userId,
+          )
+        : addPhotosResult.foto_tags;
+
+      dispatch(addProjectPhotos({ projectId, fotoTags: enriched, nasBasePath: baseFolder }));
       dispatch(nasFetchFiles(folderPath));
-    }
-  }, [processorState, addPhotosResult, projectId, dispatch, folderPath]);
+    };
+
+    insertPhotos();
+  }, [processorState, addPhotosResult, projectId, userId, dispatch, folderPath, baseFolder]);
 
   const handleClose = () => {
     if (isUploading || isProcessing) return;

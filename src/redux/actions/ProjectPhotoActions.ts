@@ -49,6 +49,7 @@ export const addProjectPhotos = createAsyncThunk(
       elementos_arquitectonicos: ft.elementos_arquitectonicos,
       rating: ratingToNumber(ft.rating),
       nas_base_path: nasBasePath ?? null,
+      supabase_url: ft.supabase_url ?? null,
     }));
 
     const { error } = await supabase.from("project_photos").insert(rows);

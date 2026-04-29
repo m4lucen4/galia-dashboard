@@ -16,6 +16,7 @@ import {
   type ProcessorAnalysis,
 } from "../hooks/usePhotoProcessor";
 import type { UserDataProps } from "../../../types";
+import { enrichFotoTagsWithStorage } from "../utils/enrichFotoTags";
 import { UserSearchSelector } from "./UserSearchSelector";
 
 const NAS_URL = import.meta.env.VITE_NAS_PROXY_URL;
@@ -42,6 +43,7 @@ interface MultimediaUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   userNasFolder: string;
+  userId?: string;
   photographers?: UserDataProps[];
   onCreateProject?: (
     analysis: ProcessorAnalysis,
@@ -109,10 +111,12 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
   isOpen,
   onClose,
   userNasFolder,
+  userId,
   photographers,
   onCreateProject,
 }) => {
   const [modalState, setModalState] = useState<ModalState>("idle");
+  const [uploadingToStorage, setUploadingToStorage] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [dragError, setDragError] = useState<string | null>(null);
   const [uploads, setUploads] = useState<FileUploadItem[]>([]);
@@ -623,17 +627,32 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
               {isDone && processorState === "done" && analysis && onCreateProject && (
                 <button
                   type="button"
-                  onClick={() => {
+                  disabled={uploadingToStorage}
+                  onClick={async () => {
+                    setUploadingToStorage(true);
+                    const activeUserId = userId;
+                    const folderName = summary?.folderName;
+                    const enrichedTags =
+                      activeUserId && folderName
+                        ? await enrichFotoTagsWithStorage(
+                            analysis.foto_tags,
+                            uploadedFolderPathRef.current,
+                            "baja",
+                            folderName,
+                            activeUserId,
+                          )
+                        : analysis.foto_tags;
+                    setUploadingToStorage(false);
                     onCreateProject(
-                      analysis,
+                      { ...analysis, foto_tags: enrichedTags },
                       uploadedFolderPathRef.current,
                       selectedPhotographer?.uid,
                     );
                     handleClose();
                   }}
-                  className="px-4 py-2 text-sm font-medium text-white bg-black border border-transparent rounded-md shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                  className="px-4 py-2 text-sm font-medium text-white bg-black border border-transparent rounded-md shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Crear proyecto
+                  {uploadingToStorage ? "Preparando fotos..." : "Crear proyecto"}
                 </button>
               )}
             </div>

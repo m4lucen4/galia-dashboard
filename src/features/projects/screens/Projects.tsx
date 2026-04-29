@@ -40,7 +40,7 @@ import {
   nasRestructure,
   nasDeleteFolder,
 } from "../../../redux/actions/NasActions";
-import { ProjectDataProps } from "../../../types";
+import { ProjectDataProps, ProjectImageData } from "../../../types";
 
 export const Projects = () => {
   const { t } = useTranslation();
@@ -154,6 +154,12 @@ export const Projects = () => {
       : null;
     setMultimediaTargetUser(targetUser);
 
+    const preselectedImageData: ProjectImageData[] = analysis.foto_tags
+      .filter((ft) => ft.supabase_url && (ft.rating === "heroica" || ft.rating === "principal"))
+      .sort((a, b) => (a.rating === "heroica" ? -1 : b.rating === "heroica" ? 1 : 0))
+      .slice(0, 10)
+      .map((ft) => ({ url: ft.supabase_url!, status: "pending" as const }));
+
     const preFill: ProjectDataProps = {
       id: "",
       user: targetUserId ?? user!.uid,
@@ -164,6 +170,7 @@ export const Projects = () => {
       year: analysis.anio || "",
       state: "draft",
       nas_folder: folderPath,
+      image_data: preselectedImageData.length > 0 ? preselectedImageData : undefined,
     };
     setMultimediaPreFill(preFill);
     setPendingFotoTags(analysis.foto_tags);
@@ -632,6 +639,7 @@ export const Projects = () => {
           isOpen={showMultimediaModal}
           onClose={() => setShowMultimediaModal(false)}
           userNasFolder={user.folder_nas ?? ""}
+          userId={user.id}
           photographers={
             user.role === "admin"
               ? users.filter(

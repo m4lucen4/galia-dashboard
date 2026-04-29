@@ -277,6 +277,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
           folderPath={nasFolder}
           projectId={projectId}
           odooId={odooId}
+          userId={user.id}
         />
       )}
     </form>
