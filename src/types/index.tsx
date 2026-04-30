@@ -333,6 +333,7 @@ export type ProjectListLayout = "grid-4" | "grid-alternating";
 
 export type ProjectListConfig = {
   layout: ProjectListLayout;
+  project_order?: string[];
 };
 
 export type CTAConfig = {

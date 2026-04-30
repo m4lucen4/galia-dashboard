@@ -480,10 +480,11 @@ export const upsertProjectListComponent = createAsyncThunk(
       );
 
       if (existing) {
+        const currentConfig = existing.config as ProjectListConfig;
         await dispatch(
           updateSiteComponent({
             componentId: existing.id,
-            updates: { config: { layout } },
+            updates: { config: { ...currentConfig, layout } },
           }),
         ).unwrap();
         return { layout };
@@ -505,6 +506,59 @@ export const upsertProjectListComponent = createAsyncThunk(
       return { layout };
     } catch (error) {
       return rejectWithValue("Error inesperado al guardar layout");
+    }
+  },
+);
+
+export const saveProjectListOrder = createAsyncThunk(
+  "siteComponents/saveProjectListOrder",
+  async (
+    { pageId, project_order }: { pageId: string; project_order: string[] },
+    { rejectWithValue, getState, dispatch },
+  ) => {
+    try {
+      const state = getState() as RootState;
+      const existing = state.siteComponent.components.find(
+        (c) => c.page_id === pageId && c.type === "project_list",
+      );
+
+      if (existing) {
+        const currentConfig = existing.config as ProjectListConfig;
+        await dispatch(
+          updateSiteComponent({
+            componentId: existing.id,
+            updates: { config: { ...currentConfig, project_order } },
+          }),
+        ).unwrap();
+        return { project_order };
+      }
+
+      const position = state.siteComponent.components.filter(
+        (c) => c.page_id === pageId,
+      ).length;
+
+      const { data, error } = await supabase
+        .from("site_components")
+        .insert({
+          page_id: pageId,
+          type: "project_list",
+          position,
+          visible: true,
+          config: { layout: "grid-4", project_order },
+        })
+        .select()
+        .single();
+
+      if (error) {
+        return rejectWithValue({
+          message: `Error al guardar orden: ${error.message}`,
+          status: error.code,
+        });
+      }
+
+      return { component: data as SiteComponentDataProps, project_order };
+    } catch (error) {
+      return rejectWithValue("Error inesperado al guardar orden");
     }
   },
 );

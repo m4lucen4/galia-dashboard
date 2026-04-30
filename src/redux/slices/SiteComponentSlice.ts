@@ -7,6 +7,7 @@ import {
   reorderSiteComponents,
   uploadSlideImage,
   upsertCTAComponent,
+  saveProjectListOrder,
 } from "../actions/SiteComponentActions";
 import { SiteComponentDataProps, IRequest, SupabaseError } from "../../types";
 
@@ -167,6 +168,26 @@ const siteComponentSlice = createSlice({
         state.saveRequest = { inProgress: false, messages: "", ok: true };
       })
       .addCase(upsertCTAComponent.rejected, (state, action) => {
+        state.saveRequest = {
+          inProgress: false,
+          messages: getErrorMessage(action.payload),
+          ok: false,
+        };
+      });
+
+    // Save project list order (handles new insert when component doesn't exist yet)
+    builder
+      .addCase(saveProjectListOrder.pending, (state) => {
+        state.saveRequest = { inProgress: true, messages: "", ok: false };
+      })
+      .addCase(saveProjectListOrder.fulfilled, (state, action) => {
+        if ("component" in action.payload && action.payload.component) {
+          state.components.push(action.payload.component);
+          state.components.sort((a, b) => a.position - b.position);
+        }
+        state.saveRequest = { inProgress: false, messages: "", ok: true };
+      })
+      .addCase(saveProjectListOrder.rejected, (state, action) => {
         state.saveRequest = {
           inProgress: false,
           messages: getErrorMessage(action.payload),
