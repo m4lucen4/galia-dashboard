@@ -89,7 +89,11 @@ The `myWeb` feature lets architecture studios create and publish a public portfo
 ### `project_list` — Auto-populated project grid
 Only exists on the `"proyectos"` page. Config is a **single object**:
 ```ts
-{ layout: "grid-4" | "grid-alternating" }
+{
+  layout: "grid-4" | "grid-alternating";
+  project_order?: string[];    // project IDs in display order
+  hidden_projects?: string[];  // project IDs to exclude from the public site
+}
 ```
 
 ### `cta` — Call-to-action block
@@ -155,6 +159,8 @@ All request state follows `IRequest = { inProgress: boolean; messages: string; o
 - `uploadContentImage(...)` — saves to `{userId}/content/image.webp`
 - `upsertCTAComponent({ pageId, config })` — create or update (idempotent)
 - `upsertProjectListComponent({ pageId, layout })` — create or update (idempotent)
+- `saveProjectListOrder({ pageId, project_order })` — persists display order (array of project IDs)
+- `saveProjectListHidden({ pageId, hidden_projects })` — persists hidden project IDs; each thunk spreads the existing config and overrides only its own field
 
 ---
 
@@ -215,6 +221,8 @@ MyWeb (screen)
 - `PageEditor` renders `ProjectsPageConfig` instead of `ComponentList` when `page.slug === "proyectos"`
 - Only supports a `project_list` component, managed via `upsertProjectListComponent`
 - Content is auto-populated from the user's projects — editors cannot add arbitrary components here
+- Users can **reorder** projects (up/down arrows → `saveProjectListOrder`) and **hide** individual ones (eye toggle → `saveProjectListHidden`)
+- Hidden projects appear dimmed + strikethrough in the dashboard; the **public site must filter `hidden_projects`** before rendering
 
 ### "home" page cannot be hidden
 - The `handleToggleVisible` in `PageList` has a guard: `if (page.slug === "home") return`

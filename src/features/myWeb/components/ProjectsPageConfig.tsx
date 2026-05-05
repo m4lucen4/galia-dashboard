@@ -2,9 +2,9 @@ import React, { useEffect, useMemo } from "react";
 import { SitePageDataProps, ProjectListConfig, ProjectListLayout, SiteComponentDataProps } from "../../../types";
 import { LayoutSelector } from "./LayoutSelector";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { upsertProjectListComponent, saveProjectListOrder } from "../../../redux/actions/SiteComponentActions";
+import { upsertProjectListComponent, saveProjectListOrder, saveProjectListHidden } from "../../../redux/actions/SiteComponentActions";
 import { fetchProjects, fetchProjectsByUserId } from "../../../redux/actions/ProjectActions";
-import { InformationCircleIcon, ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon, ChevronUpIcon, ChevronDownIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 interface ProjectsPageConfigProps {
   page: SitePageDataProps;
@@ -30,6 +30,7 @@ export const ProjectsPageConfig: React.FC<ProjectsPageConfigProps> = ({
 
   const currentLayout: ProjectListLayout = config?.layout ?? "grid-4";
   const currentOrder: string[] | undefined = config?.project_order;
+  const hiddenProjects: string[] = config?.hidden_projects ?? [];
 
   useEffect(() => {
     if (projects.length === 0 && user?.uid) {
@@ -59,6 +60,14 @@ export const ProjectsPageConfig: React.FC<ProjectsPageConfigProps> = ({
 
   const handleLayoutChange = (layout: ProjectListLayout) => {
     dispatch(upsertProjectListComponent({ pageId: page.id, layout }));
+  };
+
+  const handleToggleHidden = (projectId: string) => {
+    const isHidden = hiddenProjects.includes(projectId);
+    const updated = isHidden
+      ? hiddenProjects.filter((id) => id !== projectId)
+      : [...hiddenProjects, projectId];
+    dispatch(saveProjectListHidden({ pageId: page.id, hidden_projects: updated }));
   };
 
   const handleMove = (index: number, direction: "up" | "down") => {
@@ -99,37 +108,56 @@ export const ProjectsPageConfig: React.FC<ProjectsPageConfigProps> = ({
           <p className="text-sm text-gray-400 py-2">No hay proyectos disponibles.</p>
         ) : (
           <div className="space-y-1 max-h-[420px] overflow-y-auto pr-1">
-            {sortedProjects.map((project, index) => (
-              <div
-                key={project.id}
-                className="flex items-center gap-2 p-2 bg-white border border-gray-200 rounded-md"
-              >
-                <span className="text-xs text-gray-400 font-mono w-16 shrink-0 truncate">
-                  {String(project.id).slice(0, 8)}
-                </span>
-                <span className="text-sm text-gray-800 flex-1 truncate">{project.title}</span>
-                <div className="flex gap-1 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => handleMove(index, "up")}
-                    disabled={index === 0 || saveRequest.inProgress}
-                    className="p-0.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                    aria-label="Subir"
-                  >
-                    <ChevronUpIcon className="h-4 w-4 text-gray-600" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleMove(index, "down")}
-                    disabled={index === sortedProjects.length - 1 || saveRequest.inProgress}
-                    className="p-0.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                    aria-label="Bajar"
-                  >
-                    <ChevronDownIcon className="h-4 w-4 text-gray-600" />
-                  </button>
+            {sortedProjects.map((project, index) => {
+              const projectId = String(project.id);
+              const isHidden = hiddenProjects.includes(projectId);
+              return (
+                <div
+                  key={project.id}
+                  className={`flex items-center gap-2 p-2 border rounded-md ${isHidden ? "bg-gray-50 border-gray-100" : "bg-white border-gray-200"}`}
+                >
+                  <span className="text-xs text-gray-400 font-mono w-16 shrink-0 truncate">
+                    {projectId.slice(0, 8)}
+                  </span>
+                  <span className={`text-sm flex-1 truncate ${isHidden ? "text-gray-400 line-through" : "text-gray-800"}`}>
+                    {project.title}
+                  </span>
+                  <div className="flex gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleHidden(projectId)}
+                      disabled={saveRequest.inProgress}
+                      className="p-0.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                      aria-label={isHidden ? "Mostrar proyecto" : "Ocultar proyecto"}
+                      title={isHidden ? "Mostrar proyecto" : "Ocultar proyecto"}
+                    >
+                      {isHidden
+                        ? <EyeSlashIcon className="h-4 w-4 text-gray-400" />
+                        : <EyeIcon className="h-4 w-4 text-gray-600" />
+                      }
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleMove(index, "up")}
+                      disabled={index === 0 || saveRequest.inProgress}
+                      className="p-0.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                      aria-label="Subir"
+                    >
+                      <ChevronUpIcon className="h-4 w-4 text-gray-600" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleMove(index, "down")}
+                      disabled={index === sortedProjects.length - 1 || saveRequest.inProgress}
+                      className="p-0.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                      aria-label="Bajar"
+                    >
+                      <ChevronDownIcon className="h-4 w-4 text-gray-600" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
