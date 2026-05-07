@@ -286,6 +286,7 @@
     "sessions": "Sessions",
     "loadingProjects": "Loading projects...",
     "noProjects": "No projects available to show analytics.",
+    "noPublishedProjects": "You have no projects published on Guía de Arquitectura.",
     "error": "Error loading",
     "noData": "No data",
     "total": "Total",

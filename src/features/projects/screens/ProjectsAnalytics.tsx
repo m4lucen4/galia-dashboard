@@ -108,12 +108,10 @@ export const ProjectsAnalytics = () => {
     fetchProjectsData();
   }, [fetchProjectsData]);
 
-  const visibleProjects: ProjectDataProps[] = useMemo(() => {
-    if (user?.role === "admin") {
-      return projects.filter((p) => p.showMap === true);
-    }
-    return projects;
-  }, [projects, user?.role]);
+  const visibleProjects: ProjectDataProps[] = useMemo(
+    () => projects.filter((p) => p.showMap === true),
+    [projects],
+  );
 
   const totalPages = Math.ceil(visibleProjects.length / PAGE_SIZE);
 
@@ -345,7 +343,7 @@ export const ProjectsAnalytics = () => {
       {isTableLoading ? (
         <p className="text-sm text-gray-500">{t("analytics.loadingProjects")}</p>
       ) : visibleProjects.length === 0 ? (
-        <p className="text-sm text-gray-500">{t("analytics.noProjects")}</p>
+        <p className="text-sm text-gray-500">{t("analytics.noPublishedProjects")}</p>
       ) : (
         <>
           <div className="overflow-x-auto rounded-lg border border-gray-200">

@@ -288,6 +288,7 @@
     "sessions": "Sesiones",
     "loadingProjects": "Cargando proyectos...",
     "noProjects": "No hay proyectos disponibles para mostrar analíticas.",
+    "noPublishedProjects": "No tienes ningún proyecto publicado en Guía de Arquitectura.",
     "error": "Error al cargar",
     "noData": "Sin datos",
     "total": "Total",
