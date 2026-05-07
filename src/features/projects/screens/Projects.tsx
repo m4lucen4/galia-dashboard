@@ -486,24 +486,31 @@ export const Projects = () => {
         </p>
       </div>
       <div className="flex justify-between items-center mb-4">
-        {(user?.role === "admin" ||
-          (user?.role === "photographer" && user.odoo_id)) ? (
-          <DropdownButton
-            title={t("projects.create")}
-            options={[
-              {
-                label: t("projects.createFromScratch"),
-                onClick: handleOpenDrawer,
-              },
-              {
-                label: t("projects.createFromMultimedia"),
-                onClick: () => setShowMultimediaModal(true),
-              },
-            ]}
+        <div className="flex items-center gap-2">
+          {(user?.role === "admin" ||
+            (user?.role === "photographer" && user.odoo_id)) ? (
+            <DropdownButton
+              title={t("projects.create")}
+              options={[
+                {
+                  label: t("projects.createFromScratch"),
+                  onClick: handleOpenDrawer,
+                },
+                {
+                  label: t("projects.createFromMultimedia"),
+                  onClick: () => setShowMultimediaModal(true),
+                },
+              ]}
+            />
+          ) : (
+            <Button title={t("projects.create")} onClick={handleOpenDrawer} />
+          )}
+          <Button
+            title={t("projects.viewAnalytics")}
+            onClick={() => navigate("/projects-analytics")}
+            secondary
           />
-        ) : (
-          <Button title={t("projects.create")} onClick={handleOpenDrawer} />
-        )}
+        </div>
         <div className="flex items-center space-x-2">
           <select
             value={stateFilter}
