@@ -8,7 +8,7 @@ import { supabase } from "../../../helpers/supabase";
 import { Button } from "../../../components/shared/ui/Button";
 import { ProjectDataProps } from "../../../types";
 
-type Period = "today" | "yesterday" | "7days" | "30days" | "90days" | "custom";
+type Period = "7days" | "30days" | "sem1" | "sem2" | "custom";
 
 interface AnalyticsTotals {
   screenPageViews: number;
@@ -25,11 +25,10 @@ interface ProjectAnalyticsEntry {
 const PAGE_SIZE = 10;
 
 const PERIOD_OPTIONS: { value: Period; labelKey: string }[] = [
-  { value: "today", labelKey: "analytics.today" },
-  { value: "yesterday", labelKey: "analytics.yesterday" },
   { value: "7days", labelKey: "analytics.lastWeek" },
   { value: "30days", labelKey: "analytics.lastMonth" },
-  { value: "90days", labelKey: "analytics.last3Months" },
+  { value: "sem1", labelKey: "analytics.firstSemester" },
+  { value: "sem2", labelKey: "analytics.secondSemester" },
   { value: "custom", labelKey: "analytics.customRange" },
 ];
 
@@ -43,14 +42,8 @@ function getPeriodDates(
   customEnd: string,
 ): { startDate: string; endDate: string } {
   const today = new Date();
+  const year = today.getFullYear();
   switch (period) {
-    case "today":
-      return { startDate: formatDate(today), endDate: formatDate(today) };
-    case "yesterday": {
-      const d = new Date(today);
-      d.setDate(d.getDate() - 1);
-      return { startDate: formatDate(d), endDate: formatDate(d) };
-    }
     case "7days": {
       const d = new Date(today);
       d.setDate(d.getDate() - 6);
@@ -61,11 +54,10 @@ function getPeriodDates(
       d.setDate(d.getDate() - 29);
       return { startDate: formatDate(d), endDate: formatDate(today) };
     }
-    case "90days": {
-      const d = new Date(today);
-      d.setDate(d.getDate() - 89);
-      return { startDate: formatDate(d), endDate: formatDate(today) };
-    }
+    case "sem1":
+      return { startDate: `${year}-01-01`, endDate: `${year}-06-30` };
+    case "sem2":
+      return { startDate: `${year}-07-01`, endDate: `${year}-12-31` };
     case "custom":
       return { startDate: customStart, endDate: customEnd };
   }
@@ -113,12 +105,20 @@ export const ProjectsAnalytics = () => {
     [projects],
   );
 
-  const totalPages = Math.ceil(visibleProjects.length / PAGE_SIZE);
+  const sortedProjects = useMemo(() => {
+    return [...visibleProjects].sort((a, b) => {
+      const aViews = analytics[String(a.id)]?.totals?.screenPageViews ?? 0;
+      const bViews = analytics[String(b.id)]?.totals?.screenPageViews ?? 0;
+      return bViews - aViews;
+    });
+  }, [visibleProjects, analytics]);
+
+  const totalPages = Math.ceil(sortedProjects.length / PAGE_SIZE);
 
   const pagedProjects = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
-    return visibleProjects.slice(start, start + PAGE_SIZE);
-  }, [visibleProjects, currentPage]);
+    return sortedProjects.slice(start, start + PAGE_SIZE);
+  }, [sortedProjects, currentPage]);
 
   // Triggers a full reload: called from handlers, never from effects
   const triggerLoad = useCallback(
