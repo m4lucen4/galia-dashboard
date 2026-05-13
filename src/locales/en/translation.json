@@ -217,6 +217,7 @@
     "googleMaps": "Google Maps link",
     "placeholderGoogleMaps": "Enter Google Maps link",
     "category": "Category",
+    "selectCategory": "Select a category",
     "year": "Year",
     "placeholderYear": "Construction year",
     "authors": "Authors",

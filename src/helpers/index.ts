@@ -174,6 +174,7 @@ const categoryMap: Record<string, string> = {
   oficinas: "Oficinas",
   planeamiento: "Planeamiento",
   cultural: "Cultural",
+  industrial: "Industrial",
   publico: "Espacio público",
   rehabilitacion: "Rehabilitación",
   interiorismo: "Interiorismo",

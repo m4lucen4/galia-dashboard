@@ -218,11 +218,14 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
                 label={t("projects.category")}
                 value={formData.category || ""}
                 onChange={handleChange}
+                placeholder={t("projects.selectCategory")}
+                required
                 options={[
                   { value: "residencial", label: "Residencial" },
                   { value: "docente", label: "Docente" },
                   { value: "oficinas", label: "Oficinas" },
                   { value: "planeamiento", label: "Planeamiento" },
+                  { value: "industrial", label: "Industrial" },
                   { value: "cultural", label: "Cultural" },
                   { value: "publico", label: "Espacio público" },
                   { value: "rehabilitacion", label: "Rehabilitación" },

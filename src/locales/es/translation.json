@@ -220,6 +220,7 @@
     "googleMaps": "Enlace de Google Maps",
     "placeholderGoogleMaps": "Introduce el enlace de Google Maps",
     "category": "Categoría",
+    "selectCategory": "Selecciona una categoría",
     "year": "Año",
     "placeholderYear": "Año de construcción",
     "authors": "Autores",

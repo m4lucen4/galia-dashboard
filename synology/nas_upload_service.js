@@ -51,8 +51,13 @@ const storage = multer.diskStorage({
     }
   },
   filename: (req, file, cb) => {
-    // Preserva el nombre original, solo elimina caracteres peligrosos
-    const safe = file.originalname.replace(/[/\\:*?"<>|]/g, "_");
+    // busboy interprets multipart Content-Disposition as latin-1; re-interpret as UTF-8
+    const utf8Name = Buffer.from(file.originalname, "latin1").toString("utf8");
+    const safe = utf8Name
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "") // strip combining diacritics: á→a, ñ→n, ü→u
+      .replace(/[/\\:*?"<>|]/g, "_")
+      .replace(/[^\x00-\x7F]/g, "_");  // fallback for any remaining non-ASCII
     cb(null, safe);
   },
 });
