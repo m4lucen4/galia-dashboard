@@ -26,6 +26,25 @@ function TagChip({ tag }: { tag: string }) {
   );
 }
 
+function LightboxImage({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <>
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        className={`max-h-full max-w-full object-contain transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
+      />
+    </>
+  );
+}
+
 export function ArchiveLightbox({
   photo,
   token,
@@ -35,19 +54,13 @@ export function ArchiveLightbox({
   hasPrev,
   hasNext,
 }: ArchiveLightboxProps) {
-  const [imgLoaded, setImgLoaded] = useState(false);
-
-  useEffect(() => {
-    setImgLoaded(false);
-  }, [photo?.id]);
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft" && hasPrev) onPrev();
       if (e.key === "ArrowRight" && hasNext) onNext();
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
+    return () => globalThis.removeEventListener("keydown", onKey);
   }, [hasPrev, hasNext, onPrev, onNext]);
 
   return (
@@ -70,19 +83,11 @@ export function ArchiveLightbox({
 
             {/* Image */}
             {photo && (
-              <>
-                {!imgLoaded && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  </div>
-                )}
-                <img
-                  src={photoUrl(photo, token)}
-                  alt={photo.filename}
-                  onLoad={() => setImgLoaded(true)}
-                  className={`max-h-full max-w-full object-contain transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
-                />
-              </>
+              <LightboxImage
+                key={photo.id}
+                src={photoUrl(photo, token)}
+                alt={photo.filename}
+              />
             )}
 
             {/* Next */}
@@ -133,10 +138,28 @@ export function ArchiveLightbox({
                   </p>
                 </div>
 
-                {/* Author */}
+                {/* Arquitecto */}
+                {photo.project_collaborators.find(
+                  (c) => c.profession === "autor",
+                ) && (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">
+                      Arquitectura
+                    </p>
+                    <p className="text-gray-200 text-sm">
+                      {
+                        photo.project_collaborators.find(
+                          (c) => c.profession === "autor",
+                        )!.name
+                      }
+                    </p>
+                  </div>
+                )}
+
+                {/* Photographer */}
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">
-                    Autor
+                    Fotografía
                   </p>
                   <p className="text-gray-200 text-sm">
                     {photo.author_first_name} {photo.author_last_name}

@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { supabase } from "../../helpers/supabase";
+import type { ProjectCollaboratorsProps } from "../../types";
 
 export interface ArchivePhoto {
   id: number;
@@ -15,6 +16,7 @@ export interface ArchivePhoto {
   author_id: string;
   author_first_name: string;
   author_last_name: string;
+  project_collaborators: ProjectCollaboratorsProps[];
   iluminacion: string[];
   tipo_plano: string[];
   atmosfera_mood: string[];
@@ -57,7 +59,7 @@ function buildQuery(filters: ArchiveFilters, from: number, to: number) {
       id, filename, description, rating, nas_base_path, project_id, created_at,
       iluminacion, tipo_plano, atmosfera_mood, materiales_visibles, elementos_arquitectonicos,
       projects!inner(
-        title, category, year, user,
+        title, category, year, user, projectCollaborators,
         userData(first_name, last_name)
       )
     `,
@@ -115,6 +117,7 @@ function mapRow(row: any): ArchivePhoto {
     author_id: row.projects?.user ?? "",
     author_first_name: row.projects?.userData?.first_name ?? "",
     author_last_name: row.projects?.userData?.last_name ?? "",
+    project_collaborators: row.projects?.projectCollaborators ?? [],
     iluminacion: row.iluminacion ?? [],
     tipo_plano: row.tipo_plano ?? [],
     atmosfera_mood: row.atmosfera_mood ?? [],
