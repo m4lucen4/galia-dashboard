@@ -132,7 +132,7 @@ export const MyWeb: React.FC = () => {
         </div>
 
         <div className="space-y-6">
-          <PageList pages={pages} />
+          <PageList pages={pages} siteId={site.id} />
         </div>
       </div>
     </div>

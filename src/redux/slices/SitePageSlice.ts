@@ -4,6 +4,8 @@ import {
   initDefaultPages,
   updateSitePage,
   reorderSitePages,
+  createSitePage,
+  deleteSitePage,
 } from "../actions/SitePageActions";
 import { SitePageDataProps, IRequest, SupabaseError } from "../../types";
 
@@ -11,6 +13,8 @@ interface SitePageState {
   pages: SitePageDataProps[];
   fetchRequest: IRequest;
   saveRequest: IRequest;
+  createRequest: IRequest;
+  deleteRequest: IRequest;
 }
 
 const defaultRequest: IRequest = {
@@ -23,6 +27,8 @@ const initialState: SitePageState = {
   pages: [],
   fetchRequest: { ...defaultRequest },
   saveRequest: { ...defaultRequest },
+  createRequest: { ...defaultRequest },
+  deleteRequest: { ...defaultRequest },
 };
 
 function getErrorMessage(payload: unknown): string {
@@ -39,6 +45,8 @@ const sitePageSlice = createSlice({
     clearPageErrors: (state) => {
       state.fetchRequest = { ...defaultRequest };
       state.saveRequest = { ...defaultRequest };
+      state.createRequest = { ...defaultRequest };
+      state.deleteRequest = { ...defaultRequest };
     },
     clearPages: (state) => {
       state.pages = [];
@@ -107,6 +115,40 @@ const sitePageSlice = createSlice({
       }
       state.pages.sort((a, b) => a.position - b.position);
     });
+
+    // Create page
+    builder
+      .addCase(createSitePage.pending, (state) => {
+        state.createRequest = { inProgress: true, messages: "", ok: false };
+      })
+      .addCase(createSitePage.fulfilled, (state, action) => {
+        state.pages.push(action.payload.page);
+        state.createRequest = { inProgress: false, messages: "", ok: true };
+      })
+      .addCase(createSitePage.rejected, (state, action) => {
+        state.createRequest = {
+          inProgress: false,
+          messages: getErrorMessage(action.payload),
+          ok: false,
+        };
+      });
+
+    // Delete page
+    builder
+      .addCase(deleteSitePage.pending, (state) => {
+        state.deleteRequest = { inProgress: true, messages: "", ok: false };
+      })
+      .addCase(deleteSitePage.fulfilled, (state, action) => {
+        state.pages = state.pages.filter((p) => p.id !== action.payload.pageId);
+        state.deleteRequest = { inProgress: false, messages: "", ok: true };
+      })
+      .addCase(deleteSitePage.rejected, (state, action) => {
+        state.deleteRequest = {
+          inProgress: false,
+          messages: getErrorMessage(action.payload),
+          ok: false,
+        };
+      });
   },
 });
 

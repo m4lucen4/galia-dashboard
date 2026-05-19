@@ -2,6 +2,8 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { supabase } from "../../helpers/supabase";
 import { SitePageDataProps } from "../../types";
 
+const PROTECTED_SLUGS = ["home", "proyectos", "aviso-legal", "politica-cookies"];
+
 const DEFAULT_PAGES: {
   title: string;
   slug: string;
@@ -136,6 +138,98 @@ export const updateSitePage = createAsyncThunk(
       return { page: data as SitePageDataProps };
     } catch (error) {
       return rejectWithValue("Error inesperado al actualizar página");
+    }
+  },
+);
+
+export const createSitePage = createAsyncThunk(
+  "sitePages/createSitePage",
+  async (
+    { siteId, title, slug }: { siteId: string; title: string; slug: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      if (PROTECTED_SLUGS.includes(slug)) {
+        return rejectWithValue("Ese slug está reservado por el sistema");
+      }
+
+      const { data: existing } = await supabase
+        .from("site_pages")
+        .select("id")
+        .eq("site_id", siteId)
+        .eq("slug", slug);
+
+      if (existing && existing.length > 0) {
+        return rejectWithValue("Ya existe una página con ese slug");
+      }
+
+      const { data: allPages } = await supabase
+        .from("site_pages")
+        .select("position")
+        .eq("site_id", siteId)
+        .order("position", { ascending: false })
+        .limit(1);
+
+      const nextPosition = allPages?.[0]?.position != null ? allPages[0].position + 1 : 1;
+
+      const { data, error } = await supabase
+        .from("site_pages")
+        .insert({
+          site_id: siteId,
+          title,
+          slug,
+          position: nextPosition,
+          visible: true,
+          show_in_nav: true,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        return rejectWithValue({
+          message: `Error al crear página: ${error.message}`,
+          status: error.code,
+        });
+      }
+
+      return { page: data as SitePageDataProps };
+    } catch {
+      return rejectWithValue("Error inesperado al crear página");
+    }
+  },
+);
+
+export const deleteSitePage = createAsyncThunk(
+  "sitePages/deleteSitePage",
+  async (pageId: string, { rejectWithValue }) => {
+    try {
+      const { error: compError } = await supabase
+        .from("site_components")
+        .delete()
+        .eq("page_id", pageId);
+
+      if (compError) {
+        return rejectWithValue({
+          message: `Error al eliminar componentes: ${compError.message}`,
+          status: compError.code,
+        });
+      }
+
+      const { error } = await supabase
+        .from("site_pages")
+        .delete()
+        .eq("id", pageId);
+
+      if (error) {
+        return rejectWithValue({
+          message: `Error al eliminar página: ${error.message}`,
+          status: error.code,
+        });
+      }
+
+      return { pageId };
+    } catch {
+      return rejectWithValue("Error inesperado al eliminar página");
     }
   },
 );
