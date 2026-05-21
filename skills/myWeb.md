@@ -93,6 +93,7 @@ Only exists on the `"proyectos"` page. Config is a **single object**:
   layout: "grid-4" | "grid-alternating";
   project_order?: string[];    // project IDs in display order
   hidden_projects?: string[];  // project IDs to exclude from the public site
+  detail_type?: 1 | 2;         // project detail page design (default: 1)
 }
 ```
 
@@ -160,7 +161,8 @@ All request state follows `IRequest = { inProgress: boolean; messages: string; o
 - `upsertCTAComponent({ pageId, config })` — create or update (idempotent)
 - `upsertProjectListComponent({ pageId, layout })` — create or update (idempotent)
 - `saveProjectListOrder({ pageId, project_order })` — persists display order (array of project IDs)
-- `saveProjectListHidden({ pageId, hidden_projects })` — persists hidden project IDs; each thunk spreads the existing config and overrides only its own field
+- `saveProjectListHidden({ pageId, hidden_projects })` — persists hidden project IDs
+- `saveProjectListDetailType({ pageId, detail_type })` — persists detail page design type (1 | 2); each thunk spreads the existing config and overrides only its own field
 
 ---
 
@@ -221,8 +223,9 @@ MyWeb (screen)
 - `PageEditor` renders `ProjectsPageConfig` instead of `ComponentList` when `page.slug === "proyectos"`
 - Only supports a `project_list` component, managed via `upsertProjectListComponent`
 - Content is auto-populated from the user's projects — editors cannot add arbitrary components here
-- Users can **reorder** projects (up/down arrows → `saveProjectListOrder`) and **hide** individual ones (eye toggle → `saveProjectListHidden`)
+- Users can **reorder** projects (up/down arrows → `saveProjectListOrder`), **hide** individual ones (eye toggle → `saveProjectListHidden`), and choose the **detail page design** (card selector → `saveProjectListDetailType`)
 - Hidden projects appear dimmed + strikethrough in the dashboard; the **public site must filter `hidden_projects`** before rendering
+- `detail_type` (1 or 2) must be consumed by the public site to render the correct project detail template
 
 ### "home" page cannot be hidden
 - The `handleToggleVisible` in `PageList` has a guard: `if (page.slug === "home") return`
@@ -236,6 +239,18 @@ MyWeb (screen)
 {userId}/body/image-{imageIndex}.webp     // imageIndex is 1 | 2 | 3
 {userId}/content/image.webp
 ```
+
+---
+
+## Public Site Renderer
+
+The public site lives at `../mocklab-sites` (separate project, Astro 6 + TailwindCSS v4 + Node SSR).
+
+- Sites served at `https://sites.mocklab.app/{slug}` — one site per Mocklab user
+- Reads the same Supabase tables: `sites`, `site_pages`, `site_components`, `projects`
+- Has its own `CLAUDE.md` with full architecture details
+- **Dual-fetch pattern**: SSR renders HTML server-side; a large inline `<script>` in `BaseLayout.astro` re-fetches and re-renders client-side to apply fresh CSS vars (colors/fonts)
+- **`detail_type`** from `ProjectListConfig` must be consumed in `[slug]/proyectos/[project].astro` → passed to `ProjectDetail.astro`. Currently only type 1 is implemented; type 2 (editorial) is pending.
 
 ---
 
@@ -261,6 +276,7 @@ MyWeb (screen)
 | `src/features/myWeb/components/FontSelector.tsx` | Font dropdown |
 | `src/features/myWeb/components/NavbarTypeSelector.tsx` | Navbar style picker |
 | `src/features/myWeb/components/LayoutSelector.tsx` | Project list layout selector |
+| `src/features/myWeb/components/DetailTypeSelector.tsx` | Project detail page design selector (type 1 or 2) |
 | `src/redux/slices/SiteSlice.ts` | Site Redux slice |
 | `src/redux/slices/SitePageSlice.ts` | Pages Redux slice |
 | `src/redux/slices/SiteComponentSlice.ts` | Components Redux slice |

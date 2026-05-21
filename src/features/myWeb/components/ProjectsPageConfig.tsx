@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo } from "react";
 import { SitePageDataProps, ProjectListConfig, ProjectListLayout, SiteComponentDataProps } from "../../../types";
 import { LayoutSelector } from "./LayoutSelector";
+import { DetailTypeSelector } from "./DetailTypeSelector";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { upsertProjectListComponent, saveProjectListOrder, saveProjectListHidden } from "../../../redux/actions/SiteComponentActions";
+import { upsertProjectListComponent, saveProjectListOrder, saveProjectListHidden, saveProjectListDetailType } from "../../../redux/actions/SiteComponentActions";
 import { fetchProjects, fetchProjectsByUserId } from "../../../redux/actions/ProjectActions";
 import { InformationCircleIcon, ChevronUpIcon, ChevronDownIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
@@ -31,6 +32,7 @@ export const ProjectsPageConfig: React.FC<ProjectsPageConfigProps> = ({
   const currentLayout: ProjectListLayout = config?.layout ?? "grid-4";
   const currentOrder: string[] | undefined = config?.project_order;
   const hiddenProjects: string[] = config?.hidden_projects ?? [];
+  const currentDetailType: 1 | 2 = config?.detail_type ?? 1;
 
   useEffect(() => {
     if (projects.length === 0 && user?.uid) {
@@ -60,6 +62,10 @@ export const ProjectsPageConfig: React.FC<ProjectsPageConfigProps> = ({
 
   const handleLayoutChange = (layout: ProjectListLayout) => {
     dispatch(upsertProjectListComponent({ pageId: page.id, layout }));
+  };
+
+  const handleDetailTypeChange = (detail_type: 1 | 2) => {
+    dispatch(saveProjectListDetailType({ pageId: page.id, detail_type }));
   };
 
   const handleToggleHidden = (projectId: string) => {
@@ -93,6 +99,15 @@ export const ProjectsPageConfig: React.FC<ProjectsPageConfigProps> = ({
         <LayoutSelector
           value={currentLayout}
           onChange={handleLayoutChange}
+          disabled={saveRequest.inProgress}
+        />
+      </div>
+
+      <div>
+        <p className="text-sm font-medium text-gray-900 mb-2">Diseño del detalle de proyecto</p>
+        <DetailTypeSelector
+          value={currentDetailType}
+          onChange={handleDetailTypeChange}
           disabled={saveRequest.inProgress}
         />
       </div>

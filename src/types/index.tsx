@@ -335,6 +335,7 @@ export type ProjectListConfig = {
   layout: ProjectListLayout;
   project_order?: string[];
   hidden_projects?: string[];
+  detail_type?: 1 | 2;
 };
 
 export type CTAConfig = {

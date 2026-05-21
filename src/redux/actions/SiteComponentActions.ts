@@ -563,6 +563,59 @@ export const saveProjectListOrder = createAsyncThunk(
   },
 );
 
+export const saveProjectListDetailType = createAsyncThunk(
+  "siteComponents/saveProjectListDetailType",
+  async (
+    { pageId, detail_type }: { pageId: string; detail_type: 1 | 2 },
+    { rejectWithValue, getState, dispatch },
+  ) => {
+    try {
+      const state = getState() as RootState;
+      const existing = state.siteComponent.components.find(
+        (c) => c.page_id === pageId && c.type === "project_list",
+      );
+
+      if (existing) {
+        const currentConfig = existing.config as ProjectListConfig;
+        await dispatch(
+          updateSiteComponent({
+            componentId: existing.id,
+            updates: { config: { ...currentConfig, detail_type } },
+          }),
+        ).unwrap();
+        return { detail_type };
+      }
+
+      const position = state.siteComponent.components.filter(
+        (c) => c.page_id === pageId,
+      ).length;
+
+      const { data, error } = await supabase
+        .from("site_components")
+        .insert({
+          page_id: pageId,
+          type: "project_list",
+          position,
+          visible: true,
+          config: { layout: "grid-4", detail_type },
+        })
+        .select()
+        .single();
+
+      if (error) {
+        return rejectWithValue({
+          message: `Error al guardar tipo de detalle: ${error.message}`,
+          status: error.code,
+        });
+      }
+
+      return { component: data as SiteComponentDataProps, detail_type };
+    } catch (error) {
+      return rejectWithValue("Error inesperado al guardar tipo de detalle");
+    }
+  },
+);
+
 export const saveProjectListHidden = createAsyncThunk(
   "siteComponents/saveProjectListHidden",
   async (
