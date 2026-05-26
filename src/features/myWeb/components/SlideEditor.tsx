@@ -129,12 +129,61 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
           ))}
         </div>
 
-        <ImageUploader
-          label="Imagen de fondo"
-          currentUrl={slide.image_url || undefined}
-          onUpload={(file) => onImageUpload(index, file)}
-          loading={uploadingSlide === index}
-        />
+        {/* ── Selector de tipo de fondo ── */}
+        <div>
+          <label className="text-sm text-black">Fondo</label>
+          <div className="mt-1 flex rounded-md border border-gray-300 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => {
+                handleChange("background_type", "image");
+                setTimeout(onBlur, 0);
+              }}
+              className={`flex-1 py-1.5 text-xs font-medium transition-colors ${
+                (slide.background_type ?? "image") === "image"
+                  ? "bg-gray-900 text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Imagen
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                handleChange("background_type", "vimeo");
+                setTimeout(onBlur, 0);
+              }}
+              className={`flex-1 py-1.5 text-xs font-medium transition-colors border-l border-gray-300 ${
+                slide.background_type === "vimeo"
+                  ? "bg-gray-900 text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Vídeo Vimeo
+            </button>
+          </div>
+        </div>
+
+        {(slide.background_type ?? "image") === "image" ? (
+          <ImageUploader
+            label="Imagen de fondo"
+            currentUrl={slide.image_url || undefined}
+            onUpload={(file) => onImageUpload(index, file)}
+            loading={uploadingSlide === index}
+          />
+        ) : (
+          <div>
+            <label className="text-sm text-black">URL de Vimeo</label>
+            <input
+              type="text"
+              value={slide.vimeo_url ?? ""}
+              onChange={(e) => handleChange("vimeo_url", e.target.value)}
+              onBlur={onBlur}
+              className={inputClass}
+              placeholder="https://vimeo.com/123456789"
+            />
+          </div>
+        )}
 
         <div>
           <label className="text-sm text-black">Título</label>

@@ -295,6 +295,8 @@ export type RegisterFormData = {
 
 export type HeaderSlideConfig = {
   image_url: string;
+  vimeo_url?: string;
+  background_type?: "image" | "vimeo";
   title: string;
   description: string;
   type: 1 | 2;
