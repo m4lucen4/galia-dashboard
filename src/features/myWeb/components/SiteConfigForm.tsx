@@ -42,6 +42,7 @@ export const SiteConfigForm = forwardRef<
     primary_color: site.primary_color || "#2D3436",
     secondary_color: site.secondary_color || "#636E72",
     background_color: site.background_color || "#FFFFFF",
+    tertiary_color: site.tertiary_color || "#F5F5F5",
     font: site.font || "Inter",
     title_font: site.title_font || "Inter",
     navbar_type: site.navbar_type ?? 1,
@@ -66,6 +67,7 @@ export const SiteConfigForm = forwardRef<
       primary_color: site.primary_color || "#2D3436",
       secondary_color: site.secondary_color || "#636E72",
       background_color: site.background_color || "#FFFFFF",
+      tertiary_color: site.tertiary_color || "#F5F5F5",
       font: site.font || "Inter",
       title_font: site.title_font || "Inter",
       navbar_type: site.navbar_type ?? 1,
@@ -139,6 +141,7 @@ export const SiteConfigForm = forwardRef<
           primary_color: form.primary_color,
           secondary_color: form.secondary_color,
           background_color: form.background_color,
+          tertiary_color: form.tertiary_color,
           font: form.font,
           title_font: form.title_font,
           navbar_type: form.navbar_type,
@@ -223,7 +226,7 @@ export const SiteConfigForm = forwardRef<
       </div>
 
       {/* Colores */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <ColorPicker
           label="Color primario"
           value={form.primary_color}
@@ -243,6 +246,13 @@ export const SiteConfigForm = forwardRef<
           value={form.background_color}
           onChange={(color) =>
             setForm((prev) => ({ ...prev, background_color: color }))
+          }
+        />
+        <ColorPicker
+          label="Color terciario"
+          value={form.tertiary_color}
+          onChange={(color) =>
+            setForm((prev) => ({ ...prev, tertiary_color: color }))
           }
         />
       </div>

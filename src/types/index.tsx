@@ -396,6 +396,7 @@ export type SiteDataProps = {
   primary_color: string;
   secondary_color: string;
   background_color: string;
+  tertiary_color?: string;
   font: string;
   title_font: string;
   navbar_type: number;
