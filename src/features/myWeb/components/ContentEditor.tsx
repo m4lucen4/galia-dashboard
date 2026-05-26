@@ -211,6 +211,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({ component }) => {
           onChange={(e) => handleChange("textoIzquierda", e.target.value)}
           placeholder="Descripción principal..."
         />
+        <p className="mt-1 text-xs text-gray-400">Los saltos de línea y tabulaciones se respetarán en el sitio web.</p>
       </div>
 
       {/* ── Columna derecha ─────────────────────────────────────────────────── */}
@@ -233,6 +234,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({ component }) => {
             onChange={(e) => handleChange("textoDerecha", e.target.value)}
             placeholder="Texto complementario..."
           />
+          <p className="mt-1 text-xs text-gray-400">Los saltos de línea y tabulaciones se respetarán en el sitio web.</p>
         </div>
       </div>
 

@@ -171,6 +171,7 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
           onChange={(e) => handleChange("descripcion", e.target.value)}
           placeholder="Breve descripción o texto de contacto..."
         />
+        <p className="mt-1 text-xs text-gray-400">Los saltos de línea y tabulaciones se respetarán en el sitio web.</p>
       </div>
 
       {/* ── Direcciones ───────────────────────────────────────────────────── */}

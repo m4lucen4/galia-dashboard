@@ -207,6 +207,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             placeholder="Descripción del slide"
             rows={3}
           />
+          <p className="mt-1 text-xs text-gray-400">Los saltos de línea y tabulaciones se respetarán en el sitio web.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">

@@ -208,11 +208,11 @@ export const CTAEditor: React.FC<CTAEditorProps> = ({ component }) => {
             placeholder="Descripción del CTA..."
             error={errors.description}
           />
-          {form.type === 3 && (
-            <p className="mt-1 text-xs text-gray-400">
-              No se muestra en el tipo 3
-            </p>
-          )}
+          <p className="mt-1 text-xs text-gray-400">
+            {form.type === 3
+              ? "No se muestra en el tipo 3"
+              : "Los saltos de línea y tabulaciones se respetarán en el sitio web."}
+          </p>
         </div>
       </div>
 
