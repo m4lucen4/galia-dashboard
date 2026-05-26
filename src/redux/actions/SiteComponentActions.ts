@@ -374,7 +374,7 @@ export const uploadBodyImage = createAsyncThunk(
       const userId = state.auth.user?.uid;
       if (!userId) return rejectWithValue("Usuario no autenticado");
 
-      const filePath = `${userId}/body/image-${imageIndex}.webp`;
+      const filePath = `${userId}/body/${componentId}/image-${imageIndex}.webp`;
 
       const { error: uploadError } = await supabase.storage
         .from("sites")
@@ -428,7 +428,7 @@ export const uploadContentImage = createAsyncThunk(
       const userId = state.auth.user?.uid;
       if (!userId) return rejectWithValue("Usuario no autenticado");
 
-      const filePath = `${userId}/content/image.webp`;
+      const filePath = `${userId}/content/${componentId}/image.webp`;
 
       const { error: uploadError } = await supabase.storage
         .from("sites")
