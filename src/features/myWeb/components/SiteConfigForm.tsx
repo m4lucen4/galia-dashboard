@@ -13,6 +13,7 @@ import { ImageUploader } from "./ImageUploader";
 import { ColorPicker } from "./ColorPicker";
 import { FontSelector } from "./FontSelector";
 import { NavbarTypeSelector } from "./NavbarTypeSelector";
+import { Switch } from "../../../components/shared/ui/Switch";
 
 export interface SiteConfigFormHandle {
   save: () => void;
@@ -46,6 +47,7 @@ export const SiteConfigForm = forwardRef<
     font: site.font || "Inter",
     title_font: site.title_font || "Inter",
     navbar_type: site.navbar_type ?? 1,
+    full_width: site.full_width ?? false,
     instagram_url: site.instagram_url || "",
     facebook_url: site.facebook_url || "",
     linkedin_url: site.linkedin_url || "",
@@ -71,6 +73,7 @@ export const SiteConfigForm = forwardRef<
       font: site.font || "Inter",
       title_font: site.title_font || "Inter",
       navbar_type: site.navbar_type ?? 1,
+      full_width: site.full_width ?? false,
       instagram_url: site.instagram_url || "",
       facebook_url: site.facebook_url || "",
       linkedin_url: site.linkedin_url || "",
@@ -145,6 +148,7 @@ export const SiteConfigForm = forwardRef<
           font: form.font,
           title_font: form.title_font,
           navbar_type: form.navbar_type,
+          full_width: form.full_width,
           instagram_url: form.instagram_url || null,
           facebook_url: form.facebook_url || null,
           linkedin_url: form.linkedin_url || null,
@@ -278,6 +282,22 @@ export const SiteConfigForm = forwardRef<
           setForm((prev) => ({ ...prev, navbar_type }))
         }
       />
+
+      {/* Ancho completo */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-black">Web a ancho completo</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            La web ocupa todo el ancho de la pantalla en lugar de un ancho fijo
+          </p>
+        </div>
+        <Switch
+          checked={form.full_width}
+          onChange={() =>
+            setForm((prev) => ({ ...prev, full_width: !prev.full_width }))
+          }
+        />
+      </div>
 
       {/* Redes sociales */}
       <div>

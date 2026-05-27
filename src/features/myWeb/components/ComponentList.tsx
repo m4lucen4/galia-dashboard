@@ -31,6 +31,7 @@ const COMPONENT_TYPES: { type: SiteComponentType; label: string; description?: s
   { type: "body", label: "Body", description: "Bloque de imágenes con texto descriptivo" },
   { type: "content", label: "Contenido", description: "Título, columnas de texto y datos estadísticos" },
   { type: "contact", label: "Contacto", description: "Información de contacto y dirección" },
+  { type: "project_columns", label: "Proyectos destacados", description: "1 o 2 columnas con imagen, título, categoría y año" },
 ];
 
 export const ComponentList: React.FC<ComponentListProps> = ({

@@ -304,7 +304,16 @@ export type HeaderSlideConfig = {
   url_button: string;
 };
 
-export type SiteComponentType = "header" | "project_list" | "cta" | "body" | "content" | "contact";
+export type SiteComponentType = "header" | "project_list" | "cta" | "body" | "content" | "contact" | "project_columns";
+
+export type ProjectColumnsConfig = {
+  columns: 1 | 2;
+  project_1?: string;
+  project_2?: string;
+  vertical_align_1?: "top" | "center" | "bottom";
+  vertical_align_2?: "top" | "center" | "bottom";
+  horizontal_align?: "start" | "end" | "between" | "stretch";
+};
 
 export type ContentConfig = {
   antetitulo?: string;
@@ -382,7 +391,7 @@ export type SiteComponentDataProps = {
   type: SiteComponentType;
   position: number;
   visible: boolean;
-  config: HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig;
+  config: HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig | ProjectColumnsConfig;
   created_at: string;
   updated_at: string;
 };
@@ -406,6 +415,7 @@ export type SiteDataProps = {
   instagram_url?: string | null;
   facebook_url?: string | null;
   linkedin_url?: string | null;
+  full_width?: boolean;
   published: boolean;
   created_at: string;
   updated_at: string;
