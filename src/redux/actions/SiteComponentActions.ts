@@ -279,7 +279,7 @@ export const uploadSlideImage = createAsyncThunk(
       const userId = state.auth.user?.uid;
       if (!userId) return rejectWithValue("Usuario no autenticado");
 
-      const filePath = `${userId}/headers/slide-${slideIndex + 1}.webp`;
+      const filePath = `${userId}/headers/${componentId}/slide-${slideIndex + 1}.webp`;
 
       const { error: uploadError } = await supabase.storage
         .from("sites")
@@ -301,7 +301,7 @@ export const uploadSlideImage = createAsyncThunk(
       const newConfig = [...config];
       newConfig[slideIndex] = {
         ...newConfig[slideIndex],
-        image_url: urlData.publicUrl,
+        image_url: `${urlData.publicUrl}?t=${Date.now()}`,
       };
 
       await dispatch(
