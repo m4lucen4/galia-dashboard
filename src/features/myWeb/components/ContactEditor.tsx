@@ -5,6 +5,7 @@ import { updateSiteComponent } from "../../../redux/actions/SiteComponentActions
 import { InputField } from "../../../components/shared/ui/InputField";
 import { Button } from "../../../components/shared/ui/Button";
 import { ColorPicker } from "./ColorPicker";
+import { RichTextInput } from "./RichTextInput";
 
 interface ContactEditorProps {
   component: SiteComponentDataProps;
@@ -163,15 +164,12 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
           placeholder="Estudio de Arquitectura"
         />
 
-        <InputField
-          id="contact-descripcion"
-          type="textarea"
+        <RichTextInput
           label="Descripción"
           value={form.descripcion}
-          onChange={(e) => handleChange("descripcion", e.target.value)}
+          onChange={(html) => handleChange("descripcion", html)}
           placeholder="Breve descripción o texto de contacto..."
         />
-        <p className="mt-1 text-xs text-gray-400">Los saltos de línea y tabulaciones se respetarán en el sitio web.</p>
       </div>
 
       {/* ── Direcciones ───────────────────────────────────────────────────── */}

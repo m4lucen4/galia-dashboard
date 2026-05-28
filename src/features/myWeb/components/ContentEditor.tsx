@@ -8,6 +8,7 @@ import {
 import { InputField } from "../../../components/shared/ui/InputField";
 import { ImageUploader } from "./ImageUploader";
 import { Button } from "../../../components/shared/ui/Button";
+import { RichTextInput } from "./RichTextInput";
 
 interface ContentEditorProps {
   component: SiteComponentDataProps;
@@ -203,15 +204,12 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({ component }) => {
         <p className="text-sm font-medium text-gray-900 mb-3">
           Columna izquierda
         </p>
-        <InputField
-          id="content-texto-izquierda"
-          type="textarea"
+        <RichTextInput
           label="Texto columna izquierda"
           value={form.textoIzquierda ?? ""}
-          onChange={(e) => handleChange("textoIzquierda", e.target.value)}
+          onChange={(html) => handleChange("textoIzquierda", html)}
           placeholder="Descripción principal..."
         />
-        <p className="mt-1 text-xs text-gray-400">Los saltos de línea y tabulaciones se respetarán en el sitio web.</p>
       </div>
 
       {/* ── Columna derecha ─────────────────────────────────────────────────── */}
@@ -226,15 +224,12 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({ component }) => {
             onUpload={handleImageUpload}
             loading={uploadingImage}
           />
-          <InputField
-            id="content-texto-derecha"
-            type="textarea"
+          <RichTextInput
             label="Texto columna derecha"
             value={form.textoDerecha ?? ""}
-            onChange={(e) => handleChange("textoDerecha", e.target.value)}
+            onChange={(html) => handleChange("textoDerecha", html)}
             placeholder="Texto complementario..."
           />
-          <p className="mt-1 text-xs text-gray-400">Los saltos de línea y tabulaciones se respetarán en el sitio web.</p>
         </div>
       </div>
 

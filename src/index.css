@@ -134,3 +134,20 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Tiptap rich text editor */
+.rich-text-editor:focus {
+  outline: none;
+}
+.rich-text-editor p {
+  margin-bottom: 0.4em;
+}
+.rich-text-editor p:last-child {
+  margin-bottom: 0;
+}
+.rich-text-editor strong {
+  font-weight: 700;
+}
+.rich-text-editor em {
+  font-style: italic;
+}

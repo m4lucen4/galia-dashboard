@@ -11,6 +11,7 @@ import {
   ContentConfig,
   ContactConfig,
   ProjectColumnsConfig,
+  RichTextConfig,
 } from "../../types";
 import type { RootState } from "../store";
 
@@ -41,7 +42,7 @@ export const fetchSiteComponents = createAsyncThunk(
 function getDefaultConfig(
   type: SiteComponentType,
   options?: { layout?: ProjectListLayout },
-): HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig | ProjectColumnsConfig {
+): HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig | ProjectColumnsConfig | RichTextConfig {
   if (type === "project_list") {
     return { layout: options?.layout ?? "grid-4" };
   }
@@ -105,6 +106,12 @@ function getDefaultConfig(
       vertical_align_1: "top",
       vertical_align_2: "top",
       horizontal_align: "between",
+    };
+  }
+  if (type === "rich_text") {
+    return {
+      content: "",
+      alignment: "left",
     };
   }
   return [

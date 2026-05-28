@@ -6,6 +6,7 @@ import { BodyEditor } from "./BodyEditor";
 import { ContentEditor } from "./ContentEditor";
 import { ContactEditor } from "./ContactEditor";
 import { ProjectColumnsEditor } from "./ProjectColumnsEditor";
+import { RichTextBlockEditor } from "./RichTextBlockEditor";
 
 interface ComponentEditorProps {
   component: SiteComponentDataProps;
@@ -27,6 +28,8 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
       return <ContactEditor component={component} />;
     case "project_columns":
       return <ProjectColumnsEditor component={component} />;
+    case "rich_text":
+      return <RichTextBlockEditor component={component} />;
     default:
       return (
         <p className="text-sm text-gray-500">

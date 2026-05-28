@@ -2,6 +2,7 @@ import React from "react";
 import { HeaderSlideConfig } from "../../../types";
 import { ImageUploader } from "./ImageUploader";
 import { TrashIcon } from "@heroicons/react/24/outline";
+import { RichTextInput } from "./RichTextInput";
 
 // ─── Visual type previews ──────────────────────────────────────────────────────
 
@@ -197,18 +198,13 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
           />
         </div>
 
-        <div>
-          <label className="text-sm text-black">Descripción</label>
-          <textarea
-            value={slide.description}
-            onChange={(e) => handleChange("description", e.target.value)}
-            onBlur={onBlur}
-            className={`${inputClass} min-h-[4em]`}
-            placeholder="Descripción del slide"
-            rows={3}
-          />
-          <p className="mt-1 text-xs text-gray-400">Los saltos de línea y tabulaciones se respetarán en el sitio web.</p>
-        </div>
+        <RichTextInput
+          label="Descripción"
+          value={slide.description}
+          onChange={(html) => handleChange("description", html)}
+          onBlur={onBlur}
+          placeholder="Descripción del slide"
+        />
 
         <div className="grid grid-cols-2 gap-3">
           <div>

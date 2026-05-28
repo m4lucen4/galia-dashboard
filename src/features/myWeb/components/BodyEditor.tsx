@@ -7,6 +7,7 @@ import {
 } from "../../../redux/actions/SiteComponentActions";
 import { ImageUploader } from "./ImageUploader";
 import { Button } from "../../../components/shared/ui/Button";
+import { RichTextInput } from "./RichTextInput";
 
 interface BodyEditorProps {
   component: SiteComponentDataProps;
@@ -122,10 +123,8 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ component }) => {
     setForm((prev) => ({ ...prev, type: value }));
   };
 
-  const handleDescriptionChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>,
-  ) => {
-    setForm((prev) => ({ ...prev, description: e.target.value }));
+  const handleDescriptionChange = (html: string) => {
+    setForm((prev) => ({ ...prev, description: html }));
   };
 
   const handleImageUpload = async (index: 1 | 2 | 3, file: File) => {
@@ -210,23 +209,12 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ component }) => {
 
       {/* ── Descripción ─────────────────────────────────────────────────────── */}
       {showDescription && (
-        <div>
-          <label
-            htmlFor="body-description"
-            className="block text-sm font-medium text-gray-900 mb-1"
-          >
-            Descripción
-          </label>
-          <textarea
-            id="body-description"
-            rows={4}
-            value={form.description}
-            onChange={handleDescriptionChange}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
-            placeholder="Escribe una descripción..."
-          />
-          <p className="mt-1 text-xs text-gray-400">Los saltos de línea y tabulaciones se respetarán en el sitio web.</p>
-        </div>
+        <RichTextInput
+          label="Descripción"
+          value={form.description}
+          onChange={handleDescriptionChange}
+          placeholder="Escribe una descripción..."
+        />
       )}
 
       {/* ── Guardar ─────────────────────────────────────────────────────────── */}

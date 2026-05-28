@@ -5,6 +5,10 @@ import { updateSiteComponent } from "../../../redux/actions/SiteComponentActions
 import { InputField } from "../../../components/shared/ui/InputField";
 import { Button } from "../../../components/shared/ui/Button";
 import { ColorPicker } from "./ColorPicker";
+import { RichTextInput } from "./RichTextInput";
+
+const isRichTextEmpty = (html: string) =>
+  !html.replace(/<[^>]*>/g, "").trim();
 
 interface CTAEditorProps {
   component: SiteComponentDataProps;
@@ -116,7 +120,7 @@ export const CTAEditor: React.FC<CTAEditorProps> = ({ component }) => {
   const handleSave = async () => {
     const newErrors = {
       title: form.title.trim() ? "" : "El título es obligatorio",
-      description: form.description.trim()
+      description: !isRichTextEmpty(form.description)
         ? ""
         : "La descripción es obligatoria",
     };
@@ -199,20 +203,18 @@ export const CTAEditor: React.FC<CTAEditorProps> = ({ component }) => {
         />
 
         <div>
-          <InputField
-            id="cta-description"
-            type="textarea"
+          <RichTextInput
             label="Descripción *"
             value={form.description}
-            onChange={(e) => handleChange("description", e.target.value)}
+            onChange={(html) => {
+              handleChange("description", html);
+            }}
             placeholder="Descripción del CTA..."
             error={errors.description}
           />
-          <p className="mt-1 text-xs text-gray-400">
-            {form.type === 3
-              ? "No se muestra en el tipo 3"
-              : "Los saltos de línea y tabulaciones se respetarán en el sitio web."}
-          </p>
+          {form.type === 3 && (
+            <p className="mt-1 text-xs text-gray-400">No se muestra en el tipo 3</p>
+          )}
         </div>
       </div>
 
