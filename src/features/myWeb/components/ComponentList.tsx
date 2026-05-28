@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { SiteComponentDataProps, SiteComponentType } from "../../../types";
+import React, { useState, useEffect } from "react";
+import { SiteComponentDataProps, SiteComponentType, ProjectColumnsConfig } from "../../../types";
 import { ComponentEditor } from "./ComponentEditor";
-import { useAppDispatch } from "../../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { fetchProjects, fetchProjectsByUserId } from "../../../redux/actions/ProjectActions";
 import {
   addSiteComponent,
   deleteSiteComponent,
@@ -40,7 +41,20 @@ export const ComponentList: React.FC<ComponentListProps> = ({
   components,
 }) => {
   const dispatch = useAppDispatch();
+  const { projects } = useAppSelector((state) => state.project);
+  const user = useAppSelector((state) => state.auth.user);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const hasProjectColumns = components.some((c) => c.type === "project_columns");
+    if (hasProjectColumns && projects.length === 0 && user?.uid) {
+      if (user.role === "admin") {
+        dispatch(fetchProjects());
+      } else {
+        dispatch(fetchProjectsByUserId(user.uid));
+      }
+    }
+  }, [dispatch, components, projects.length, user]);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
@@ -93,6 +107,17 @@ export const ComponentList: React.FC<ComponentListProps> = ({
   const getComponentLabel = (type: string) => {
     const found = COMPONENT_TYPES.find((ct) => ct.type === type);
     return found ? found.label : type;
+  };
+
+  const getProjectColumnsSummary = (component: SiteComponentDataProps): string | null => {
+    if (component.type !== "project_columns") return null;
+    const cfg = component.config;
+    if (Array.isArray(cfg) || !("columns" in cfg)) return null;
+    const config = cfg as ProjectColumnsConfig;
+    const find = (id?: string) => projects.find((p) => String(p.id) === String(id))?.title;
+    const titles = [find(config.project_1), config.columns === 2 ? find(config.project_2) : undefined]
+      .filter(Boolean) as string[];
+    return titles.length > 0 ? titles.join(" · ") : null;
   };
 
   return (
@@ -151,6 +176,11 @@ export const ComponentList: React.FC<ComponentListProps> = ({
                 <span className="text-sm font-medium text-gray-900">
                   {getComponentLabel(component.type)}
                 </span>
+                {getProjectColumnsSummary(component) && (
+                  <span className="text-xs text-gray-400 truncate max-w-48">
+                    {getProjectColumnsSummary(component)}
+                  </span>
+                )}
                 {!component.visible && (
                   <span className="text-xs text-gray-400 ml-1">(oculto)</span>
                 )}

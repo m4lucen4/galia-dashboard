@@ -1,6 +1,50 @@
 import React, { useEffect, useRef } from "react";
-import { useEditor, EditorContent, useEditorState } from "@tiptap/react";
+import { useEditor, EditorContent, useEditorState, Extension } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { TextStyle } from "@tiptap/extension-text-style";
+
+const FONT_SIZES: Record<"t1" | "t2" | "t3", string> = {
+  t1: "2.25rem",
+  t2: "1.5rem",
+  t3: "1rem",
+};
+
+const FontSize = Extension.create({
+  name: "fontSize",
+  addOptions() {
+    return { types: ["textStyle"] };
+  },
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (el) =>
+              (el as HTMLElement).style.fontSize || null,
+            renderHTML: (attrs) => {
+              if (!attrs.fontSize) return {};
+              return { style: `font-size: ${attrs.fontSize}` };
+            },
+          },
+        },
+      },
+    ];
+  },
+  addCommands() {
+    return {
+      setFontSize:
+        (size: string) =>
+        ({ chain }: { chain: () => { setMark: (name: string, attrs: Record<string, unknown>) => { run: () => boolean } } }) =>
+          chain().setMark("textStyle", { fontSize: size }).run(),
+      unsetFontSize:
+        () =>
+        ({ chain }: { chain: () => { setMark: (name: string, attrs: Record<string, unknown>) => { removeEmptyTextStyle: () => { run: () => boolean } } } }) =>
+          chain().setMark("textStyle", { fontSize: null }).removeEmptyTextStyle().run(),
+    } as never;
+  },
+});
 
 interface RichTextInputProps {
   label?: string;
@@ -25,7 +69,7 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
   const syncingRef = useRef(false);
 
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [StarterKit, TextStyle, FontSize],
     content: value,
     onUpdate: ({ editor }) => {
       if (syncingRef.current) return;
@@ -47,6 +91,9 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
     selector: ({ editor }) => ({
       bold: editor.isActive("bold"),
       italic: editor.isActive("italic"),
+      t1: editor.isActive("textStyle", { fontSize: FONT_SIZES.t1 }),
+      t2: editor.isActive("textStyle", { fontSize: FONT_SIZES.t2 }),
+      t3: editor.isActive("textStyle", { fontSize: FONT_SIZES.t3 }),
       empty: editor.isEmpty,
     }),
   });
@@ -54,6 +101,15 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
   const isBold = editorState?.bold ?? false;
   const isItalic = editorState?.italic ?? false;
   const isEmpty = editorState?.empty ?? isEffectivelyEmpty(value);
+
+  const handleFontSize = (key: "t1" | "t2" | "t3") => {
+    if (!editor) return;
+    if (editorState?.[key]) {
+      (editor.chain().focus() as unknown as { unsetFontSize: () => { run: () => boolean } }).unsetFontSize().run();
+    } else {
+      (editor.chain().focus() as unknown as { setFontSize: (s: string) => { run: () => boolean } }).setFontSize(FONT_SIZES[key]).run();
+    }
+  };
 
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
@@ -108,6 +164,24 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
           >
             <em>C</em>
           </button>
+          <span className="w-px h-4 bg-gray-200 mx-0.5" />
+          {(["t1", "t2", "t3"] as const).map((key) => (
+            <button
+              key={key}
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleFontSize(key);
+              }}
+              className={`px-2 py-0.5 text-xs rounded transition-colors ${
+                editorState?.[key]
+                  ? "bg-gray-900 text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+              }`}
+            >
+              {key.toUpperCase()}
+            </button>
+          ))}
         </div>
         {/* Editor area */}
         <div className="relative">
@@ -123,8 +197,7 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
         <p className="mt-1 text-xs text-red-500">{error}</p>
       ) : (
         <p className="mt-1 text-xs text-gray-400">
-          <strong>N</strong> = negrita · <em>C</em> = cursiva · Intro = nueva
-          línea
+          <strong>N</strong> = negrita · <em>C</em> = cursiva · T1/T2/T3 = tamaño · Intro = nueva línea
         </p>
       )}
     </div>
