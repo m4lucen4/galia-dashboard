@@ -120,6 +120,12 @@ Number of images per type: 1→2 imgs, 2→1 img, 3→3 imgs, 4→3 imgs (no tex
 ```
 Type 1: text + 2-column stats. Type 2: image + content + stats.
 
+### `separator` — Vertical spacer
+```ts
+{ size: "small" | "medium" | "large" }
+```
+Adds vertical spacing between components. Editor auto-saves on size selection (no save button).
+
 ---
 
 ## Redux State

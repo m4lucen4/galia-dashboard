@@ -12,6 +12,7 @@ import {
   ContactConfig,
   ProjectColumnsConfig,
   RichTextConfig,
+  SeparatorConfig,
 } from "../../types";
 import type { RootState } from "../store";
 
@@ -42,7 +43,7 @@ export const fetchSiteComponents = createAsyncThunk(
 function getDefaultConfig(
   type: SiteComponentType,
   options?: { layout?: ProjectListLayout },
-): HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig | ProjectColumnsConfig | RichTextConfig {
+): HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig | ProjectColumnsConfig | RichTextConfig | SeparatorConfig {
   if (type === "project_list") {
     return { layout: options?.layout ?? "grid-4" };
   }
@@ -112,6 +113,11 @@ function getDefaultConfig(
     return {
       content: "",
       alignment: "left",
+    };
+  }
+  if (type === "separator") {
+    return {
+      size: "medium",
     };
   }
   return [

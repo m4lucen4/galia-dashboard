@@ -34,6 +34,7 @@ const COMPONENT_TYPES: { type: SiteComponentType; label: string; description?: s
   { type: "contact", label: "Contacto", description: "Información de contacto y dirección" },
   { type: "project_columns", label: "Proyectos destacados", description: "1 o 2 columnas con imagen, título, categoría y año" },
   { type: "rich_text", label: "Texto enriquecido", description: "Bloque de texto con negrita, cursiva y alineación" },
+  { type: "separator", label: "Separador", description: "Espaciado vertical entre componentes" },
 ];
 
 export const ComponentList: React.FC<ComponentListProps> = ({

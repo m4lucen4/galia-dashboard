@@ -304,11 +304,15 @@ export type HeaderSlideConfig = {
   url_button: string;
 };
 
-export type SiteComponentType = "header" | "project_list" | "cta" | "body" | "content" | "contact" | "project_columns" | "rich_text";
+export type SiteComponentType = "header" | "project_list" | "cta" | "body" | "content" | "contact" | "project_columns" | "rich_text" | "separator";
 
 export type RichTextConfig = {
   content: string;
   alignment: "left" | "right";
+};
+
+export type SeparatorConfig = {
+  size: "small" | "medium" | "large";
 };
 
 export type ProjectColumnsConfig = {
@@ -396,7 +400,7 @@ export type SiteComponentDataProps = {
   type: SiteComponentType;
   position: number;
   visible: boolean;
-  config: HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig | ProjectColumnsConfig | RichTextConfig;
+  config: HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig | ProjectColumnsConfig | RichTextConfig | SeparatorConfig;
   created_at: string;
   updated_at: string;
 };
