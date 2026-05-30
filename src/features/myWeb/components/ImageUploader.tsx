@@ -91,28 +91,39 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   return (
     <div>
       <label className="text-sm text-black">{label}</label>
-      <div
-        className="mt-1 flex items-center gap-4 p-3 border border-gray-300 rounded-md cursor-pointer hover:border-gray-400 transition-colors"
-        onClick={() => inputRef.current?.click()}
-      >
-        {currentUrl ? (
-          <img
-            src={currentUrl}
-            alt={label}
-            className="h-16 w-16 object-cover rounded-md"
-          />
-        ) : (
-          <div className="h-16 w-16 flex items-center justify-center bg-gray-100 rounded-md">
-            <PhotoIcon className="h-8 w-8 text-gray-400" />
+      <div className="mt-1 relative">
+        <div
+          className="flex items-center gap-4 p-3 border border-gray-300 rounded-md cursor-pointer hover:border-gray-400 transition-colors"
+          onClick={() => inputRef.current?.click()}
+        >
+          {currentUrl ? (
+            <img
+              src={currentUrl}
+              alt={label}
+              className="h-16 w-16 object-cover rounded-md flex-shrink-0"
+            />
+          ) : (
+            <div className="h-16 w-16 flex items-center justify-center bg-gray-100 rounded-md flex-shrink-0">
+              <PhotoIcon className="h-8 w-8 text-gray-400" />
+            </div>
+          )}
+          <div className="flex-1">
+            <p className="text-sm text-gray-600">
+              {currentUrl ? "Clic para reemplazar" : "Clic para subir imagen"}
+            </p>
           </div>
-        )}
-        <div className="flex-1">
-          <p className="text-sm text-gray-600">
-            {currentUrl ? "Clic para reemplazar" : "Clic para subir imagen"}
-          </p>
+          {loading && (
+            <ArrowPathIcon className="h-5 w-5 text-gray-400 animate-spin" />
+          )}
         </div>
-        {loading && (
-          <ArrowPathIcon className="h-5 w-5 text-gray-400 animate-spin" />
+        {currentUrl && !loading && onRemove && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onRemove(); }}
+            className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-0.5 text-gray-500 hover:text-red-500 hover:border-red-300 transition-colors"
+          >
+            <XMarkIcon className="h-3.5 w-3.5" />
+          </button>
         )}
       </div>
       <input

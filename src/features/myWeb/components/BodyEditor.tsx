@@ -211,6 +211,7 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ component }) => {
             label={`Imagen ${n}`}
             currentUrl={form[`image_${n}`] || null}
             onUpload={(file) => handleImageUpload(n, file)}
+            onRemove={() => setForm((prev) => ({ ...prev, [`image_${n}`]: "" }))}
             loading={
               uploadingImage === n ||
               (uploadingImage === n && uploadRequest.inProgress)

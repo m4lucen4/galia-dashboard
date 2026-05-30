@@ -222,6 +222,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({ component }) => {
             label="Imagen columna derecha"
             currentUrl={form.image || null}
             onUpload={handleImageUpload}
+            onRemove={() => setForm((prev) => ({ ...prev, image: "" }))}
             loading={uploadingImage}
           />
           <RichTextInput

@@ -170,6 +170,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             label="Imagen de fondo"
             currentUrl={slide.image_url || undefined}
             onUpload={(file) => onImageUpload(index, file)}
+            onRemove={() => onUpdate(index, { ...slide, image_url: "" })}
             loading={uploadingSlide === index}
           />
         ) : (
