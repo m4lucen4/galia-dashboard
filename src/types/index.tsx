@@ -424,6 +424,7 @@ export type SiteDataProps = {
   font: string;
   title_font: string;
   navbar_type: number;
+  navbar_transparent?: boolean;
   custom_domain?: string | null;
   favicon_url?: string | null;
   meta_description?: string | null;

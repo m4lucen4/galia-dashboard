@@ -47,6 +47,7 @@ export const SiteConfigForm = forwardRef<
     font: site.font || "Inter",
     title_font: site.title_font || "Inter",
     navbar_type: site.navbar_type ?? 1,
+    navbar_transparent: site.navbar_transparent ?? false,
     full_width: site.full_width ?? false,
     instagram_url: site.instagram_url || "",
     facebook_url: site.facebook_url || "",
@@ -73,6 +74,7 @@ export const SiteConfigForm = forwardRef<
       font: site.font || "Inter",
       title_font: site.title_font || "Inter",
       navbar_type: site.navbar_type ?? 1,
+      navbar_transparent: site.navbar_transparent ?? false,
       full_width: site.full_width ?? false,
       instagram_url: site.instagram_url || "",
       facebook_url: site.facebook_url || "",
@@ -148,6 +150,7 @@ export const SiteConfigForm = forwardRef<
           font: form.font,
           title_font: form.title_font,
           navbar_type: form.navbar_type,
+          navbar_transparent: form.navbar_transparent,
           full_width: form.full_width,
           instagram_url: form.instagram_url || null,
           facebook_url: form.facebook_url || null,
@@ -282,6 +285,22 @@ export const SiteConfigForm = forwardRef<
           setForm((prev) => ({ ...prev, navbar_type }))
         }
       />
+
+      {/* Navbar transparente */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-black">Navbar transparente</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            En escritorio, el navbar arranca transparente y muestra fondo al hacer scroll. En móvil siempre tiene fondo.
+          </p>
+        </div>
+        <Switch
+          checked={form.navbar_transparent}
+          onChange={() =>
+            setForm((prev) => ({ ...prev, navbar_transparent: !prev.navbar_transparent }))
+          }
+        />
+      </div>
 
       {/* Ancho completo */}
       <div className="flex items-center justify-between">
