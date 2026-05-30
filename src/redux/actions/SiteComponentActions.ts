@@ -13,6 +13,7 @@ import {
   ProjectColumnsConfig,
   RichTextConfig,
   SeparatorConfig,
+  FigureConfig,
 } from "../../types";
 import type { RootState } from "../store";
 
@@ -43,7 +44,7 @@ export const fetchSiteComponents = createAsyncThunk(
 function getDefaultConfig(
   type: SiteComponentType,
   options?: { layout?: ProjectListLayout },
-): HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig | ProjectColumnsConfig | RichTextConfig | SeparatorConfig {
+): HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig | ProjectColumnsConfig | RichTextConfig | SeparatorConfig | FigureConfig {
   if (type === "project_list") {
     return { layout: options?.layout ?? "grid-4" };
   }
@@ -118,6 +119,13 @@ function getDefaultConfig(
   if (type === "separator") {
     return {
       size: "medium",
+    };
+  }
+  if (type === "figure") {
+    return {
+      image_url: "",
+      caption: "",
+      size: "full",
     };
   }
   return [
@@ -636,6 +644,60 @@ export const saveProjectListDetailType = createAsyncThunk(
       return { component: data as SiteComponentDataProps, detail_type };
     } catch (error) {
       return rejectWithValue("Error inesperado al guardar tipo de detalle");
+    }
+  },
+);
+
+export const uploadFigureImage = createAsyncThunk(
+  "siteComponents/uploadFigureImage",
+  async (
+    {
+      file,
+      componentId,
+      config,
+    }: {
+      file: File;
+      componentId: string;
+      config: FigureConfig;
+    },
+    { rejectWithValue, getState, dispatch },
+  ) => {
+    try {
+      const state = getState() as RootState;
+      const userId = state.auth.user?.uid;
+      if (!userId) return rejectWithValue("Usuario no autenticado");
+
+      const filePath = `${userId}/figure/${componentId}/image.webp`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("sites")
+        .upload(filePath, file, {
+          contentType: file.type,
+          upsert: true,
+        });
+
+      if (uploadError) {
+        return rejectWithValue({
+          message: `Error al subir imagen: ${uploadError.message}`,
+        });
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("sites")
+        .getPublicUrl(filePath);
+
+      const newConfig: FigureConfig = {
+        ...config,
+        image_url: `${urlData.publicUrl}?t=${Date.now()}`,
+      };
+
+      await dispatch(
+        updateSiteComponent({ componentId, updates: { config: newConfig } }),
+      ).unwrap();
+
+      return { url: urlData.publicUrl };
+    } catch (error) {
+      return rejectWithValue("Error inesperado al subir imagen del figure");
     }
   },
 );

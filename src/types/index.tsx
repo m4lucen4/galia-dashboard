@@ -304,7 +304,7 @@ export type HeaderSlideConfig = {
   url_button: string;
 };
 
-export type SiteComponentType = "header" | "project_list" | "cta" | "body" | "content" | "contact" | "project_columns" | "rich_text" | "separator";
+export type SiteComponentType = "header" | "project_list" | "cta" | "body" | "content" | "contact" | "project_columns" | "rich_text" | "separator" | "figure";
 
 export type RichTextConfig = {
   content: string;
@@ -313,6 +313,12 @@ export type RichTextConfig = {
 
 export type SeparatorConfig = {
   size: "small" | "medium" | "large";
+};
+
+export type FigureConfig = {
+  image_url: string;
+  caption: string;
+  size: "half" | "full";
 };
 
 export type ProjectColumnsConfig = {
@@ -400,7 +406,7 @@ export type SiteComponentDataProps = {
   type: SiteComponentType;
   position: number;
   visible: boolean;
-  config: HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig | ProjectColumnsConfig | RichTextConfig | SeparatorConfig;
+  config: HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig | ProjectColumnsConfig | RichTextConfig | SeparatorConfig | FigureConfig;
   created_at: string;
   updated_at: string;
 };

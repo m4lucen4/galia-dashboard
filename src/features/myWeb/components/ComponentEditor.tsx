@@ -8,6 +8,7 @@ import { ContactEditor } from "./ContactEditor";
 import { ProjectColumnsEditor } from "./ProjectColumnsEditor";
 import { RichTextBlockEditor } from "./RichTextBlockEditor";
 import { SeparatorEditor } from "./SeparatorEditor";
+import { FigureEditor } from "./FigureEditor";
 
 interface ComponentEditorProps {
   component: SiteComponentDataProps;
@@ -33,6 +34,8 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
       return <RichTextBlockEditor component={component} />;
     case "separator":
       return <SeparatorEditor component={component} />;
+    case "figure":
+      return <FigureEditor component={component} />;
     default:
       return (
         <p className="text-sm text-gray-500">
