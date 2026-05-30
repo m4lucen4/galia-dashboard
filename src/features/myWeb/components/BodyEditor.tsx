@@ -76,8 +76,19 @@ const PreviewType4: React.FC = () => (
   </svg>
 );
 
+const PreviewType5: React.FC = () => (
+  <svg viewBox="0 0 120 70" className="w-full h-auto" fill="none">
+    {/* foto 1 — 1/3 */}
+    <rect x="2" y="2" width="36" height="66" rx="2" fill="#D1D5DB" />
+    {/* foto 2 — 1/3 */}
+    <rect x="42" y="2" width="36" height="66" rx="2" fill="#D1D5DB" />
+    {/* foto 3 — 1/3 */}
+    <rect x="82" y="2" width="36" height="66" rx="2" fill="#D1D5DB" />
+  </svg>
+);
+
 const TYPE_OPTIONS: {
-  value: 1 | 2 | 3 | 4;
+  value: 1 | 2 | 3 | 4 | 5;
   label: string;
   Preview: React.FC;
 }[] = [
@@ -85,9 +96,10 @@ const TYPE_OPTIONS: {
   { value: 2, label: "Foto grande · Texto", Preview: PreviewType2 },
   { value: 3, label: "3 fotos · Texto", Preview: PreviewType3 },
   { value: 4, label: "Foto · Foto · Foto grande (3 col.)", Preview: PreviewType4 },
+  { value: 5, label: "3 fotos iguales (sin texto)", Preview: PreviewType5 },
 ];
 
-function imagesForType(type: 1 | 2 | 3 | 4): Array<1 | 2 | 3> {
+function imagesForType(type: 1 | 2 | 3 | 4 | 5): Array<1 | 2 | 3> {
   if (type === 2) return [1];
   if (type === 1) return [1, 2];
   return [1, 2, 3];
@@ -119,7 +131,7 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ component }) => {
     }
   }, [component.config]);
 
-  const handleTypeChange = (value: 1 | 2 | 3 | 4) => {
+  const handleTypeChange = (value: 1 | 2 | 3 | 4 | 5) => {
     setForm((prev) => ({ ...prev, type: value }));
   };
 
@@ -157,7 +169,7 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ component }) => {
   };
 
   const visibleImages = imagesForType(form.type);
-  const showDescription = form.type !== 4;
+  const showDescription = form.type !== 4 && form.type !== 5;
 
   return (
     <div className="space-y-6">
