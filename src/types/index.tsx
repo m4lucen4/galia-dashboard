@@ -309,6 +309,7 @@ export type SiteComponentType = "header" | "project_list" | "cta" | "body" | "co
 export type RichTextConfig = {
   content: string;
   alignment: "left" | "right";
+  width?: "full" | "half" | "two-thirds";
 };
 
 export type SeparatorConfig = {

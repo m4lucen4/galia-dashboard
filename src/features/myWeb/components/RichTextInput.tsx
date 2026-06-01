@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { useEditor, EditorContent, useEditorState, Extension } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { TextStyle } from "@tiptap/extension-text-style";
+import TextAlign from "@tiptap/extension-text-align";
 
 const FONT_SIZES: Record<"t1" | "t2" | "t3", string> = {
   t1: "2.25rem",
@@ -69,7 +70,12 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
   const syncingRef = useRef(false);
 
   const editor = useEditor({
-    extensions: [StarterKit, TextStyle, FontSize],
+    extensions: [
+      StarterKit,
+      TextStyle,
+      FontSize,
+      TextAlign.configure({ types: ["paragraph", "heading"] }),
+    ],
     content: value,
     onUpdate: ({ editor }) => {
       if (syncingRef.current) return;
@@ -94,12 +100,15 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
       t1: editor.isActive("textStyle", { fontSize: FONT_SIZES.t1 }),
       t2: editor.isActive("textStyle", { fontSize: FONT_SIZES.t2 }),
       t3: editor.isActive("textStyle", { fontSize: FONT_SIZES.t3 }),
+      alignLeft: editor.isActive({ textAlign: "left" }),
+      alignRight: editor.isActive({ textAlign: "right" }),
       empty: editor.isEmpty,
     }),
   });
 
   const isBold = editorState?.bold ?? false;
   const isItalic = editorState?.italic ?? false;
+  const isAlignRight = editorState?.alignRight ?? false;
   const isEmpty = editorState?.empty ?? isEffectivelyEmpty(value);
 
   const handleFontSize = (key: "t1" | "t2" | "t3") => {
@@ -182,6 +191,37 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
               {key.toUpperCase()}
             </button>
           ))}
+          <span className="w-px h-4 bg-gray-200 mx-0.5" />
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor?.chain().focus().setTextAlign("left").run();
+            }}
+            className={`px-2 py-0.5 text-xs rounded transition-colors ${
+              !isAlignRight
+                ? "bg-gray-900 text-white"
+                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+            }`}
+            title="Alinear a la izquierda"
+          >
+            ←
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor?.chain().focus().setTextAlign("right").run();
+            }}
+            className={`px-2 py-0.5 text-xs rounded transition-colors ${
+              isAlignRight
+                ? "bg-gray-900 text-white"
+                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+            }`}
+            title="Alinear a la derecha"
+          >
+            →
+          </button>
         </div>
         {/* Editor area */}
         <div className="relative">

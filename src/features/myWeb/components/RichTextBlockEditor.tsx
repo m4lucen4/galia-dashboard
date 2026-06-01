@@ -12,6 +12,7 @@ interface RichTextBlockEditorProps {
 const defaultConfig: RichTextConfig = {
   content: "",
   alignment: "left",
+  width: "full",
 };
 
 export const RichTextBlockEditor: React.FC<RichTextBlockEditorProps> = ({
@@ -79,6 +80,33 @@ export const RichTextBlockEditor: React.FC<RichTextBlockEditorProps> = ({
           >
             Derecha →
           </button>
+        </div>
+      </div>
+
+      {/* ── Ancho ───────────────────────────────────────────────────────────── */}
+      <div>
+        <p className="text-sm font-medium text-gray-900 mb-2">Ancho</p>
+        <div className="flex rounded-md border border-gray-300 overflow-hidden w-fit">
+          {(
+            [
+              { value: "full", label: "Completo" },
+              { value: "two-thirds", label: "2/3" },
+              { value: "half", label: "50%" },
+            ] as const
+          ).map(({ value, label }, idx) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setForm((prev) => ({ ...prev, width: value }))}
+              className={`px-4 py-1.5 text-xs font-medium transition-colors ${idx > 0 ? "border-l border-gray-300" : ""} ${
+                (form.width ?? "full") === value
+                  ? "bg-gray-900 text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
