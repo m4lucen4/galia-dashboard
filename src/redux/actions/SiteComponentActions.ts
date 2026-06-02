@@ -425,16 +425,18 @@ export const uploadBodyImage = createAsyncThunk(
         .from("sites")
         .getPublicUrl(filePath);
 
+      const url = `${urlData.publicUrl}?t=${Date.now()}`;
+
       const newConfig: BodyConfig = {
         ...config,
-        [`image_${imageIndex}`]: urlData.publicUrl,
+        [`image_${imageIndex}`]: url,
       };
 
       await dispatch(
         updateSiteComponent({ componentId, updates: { config: newConfig } }),
       ).unwrap();
 
-      return { imageIndex, url: urlData.publicUrl };
+      return { imageIndex, url };
     } catch (error) {
       return rejectWithValue("Error inesperado al subir imagen del body");
     }
@@ -479,16 +481,18 @@ export const uploadContentImage = createAsyncThunk(
         .from("sites")
         .getPublicUrl(filePath);
 
+      const url = `${urlData.publicUrl}?t=${Date.now()}`;
+
       const newConfig: ContentConfig = {
         ...config,
-        image: urlData.publicUrl,
+        image: url,
       };
 
       await dispatch(
         updateSiteComponent({ componentId, updates: { config: newConfig } }),
       ).unwrap();
 
-      return { url: urlData.publicUrl };
+      return { url };
     } catch (error) {
       return rejectWithValue("Error inesperado al subir imagen del content");
     }
