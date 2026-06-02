@@ -206,7 +206,7 @@ export const uploadSiteImage = createAsyncThunk(
         .from("sites")
         .getPublicUrl(filePath);
 
-      const url = urlData.publicUrl;
+      const url = `${urlData.publicUrl}?t=${Date.now()}`;
 
       // Update the site with the new image URL
       await dispatch(
