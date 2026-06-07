@@ -320,6 +320,8 @@ export type FigureConfig = {
   image_url: string;
   caption: string;
   size: "half" | "full";
+  link_url?: string;
+  link_type?: "internal" | "external";
 };
 
 export type ProjectColumnsConfig = {
@@ -329,6 +331,7 @@ export type ProjectColumnsConfig = {
   vertical_align_1?: "top" | "center" | "bottom";
   vertical_align_2?: "top" | "center" | "bottom";
   horizontal_align?: "start" | "end" | "between" | "stretch";
+  width_1col?: "full" | "80" | "50";
 };
 
 export type ContentConfig = {
@@ -382,7 +385,9 @@ export type ContactConfig = {
   antetitulo?: string;
   titulo: string;
   descripcion: string;
+  titulo_direccion1?: string;
   direccion1: string;
+  titulo_direccion2?: string;
   direccion2?: string;
   form_bg_color?: string;
   form_email?: string;

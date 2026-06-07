@@ -17,6 +17,8 @@ const defaultFigureConfig: FigureConfig = {
   image_url: "",
   caption: "",
   size: "full",
+  link_url: "",
+  link_type: undefined,
 };
 
 const SIZE_OPTIONS: { value: FigureConfig["size"]; label: string; description: string }[] = [
@@ -129,6 +131,49 @@ export const FigureEditor: React.FC<FigureEditorProps> = ({ component }) => {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* ── Enlace ────────────────────────────────────────────────────────── */}
+      <div>
+        <p className="text-sm font-medium text-gray-900 mb-3">Enlace (opcional)</p>
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          {(["none", "internal", "external"] as const).map((option) => {
+            const current = form.link_type ?? "none";
+            const labels = { none: "Sin enlace", internal: "Interno", external: "Externo" };
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() =>
+                  setForm((prev) => ({
+                    ...prev,
+                    link_type: option === "none" ? undefined : option,
+                    link_url: option === "none" ? "" : prev.link_url,
+                  }))
+                }
+                className={`rounded-md border-2 p-2 text-sm font-medium transition-colors focus:outline-none ${
+                  current === option
+                    ? "border-gray-900 bg-gray-50 text-gray-900"
+                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-400"
+                }`}
+              >
+                {labels[option]}
+              </button>
+            );
+          })}
+        </div>
+        {form.link_type && (
+          <InputField
+            id="figure-link-url"
+            type="text"
+            label={form.link_type === "internal" ? "Ruta interna (ej. sobre-nosotros)" : "URL externa"}
+            value={form.link_url ?? ""}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, link_url: e.target.value }))
+            }
+            placeholder={form.link_type === "internal" ? "sobre-nosotros" : "https://..."}
+          />
+        )}
       </div>
 
       {/* ── Guardar ───────────────────────────────────────────────────────── */}

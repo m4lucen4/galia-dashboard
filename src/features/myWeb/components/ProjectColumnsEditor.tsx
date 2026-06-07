@@ -15,6 +15,7 @@ const defaultConfig: ProjectColumnsConfig = {
   vertical_align_1: "top",
   vertical_align_2: "top",
   horizontal_align: "between",
+  width_1col: "full",
 };
 
 const VERTICAL_OPTIONS: { value: "top" | "center" | "bottom"; label: string }[] = [
@@ -28,6 +29,12 @@ const HORIZONTAL_OPTIONS: { value: "start" | "end" | "between" | "stretch"; labe
   { value: "end", label: "Fin" },
   { value: "between", label: "Entre" },
   { value: "stretch", label: "Expandir" },
+];
+
+const WIDTH_1COL_OPTIONS: { value: "full" | "80" | "50"; label: string }[] = [
+  { value: "full", label: "Ancho completo" },
+  { value: "80", label: "80%" },
+  { value: "50", label: "50%" },
 ];
 
 export const ProjectColumnsEditor: React.FC<ProjectColumnsEditorProps> = ({ component }) => {
@@ -151,6 +158,25 @@ export const ProjectColumnsEditor: React.FC<ProjectColumnsEditorProps> = ({ comp
           </div>
         );
       })}
+
+      {/* Ancho — solo 1 columna */}
+      {form.columns === 1 && (
+        <div>
+          <p className="text-sm font-medium text-gray-900 mb-2">Ancho del proyecto</p>
+          <div className="flex gap-2">
+            {WIDTH_1COL_OPTIONS.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, width_1col: value }))}
+                className={`flex-1 ${selectClass((form.width_1col ?? "full") === value)}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Alineación horizontal — solo 2 columnas */}
       {form.columns === 2 && (

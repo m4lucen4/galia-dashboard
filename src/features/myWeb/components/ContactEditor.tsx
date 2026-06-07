@@ -174,30 +174,38 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
 
       {/* ── Direcciones ───────────────────────────────────────────────────── */}
       <div className="space-y-4">
-        <div>
-          <label className="block text-sm text-black mb-1">
-            {form.type === 1 ? "Dirección 1" : "Dirección"}
-          </label>
-          <textarea
-            value={form.direccion1}
-            onChange={(e) => handleChange("direccion1", e.target.value)}
-            rows={4}
-            className="w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-gray-800 resize-y"
-            placeholder={"Calle Ejemplo, 12\n28001 Madrid\nEspaña"}
-          />
-        </div>
+        <InputField
+          id="contact-titulo-direccion1"
+          type="text"
+          label={form.type === 1 ? "Título dirección 1 (opcional)" : "Título dirección (opcional)"}
+          value={form.titulo_direccion1 ?? ""}
+          onChange={(e) => handleChange("titulo_direccion1", e.target.value)}
+          placeholder="Oficina principal"
+        />
+        <RichTextInput
+          label={form.type === 1 ? "Dirección 1" : "Dirección"}
+          value={form.direccion1}
+          onChange={(html) => handleChange("direccion1", html)}
+          placeholder="Calle Ejemplo, 12&#10;28001 Madrid&#10;España"
+        />
 
         {form.type === 1 && (
-          <div>
-            <label className="block text-sm text-black mb-1">Dirección 2</label>
-            <textarea
-              value={form.direccion2 ?? ""}
-              onChange={(e) => handleChange("direccion2", e.target.value)}
-              rows={4}
-              className="w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-gray-800 resize-y"
-              placeholder={"Calle Ejemplo, 34\n08001 Barcelona\nEspaña"}
+          <>
+            <InputField
+              id="contact-titulo-direccion2"
+              type="text"
+              label="Título dirección 2 (opcional)"
+              value={form.titulo_direccion2 ?? ""}
+              onChange={(e) => handleChange("titulo_direccion2", e.target.value)}
+              placeholder="Oficina Barcelona"
             />
-          </div>
+            <RichTextInput
+              label="Dirección 2"
+              value={form.direccion2 ?? ""}
+              onChange={(html) => handleChange("direccion2", html)}
+              placeholder="Calle Ejemplo, 34&#10;08001 Barcelona&#10;España"
+            />
+          </>
         )}
       </div>
 
