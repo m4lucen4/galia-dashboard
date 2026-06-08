@@ -116,7 +116,7 @@ export const updateSitePage = createAsyncThunk(
       updates,
     }: {
       pageId: string;
-      updates: Partial<Pick<SitePageDataProps, "visible" | "show_in_nav" | "position" | "title" | "content">>;
+      updates: Partial<Pick<SitePageDataProps, "visible" | "show_in_nav" | "position" | "title" | "slug" | "content">>;
     },
     { rejectWithValue },
   ) => {
@@ -170,7 +170,7 @@ export const createSitePage = createAsyncThunk(
         .order("position", { ascending: false })
         .limit(1);
 
-      const nextPosition = allPages?.[0]?.position != null ? allPages[0].position + 1 : 1;
+      const nextPosition = allPages?.[0]?.position == null ? 1 : allPages[0].position + 1;
 
       const { data, error } = await supabase
         .from("site_pages")

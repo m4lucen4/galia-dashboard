@@ -302,6 +302,7 @@ export type HeaderSlideConfig = {
   type: 1 | 2;
   text_button: string;
   url_button: string;
+  icon_button?: string;
 };
 
 export type SiteComponentType = "header" | "project_list" | "cta" | "body" | "content" | "contact" | "project_columns" | "rich_text" | "separator" | "figure";

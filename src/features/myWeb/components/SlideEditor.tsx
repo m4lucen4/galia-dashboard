@@ -3,6 +3,7 @@ import { HeaderSlideConfig } from "../../../types";
 import { ImageUploader } from "./ImageUploader";
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { RichTextInput } from "./RichTextInput";
+import { IconPicker } from "./IconPicker";
 
 // ─── Visual type previews ──────────────────────────────────────────────────────
 
@@ -231,6 +232,14 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             />
           </div>
         </div>
+
+        <IconPicker
+          value={slide.icon_button}
+          onChange={(name) => {
+            handleChange("icon_button", name);
+            setTimeout(onBlur, 0);
+          }}
+        />
       </div>
     </div>
   );
