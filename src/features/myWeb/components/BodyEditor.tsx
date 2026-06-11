@@ -18,6 +18,9 @@ const defaultBodyConfig: BodyConfig = {
   image_1: "",
   image_2: "",
   image_3: "",
+  link_1: "",
+  link_2: "",
+  link_3: "",
   type: 1,
 };
 
@@ -206,17 +209,38 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ component }) => {
       {/* ── Imágenes ────────────────────────────────────────────────────────── */}
       <div className="space-y-4">
         {visibleImages.map((n) => (
-          <ImageUploader
-            key={n}
-            label={`Imagen ${n}`}
-            currentUrl={form[`image_${n}`] || null}
-            onUpload={(file) => handleImageUpload(n, file)}
-            onRemove={() => setForm((prev) => ({ ...prev, [`image_${n}`]: "" }))}
-            loading={
-              uploadingImage === n ||
-              (uploadingImage === n && uploadRequest.inProgress)
-            }
-          />
+          <div key={n} className="space-y-2">
+            <ImageUploader
+              label={`Imagen ${n}`}
+              currentUrl={form[`image_${n}`] || null}
+              onUpload={(file) => handleImageUpload(n, file)}
+              onRemove={() =>
+                setForm((prev) => ({ ...prev, [`image_${n}`]: "" }))
+              }
+              loading={
+                uploadingImage === n ||
+                (uploadingImage === n && uploadRequest.inProgress)
+              }
+            />
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">
+                Enlace de imagen {n}{" "}
+                <span className="font-normal text-gray-400">(opcional)</span>
+              </label>
+              <input
+                type="text"
+                value={form[`link_${n}` as `link_${1 | 2 | 3}`] ?? ""}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    [`link_${n}`]: e.target.value,
+                  }))
+                }
+                placeholder="https://ejemplo.com  o  /proyectos"
+                className="w-full rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:outline-none"
+              />
+            </div>
+          </div>
         ))}
       </div>
 
