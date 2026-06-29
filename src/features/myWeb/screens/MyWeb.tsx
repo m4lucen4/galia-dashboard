@@ -1,14 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { RootState } from "../../../redux/store";
-import {
-  fetchSite,
-  createSite,
-} from "../../../redux/actions/SiteActions";
+import { fetchSite, createSite } from "../../../redux/actions/SiteActions";
 import { initDefaultPages } from "../../../redux/actions/SitePageActions";
 import { SiteConfigForm, SiteConfigFormHandle } from "../components/SiteConfigForm";
-import { PageList } from "../components/PageList";
+import { PageEditor } from "../components/PageEditor";
 import { PublishButton } from "../components/PublishButton";
+import { MyWebTabBar } from "../components/MyWebTabBar";
 import { InputField } from "../../../components/shared/ui/InputField";
 import { Button } from "../../../components/shared/ui/Button";
 
@@ -21,6 +19,7 @@ export const MyWeb: React.FC = () => {
   const { pages } = useAppSelector((state: RootState) => state.sitePage);
 
   const configFormRef = useRef<SiteConfigFormHandle>(null);
+  const [activeTabId, setActiveTabId] = useState<string>("config");
 
   // Creation form state
   const [studioName, setStudioName] = useState("");
@@ -42,7 +41,7 @@ export const MyWeb: React.FC = () => {
     return name
       .toLowerCase()
       .normalize("NFD")
-      .replaceAll(/[\u0300-\u036f]/g, "")
+      .replaceAll(/[̀-ͯ]/g, "")
       .replaceAll(/[^a-z0-9\s-]/g, "")
       .replaceAll(/\s+/g, "-")
       .replaceAll(/-+/g, "-")
@@ -101,9 +100,7 @@ export const MyWeb: React.FC = () => {
           <Button
             title="Crear mi web"
             onClick={handleCreateSite}
-            disabled={
-              saveRequest.inProgress || !studioName || !slug
-            }
+            disabled={saveRequest.inProgress || !studioName || !slug}
           />
 
           {saveRequest.messages && !saveRequest.ok && (
@@ -114,26 +111,32 @@ export const MyWeb: React.FC = () => {
     );
   }
 
-  // Site exists — show config + pages (two columns)
+  const activePage = pages.find((p) => p.id === activeTabId);
+
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base/7 font-semibold text-gray-900">Mi Web</h3>
+    <div className="w-full flex flex-col min-h-0">
+      <div className="px-4 pt-4 pb-3">
+        <PublishButton
+          site={site}
+          onSave={() => configFormRef.current?.save()}
+        />
       </div>
 
-      <PublishButton
-        site={site}
-        onSave={() => configFormRef.current?.save()}
+      <MyWebTabBar
+        pages={pages}
+        siteId={site.id}
+        activeTabId={activeTabId}
+        onTabChange={setActiveTabId}
+        onPageCreated={setActiveTabId}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        <div className="space-y-6">
+      <div className="w-full px-6 py-6">
+        {activeTabId === "config" && (
           <SiteConfigForm ref={configFormRef} site={site} />
-        </div>
-
-        <div className="space-y-6">
-          <PageList pages={pages} siteId={site.id} />
-        </div>
+        )}
+        {activePage && (
+          <PageEditor key={activePage.id} page={activePage} />
+        )}
       </div>
     </div>
   );
