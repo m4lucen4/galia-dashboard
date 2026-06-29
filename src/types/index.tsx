@@ -442,6 +442,8 @@ export type SiteDataProps = {
   facebook_url?: string | null;
   linkedin_url?: string | null;
   full_width?: boolean;
+  default_language?: string;
+  multilanguage?: boolean;
   published: boolean;
   created_at: string;
   updated_at: string;

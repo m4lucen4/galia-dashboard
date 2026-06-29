@@ -49,6 +49,8 @@ export const SiteConfigForm = forwardRef<
     navbar_type: site.navbar_type ?? 1,
     navbar_transparent: site.navbar_transparent ?? false,
     full_width: site.full_width ?? false,
+    default_language: site.default_language || "es",
+    multilanguage: site.multilanguage ?? false,
     instagram_url: site.instagram_url || "",
     facebook_url: site.facebook_url || "",
     linkedin_url: site.linkedin_url || "",
@@ -76,6 +78,8 @@ export const SiteConfigForm = forwardRef<
       navbar_type: site.navbar_type ?? 1,
       navbar_transparent: site.navbar_transparent ?? false,
       full_width: site.full_width ?? false,
+      default_language: site.default_language || "es",
+      multilanguage: site.multilanguage ?? false,
       instagram_url: site.instagram_url || "",
       facebook_url: site.facebook_url || "",
       linkedin_url: site.linkedin_url || "",
@@ -152,6 +156,8 @@ export const SiteConfigForm = forwardRef<
           navbar_type: form.navbar_type,
           navbar_transparent: form.navbar_transparent,
           full_width: form.full_width,
+          default_language: form.default_language,
+          multilanguage: form.multilanguage,
           instagram_url: form.instagram_url || null,
           facebook_url: form.facebook_url || null,
           linkedin_url: form.linkedin_url || null,
@@ -316,6 +322,52 @@ export const SiteConfigForm = forwardRef<
             setForm((prev) => ({ ...prev, full_width: !prev.full_width }))
           }
         />
+      </div>
+
+      {/* Idioma */}
+      <div className="space-y-4">
+        <p className="text-sm font-medium text-black">Idioma</p>
+
+        <div>
+          <p className="text-xs text-gray-500 mb-2">Idioma por defecto de la web</p>
+          <div className="flex gap-3">
+            {(["es", "en"] as const).map((lang) => (
+              <label
+                key={lang}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md border cursor-pointer text-sm transition-colors ${
+                  form.default_language === lang
+                    ? "border-black bg-black text-white"
+                    : "border-gray-300 text-gray-700 hover:border-gray-400"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="default_language"
+                  value={lang}
+                  checked={form.default_language === lang}
+                  onChange={() => setForm((prev) => ({ ...prev, default_language: lang }))}
+                  className="sr-only"
+                />
+                {lang === "es" ? "Español" : "English"}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-black">Web multi-idioma</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Muestra un selector de idioma en la web. Los visitantes podrán cambiar entre Español e Inglés.
+            </p>
+          </div>
+          <Switch
+            checked={form.multilanguage}
+            onChange={() =>
+              setForm((prev) => ({ ...prev, multilanguage: !prev.multilanguage }))
+            }
+          />
+        </div>
       </div>
 
       {/* Redes sociales */}
