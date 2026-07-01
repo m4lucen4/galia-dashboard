@@ -248,7 +248,7 @@
     "launchProject": "Generate publications",
     "recoveryProject": "Recover draft",
     "selectPromptOption": "Select a GPT",
-    "assignProject": "Assign project",
+    "assignProject": "Duplicate and assign project",
     "createdBy": "User",
     "addCollaborator": "Add collaborator",
     "add": "Add",

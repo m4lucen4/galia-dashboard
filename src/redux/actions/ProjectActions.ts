@@ -586,56 +586,77 @@ export const assignProject = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const { data: updatedProject, error } = await supabase
+      // Fetch original project
+      const { data: originalProject, error: fetchError } = await supabase
         .from("projects")
-        .update({ user: assignedUserId })
+        .select("*")
         .eq("id", projectId)
+        .single();
+
+      if (fetchError || !originalProject) {
+        return rejectWithValue({
+          message: `Error fetching project: ${fetchError?.message}`,
+          status: fetchError?.code,
+        });
+      }
+
+      // Copy images in Storage to the assignee's folder.
+      // URLs can be from any bucket; extract bucket + path from the public URL.
+      // Strip query params before parsing to avoid corrupt paths.
+      const PUBLIC_MARKER = "/object/public/";
+      const originalUserId = originalProject.user;
+
+      const newImageData: ProjectImageData[] = [];
+      for (const img of originalProject.image_data ?? []) {
+        const cleanUrl = img.url.split("?")[0];
+        const markerIdx = cleanUrl.indexOf(PUBLIC_MARKER);
+        if (markerIdx === -1) continue;
+        const bucketAndPath = cleanUrl.slice(markerIdx + PUBLIC_MARKER.length);
+        const slashIdx = bucketAndPath.indexOf("/");
+        if (slashIdx === -1) continue;
+        const bucket = bucketAndPath.slice(0, slashIdx);
+        const sourcePath = bucketAndPath.slice(slashIdx + 1);
+        const destPath = sourcePath.replace(
+          new RegExp(`^${originalUserId}/`),
+          `${assignedUserId}/`,
+        );
+        if (destPath === sourcePath) continue;
+
+        const { error: copyError } = await supabase.storage
+          .from(bucket)
+          .copy(sourcePath, destPath);
+
+        if (!copyError) {
+          const { data: publicUrlData } = supabase.storage
+            .from(bucket)
+            .getPublicUrl(destPath);
+          newImageData.push({ url: publicUrlData.publicUrl, status: "pending" });
+        }
+      }
+
+      // Insert duplicate project (id omitted — Supabase auto-generates bigint)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id: _id, created_at: _ca, updated_at: _ua, userData: _ud, projectCollaborators: _pc, ...fields } = originalProject;
+
+      const { data: newProject, error: insertError } = await supabase
+        .from("projects")
+        .insert({
+          ...fields,
+          user: assignedUserId,
+          image_data: newImageData,
+          nas_folder: null,
+        })
         .select()
         .single();
 
-      if (error) {
+      if (insertError || !newProject) {
         return rejectWithValue({
-          message: `Error assigning project: ${error.message}`,
-          status: error.code,
+          message: `Error duplicating project: ${insertError?.message}`,
+          status: insertError?.code,
         });
       }
 
-      // Crear carpeta en Synology si el usuario destino es fotógrafo con odoo_id y folder_nas
-      const { data: assignedUser } = await supabase
-        .from("userData")
-        .select("role, odoo_id, folder_nas, first_name, last_name")
-        .eq("uid", assignedUserId)
-        .single();
-
-      if (assignedUser?.role === "photographer" && assignedUser.folder_nas) {
-        const initials = getInitials(
-          assignedUser.first_name,
-          assignedUser.last_name,
-        );
-        const folderName = assignedUser.odoo_id
-          ? `${projectId}-${assignedUser.odoo_id}-${initials}`
-          : `${projectId}-${initials}`;
-        const synologyFunctionUrl = import.meta.env
-          .VITE_SUPABASE_FUNCTION_SYNOLOGY_CREATE_FOLDER;
-
-        fetch(synologyFunctionUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
-            folderName,
-            emailPrefix: assignedUser.folder_nas,
-          }),
-        }).catch((err) => {
-          console.error("Error creating Synology folder on assign:", err);
-        });
-      }
-
-      return {
-        project: updatedProject,
-      };
+      return { project: newProject };
     } catch (error: unknown) {
       console.error("Error in assignProject:", error);
       const appError: SupabaseError = {

@@ -344,17 +344,7 @@ const projectSlice = createSlice({
         };
       })
       .addCase(assignProject.fulfilled, (state, action) => {
-        const updatedProject = action.payload.project;
-
-        // Update the project in the projects array
-        state.projects = state.projects.map((project) =>
-          project.id === updatedProject.id ? updatedProject : project
-        );
-
-        // Update the selected project if it matches
-        if (state.project?.id === updatedProject.id) {
-          state.project = updatedProject;
-        }
+        state.projects = [...state.projects, action.payload.project];
 
         state.assignProjectRequest = {
           inProgress: false,

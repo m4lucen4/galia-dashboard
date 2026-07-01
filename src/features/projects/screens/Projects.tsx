@@ -608,8 +608,8 @@ export const Projects = () => {
       )}
       {showAssignModal && (
         <Alert
-          title="Asignar Proyecto"
-          description="Busca y selecciona el usuario al que deseas asignar este proyecto:"
+          title="Duplicar y asignar proyecto"
+          description="Busca y selecciona el usuario al que deseas duplicar y asignar este proyecto:"
           onAccept={handleConfirmAssign}
           onCancel={() => {
             setShowAssignModal(false);
