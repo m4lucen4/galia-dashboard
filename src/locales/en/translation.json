@@ -302,6 +302,7 @@
     "instagramPreview": "Instagram preview",
     "linkedlnPreview": "LinkedIn preview",
     "editPreviewProject": "Edit publishing",
+    "viewPreviewProject": "Publication details",
     "deletePreviewProject": "Delete publishing",
     "previewProject": "Project preview",
     "deleteProject": "Do you want to delete the project?",
@@ -339,6 +340,12 @@
       "preview": "Preview",
       "scheduled": "Scheduled",
       "published": "Published"
+    },
+    "calendar": {
+      "month": "Month",
+      "week": "Week",
+      "today": "Today",
+      "noScheduledPosts": "There are no scheduled or published posts to show on the calendar."
     }
   },
   "profile": {

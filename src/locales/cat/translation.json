@@ -303,6 +303,7 @@
     "instagramPreview": "Vista prèvia d'Instagram",
     "linkedlnPreview": "Vista prèvia de LinkedIn",
     "editPreviewProject": "Editar publicació",
+    "viewPreviewProject": "Detalls de la publicació",
     "deletePreviewProject": "Eliminar publicació",
     "previewProject": "Vista prèvia del projecte",
     "deleteProject": "Vols eliminar el projecte?",
@@ -340,6 +341,12 @@
       "preview": "Vista prèvia",
       "scheduled": "Programats",
       "published": "Publicats"
+    },
+    "calendar": {
+      "month": "Mes",
+      "week": "Setmana",
+      "today": "Avui",
+      "noScheduledPosts": "No hi ha publicacions programades ni publicades per mostrar al calendari."
     }
   },
   "profile": {

@@ -24,6 +24,7 @@ type PreviewProjectFormProps = {
   loading: boolean;
   onSave: () => void;
   onIterateStart: () => void;
+  readOnly?: boolean;
 };
 
 const MAX_IMAGES = 10;
@@ -33,6 +34,7 @@ export const PreviewProjectForm = ({
   loading,
   onSave,
   onIterateStart,
+  readOnly = false,
 }: PreviewProjectFormProps) => {
   const dispatch = useAppDispatch();
   const updateMainVersionRequest = useAppSelector(
@@ -276,9 +278,10 @@ export const PreviewProjectForm = ({
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Escribe una descripción..."
         disabled={
-          project.versions &&
-          project.versions.length > 0 &&
-          !isCurrentVersionMain()
+          readOnly ||
+          (project.versions &&
+            project.versions.length > 0 &&
+            !isCurrentVersionMain())
         }
       />
 
@@ -350,7 +353,8 @@ export const PreviewProjectForm = ({
           </div>
 
           {/* Instructions and iterate button - only on main version */}
-          {isCurrentVersionMain() &&
+          {!readOnly &&
+            isCurrentVersionMain() &&
             project.versions &&
             project.versions.length < 10 && (
               <div className="space-y-2">
@@ -394,7 +398,7 @@ export const PreviewProjectForm = ({
             )}
 
           {/* Set as main version button - only on non-main versions */}
-          {!isCurrentVersionMain() && (
+          {!readOnly && !isCurrentVersionMain() && (
             <div className="flex justify-center">
               <button
                 onClick={handleSetAsMainVersion}
@@ -416,7 +420,7 @@ export const PreviewProjectForm = ({
       )}
 
       {/* Instructions and button when versions don't exist */}
-      {(!project.versions || project.versions.length === 0) && (
+      {!readOnly && (!project.versions || project.versions.length === 0) && (
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
           {/* Instructions field */}
           <div className="w-full">
@@ -459,7 +463,7 @@ export const PreviewProjectForm = ({
           <h4 className="text-sm font-medium text-gray-700">
             Imágenes de la publicación
           </h4>
-          {images.length < MAX_IMAGES && (
+          {!readOnly && images.length < MAX_IMAGES && (
             <button
               onClick={() => setShowGallerySelector(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
@@ -479,44 +483,50 @@ export const PreviewProjectForm = ({
           {images.map((image, index) => (
             <div
               key={`${image.url}-${index}`}
-              className={`relative group border rounded-md overflow-hidden cursor-move transition-all duration-200 ${
+              className={`relative group border rounded-md overflow-hidden transition-all duration-200 ${
+                readOnly ? "" : "cursor-move"
+              } ${
                 draggedIndex === index
                   ? "opacity-50 scale-95 shadow-lg"
                   : "hover:shadow-md"
               }`}
               style={{ height: "180px" }}
-              draggable
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragEnd={handleDragEnd}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, index)}
+              draggable={!readOnly}
+              onDragStart={readOnly ? undefined : (e) => handleDragStart(e, index)}
+              onDragEnd={readOnly ? undefined : handleDragEnd}
+              onDragOver={readOnly ? undefined : handleDragOver}
+              onDrop={readOnly ? undefined : (e) => handleDrop(e, index)}
             >
               {/* Indicador de orden */}
               <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center z-10">
                 {index + 1}
               </div>
 
-              {/* Icono de drag */}
-              <div className="absolute top-2 right-2 bg-gray-800 bg-opacity-75 text-white p-1 rounded z-10">
-                <svg
-                  className="w-4 h-4"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                  <path d="M6 6a2 2 0 110-4 2 2 0 010 4zM6 12a2 2 0 110-4 2 2 0 010 4zM6 18a2 2 0 110-4 2 2 0 010 4z" />
-                  <path d="M14 6a2 2 0 110-4 2 2 0 010 4zM14 12a2 2 0 110-4 2 2 0 010 4zM14 18a2 2 0 110-4 2 2 0 010 4z" />
-                </svg>
-              </div>
+              {!readOnly && (
+                <>
+                  {/* Icono de drag */}
+                  <div className="absolute top-2 right-2 bg-gray-800 bg-opacity-75 text-white p-1 rounded z-10">
+                    <svg
+                      className="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                      <path d="M6 6a2 2 0 110-4 2 2 0 010 4zM6 12a2 2 0 110-4 2 2 0 010 4zM6 18a2 2 0 110-4 2 2 0 010 4z" />
+                      <path d="M14 6a2 2 0 110-4 2 2 0 010 4zM14 12a2 2 0 110-4 2 2 0 010 4zM14 18a2 2 0 110-4 2 2 0 010 4z" />
+                    </svg>
+                  </div>
 
-              {/* Botón eliminar */}
-              <button
-                onClick={() => handleRemoveImage(image.url)}
-                className="absolute top-2 right-10 p-1 bg-red-500 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
-                title="Eliminar imagen"
-              >
-                <XMarkIcon className="w-3.5 h-3.5" />
-              </button>
+                  {/* Botón eliminar */}
+                  <button
+                    onClick={() => handleRemoveImage(image.url)}
+                    className="absolute top-2 right-10 p-1 bg-red-500 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+                    title="Eliminar imagen"
+                  >
+                    <XMarkIcon className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
 
               <img
                 src={image.url}
@@ -529,13 +539,18 @@ export const PreviewProjectForm = ({
                 }}
               />
               <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 py-2 px-2">
-                <label className="flex items-center justify-between text-white cursor-pointer">
+                <label
+                  className={`flex items-center justify-between text-white ${
+                    readOnly ? "" : "cursor-pointer"
+                  }`}
+                >
                   <span className="text-xs">
                     {image.status === "pending" ? "Selected" : "Not Selected"}
                   </span>
                   <input
                     type="checkbox"
                     checked={image.status === "pending"}
+                    disabled={readOnly}
                     onChange={() => handleToggleImageSelection(image.url)}
                     className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                   />
@@ -546,14 +561,16 @@ export const PreviewProjectForm = ({
         </div>
       </div>
 
-      <div className="mt-6">
-        <Button
-          fullWidth
-          title={loading ? "Guardando..." : "Guardar publicación"}
-          disabled={loading}
-          onClick={handleSave}
-        />
-      </div>
+      {!readOnly && (
+        <div className="mt-6">
+          <Button
+            fullWidth
+            title={loading ? "Guardando..." : "Guardar publicación"}
+            disabled={loading}
+            onClick={handleSave}
+          />
+        </div>
+      )}
 
       <MediaGallerySelector
         isOpen={showGallerySelector}

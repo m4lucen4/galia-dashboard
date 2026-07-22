@@ -32,6 +32,7 @@ import { fetchUserByUid } from "../../../redux/actions/UserActions";
 import { Alert } from "../../../components/shared/ui/Alert";
 import { ConfigPublish } from "../components/configPublish";
 import { CardsList } from "../components/cardList";
+import { CalendarView } from "../components/calendarView";
 import { PreviewProjectForm } from "../../../components/previewProjects/PreviewProjectForm";
 import { Filters } from "../components/Filters";
 import { WorkingInProgress } from "../../../components/shared/ui/WorkingInProgress";
@@ -47,6 +48,7 @@ export const PreviewProjects = () => {
   const [seeInstagram, setSeeInstagram] = useState(false);
   const [seeLinkedln, setSeeLinkedln] = useState(false);
   const [seeEditPreview, setEditSeePreview] = useState(false);
+  const [isReadOnlyPreview, setIsReadOnlyPreview] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [publishDate, setPublishDate] = useState<string>("");
   const [hasDateValidationError, setHasDateValidationError] = useState(false);
@@ -57,7 +59,9 @@ export const PreviewProjects = () => {
   });
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list" | "calendar">(
+    "grid",
+  );
   const [itemsPerPage, setItemsPerPage] = useState<number>(6);
   const [isIterating, setIsIterating] = useState<boolean>(false);
   const [iteratingProjectId, setIteratingProjectId] = useState<string | null>(
@@ -104,6 +108,16 @@ export const PreviewProjects = () => {
   const handleEditPreview = (project: PreviewProjectDataProps) => {
     dispatch(clearSelectedProject());
     dispatch(fetchPreviewProjectById(project.id));
+    setIsReadOnlyPreview(false);
+    setEditSeePreview(true);
+    setDrawerOpen(true);
+    setOpenMenuId(null);
+  };
+
+  const handleViewProjectDetails = (project: PreviewProjectDataProps) => {
+    dispatch(clearSelectedProject());
+    dispatch(fetchPreviewProjectById(project.id));
+    setIsReadOnlyPreview(project.state !== "preview");
     setEditSeePreview(true);
     setDrawerOpen(true);
     setOpenMenuId(null);
@@ -182,6 +196,7 @@ export const PreviewProjects = () => {
     setSeeInstagram(false);
     setSeeLinkedln(false);
     setEditSeePreview(false);
+    setIsReadOnlyPreview(false);
     setDrawerOpen(false);
   };
 
@@ -216,6 +231,8 @@ export const PreviewProjects = () => {
   const getDrawerTitle = () => {
     if (seeInstagram) return t("previewProjects.instagramPreview");
     if (seeLinkedln) return t("previewProjects.linkedlnPreview");
+    if (seeEditPreview && isReadOnlyPreview)
+      return t("previewProjects.viewPreviewProject");
     if (seeEditPreview) return t("previewProjects.editPreviewProject");
     return t("previewProjects.previewProject");
   };
@@ -345,6 +362,17 @@ export const PreviewProjects = () => {
           >
             <ListBulletIcon className="h-5 w-5" />
           </button>
+          <button
+            onClick={() => setViewMode("calendar")}
+            className={`p-2 rounded-md transition-colors ${
+              viewMode === "calendar"
+                ? "bg-black text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+            title="Vista de calendario"
+          >
+            <CalendarDaysIcon className="h-5 w-5" />
+          </button>
         </div>
       </div>
 
@@ -373,26 +401,34 @@ export const PreviewProjects = () => {
             onSave={handleSavePreviewProject}
             onIterateStart={handleIterateStart}
             loading={previewProjectUpdateRequest.inProgress}
+            readOnly={isReadOnlyPreview}
           />
         )}
       </Drawer>
 
-      <CardsList
-        projects={filteredProjects}
-        openMenuId={openMenuId}
-        currentPage={currentPage}
-        viewMode={viewMode}
-        itemsPerPage={itemsPerPage}
-        onPageChange={handlePageChange}
-        onItemsPerPageChange={handleItemsPerPageChange}
-        handleToggleMenu={handleToggleMenu}
-        handleEditPreview={handleEditPreview}
-        handleDeletePreview={handleDeletePreview}
-        handleOpenPublishConfig={handleOpenPublishConfig}
-        handleOpenInstagram={handleOpenInstagram}
-        handleOpenLinkedln={handleOpenLinkedln}
-        handlePublishAgain={handlePublishAgain}
-      />
+      {viewMode === "calendar" ? (
+        <CalendarView
+          projects={filteredProjects}
+          onSelectProject={handleViewProjectDetails}
+        />
+      ) : (
+        <CardsList
+          projects={filteredProjects}
+          openMenuId={openMenuId}
+          currentPage={currentPage}
+          viewMode={viewMode}
+          itemsPerPage={itemsPerPage}
+          onPageChange={handlePageChange}
+          onItemsPerPageChange={handleItemsPerPageChange}
+          handleToggleMenu={handleToggleMenu}
+          handleEditPreview={handleEditPreview}
+          handleDeletePreview={handleDeletePreview}
+          handleOpenPublishConfig={handleOpenPublishConfig}
+          handleOpenInstagram={handleOpenInstagram}
+          handleOpenLinkedln={handleOpenLinkedln}
+          handlePublishAgain={handlePublishAgain}
+        />
+      )}
 
       {isAlertOpen("publishConfig") && (
         <Alert
