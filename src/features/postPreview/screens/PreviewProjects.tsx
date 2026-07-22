@@ -27,6 +27,7 @@ import {
   deletePreviewProject,
   resetProjectToPreview,
 } from "../../../redux/actions/PreviewProjectActions";
+import { clearSelectedProject } from "../../../redux/slices/PreviewProjectSlice";
 import { fetchUserByUid } from "../../../redux/actions/UserActions";
 import { Alert } from "../../../components/shared/ui/Alert";
 import { ConfigPublish } from "../components/configPublish";
@@ -34,6 +35,7 @@ import { CardsList } from "../components/cardList";
 import { PreviewProjectForm } from "../../../components/previewProjects/PreviewProjectForm";
 import { Filters } from "../components/Filters";
 import { WorkingInProgress } from "../../../components/shared/ui/WorkingInProgress";
+import { LoadingSpinner } from "../../../components/shared/ui/LoadingSpinner";
 
 export const PreviewProjects = () => {
   const dispatch = useAppDispatch();
@@ -65,9 +67,12 @@ export const PreviewProjects = () => {
 
   const user = useAppSelector((state: RootState) => state.auth.user);
   const { userData } = useAppSelector((state: RootState) => state.user);
-  const { projects, project, previewProjectUpdateRequest } = useAppSelector(
-    (state: RootState) => state.previewProject,
-  );
+  const {
+    projects,
+    project,
+    previewProjectUpdateRequest,
+    previewProjectFetchByIdRequest,
+  } = useAppSelector((state: RootState) => state.previewProject);
 
   const filteredProjects = projects.filter((project) => {
     if (selectedFilter === "all") return true;
@@ -97,6 +102,7 @@ export const PreviewProjects = () => {
   };
 
   const handleEditPreview = (project: PreviewProjectDataProps) => {
+    dispatch(clearSelectedProject());
     dispatch(fetchPreviewProjectById(project.id));
     setEditSeePreview(true);
     setDrawerOpen(true);
@@ -159,12 +165,14 @@ export const PreviewProjects = () => {
   }, [isIterationCompleted, isIterating, fetchPreviewProjectsData]);
 
   const handleOpenInstagram = (project: PreviewProjectDataProps) => {
+    dispatch(clearSelectedProject());
     dispatch(fetchPreviewProjectById(project.id));
     setSeeInstagram(true);
     setDrawerOpen(true);
   };
 
   const handleOpenLinkedln = (project: PreviewProjectDataProps) => {
+    dispatch(clearSelectedProject());
     dispatch(fetchPreviewProjectById(project.id));
     setSeeLinkedln(true);
     setDrawerOpen(true);
@@ -345,14 +353,22 @@ export const PreviewProjects = () => {
         isOpen={drawerOpen}
         onClose={handleCloseDrawer}
       >
+        {(seeInstagram || seeLinkedln || seeEditPreview) &&
+          !project &&
+          previewProjectFetchByIdRequest.inProgress && (
+            <div className="flex justify-center py-12">
+              <LoadingSpinner size="large" color="primary" />
+            </div>
+          )}
         {seeInstagram && project && userData && (
-          <InstagramPost project={project} user={userData} />
+          <InstagramPost key={project.id} project={project} user={userData} />
         )}
         {seeLinkedln && project && userData && (
-          <LinkedInPost project={project} user={userData} />
+          <LinkedInPost key={project.id} project={project} user={userData} />
         )}
         {seeEditPreview && project && (
           <PreviewProjectForm
+            key={project.id}
             project={project}
             onSave={handleSavePreviewProject}
             onIterateStart={handleIterateStart}

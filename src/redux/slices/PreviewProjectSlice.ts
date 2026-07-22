@@ -72,7 +72,11 @@ const initialState: ProjectState = {
 const previewProjectSlice = createSlice({
   name: "previewProject",
   initialState,
-  reducers: {},
+  reducers: {
+    clearSelectedProject: (state) => {
+      state.project = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchPreviewProjects.pending, (state) => {
@@ -358,4 +362,5 @@ const previewProjectSlice = createSlice({
   },
 });
 
+export const { clearSelectedProject } = previewProjectSlice.actions;
 export default previewProjectSlice.reducer;
