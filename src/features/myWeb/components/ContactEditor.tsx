@@ -6,6 +6,8 @@ import { InputField } from "../../../components/shared/ui/InputField";
 import { Button } from "../../../components/shared/ui/Button";
 import { ColorPicker } from "./ColorPicker";
 import { RichTextInput } from "./RichTextInput";
+import { Switch } from "../../../components/shared/ui/Switch";
+import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
 
 interface ContactEditorProps {
   component: SiteComponentDataProps;
@@ -22,51 +24,60 @@ const defaultContactConfig: ContactConfig = {
 
 // ─── Visual previews ──────────────────────────────────────────────────────────
 
-const PreviewThreeColumns: React.FC = () => (
+interface PreviewProps {
+  reversed?: boolean;
+}
+
+const PreviewThreeColumns: React.FC<PreviewProps> = ({ reversed }) => (
   <svg viewBox="0 0 120 70" className="w-full h-auto" fill="none">
-    {/* Left col 50% — antetítulo + título + descripción */}
-    <rect x="4" y="10" width="22" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="4" y="17" width="52" height="7" rx="1" fill="#6B7280" />
-    <rect x="4" y="28" width="50" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="4" y="33" width="42" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="4" y="38" width="46" height="3" rx="1" fill="#D1D5DB" />
-    {/* Center col 25% — dirección 1 */}
-    <rect x="64" y="10" width="20" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="64" y="17" width="24" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="64" y="22" width="18" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="64" y="27" width="22" height="3" rx="1" fill="#D1D5DB" />
-    {/* Right col 25% — dirección 2 */}
-    <rect x="94" y="10" width="20" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="94" y="17" width="24" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="94" y="22" width="18" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="94" y="27" width="22" height="3" rx="1" fill="#D1D5DB" />
+    <g transform={reversed ? "translate(120,0) scale(-1,1)" : undefined}>
+      {/* Left col 50% — antetítulo + título + descripción */}
+      <rect x="4" y="10" width="22" height="3" rx="1" fill="#D1D5DB" />
+      <rect x="4" y="17" width="52" height="7" rx="1" fill="#6B7280" />
+      <rect x="4" y="28" width="50" height="3" rx="1" fill="#D1D5DB" />
+      <rect x="4" y="33" width="42" height="3" rx="1" fill="#D1D5DB" />
+      <rect x="4" y="38" width="46" height="3" rx="1" fill="#D1D5DB" />
+      {/* Center col 25% — dirección 1 */}
+      <rect x="64" y="10" width="20" height="3" rx="1" fill="#D1D5DB" />
+      <rect x="64" y="17" width="24" height="3" rx="1" fill="#D1D5DB" />
+      <rect x="64" y="22" width="18" height="3" rx="1" fill="#D1D5DB" />
+      <rect x="64" y="27" width="22" height="3" rx="1" fill="#D1D5DB" />
+      {/* Right col 25% — dirección 2 */}
+      <rect x="94" y="10" width="20" height="3" rx="1" fill="#D1D5DB" />
+      <rect x="94" y="17" width="24" height="3" rx="1" fill="#D1D5DB" />
+      <rect x="94" y="22" width="18" height="3" rx="1" fill="#D1D5DB" />
+      <rect x="94" y="27" width="22" height="3" rx="1" fill="#D1D5DB" />
+    </g>
   </svg>
 );
 
-const PreviewSplitForm: React.FC = () => (
+const PreviewSplitForm: React.FC<PreviewProps> = ({ reversed }) => (
   <svg viewBox="0 0 120 70" className="w-full h-auto" fill="none">
-    {/* Left col 50% — título + descripción + dirección */}
-    <rect x="4" y="10" width="50" height="7" rx="1" fill="#6B7280" />
-    <rect x="4" y="21" width="48" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="4" y="26" width="40" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="4" y="34" width="44" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="4" y="39" width="36" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="4" y="44" width="40" height="3" rx="1" fill="#D1D5DB" />
-    {/* Right col 50% — form */}
-    <rect x="64" y="8" width="52" height="10" rx="2" fill="#F3F4F6" stroke="#D1D5DB" strokeWidth="0.5" />
-    <rect x="64" y="22" width="52" height="10" rx="2" fill="#F3F4F6" stroke="#D1D5DB" strokeWidth="0.5" />
-    <rect x="64" y="36" width="52" height="16" rx="2" fill="#F3F4F6" stroke="#D1D5DB" strokeWidth="0.5" />
-    <rect x="64" y="56" width="24" height="8" rx="2" fill="#374151" />
+    <g transform={reversed ? "translate(120,0) scale(-1,1)" : undefined}>
+      {/* Left col 50% — título + descripción + dirección */}
+      <rect x="4" y="10" width="50" height="7" rx="1" fill="#6B7280" />
+      <rect x="4" y="21" width="48" height="3" rx="1" fill="#D1D5DB" />
+      <rect x="4" y="26" width="40" height="3" rx="1" fill="#D1D5DB" />
+      <rect x="4" y="34" width="44" height="3" rx="1" fill="#D1D5DB" />
+      <rect x="4" y="39" width="36" height="3" rx="1" fill="#D1D5DB" />
+      <rect x="4" y="44" width="40" height="3" rx="1" fill="#D1D5DB" />
+      {/* Right col 50% — form */}
+      <rect x="64" y="8" width="52" height="10" rx="2" fill="#F3F4F6" stroke="#D1D5DB" strokeWidth="0.5" />
+      <rect x="64" y="22" width="52" height="10" rx="2" fill="#F3F4F6" stroke="#D1D5DB" strokeWidth="0.5" />
+      <rect x="64" y="36" width="52" height="16" rx="2" fill="#F3F4F6" stroke="#D1D5DB" strokeWidth="0.5" />
+      <rect x="64" y="56" width="24" height="8" rx="2" fill="#374151" />
+    </g>
   </svg>
 );
 
 const TYPE_OPTIONS: {
   value: 1 | 2;
   label: string;
-  Preview: React.FC;
+  Preview: React.FC<PreviewProps>;
+  reverseField: "columns_reverse" | "form_reverse";
 }[] = [
-  { value: 1, label: "Tres columnas", Preview: PreviewThreeColumns },
-  { value: 2, label: "Split con formulario", Preview: PreviewSplitForm },
+  { value: 1, label: "Tres columnas", Preview: PreviewThreeColumns, reverseField: "columns_reverse" },
+  { value: 2, label: "Split con formulario", Preview: PreviewSplitForm, reverseField: "form_reverse" },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -92,7 +103,7 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
     }
   }, [component.config]);
 
-  const handleChange = (field: keyof ContactConfig, value: string | number) => {
+  const handleChange = (field: keyof ContactConfig, value: string | number | boolean) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -118,27 +129,42 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
       <div>
         <p className="text-sm font-medium text-gray-900 mb-3">Tipo de contacto</p>
         <div className="grid grid-cols-2 gap-3">
-          {TYPE_OPTIONS.map(({ value, label, Preview }) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => handleChange("type", value)}
-              className={`rounded-md border-2 p-2 text-center transition-colors focus:outline-none ${
-                form.type === value
-                  ? "border-gray-900 bg-gray-50"
-                  : "border-gray-200 bg-white hover:border-gray-400"
-              }`}
-            >
-              <Preview />
-              <span
-                className={`mt-2 block text-xs font-medium ${
-                  form.type === value ? "text-gray-900" : "text-gray-500"
-                }`}
-              >
-                {label}
-              </span>
-            </button>
-          ))}
+          {TYPE_OPTIONS.map(({ value, label, Preview, reverseField }) => {
+            const reversed = form[reverseField] ?? false;
+            return (
+              <div key={value} className="relative">
+                <button
+                  type="button"
+                  onClick={() => handleChange("type", value)}
+                  className={`w-full rounded-md border-2 p-2 text-center transition-colors focus:outline-none ${
+                    form.type === value
+                      ? "border-gray-900 bg-gray-50"
+                      : "border-gray-200 bg-white hover:border-gray-400"
+                  }`}
+                >
+                  <Preview reversed={reversed} />
+                  <span
+                    className={`mt-2 block text-xs font-medium ${
+                      form.type === value ? "text-gray-900" : "text-gray-500"
+                    }`}
+                  >
+                    {label}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleChange(reverseField, !reversed);
+                  }}
+                  className="absolute bottom-2 right-2 rounded bg-white border border-gray-300 p-1 text-gray-500 shadow-sm transition-colors hover:border-gray-400 hover:text-gray-900"
+                  title="Invertir orden"
+                >
+                  <ArrowsRightLeftIcon className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -154,6 +180,19 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
             placeholder="Texto pequeño encima del título"
           />
         )}
+
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-black">Mostrar logo</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Muestra el logo de la web encima del título en este componente
+            </p>
+          </div>
+          <Switch
+            checked={form.show_logo ?? false}
+            onChange={() => handleChange("show_logo", !(form.show_logo ?? false))}
+          />
+        </div>
 
         <InputField
           id="contact-titulo"

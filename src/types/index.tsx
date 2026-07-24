@@ -389,6 +389,7 @@ export type CTAConfig = {
 export type ContactConfig = {
   type: 1 | 2;
   antetitulo?: string;
+  show_logo?: boolean;
   titulo: string;
   descripcion: string;
   titulo_direccion1?: string;
@@ -397,6 +398,8 @@ export type ContactConfig = {
   direccion2?: string;
   form_bg_color?: string;
   form_email?: string;
+  columns_reverse?: boolean;
+  form_reverse?: boolean;
 };
 
 export type SitePageDataProps = {
@@ -438,6 +441,7 @@ export type SiteDataProps = {
   navbar_type: number;
   navbar_transparent?: boolean;
   navbar_hidden?: boolean;
+  footer_hidden?: boolean;
   custom_domain?: string | null;
   favicon_url?: string | null;
   meta_description?: string | null;

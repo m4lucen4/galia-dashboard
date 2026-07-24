@@ -49,6 +49,7 @@ export const SiteConfigForm = forwardRef<
     navbar_type: site.navbar_type ?? 1,
     navbar_transparent: site.navbar_transparent ?? false,
     navbar_hidden: site.navbar_hidden ?? false,
+    footer_hidden: site.footer_hidden ?? false,
     full_width: site.full_width ?? false,
     default_language: site.default_language || "es",
     multilanguage: site.multilanguage ?? false,
@@ -79,6 +80,7 @@ export const SiteConfigForm = forwardRef<
       navbar_type: site.navbar_type ?? 1,
       navbar_transparent: site.navbar_transparent ?? false,
       navbar_hidden: site.navbar_hidden ?? false,
+      footer_hidden: site.footer_hidden ?? false,
       full_width: site.full_width ?? false,
       default_language: site.default_language || "es",
       multilanguage: site.multilanguage ?? false,
@@ -158,6 +160,7 @@ export const SiteConfigForm = forwardRef<
           navbar_type: form.navbar_type,
           navbar_transparent: form.navbar_transparent,
           navbar_hidden: form.navbar_hidden,
+          footer_hidden: form.footer_hidden,
           full_width: form.full_width,
           default_language: form.default_language,
           multilanguage: form.multilanguage,
@@ -330,6 +333,22 @@ export const SiteConfigForm = forwardRef<
           </div>
         </>
       )}
+
+      {/* Ocultar footer */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-black">Ocultar footer</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            La web no muestra ningún footer
+          </p>
+        </div>
+        <Switch
+          checked={form.footer_hidden}
+          onChange={() =>
+            setForm((prev) => ({ ...prev, footer_hidden: !prev.footer_hidden }))
+          }
+        />
+      </div>
 
       {/* Ancho completo */}
       <div className="flex items-center justify-between">
