@@ -1,8 +1,28 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useEditor, EditorContent, useEditorState, Extension } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { TextStyle } from "@tiptap/extension-text-style";
 import TextAlign from "@tiptap/extension-text-align";
+import Link from "@tiptap/extension-link";
+
+type LinkType = "url" | "email" | "tel";
+
+const parseLinkHref = (href: string | undefined): { type: LinkType; value: string } => {
+  if (!href) return { type: "url", value: "" };
+  if (href.startsWith("mailto:")) return { type: "email", value: href.slice("mailto:".length) };
+  if (href.startsWith("tel:")) return { type: "tel", value: href.slice("tel:".length) };
+  return { type: "url", value: href };
+};
+
+const buildLinkHref = (type: LinkType, rawValue: string): string => {
+  const value = rawValue.trim();
+  if (!value) return "";
+  if (type === "email") return `mailto:${value.replace(/^mailto:/, "")}`;
+  if (type === "tel") return `tel:${value.replace(/^tel:/, "")}`;
+  if (value.startsWith("/") || /^https?:\/\//i.test(value)) return value;
+  return `https://${value}`;
+};
 
 const FONT_SIZES: Record<"t1" | "t2" | "t3", string> = {
   t1: "2.25rem",
@@ -68,6 +88,12 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
   error,
 }) => {
   const syncingRef = useRef(false);
+  const linkPopoverRef = useRef<HTMLDivElement>(null);
+  const linkButtonRef = useRef<HTMLButtonElement>(null);
+  const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
+  const [linkPopoverPos, setLinkPopoverPos] = useState({ top: 0, left: 0 });
+  const [linkType, setLinkType] = useState<LinkType>("url");
+  const [linkValue, setLinkValue] = useState("");
 
   const editor = useEditor({
     extensions: [
@@ -75,6 +101,11 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
       TextStyle,
       FontSize,
       TextAlign.configure({ types: ["paragraph", "heading"] }),
+      Link.configure({
+        openOnClick: false,
+        autolink: false,
+        HTMLAttributes: { target: "_blank", rel: "noopener noreferrer" },
+      }),
     ],
     content: value,
     onUpdate: ({ editor }) => {
@@ -103,6 +134,7 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
       alignLeft: editor.isActive({ textAlign: "left" }),
       alignCenter: editor.isActive({ textAlign: "center" }),
       alignRight: editor.isActive({ textAlign: "right" }),
+      link: editor.isActive("link"),
       empty: editor.isEmpty,
     }),
   });
@@ -122,6 +154,42 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
       (editor.chain().focus() as unknown as { setFontSize: (s: string) => { run: () => boolean } }).setFontSize(FONT_SIZES[key]).run();
     }
   };
+
+  const openLinkPopover = () => {
+    if (!editor) return;
+    const { type, value } = parseLinkHref(editor.getAttributes("link").href as string | undefined);
+    setLinkType(type);
+    setLinkValue(value);
+    const rect = linkButtonRef.current?.getBoundingClientRect();
+    if (rect) setLinkPopoverPos({ top: rect.bottom + 4, left: rect.left });
+    setLinkPopoverOpen(true);
+  };
+
+  const applyLink = () => {
+    if (!editor) return;
+    const href = buildLinkHref(linkType, linkValue);
+    if (!href) return;
+    editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
+    setLinkPopoverOpen(false);
+  };
+
+  const removeLink = () => {
+    if (!editor) return;
+    editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    setLinkPopoverOpen(false);
+  };
+
+  useEffect(() => {
+    if (!linkPopoverOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (linkPopoverRef.current?.contains(target)) return;
+      if (linkButtonRef.current?.contains(target)) return;
+      setLinkPopoverOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [linkPopoverOpen]);
 
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
@@ -240,6 +308,104 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
           >
             →
           </button>
+          <span className="w-px h-4 bg-gray-200 mx-0.5" />
+          <button
+            ref={linkButtonRef}
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              openLinkPopover();
+            }}
+            className={`px-2 py-0.5 text-xs rounded transition-colors ${
+              editorState?.link
+                ? "bg-gray-900 text-white"
+                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+            }`}
+            title="Añadir enlace"
+          >
+            🔗
+          </button>
+          {linkPopoverOpen &&
+            createPortal(
+              <div
+                ref={linkPopoverRef}
+                style={{ top: linkPopoverPos.top, left: linkPopoverPos.left }}
+                className="fixed z-50 w-64 rounded-md border border-gray-200 bg-white p-2 shadow-lg"
+              >
+                <div className="flex rounded-md border border-gray-300 overflow-hidden mb-2">
+                  {(
+                    [
+                      { value: "url", label: "Enlace" },
+                      { value: "email", label: "Email" },
+                      { value: "tel", label: "Teléfono" },
+                    ] as const
+                  ).map(({ value, label }, idx) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setLinkType(value);
+                      }}
+                      className={`flex-1 px-2 py-1 text-xs font-medium transition-colors ${idx > 0 ? "border-l border-gray-300" : ""} ${
+                        linkType === value
+                          ? "bg-gray-900 text-white"
+                          : "bg-white text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  value={linkValue}
+                  onChange={(e) => setLinkValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      applyLink();
+                    }
+                  }}
+                  placeholder={
+                    linkType === "email"
+                      ? "nombre@ejemplo.com"
+                      : linkType === "tel"
+                        ? "+34 600 000 000"
+                        : "https://ejemplo.com o /proyectos"
+                  }
+                  className="w-full rounded border border-gray-300 px-2 py-1 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-500 mb-2"
+                />
+                <div className="flex items-center justify-between gap-2">
+                  {editorState?.link ? (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        removeLink();
+                      }}
+                      className="text-xs text-red-500 hover:underline"
+                    >
+                      Quitar enlace
+                    </button>
+                  ) : (
+                    <span />
+                  )}
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      applyLink();
+                    }}
+                    disabled={!linkValue.trim()}
+                    className="px-3 py-1 text-xs font-medium rounded bg-gray-900 text-white disabled:opacity-40"
+                  >
+                    Aplicar
+                  </button>
+                </div>
+              </div>,
+              document.body,
+            )}
         </div>
         {/* Editor area */}
         <div className="relative">
@@ -255,7 +421,7 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
         <p className="mt-1 text-xs text-red-500">{error}</p>
       ) : (
         <p className="mt-1 text-xs text-gray-400">
-          <strong>N</strong> = negrita · <em>C</em> = cursiva · T1/T2/T3 = tamaño · Intro = nueva línea
+          <strong>N</strong> = negrita · <em>C</em> = cursiva · T1/T2/T3 = tamaño · 🔗 = enlace · Intro = nueva línea
         </p>
       )}
     </div>
