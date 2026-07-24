@@ -303,6 +303,8 @@ export type HeaderSlideConfig = {
   text_button: string;
   url_button: string;
   icon_button?: string;
+  show_logo?: boolean;
+  logo_title_align?: "bottom" | "center";
 };
 
 export type SiteComponentType = "header" | "project_list" | "cta" | "body" | "content" | "contact" | "project_columns" | "rich_text" | "separator" | "figure";
@@ -435,6 +437,7 @@ export type SiteDataProps = {
   title_font: string;
   navbar_type: number;
   navbar_transparent?: boolean;
+  navbar_hidden?: boolean;
   custom_domain?: string | null;
   favicon_url?: string | null;
   meta_description?: string | null;

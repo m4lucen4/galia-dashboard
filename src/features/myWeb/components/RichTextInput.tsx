@@ -101,6 +101,7 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
       t2: editor.isActive("textStyle", { fontSize: FONT_SIZES.t2 }),
       t3: editor.isActive("textStyle", { fontSize: FONT_SIZES.t3 }),
       alignLeft: editor.isActive({ textAlign: "left" }),
+      alignCenter: editor.isActive({ textAlign: "center" }),
       alignRight: editor.isActive({ textAlign: "right" }),
       empty: editor.isEmpty,
     }),
@@ -108,7 +109,9 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
 
   const isBold = editorState?.bold ?? false;
   const isItalic = editorState?.italic ?? false;
+  const isAlignCenter = editorState?.alignCenter ?? false;
   const isAlignRight = editorState?.alignRight ?? false;
+  const isAlignLeft = !isAlignCenter && !isAlignRight;
   const isEmpty = editorState?.empty ?? isEffectivelyEmpty(value);
 
   const handleFontSize = (key: "t1" | "t2" | "t3") => {
@@ -199,13 +202,28 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
               editor?.chain().focus().setTextAlign("left").run();
             }}
             className={`px-2 py-0.5 text-xs rounded transition-colors ${
-              !isAlignRight
+              isAlignLeft
                 ? "bg-gray-900 text-white"
                 : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
             }`}
             title="Alinear a la izquierda"
           >
             ←
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor?.chain().focus().setTextAlign("center").run();
+            }}
+            className={`px-2 py-0.5 text-xs rounded transition-colors ${
+              isAlignCenter
+                ? "bg-gray-900 text-white"
+                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+            }`}
+            title="Centrar"
+          >
+            ↔
           </button>
           <button
             type="button"

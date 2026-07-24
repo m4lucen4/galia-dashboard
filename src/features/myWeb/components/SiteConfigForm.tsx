@@ -48,6 +48,7 @@ export const SiteConfigForm = forwardRef<
     title_font: site.title_font || "Inter",
     navbar_type: site.navbar_type ?? 1,
     navbar_transparent: site.navbar_transparent ?? false,
+    navbar_hidden: site.navbar_hidden ?? false,
     full_width: site.full_width ?? false,
     default_language: site.default_language || "es",
     multilanguage: site.multilanguage ?? false,
@@ -77,6 +78,7 @@ export const SiteConfigForm = forwardRef<
       title_font: site.title_font || "Inter",
       navbar_type: site.navbar_type ?? 1,
       navbar_transparent: site.navbar_transparent ?? false,
+      navbar_hidden: site.navbar_hidden ?? false,
       full_width: site.full_width ?? false,
       default_language: site.default_language || "es",
       multilanguage: site.multilanguage ?? false,
@@ -155,6 +157,7 @@ export const SiteConfigForm = forwardRef<
           title_font: form.title_font,
           navbar_type: form.navbar_type,
           navbar_transparent: form.navbar_transparent,
+          navbar_hidden: form.navbar_hidden,
           full_width: form.full_width,
           default_language: form.default_language,
           multilanguage: form.multilanguage,
@@ -284,29 +287,49 @@ export const SiteConfigForm = forwardRef<
         />
       </div>
 
-      {/* Tipo de navegación */}
-      <NavbarTypeSelector
-        value={form.navbar_type}
-        onChange={(navbar_type) =>
-          setForm((prev) => ({ ...prev, navbar_type }))
-        }
-      />
-
-      {/* Navbar transparente */}
+      {/* Ocultar navbar */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-black">Navbar transparente</p>
+          <p className="text-sm font-medium text-black">Ocultar navbar</p>
           <p className="text-xs text-gray-500 mt-0.5">
-            En escritorio, el navbar arranca transparente y muestra fondo al hacer scroll. En móvil siempre tiene fondo.
+            La web no muestra ningún navbar, ni siquiera al hacer scroll
           </p>
         </div>
         <Switch
-          checked={form.navbar_transparent}
+          checked={form.navbar_hidden}
           onChange={() =>
-            setForm((prev) => ({ ...prev, navbar_transparent: !prev.navbar_transparent }))
+            setForm((prev) => ({ ...prev, navbar_hidden: !prev.navbar_hidden }))
           }
         />
       </div>
+
+      {!form.navbar_hidden && (
+        <>
+          {/* Tipo de navegación */}
+          <NavbarTypeSelector
+            value={form.navbar_type}
+            onChange={(navbar_type) =>
+              setForm((prev) => ({ ...prev, navbar_type }))
+            }
+          />
+
+          {/* Navbar transparente */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-black">Navbar transparente</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                En escritorio, el navbar arranca transparente y muestra fondo al hacer scroll. En móvil siempre tiene fondo.
+              </p>
+            </div>
+            <Switch
+              checked={form.navbar_transparent}
+              onChange={() =>
+                setForm((prev) => ({ ...prev, navbar_transparent: !prev.navbar_transparent }))
+              }
+            />
+          </div>
+        </>
+      )}
 
       {/* Ancho completo */}
       <div className="flex items-center justify-between">

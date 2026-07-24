@@ -4,6 +4,7 @@ import { ImageUploader } from "./ImageUploader";
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { RichTextInput } from "./RichTextInput";
 import { IconPicker } from "./IconPicker";
+import { Switch } from "../../../components/shared/ui/Switch";
 
 // ─── Visual type previews ──────────────────────────────────────────────────────
 
@@ -77,7 +78,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
 }) => {
   const handleChange = (
     field: keyof HeaderSlideConfig,
-    value: string | number,
+    value: string | number | boolean,
   ) => {
     onUpdate(index, { ...slide, [field]: value });
   };
@@ -187,6 +188,62 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             />
           </div>
         )}
+
+        <div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-black">Mostrar logo</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Muestra el logo de la web encima del título en este slide
+              </p>
+            </div>
+            <Switch
+              checked={slide.show_logo ?? false}
+              onChange={() => {
+                handleChange("show_logo", !(slide.show_logo ?? false));
+                setTimeout(onBlur, 0);
+              }}
+            />
+          </div>
+
+          {slide.show_logo && (
+            <div className="mt-3">
+              <label className="text-sm text-black">
+                Posición vertical del logo y el título
+              </label>
+              <div className="mt-1 flex rounded-md border border-gray-300 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleChange("logo_title_align", "bottom");
+                    setTimeout(onBlur, 0);
+                  }}
+                  className={`flex-1 py-1.5 text-xs font-medium transition-colors ${
+                    (slide.logo_title_align ?? "bottom") === "bottom"
+                      ? "bg-gray-900 text-white"
+                      : "bg-white text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  Abajo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleChange("logo_title_align", "center");
+                    setTimeout(onBlur, 0);
+                  }}
+                  className={`flex-1 py-1.5 text-xs font-medium transition-colors border-l border-gray-300 ${
+                    slide.logo_title_align === "center"
+                      ? "bg-gray-900 text-white"
+                      : "bg-white text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  Centrado
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div>
           <label className="text-sm text-black">Título</label>
