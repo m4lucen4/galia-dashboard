@@ -28,6 +28,8 @@ import { RegisterScreen } from "../features/register/screens/Register";
 import { Multimedia } from "@/features/multimedia/screens/Multimedia";
 import { Archive } from "../features/archive/screens/Archive";
 import { MyWeb } from "../features/myWeb/screens/MyWeb";
+import { lazy, Suspense } from "react";
+const WikiAdmin = lazy(() => import("@/features/documentation/screens/WikiAdmin").then((module) => ({ default: module.WikiAdmin })));
 
 export const AppRoutes = () => (
   <Routes>
@@ -35,11 +37,16 @@ export const AppRoutes = () => (
       <Route path="/login" element={<LoginScreen />} />
       <Route path="/register" element={<RegisterScreen />} />
     </Route>
+    <Route element={<AdminRoute />}>
+      <Route path="/users" element={<Users />} />
+      <Route path="/wiki/admin" element={<Suspense fallback={<div className="p-8">Cargando editor…</div>}><WikiAdmin /></Suspense>} />
+    </Route>
     <Route element={<PublicRoute />}>
       <Route path="/" element={<Web />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/wiki" element={<Documentation />} />
+      <Route path="/wiki/:sectionId/:sectionSlug?" element={<Documentation />} />
     </Route>
     <Route element={<ProtectedRoute />}>
       <Route path="/home" element={<Home />} />
@@ -52,9 +59,6 @@ export const AppRoutes = () => (
       <Route path="/my-gpts" element={<MyGpts />} />
       <Route path="/auth/linkedin/callback" element={<LinkedInCallback />} />
       <Route path="/auth/instagram/callback" element={<InstagramCallback />} />
-    </Route>
-    <Route element={<AdminRoute />}>
-      <Route path="/users" element={<Users />} />
     </Route>
     <Route element={<AdminWebRoute />}>
       <Route path="/archivo" element={<Archive />} />

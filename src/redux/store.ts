@@ -13,6 +13,8 @@ import sitePageReducer from "./slices/SitePageSlice";
 import siteComponentReducer from "./slices/SiteComponentSlice";
 import subscriptionReducer from "./slices/SubscriptionSlice";
 import registerReducer from "./slices/RegisterSlice";
+import wikiReducer from "./slices/WikiSlice";
+import wikiAdminReducer from "./slices/WikiAdminSlice";
 
 export const store = configureStore({
   reducer: {
@@ -30,6 +32,8 @@ export const store = configureStore({
     siteComponent: siteComponentReducer,
     subscription: subscriptionReducer,
     register: registerReducer,
+    wiki: wikiReducer,
+    wikiAdmin: wikiAdminReducer,
   },
 });
 

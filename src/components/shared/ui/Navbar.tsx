@@ -175,6 +175,13 @@ export default function Navbar() {
                       {t("menu.wiki")}
                     </Link>
                   </MenuItem>
+                  {userData?.role === "admin" && (
+                    <MenuItem>
+                      <Link to="/wiki/admin" className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden">
+                        Gestionar wiki
+                      </Link>
+                    </MenuItem>
+                  )}
                   <MenuItem>
                     <button
                       onClick={confirmLogout}
