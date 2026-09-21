@@ -1,0 +1,3 @@
+[functions.odoo-project-sync]
+verify_jwt = true
+entrypoint = "./functions/odoo-project-sync/index.ts"

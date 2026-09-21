@@ -53,6 +53,7 @@ export type ProjectImageData = {
 };
 
 export type ProjectCollaboratorsProps = {
+  id: string;
   profession: string;
   name: string;
   website?: string;

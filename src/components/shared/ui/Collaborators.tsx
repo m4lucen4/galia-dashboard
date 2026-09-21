@@ -202,6 +202,7 @@ export const Collaborators: React.FC<CollaboratorsProps> = ({
 
   const addCollaborator = () => {
     const newCollaborator: ProjectCollaboratorsProps = {
+      id: crypto.randomUUID(),
       profession: "",
       name: "",
       website: "",
@@ -241,10 +242,10 @@ export const Collaborators: React.FC<CollaboratorsProps> = ({
 
     if (over && active.id !== over.id) {
       const oldIndex = collaborators.findIndex(
-        (_, idx) => `collaborator-${idx}` === active.id,
+        (collaborator) => collaborator.id === active.id,
       );
       const newIndex = collaborators.findIndex(
-        (_, idx) => `collaborator-${idx}` === over.id,
+        (collaborator) => collaborator.id === over.id,
       );
 
       const reorderedCollaborators = arrayMove(
@@ -286,14 +287,14 @@ export const Collaborators: React.FC<CollaboratorsProps> = ({
             onDragEnd={handleDragEnd}
           >
             <SortableContext
-              items={collaborators.map((_, idx) => `collaborator-${idx}`)}
+              items={collaborators.map((collaborator) => collaborator.id)}
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-4">
                 {collaborators.map((collaborator, index) => (
                   <SortableCollaboratorItem
-                    key={`collaborator-${index}`}
-                    id={`collaborator-${index}`}
+                    key={collaborator.id}
+                    id={collaborator.id}
                     collaborator={collaborator}
                     index={index}
                     onRemove={removeCollaborator}

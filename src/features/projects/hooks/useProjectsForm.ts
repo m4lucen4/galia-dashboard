@@ -16,6 +16,26 @@ interface UseProjectsFormProps {
   onSubmit: (project: CreateProjectProps) => void;
 }
 
+const ensureCollaboratorIds = (
+  collaborators: ProjectCollaboratorsProps[] | undefined,
+): ProjectCollaboratorsProps[] => {
+  const usedIds = new Set<string>();
+
+  return (collaborators ?? []).map((collaborator) => {
+    const existingId = collaborator.id;
+    const isValidId =
+      typeof existingId === "string" &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        existingId,
+      ) &&
+      !usedIds.has(existingId);
+    const id = isValidId ? existingId : crypto.randomUUID();
+
+    usedIds.add(id);
+    return { ...collaborator, id };
+  });
+};
+
 export const useProjectsForm = ({
   initialData,
   user,
@@ -37,16 +57,24 @@ export const useProjectsForm = ({
     projectCollaborators: [],
   };
 
-  const [formData, setFormData] = useState<CreateProjectProps>(
-    initialData || defaultFormData,
-  );
+  const [formData, setFormData] = useState<CreateProjectProps>(() => ({
+    ...(initialData || defaultFormData),
+    projectCollaborators: ensureCollaboratorIds(
+      initialData?.projectCollaborators,
+    ),
+  }));
   const [allImages, setAllImages] = useState<ImageItem[]>([]);
 
   // Sync initialData prop changes to local state when editing different projects.
   /* eslint-disable */
   useLayoutEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      setFormData({
+        ...initialData,
+        projectCollaborators: ensureCollaboratorIds(
+          initialData.projectCollaborators,
+        ),
+      });
 
       if (initialData.image_data && initialData.image_data.length > 0) {
         const existingImageItems: ImageItem[] = initialData.image_data.map(
