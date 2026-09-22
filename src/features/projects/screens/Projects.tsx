@@ -7,19 +7,14 @@ import { Button } from "../../../components/shared/ui/Button";
 import { DropdownButton } from "../../../components/shared/ui/DropdownButton";
 import { errorMessages } from "../../../helpers";
 import {
-  addProject,
-  CreateProjectProps,
-  updateProject,
   updateProjectPreview,
   updateProjectDraft,
   deleteProject,
   assignProject,
-  getInitials,
 } from "../../../redux/actions/ProjectActions";
 import { fetchUsers } from "../../../redux/actions/UserActions";
 import {
   clearProjectErrors,
-  clearSelectedProject,
 } from "../../../redux/slices/ProjectSlice";
 import { ProjectsTable } from "../components/projectsTable";
 import { useProjectsData } from "../../../hooks/useProjectsData";
@@ -30,22 +25,12 @@ import { useTranslation } from "react-i18next";
 import { ProjectsForm } from "../components/ProjectsForm";
 import { UserSearchSelector } from "../components/UserSearchSelector";
 import { MultimediaUploadModal } from "../components/MultimediaUploadModal";
-import {
-  type ProcessorAnalysis,
-  type FotoTag,
-} from "../hooks/usePhotoProcessor";
-import { addProjectPhotos } from "../../../redux/actions/ProjectPhotoActions";
-import {
-  nasRenameFolder,
-  nasRestructure,
-  nasDeleteFolder,
-} from "../../../redux/actions/NasActions";
-import { ProjectDataProps, ProjectImageData } from "../../../types";
+import { nasDeleteFolder } from "../../../redux/actions/NasActions";
+import { getProjectNasBaseFolder } from "../../../helpers/nasPaths";
+import { useProjectDrawer } from "../hooks/useProjectDrawer";
 
 export const Projects = () => {
   const { t } = useTranslation();
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
   const [processingProjectId, setProcessingProjectId] = useState<string | null>(
     null,
   );
@@ -73,18 +58,23 @@ export const Projects = () => {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [showMultimediaModal, setShowMultimediaModal] = useState(false);
-  const [multimediaPreFill, setMultimediaPreFill] =
-    useState<ProjectDataProps | null>(null);
-  const [pendingFotoTags, setPendingFotoTags] = useState<FotoTag[] | null>(
-    null,
-  );
-  const [multimediaMinFolder, setMultimediaMinFolder] = useState<string | null>(
-    null,
-  );
-  const [multimediaTargetUser, setMultimediaTargetUser] =
-    useState<(typeof users)[0] | null>(null);
 
   const fetchProjectsData = useProjectsData(user);
+  const {
+    drawerOpen,
+    isEditMode,
+    handleOpenDrawer,
+    handleCloseDrawer,
+    handleCreateFromMultimedia,
+    handleEditProject,
+    formProps,
+  } = useProjectDrawer({
+    user,
+    users,
+    project,
+    loading: projectAddRequest.inProgress,
+    fetchProjectsData,
+  });
   const errorMessage = errorMessages({
     addError: projectAddRequest.messages,
     assignError: assignProjectRequest.messages,
@@ -136,59 +126,9 @@ export const Projects = () => {
     return () => clearTimeout(timeoutId);
   }, [processingProjectId]);
 
-  const handleOpenDrawer = () => {
-    setIsEditMode(false);
-    setMultimediaPreFill(null);
-    setPendingFotoTags(null);
-    setMultimediaMinFolder(null);
-    setDrawerOpen(true);
-  };
-
-  const handleCreateFromMultimedia = (
-    analysis: ProcessorAnalysis,
-    folderPath: string,
-    targetUserId?: string,
-  ) => {
-    const targetUser = targetUserId
-      ? (users.find((u) => u.uid === targetUserId) ?? null)
-      : null;
-    setMultimediaTargetUser(targetUser);
-
-    const preselectedImageData: ProjectImageData[] = analysis.foto_tags
-      .filter((ft) => ft.supabase_url && (ft.rating === "heroica" || ft.rating === "principal"))
-      .sort((a, b) => (a.rating === "heroica" ? -1 : b.rating === "heroica" ? 1 : 0))
-      .slice(0, 10)
-      .map((ft) => ({ url: ft.supabase_url!, status: "pending" as const }));
-
-    const preFill: ProjectDataProps = {
-      id: "",
-      user: targetUserId ?? user!.uid,
-      title: analysis.titulo,
-      description: analysis.descripcion,
-      keywords: analysis.tags.join(", "),
-      weblink: analysis.web || "",
-      year: analysis.anio || "",
-      state: "draft",
-      nas_folder: folderPath,
-      image_data: preselectedImageData.length > 0 ? preselectedImageData : undefined,
-    };
-    setMultimediaPreFill(preFill);
-    setPendingFotoTags(analysis.foto_tags);
-    setMultimediaMinFolder(`/${folderPath}/min`);
-    setIsEditMode(false);
-    dispatch(clearSelectedProject());
-    setDrawerOpen(true);
-  };
-
-  const handleEditProject = () => {
-    dispatch(clearSelectedProject());
-    setIsEditMode(true);
-    setDrawerOpen(true);
-  };
-
   const handleDeleteProject = (projectId: string) => {
     const proj = projects.find((p) => String(p.id) === projectId);
-    const nasFolder = proj ? getNasParentFolder(proj) : null;
+    const nasFolder = proj ? getProjectNasBaseFolder(proj, user) : null;
     setSelectedProjectId(projectId);
     setPendingNasFolder(nasFolder);
     setShowDeleteModal(true);
@@ -210,79 +150,6 @@ export const Projects = () => {
           console.error("Error deleting project:", error);
           setShowDeleteModal(false);
           setPendingNasFolder(null);
-        });
-    }
-  };
-
-  const handleProjectSubmit = (formData: CreateProjectProps) => {
-    if (isEditMode && project) {
-      const updateData = {
-        ...formData,
-        id: project.id,
-      };
-
-      dispatch(updateProject(updateData))
-        .unwrap()
-        .then(() => {
-          fetchProjectsData();
-          setDrawerOpen(false);
-        });
-    } else {
-      dispatch(addProject(formData))
-        .unwrap()
-        .then((result) => {
-          fetchProjectsData();
-          setDrawerOpen(false);
-
-          const newProjectId = result.project?.id;
-          const nasFolder = multimediaPreFill?.nas_folder;
-          const nasUser = multimediaTargetUser ?? user;
-
-          if (newProjectId && nasFolder && nasUser?.folder_nas) {
-            const initials = getInitials(nasUser.first_name, nasUser.last_name);
-            const odooId = String(nasUser.odoo_id ?? "");
-            const newFolderName = odooId
-              ? `${newProjectId}-${odooId}-${initials}`
-              : `${newProjectId}-${initials}`;
-            const newFolderPath = `${nasUser.folder_nas}/${newFolderName}`;
-
-            // Sequential: rename → restructure → save photos
-            dispatch(nasRenameFolder({ from: nasFolder, to: newFolderPath }))
-              .unwrap()
-              .then(() =>
-                dispatch(
-                  nasRestructure({
-                    folder: newFolderPath,
-                    projectId: String(newProjectId),
-                    odooId,
-                  }),
-                ).unwrap(),
-              )
-              .then((restructureResult) => {
-                if (pendingFotoTags) {
-                  const fileMapping = restructureResult.fileMapping ?? {};
-                  const translatedTags = pendingFotoTags.map((tag) => ({
-                    ...tag,
-                    filename: fileMapping[tag.filename] ?? tag.filename,
-                  }));
-                  dispatch(
-                    addProjectPhotos({
-                      projectId: newProjectId,
-                      fotoTags: translatedTags,
-                      nasBasePath: newFolderPath,
-                    }),
-                  );
-                }
-              })
-              .catch((err) => {
-                console.error("Error in post-create NAS operations:", err);
-              });
-          }
-
-          setMultimediaPreFill(null);
-          setPendingFotoTags(null);
-          setMultimediaMinFolder(null);
-          setMultimediaTargetUser(null);
         });
     }
   };
@@ -361,84 +228,6 @@ export const Projects = () => {
           setShowRecoveryModal(false);
         });
     }
-  };
-
-  const getNasFolder = (): string | null => {
-    if (!project) return null;
-
-    // Multimedia projects use _min (thumbnails), traditional use _alta
-    const suffix = project.nas_folder ? `${project.id}_min` : `${project.id}_alta`;
-
-    // Photographer editing their own project
-    if (user?.role === "photographer" && user.folder_nas) {
-      const initials = getInitials(user.first_name, user.last_name);
-      const folderName = user.odoo_id
-        ? `${project.id}-${user.odoo_id}-${initials}`
-        : `${project.id}-${initials}`;
-      return `/${user.folder_nas}/${folderName}/${suffix}`;
-    }
-
-    // Admin editing a photographer's project
-    if (
-      project.userData?.role === "photographer" &&
-      project.userData.folder_nas
-    ) {
-      const initials = getInitials(
-        project.userData.first_name,
-        project.userData.last_name,
-      );
-      const folderName = project.userData.odoo_id
-        ? `${project.id}-${project.userData.odoo_id}-${initials}`
-        : `${project.id}-${initials}`;
-      return `/${project.userData.folder_nas}/${folderName}/${suffix}`;
-    }
-
-    return null;
-  };
-
-  const getNasParentFolder = (proj: ProjectDataProps): string | null => {
-    if (user?.role === "photographer" && user.folder_nas) {
-      const initials = getInitials(user.first_name, user.last_name);
-      const folderName = user.odoo_id
-        ? `${proj.id}-${user.odoo_id}-${initials}`
-        : `${proj.id}-${initials}`;
-      return `${user.folder_nas}/${folderName}`;
-    }
-    if (proj.userData?.role === "photographer" && proj.userData.folder_nas) {
-      const initials = getInitials(
-        proj.userData.first_name,
-        proj.userData.last_name,
-      );
-      const folderName = proj.userData.odoo_id
-        ? `${proj.id}-${proj.userData.odoo_id}-${initials}`
-        : `${proj.id}-${initials}`;
-      return `${proj.userData.folder_nas}/${folderName}`;
-    }
-    return null;
-  };
-
-  const getFormData = () => {
-    if (!project) return undefined;
-
-    return {
-      id: project.id,
-      title: project.title,
-      state: project.state,
-      description: project.description,
-      keywords: project.keywords,
-      requiredAI: project.requiredAI,
-      prompt: project.prompt,
-      user: project.user,
-      weblink: project.weblink,
-      image_data: project.image_data,
-      publications: project.publications,
-      googleMaps: project.googleMaps,
-      category: project.category,
-      year: project.year,
-      showMap: project.showMap,
-      projectCollaborators: project.projectCollaborators,
-      nas_folder: project.nas_folder,
-    };
   };
 
   const clearFilter = () => {
@@ -536,33 +325,10 @@ export const Projects = () => {
           isEditMode ? t("projects.editProject") : t("projects.createProject")
         }
         isOpen={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false);
-          setMultimediaPreFill(null);
-          setPendingFotoTags(null);
-          setMultimediaMinFolder(null);
-          setMultimediaTargetUser(null);
-        }}
+        onClose={handleCloseDrawer}
       >
         <ProjectsForm
-          initialData={isEditMode ? getFormData() : (multimediaPreFill ?? undefined)}
-          onSubmit={handleProjectSubmit}
-          loading={projectAddRequest.inProgress}
-          isEditMode={isEditMode}
-          user={user}
-          nasFolder={
-            isEditMode
-              ? (getNasFolder() ?? undefined)
-              : (multimediaMinFolder ?? undefined)
-          }
-          projectId={isEditMode && project ? String(project.id) : undefined}
-          odooId={
-            isEditMode
-              ? (user?.role === "photographer"
-                  ? (user.odoo_id ? String(user.odoo_id) : undefined)
-                  : (project?.userData?.odoo_id ? String(project.userData.odoo_id) : undefined))
-              : undefined
-          }
+          {...formProps}
         />
       </Drawer>
       <ProjectsTable
