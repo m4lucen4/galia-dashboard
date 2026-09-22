@@ -28,6 +28,8 @@ import { MultimediaUploadModal } from "../components/MultimediaUploadModal";
 import { nasDeleteFolder } from "../../../redux/actions/NasActions";
 import { getProjectNasBaseFolder } from "../../../helpers/nasPaths";
 import { useProjectDrawer } from "../hooks/useProjectDrawer";
+import { useProjectFilters } from "../hooks/useProjectFilters";
+import { ProjectsFilters } from "../components/ProjectsFilters";
 
 export const Projects = () => {
   const { t } = useTranslation();
@@ -36,7 +38,6 @@ export const Projects = () => {
   );
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [showTimeoutError, setShowTimeoutError] = useState(false);
-  const [stateFilter, setStateFilter] = useState<string>("");
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const user = useAppSelector((state: RootState) => state.auth.user);
@@ -84,13 +85,19 @@ export const Projects = () => {
   const { isCompleted, recordCount } =
     useProjectPreviewRealtime(processingProjectId);
 
-  const uniqueStates = Array.from(
-    new Set(projects.map((project) => project.state)),
-  ).filter((s): s is string => Boolean(s));
-
-  const filteredProjects = stateFilter
-    ? projects.filter((project) => project.state === stateFilter)
-    : projects;
+  const {
+    titleFilter,
+    stateFilter,
+    ownerFilter,
+    uniqueStates,
+    ownerOptions,
+    filteredProjects,
+    filterChangeVersion,
+    clearFilters,
+    handleTitleFilterChange,
+    handleStateFilterChange,
+    handleOwnerFilterChange,
+  } = useProjectFilters({ projects, users });
 
   useEffect(() => {
     fetchProjectsData();
@@ -230,20 +237,6 @@ export const Projects = () => {
     }
   };
 
-  const clearFilter = () => {
-    setStateFilter("");
-  };
-
-  const getStateLabel = (state: string): string => {
-    const stateLabels: Record<string, string> = {
-      draft: "Draft",
-      preview: "Preview",
-      inProgress: "In progress",
-      launched: "Launched",
-    };
-    return stateLabels[state] ?? state;
-  };
-
   if (!user) {
     return;
   }
@@ -300,26 +293,19 @@ export const Projects = () => {
             secondary
           />
         </div>
-        <div className="flex items-center space-x-2">
-          <select
-            value={stateFilter}
-            onChange={(e) => setStateFilter(e.target.value)}
-            className="border border-gray-300 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">{t("projects.allStates")}</option>
-            {uniqueStates.map((state) => (
-              <option key={state} value={state}>
-                {getStateLabel(state)}
-              </option>
-            ))}
-          </select>
-          <Button
-            title={t("projects.cleanFilters")}
-            onClick={clearFilter}
-            secondary
-          />
-        </div>
       </div>
+      <ProjectsFilters
+        isAdmin={user.role === "admin"}
+        titleFilter={titleFilter}
+        stateFilter={stateFilter}
+        ownerFilter={ownerFilter}
+        uniqueStates={uniqueStates}
+        ownerOptions={ownerOptions}
+        onTitleFilterChange={handleTitleFilterChange}
+        onStateFilterChange={handleStateFilterChange}
+        onOwnerFilterChange={handleOwnerFilterChange}
+        onClearFilters={clearFilters}
+      />
       <Drawer
         title={
           isEditMode ? t("projects.editProject") : t("projects.createProject")
@@ -340,6 +326,7 @@ export const Projects = () => {
         onRecoveryProject={handleRecoveyProject}
         onDeleteProject={handleDeleteProject}
         onAssignProject={handleAssignProject}
+        filterChangeVersion={filterChangeVersion}
       />
       {errorMessage && (
         <Alert

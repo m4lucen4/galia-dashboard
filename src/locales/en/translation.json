@@ -186,6 +186,8 @@
     "createFromMultimedia": "Create from multimedia",
     "cleanFilters": "Clear filters",
     "allStates": "All statuses",
+    "allOwners": "All owners",
+    "searchByTitle": "Search by title",
     "stage1": "Preparing your publications...",
     "stage2": "Generating content...",
     "stage3": "Optimizing images...",

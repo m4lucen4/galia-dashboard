@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
   getPaginationRowModel,
+  PaginationState,
   useReactTable,
   SortingState,
 } from "@tanstack/react-table";
@@ -26,6 +27,7 @@ type ProjectsTableProps = {
   onRecoveryProject: (projectId: string) => void;
   onDeleteProject: (projectId: string) => void;
   onAssignProject: (projectId: string) => void;
+  filterChangeVersion: number;
 };
 
 export const ProjectsTable = ({
@@ -37,11 +39,41 @@ export const ProjectsTable = ({
   onRecoveryProject,
   onDeleteProject,
   onAssignProject,
+  filterChangeVersion,
 }: ProjectsTableProps) => {
   const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    setPagination((currentPagination) =>
+      currentPagination.pageIndex === 0
+        ? currentPagination
+        : { ...currentPagination, pageIndex: 0 },
+    );
+  }, [filterChangeVersion]);
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const lastPageIndex = Math.max(
+      0,
+      Math.ceil(projects.length / pagination.pageSize) - 1,
+    );
+
+    setPagination((currentPagination) => {
+      const pageIndex = Math.min(currentPagination.pageIndex, lastPageIndex);
+
+      return pageIndex === currentPagination.pageIndex
+        ? currentPagination
+        : { ...currentPagination, pageIndex };
+    });
+  }, [isLoading, pagination.pageSize, projects.length]);
 
   const handleToggleMenu = (projectId: string) => {
     if (openMenuId === projectId) {
@@ -176,17 +208,15 @@ export const ProjectsTable = ({
     columns,
     state: {
       sorting,
+      pagination,
     },
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     columnResizeMode: "onChange",
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    },
+    autoResetPageIndex: false,
   });
 
   if (isLoading) {
