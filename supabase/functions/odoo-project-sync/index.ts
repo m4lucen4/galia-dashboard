@@ -12,7 +12,6 @@ type WebhookPayload = { type: WebhookEvent; schema: "public"; table: "projects";
 type Project = Record<string, unknown>;
 type Collaborator = { id: string; name: string; profession: string; website: string | false };
 type OdooProject = { id: unknown; x_mocklab_id: unknown; x_studio_galeria_1?: unknown };
-type OdooPartner = { id: unknown; x_studio_mocklab_id: unknown };
 type Attachment = { id: unknown; name: unknown; type: unknown; url: unknown; res_model: unknown; res_id: unknown };
 type OdooCollaborator = { id: unknown; x_name: unknown; x_partner_id: unknown; x_origen: unknown; x_estado_validacion: unknown };
 
@@ -32,10 +31,11 @@ const constantTimeEquals = (received: string | null, expected: string) => {
   for (let index = 0; index < expected.length; index += 1) difference |= received.charCodeAt(index) ^ expected.charCodeAt(index);
   return difference === 0;
 };
+const escapeHtml = (value: string) => value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 const plainHtml = (value: unknown) => {
   if (value === null || value === undefined || value === "") return false;
   if (typeof value !== "string") throw new ValidationError("Description must be text");
-  return `<p>${value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;").replaceAll("\n", "<br>")}</p>`;
+  return `<p>${escapeHtml(value).replaceAll("\n", "<br>")}</p>`;
 };
 const projectIdFromPayload = (payload: WebhookPayload) => {
   const source = payload.type === "DELETE" ? payload.old_record : payload.record;
@@ -119,6 +119,17 @@ const validateCollaborators = (value: unknown) => {
   if (new Set(collaborators.map(({ id }) => id)).size !== collaborators.length) throw new ValidationError("Collaborator IDs must be unique");
   return collaborators;
 };
+const googleMapsHtml = (value: string) => {
+  let url: URL;
+  try { url = new URL(value); } catch { throw new ValidationError("Google Maps URL is invalid"); }
+  const host = url.hostname.toLowerCase();
+  const isGoogleMapsHost = ["google.com", "www.google.com", "maps.google.com", "maps.app.goo.gl"].includes(host);
+  const isLegacyShortLink = host === "goo.gl" && (url.pathname === "/maps" || url.pathname.startsWith("/maps/"));
+  if (url.protocol !== "https:" || url.username || url.password || url.port || (!isGoogleMapsHost && !isLegacyShortLink)) throw new ValidationError("Google Maps URL is not an allowed HTTPS link");
+  const normalized = url.toString();
+  const escaped = escapeHtml(normalized);
+  return `<p><a href="${escaped}">${escaped}</a></p>`;
+};
 const projectValues = (project: Project, projectId: number, categories: Record<string, number>) => {
   if (typeof project.title !== "string" || !project.title.trim()) throw new ValidationError("Project title is required");
   const category = project.category;
@@ -143,7 +154,9 @@ const projectValues = (project: Project, projectId: number, categories: Record<s
       const lat = coordinate(coordinates.lat); const lng = coordinate(coordinates.lng);
       if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) throw new Error();
       googleMaps = `<p><a href="https://www.google.com/maps?q=${lat},${lng}">${lat},${lng}</a></p>`;
-    } catch { throw new ValidationError("Google Maps must be coordinate JSON"); }
+    } catch {
+      googleMaps = googleMapsHtml(mapValue);
+    }
   }
   const description = plainHtml(project.description);
   return { name: project.title.trim(), x_mocklab_id: projectId, description, x_studio_html_field_292_1jh13q299: description, x_studio_palabras_clave: typeof project.keywords === "string" && project.keywords.trim() ? project.keywords.trim() : false, x_web: typeof project.weblink === "string" && project.weblink.trim() ? project.weblink.trim() : false, x_usar_ia: project.requiredAI === true, x_num_publicaciones: publications ?? false, x_studio_google_maps: googleMaps, x_mostrar_mapa: project.showMap === true, x_studio_ano: year ? Number(year) : false, x_studio_tipologia: [[6, 0, categoryId ? [categoryId] : []]] };
@@ -187,20 +200,19 @@ const partnerMappings = async (supabase: ReturnType<typeof createClient>, collab
   const { data, error } = await supabase.from("odoo_collaborator_partner_mappings").select("collaborator_id,odoo_partner_id").in("collaborator_id", ids);
   if (error) throw new RemoteRequestError("Collaborator mapping read failed");
   const mappings = new Map<string, number>((data ?? []).map((row: { collaborator_id: unknown; odoo_partner_id: unknown }) => [String(row.collaborator_id).toLowerCase(), safeInteger(row.odoo_partner_id, "Odoo partner ID")]));
-  if (mappings.size !== ids.length) throw new ValidationError("One or more collaborators need an Odoo partner mapping", "unmapped_collaborator_partner");
   return mappings;
 };
-const resolveProjectCustomer = async (supabase: ReturnType<typeof createClient>, odoo: OdooClient, ownerUUID: unknown) => {
+const resolveProjectCustomer = async (supabase: ReturnType<typeof createClient>, ownerUUID: unknown) => {
   if (typeof ownerUUID !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(ownerUUID)) throw new ValidationError("Project owner UUID is missing or invalid", "missing_project_owner");
-  const { data, error } = await supabase.from("userData").select("id").eq("uid", ownerUUID).maybeSingle();
+  const { data, error } = await supabase.from("userData").select("odoo_id").eq("uid", ownerUUID).maybeSingle();
   if (error) throw new RemoteRequestError("Project owner read failed", "project_owner_read_failed");
   if (!data) throw new ValidationError("Project owner account is missing", "missing_project_owner_account");
-  const externalId = safeInteger(data.id, "Project owner account ID");
-  const matches = await odoo.call<OdooPartner[]>("res.partner", "search_read", { domain: [["x_studio_mocklab_id", "=", externalId]], fields: ["id", "x_studio_mocklab_id"], limit: 2, context: { active_test: false } });
-  if (!matches.length) throw new ValidationError("Project owner has no exact Odoo customer", "missing_project_customer");
-  if (matches.length > 1) throw new AmbiguousRemoteError("Multiple Odoo customers use this Mocklab ID", "duplicate_project_customer");
-  if (safeInteger(matches[0].x_studio_mocklab_id, "Odoo customer external ID") !== externalId) throw new AmbiguousRemoteError("Odoo customer identity mismatch", "project_customer_identity_mismatch");
-  return safeInteger(matches[0].id, "Odoo customer ID");
+  try {
+    return safeInteger(data.odoo_id, "Project owner Odoo customer ID");
+  } catch (error) {
+    if (error instanceof ValidationError) throw new ValidationError("Project owner Odoo customer ID is missing or invalid", "invalid_project_customer_id");
+    throw error;
+  }
 };
 const reconcileGallery = async (odoo: OdooClient, projectId: number, remoteId: number, remote: OdooProject, urls: string[]) => {
   const galleryIds = new Set(relationIds(remote.x_studio_galeria_1));
@@ -229,7 +241,7 @@ const reconcileGallery = async (odoo: OdooClient, projectId: number, remoteId: n
     expectTrue(await odoo.call<boolean>("project.project", "write", { ids: [remoteId], vals: { x_studio_galeria_1: [[4, attachmentId]] } }), "gallery relation add");
   }
 };
-const reconcileCollaborators = async (odoo: OdooClient, projectId: number, remoteId: number, collaborators: Collaborator[], mappings: Map<string, number>) => {
+const reconcileCollaborators = async (odoo: OdooClient, correlationId: string, projectId: number, remoteId: number, collaborators: Collaborator[], mappings: Map<string, number>) => {
   const existing = await odoo.call<OdooCollaborator[]>("x_proyecto_colaborador", "search_read", { domain: [["x_proyecto_id", "=", remoteId]], fields: ["id", "x_name", "x_partner_id", "x_origen", "x_estado_validacion"], limit: 1000 });
   const owned = new Map<string, OdooCollaborator>();
   for (const row of existing) {
@@ -243,9 +255,13 @@ const reconcileCollaborators = async (odoo: OdooClient, projectId: number, remot
     if (sourceIds.has(collaboratorId) || row.x_origen !== "formulario") continue;
     expectTrue(await odoo.call<boolean>("x_proyecto_colaborador", "unlink", { ids: [safeInteger(row.id, "Odoo collaborator ID")] }), "owned collaborator removal");
   }
+  let unmappedCount = 0;
   for (const [index, collaborator] of collaborators.entries()) {
     const partnerId = mappings.get(collaborator.id);
-    if (!partnerId) throw new ValidationError("Collaborator partner mapping is missing", "unmapped_collaborator_partner");
+    if (!partnerId) {
+      unmappedCount += 1;
+      continue;
+    }
     const row = owned.get(collaborator.id);
     const values = { x_proyecto_id: remoteId, x_partner_id: partnerId, x_name: `${collaborator.name} ${collaboratorMarker(projectId, collaborator.id)}`, x_profesion: collaborator.profession, x_secuencia: index + 1, x_web_declarada: collaborator.website };
     if (!row) {
@@ -257,13 +273,14 @@ const reconcileCollaborators = async (odoo: OdooClient, projectId: number, remot
       expectTrue(await odoo.call<boolean>("x_proyecto_colaborador", "write", { ids: [safeInteger(row.id, "Odoo collaborator ID")], vals: values }), "owned collaborator update");
     }
   }
+  if (unmappedCount > 0) console.warn("Odoo project sync skipped unmapped collaborators", { correlationId, projectId, unmappedCount });
 };
 const deleteProject = async (odoo: OdooClient, projectId: number) => {
   const remote = await oneProject(odoo, projectId);
   if (!remote) return;
   expectTrue(await odoo.call<boolean>("project.project", "unlink", { ids: [safeInteger(remote.id, "Odoo project ID")] }), "project deletion");
 };
-const syncProject = async (supabase: ReturnType<typeof createClient>, odoo: OdooClient, projectId: number) => {
+const syncProject = async (supabase: ReturnType<typeof createClient>, odoo: OdooClient, correlationId: string, projectId: number) => {
   const project = await loadProject(supabase, projectId);
   if (!project) return deleteProject(odoo, projectId);
   const settings = configuredProjectSync();
@@ -272,7 +289,7 @@ const syncProject = async (supabase: ReturnType<typeof createClient>, odoo: Odoo
   if (new Set(urls).size !== urls.length) throw new ValidationError("Image URLs must be unique");
   const collaborators = validateCollaborators(project.projectCollaborators);
   const mappings = await partnerMappings(supabase, collaborators);
-  const customerId = await resolveProjectCustomer(supabase, odoo, project.user);
+  const customerId = await resolveProjectCustomer(supabase, project.user);
   const values = { ...baseValues, partner_id: customerId };
   let remote = await oneProject(odoo, projectId);
   if (remote) {
@@ -288,7 +305,7 @@ const syncProject = async (supabase: ReturnType<typeof createClient>, odoo: Odoo
   }
   const remoteId = safeInteger(remote!.id, "Odoo project ID");
   await reconcileGallery(odoo, projectId, remoteId, remote!, urls);
-  await reconcileCollaborators(odoo, projectId, remoteId, collaborators, mappings);
+  await reconcileCollaborators(odoo, correlationId, projectId, remoteId, collaborators, mappings);
   if (!await loadProject(supabase, projectId)) await deleteProject(odoo, projectId);
 };
 
@@ -324,7 +341,7 @@ Deno.serve(async (request) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     if (!supabaseUrl) throw new ValidationError("SUPABASE_URL is missing");
     const supabase = createClient(supabaseUrl, serviceRoleKey);
-    await syncProject(supabase, odoo, projectId);
+    await syncProject(supabase, odoo, correlationId, projectId);
     return response({ status: "synced", correlationId }, 200);
   } catch (error) {
     const status = error instanceof ValidationError ? 400 : error instanceof AmbiguousRemoteError || error instanceof RemoteRequestError ? 502 : 500;
