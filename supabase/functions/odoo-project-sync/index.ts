@@ -10,7 +10,7 @@ const projectFields = "id,user,title,description,keywords,requiredAI,weblink,ima
 type WebhookEvent = "INSERT" | "UPDATE" | "DELETE";
 type WebhookPayload = { type: WebhookEvent; schema: "public"; table: "projects"; record: Record<string, unknown> | null; old_record: Record<string, unknown> | null };
 type Project = Record<string, unknown>;
-type Collaborator = { id: string; name: string; profession: string; website: string | false };
+type Collaborator = { id: string; name: string; profession: string; website: string | false; odooId?: number };
 type OdooProject = { id: unknown; x_mocklab_id: unknown; x_studio_galeria_1?: unknown };
 type Attachment = { id: unknown; name: unknown; type: unknown; url: unknown; res_model: unknown; res_id: unknown };
 type OdooCollaborator = { id: unknown; x_name: unknown; x_partner_id: unknown; x_origen: unknown; x_estado_validacion: unknown };
@@ -114,7 +114,8 @@ const validateCollaborators = (value: unknown) => {
     if (typeof collaborator.name !== "string" || !collaborator.name.trim() || typeof collaborator.profession !== "string" || !collaborator.profession.trim()) throw new ValidationError("Collaborator name and profession are required");
     if (collaborator.website !== undefined && collaborator.website !== null && typeof collaborator.website !== "string") throw new ValidationError("Collaborator website must be text");
     const website: string | false = typeof collaborator.website === "string" && collaborator.website.trim() ? collaborator.website.trim() : false;
-    return { id: collaborator.id.toLowerCase(), name: collaborator.name.trim(), profession: collaborator.profession.trim(), website };
+    const odooId = collaborator.odooId === undefined || collaborator.odooId === null ? undefined : safeInteger(collaborator.odooId, "Collaborator Odoo ID");
+    return { id: collaborator.id.toLowerCase(), name: collaborator.name.trim(), profession: collaborator.profession.trim(), website, ...(odooId ? { odooId } : {}) };
   });
   if (new Set(collaborators.map(({ id }) => id)).size !== collaborators.length) throw new ValidationError("Collaborator IDs must be unique");
   return collaborators;
@@ -194,13 +195,18 @@ const loadProject = async (supabase: ReturnType<typeof createClient>, projectId:
   if (data && safeInteger(data.id, "Current project ID") !== projectId) throw new ValidationError("Current project ID mismatch");
   return data as Project | null;
 };
-const partnerMappings = async (supabase: ReturnType<typeof createClient>, collaborators: Collaborator[]) => {
-  if (!collaborators.length) return new Map<string, number>();
-  const ids = collaborators.map(({ id }) => id);
-  const { data, error } = await supabase.from("odoo_collaborator_partner_mappings").select("collaborator_id,odoo_partner_id").in("collaborator_id", ids);
-  if (error) throw new RemoteRequestError("Collaborator mapping read failed");
-  const mappings = new Map<string, number>((data ?? []).map((row: { collaborator_id: unknown; odoo_partner_id: unknown }) => [String(row.collaborator_id).toLowerCase(), safeInteger(row.odoo_partner_id, "Odoo partner ID")]));
-  return mappings;
+const resolveCollaboratorPartners = async (odoo: OdooClient, collaborators: Collaborator[]) => {
+  const selectedIds = [...new Set(collaborators.flatMap(({ odooId }) => odooId === undefined ? [] : [odooId]))];
+  if (!selectedIds.length) return;
+  const matches = await odoo.call<{ id: unknown }[]>("res.partner", "search_read", { domain: [["id", "in", selectedIds]], fields: ["id"], limit: selectedIds.length + 1, context: { active_test: false } });
+  if (matches.length !== selectedIds.length) throw new AmbiguousRemoteError("Selected Odoo collaborator contacts could not be resolved");
+  const resolvedIds = new Set<number>();
+  for (const match of matches) {
+    const id = safeInteger(match.id, "Selected Odoo collaborator contact ID");
+    if (!selectedIds.includes(id) || resolvedIds.has(id)) throw new AmbiguousRemoteError("Selected Odoo collaborator contacts are inconsistent");
+    resolvedIds.add(id);
+  }
+  if (resolvedIds.size !== selectedIds.length) throw new AmbiguousRemoteError("Selected Odoo collaborator contacts are ambiguous");
 };
 const resolveProjectCustomer = async (supabase: ReturnType<typeof createClient>, ownerUUID: unknown) => {
   if (typeof ownerUUID !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(ownerUUID)) throw new ValidationError("Project owner UUID is missing or invalid", "missing_project_owner");
@@ -241,39 +247,36 @@ const reconcileGallery = async (odoo: OdooClient, projectId: number, remoteId: n
     expectTrue(await odoo.call<boolean>("project.project", "write", { ids: [remoteId], vals: { x_studio_galeria_1: [[4, attachmentId]] } }), "gallery relation add");
   }
 };
-const reconcileCollaborators = async (odoo: OdooClient, correlationId: string, projectId: number, remoteId: number, collaborators: Collaborator[], mappings: Map<string, number>) => {
+const reconcileCollaborators = async (odoo: OdooClient, projectId: number, remoteId: number, collaborators: Collaborator[]) => {
   const existing = await odoo.call<OdooCollaborator[]>("x_proyecto_colaborador", "search_read", { domain: [["x_proyecto_id", "=", remoteId]], fields: ["id", "x_name", "x_partner_id", "x_origen", "x_estado_validacion"], limit: 1000 });
+  const marked = new Map<string, OdooCollaborator>();
   const owned = new Map<string, OdooCollaborator>();
   for (const row of existing) {
     const collaboratorId = parseCollaboratorMarker(row.x_name, projectId);
     if (!collaboratorId) continue;
-    if (owned.has(collaboratorId)) throw new AmbiguousRemoteError("Duplicate owned collaborator marker");
-    owned.set(collaboratorId, row);
+    if (marked.has(collaboratorId)) throw new AmbiguousRemoteError("Duplicate collaborator marker");
+    marked.set(collaboratorId, row);
+    if (row.x_origen === "formulario") owned.set(collaboratorId, row);
   }
-  const sourceIds = new Set(collaborators.map(({ id }) => id));
+  const selected = new Map(collaborators.flatMap((collaborator) => collaborator.odooId === undefined ? [] : [[collaborator.id, collaborator] as const]));
   for (const [collaboratorId, row] of owned) {
-    if (sourceIds.has(collaboratorId) || row.x_origen !== "formulario") continue;
+    if (selected.has(collaboratorId)) continue;
     expectTrue(await odoo.call<boolean>("x_proyecto_colaborador", "unlink", { ids: [safeInteger(row.id, "Odoo collaborator ID")] }), "owned collaborator removal");
   }
-  let unmappedCount = 0;
   for (const [index, collaborator] of collaborators.entries()) {
-    const partnerId = mappings.get(collaborator.id);
-    if (!partnerId) {
-      unmappedCount += 1;
-      continue;
-    }
+    if (collaborator.odooId === undefined) continue;
     const row = owned.get(collaborator.id);
-    const values = { x_proyecto_id: remoteId, x_partner_id: partnerId, x_name: `${collaborator.name} ${collaboratorMarker(projectId, collaborator.id)}`, x_profesion: collaborator.profession, x_secuencia: index + 1, x_web_declarada: collaborator.website };
+    if (!row && marked.has(collaborator.id)) throw new AmbiguousRemoteError("Collaborator marker belongs to a non-receiver row");
+    const values = { x_proyecto_id: remoteId, x_partner_id: collaborator.odooId, x_name: `${collaborator.name} ${collaboratorMarker(projectId, collaborator.id)}`, x_profesion: collaborator.profession, x_secuencia: index + 1, x_web_declarada: collaborator.website };
     if (!row) {
       const created = await odoo.call<unknown>("x_proyecto_colaborador", "create", { vals_list: [{ ...values, x_origen: "formulario", x_estado_validacion: "confirmado" }] });
       if (!Array.isArray(created) || created.length !== 1) throw new AmbiguousRemoteError("Odoo did not return one collaborator ID");
       safeInteger(created[0], "Odoo collaborator ID");
     } else if (row.x_origen === "formulario") {
-      if (safeInteger(relationalId(row.x_partner_id), "Existing collaborator partner ID") !== partnerId) throw new AmbiguousRemoteError("Owned collaborator partner differs from the configured mapping");
+      safeInteger(relationalId(row.x_partner_id), "Existing collaborator partner ID");
       expectTrue(await odoo.call<boolean>("x_proyecto_colaborador", "write", { ids: [safeInteger(row.id, "Odoo collaborator ID")], vals: values }), "owned collaborator update");
     }
   }
-  if (unmappedCount > 0) console.warn("Odoo project sync skipped unmapped collaborators", { correlationId, projectId, unmappedCount });
 };
 const deleteProject = async (odoo: OdooClient, projectId: number) => {
   const remote = await oneProject(odoo, projectId);
@@ -288,8 +291,8 @@ const syncProject = async (supabase: ReturnType<typeof createClient>, odoo: Odoo
   const urls = (project.image_data === null || project.image_data === undefined ? [] : Array.isArray(project.image_data) ? project.image_data : (() => { throw new ValidationError("image_data must be an array"); })()).map((image) => canonicalUrl(image && typeof image === "object" ? (image as Record<string, unknown>).url : image, settings.hosts));
   if (new Set(urls).size !== urls.length) throw new ValidationError("Image URLs must be unique");
   const collaborators = validateCollaborators(project.projectCollaborators);
-  const mappings = await partnerMappings(supabase, collaborators);
   const customerId = await resolveProjectCustomer(supabase, project.user);
+  await resolveCollaboratorPartners(odoo, collaborators);
   const values = { ...baseValues, partner_id: customerId };
   let remote = await oneProject(odoo, projectId);
   if (remote) {
@@ -305,7 +308,7 @@ const syncProject = async (supabase: ReturnType<typeof createClient>, odoo: Odoo
   }
   const remoteId = safeInteger(remote!.id, "Odoo project ID");
   await reconcileGallery(odoo, projectId, remoteId, remote!, urls);
-  await reconcileCollaborators(odoo, correlationId, projectId, remoteId, collaborators, mappings);
+  await reconcileCollaborators(odoo, projectId, remoteId, collaborators);
   if (!await loadProject(supabase, projectId)) await deleteProject(odoo, projectId);
 };
 
