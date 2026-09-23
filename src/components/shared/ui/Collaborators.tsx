@@ -1,12 +1,12 @@
-import React from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { InputField } from "./InputField";
 import { Button } from "./Button";
 import { AddIcon } from "../../icons/AddIcon";
 import { DeleteIcon } from "../../icons/DeleteIcon";
 import { ProjectCollaboratorsProps } from "../../../types";
 import { SelectField } from "./SelectField";
 import { normalizeUrl } from "../../../helpers";
+import { supabase } from "../../../helpers/supabase";
 import {
   DndContext,
   closestCenter,
@@ -42,7 +42,87 @@ interface SortableCollaboratorItemProps {
     value: string,
   ) => void;
   onWebsiteBlur: (index: number, value: string) => void;
+  onContactSelect: (index: number, contact: OdooContact) => void;
+  onNameFocus: () => void;
+  odooContacts: OdooContact[];
+  isLoadingOdooContacts: boolean;
+  odooContactsError: boolean;
+  isOdooContactsIncomplete: boolean;
 }
+
+interface OdooContact {
+  id: number;
+  name: string;
+}
+
+interface OdooContactsResponse {
+  status: "complete" | "incomplete";
+  contacts: OdooContact[];
+  pagination: {
+    order: "id asc";
+    pageSize: number;
+    maxContacts: number;
+    pages: number;
+  };
+}
+
+const isOdooContactsResponse = (value: unknown): value is OdooContactsResponse => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+
+  const response = value as {
+    status?: unknown;
+    contacts?: unknown;
+    pagination?: unknown;
+  };
+
+  if (
+    (response.status !== "complete" && response.status !== "incomplete") ||
+    !Array.isArray(response.contacts) ||
+    !response.contacts.every(
+      (contact) =>
+        contact &&
+        typeof contact === "object" &&
+        !Array.isArray(contact) &&
+        Number.isSafeInteger((contact as { id?: unknown }).id) &&
+        (contact as { id: number }).id > 0 &&
+        typeof (contact as { name?: unknown }).name === "string",
+    ) ||
+    !response.pagination ||
+    typeof response.pagination !== "object" ||
+    Array.isArray(response.pagination)
+  ) {
+    return false;
+  }
+
+  const pagination = response.pagination as {
+    order?: unknown;
+    pageSize?: unknown;
+    maxContacts?: unknown;
+    pages?: unknown;
+  };
+
+  return (
+    pagination.order === "id asc" &&
+    typeof pagination.pageSize === "number" &&
+    Number.isSafeInteger(pagination.pageSize) &&
+    pagination.pageSize > 0 &&
+    typeof pagination.maxContacts === "number" &&
+    Number.isSafeInteger(pagination.maxContacts) &&
+    pagination.maxContacts > 0 &&
+    typeof pagination.pages === "number" &&
+    Number.isSafeInteger(pagination.pages) &&
+    pagination.pages > 0
+  );
+};
+
+const minimumSearchLength = 3;
+const maximumSuggestions = 10;
+
+const normalizeSearchText = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase();
 
 const SortableCollaboratorItem: React.FC<SortableCollaboratorItemProps> = ({
   collaborator,
@@ -51,8 +131,16 @@ const SortableCollaboratorItem: React.FC<SortableCollaboratorItemProps> = ({
   onRemove,
   onUpdate,
   onWebsiteBlur,
+  onContactSelect,
+  onNameFocus,
+  odooContacts,
+  isLoadingOdooContacts,
+  odooContactsError,
+  isOdooContactsIncomplete,
 }) => {
   const { t } = useTranslation();
+  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const {
     attributes,
     listeners,
@@ -66,6 +154,69 @@ const SortableCollaboratorItem: React.FC<SortableCollaboratorItemProps> = ({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+  };
+
+  const normalizedName = normalizeSearchText(collaborator.name);
+  const suggestions = useMemo(
+    () =>
+      normalizedName.length >= minimumSearchLength
+        ? odooContacts
+            .filter((contact) =>
+              normalizeSearchText(contact.name).includes(normalizedName),
+            )
+            .slice(0, maximumSuggestions)
+        : [],
+    [normalizedName, odooContacts],
+  );
+  const shouldShowSuggestions =
+    isSuggestionsOpen && collaborator.name.length >= minimumSearchLength;
+  const activeSuggestion =
+    activeSuggestionIndex >= 0 && activeSuggestionIndex < suggestions.length
+      ? suggestions[activeSuggestionIndex]
+      : undefined;
+  const contactFeedback = isLoadingOdooContacts
+    ? "Cargando contactos de Odoo…"
+    : odooContactsError
+      ? "No se han podido cargar los contactos de Odoo. Puedes escribir el nombre manualmente."
+      : isOdooContactsIncomplete
+        ? "La lista de Odoo está incompleta; puede haber más coincidencias."
+        : null;
+
+  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onUpdate(index, "name", event.target.value);
+    setIsSuggestionsOpen(event.target.value.length >= minimumSearchLength);
+    setActiveSuggestionIndex(-1);
+  };
+
+  const selectContact = (contact: OdooContact) => {
+    onContactSelect(index, contact);
+    setIsSuggestionsOpen(false);
+    setActiveSuggestionIndex(-1);
+  };
+
+  const handleNameKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!shouldShowSuggestions || suggestions.length === 0) {
+      if (event.key === "Escape") setIsSuggestionsOpen(false);
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveSuggestionIndex((currentIndex) =>
+        currentIndex < suggestions.length - 1 ? currentIndex + 1 : 0,
+      );
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveSuggestionIndex((currentIndex) =>
+        currentIndex > 0 ? currentIndex - 1 : suggestions.length - 1,
+      );
+    } else if (event.key === "Enter" && activeSuggestion) {
+      event.preventDefault();
+      selectContact(activeSuggestion);
+    } else if (event.key === "Escape") {
+      setIsSuggestionsOpen(false);
+      setActiveSuggestionIndex(-1);
+    }
   };
 
   return (
@@ -152,15 +303,83 @@ const SortableCollaboratorItem: React.FC<SortableCollaboratorItemProps> = ({
           />
         </div>
         <div>
-          <InputField
-            id={`name-${index}`}
-            label={t("projects.collaboratorName")}
-            placeholder={t("projects.collaboratorNamePlaceholder")}
-            type="text"
-            value={collaborator.name}
-            onChange={(e) => onUpdate(index, "name", e.target.value)}
-            required
-          />
+          <div
+            className="relative"
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) {
+                setIsSuggestionsOpen(false);
+                setActiveSuggestionIndex(-1);
+              }
+            }}
+          >
+            <label className="text-sm text-black" htmlFor={`name-${index}`}>
+              {t("projects.collaboratorName")}
+              <span className="ml-1 text-blue-600 font-medium">*</span>
+            </label>
+            <input
+              id={`name-${index}`}
+              name={`name-${index}`}
+              placeholder={t("projects.collaboratorNamePlaceholder")}
+              type="text"
+              value={collaborator.name}
+              onChange={handleNameChange}
+              onFocus={() => {
+                void onNameFocus();
+                if (collaborator.name.length >= minimumSearchLength) {
+                  setIsSuggestionsOpen(true);
+                }
+              }}
+              onKeyDown={handleNameKeyDown}
+              required
+              autoComplete="off"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-controls={`name-suggestions-${index}`}
+              aria-expanded={shouldShowSuggestions}
+              aria-activedescendant={
+                activeSuggestion
+                  ? `name-suggestion-${index}-${activeSuggestion.id}`
+                  : undefined
+              }
+              className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-gray-800 sm:text-sm/6"
+            />
+            {shouldShowSuggestions && (
+              <ul
+                id={`name-suggestions-${index}`}
+                role="listbox"
+                className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg"
+              >
+                {!isLoadingOdooContacts &&
+                !odooContactsError &&
+                suggestions.length === 0 ? (
+                  <li className="px-3 py-2 text-sm text-gray-500">
+                    {isOdooContactsIncomplete
+                      ? "No hay coincidencias en la parte disponible de Odoo"
+                      : "No hay coincidencias"}
+                  </li>
+                ) : !isLoadingOdooContacts && !odooContactsError ? (
+                  suggestions.map((contact, suggestionIndex) => (
+                    <li key={contact.id}>
+                      <button
+                        id={`name-suggestion-${index}-${contact.id}`}
+                        type="button"
+                        role="option"
+                        aria-selected={activeSuggestionIndex === suggestionIndex}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => selectContact(contact)}
+                        className={`w-full px-3 py-2 text-left text-sm text-gray-900 hover:bg-gray-100 ${activeSuggestionIndex === suggestionIndex ? "bg-gray-100" : ""}`}
+                      >
+                        {contact.name}
+                      </button>
+                    </li>
+                  ))
+                ) : null}
+              </ul>
+            )}
+            {contactFeedback && (
+              <p className="mt-1 text-xs text-gray-500">{contactFeedback}</p>
+            )}
+          </div>
         </div>
         <div className="md:col-span-2">
           <label className="text-sm text-black" htmlFor={`website-${index}`}>
@@ -188,6 +407,14 @@ export const Collaborators: React.FC<CollaboratorsProps> = ({
   label,
 }) => {
   const { t } = useTranslation();
+  const [odooContacts, setOdooContacts] = useState<OdooContact[]>([]);
+  const [isLoadingOdooContacts, setIsLoadingOdooContacts] = useState(false);
+  const [odooContactsError, setOdooContactsError] = useState(false);
+  const [isOdooContactsIncomplete, setIsOdooContactsIncomplete] =
+    useState(false);
+  const odooContactsRequestId = useRef(0);
+  const odooContactsLoadPromise = useRef<Promise<void> | null>(null);
+  const hasLoadedOdooContacts = useRef(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -208,6 +435,77 @@ export const Collaborators: React.FC<CollaboratorsProps> = ({
       website: "",
     };
     onChange([...collaborators, newCollaborator]);
+    void loadOdooContacts();
+  };
+
+  const loadOdooContacts = () => {
+    if (odooContactsLoadPromise.current) {
+      return odooContactsLoadPromise.current;
+    }
+
+    if (hasLoadedOdooContacts.current) {
+      return Promise.resolve();
+    }
+
+    const requestId = odooContactsRequestId.current + 1;
+    odooContactsRequestId.current = requestId;
+    setIsLoadingOdooContacts(true);
+    setOdooContactsError(false);
+    setOdooContacts([]);
+    setIsOdooContactsIncomplete(false);
+
+    const loadPromise = (async () => {
+      try {
+        const { data, error } =
+          await supabase.functions.invoke<OdooContactsResponse>(
+            "odoo-contacts",
+            {
+              body: {},
+            },
+          );
+
+        if (requestId !== odooContactsRequestId.current) return;
+
+        if (error || !isOdooContactsResponse(data)) {
+          console.error("Unable to load Odoo contacts");
+          setOdooContacts([]);
+          setIsOdooContactsIncomplete(false);
+          setOdooContactsError(true);
+          return;
+        }
+
+        hasLoadedOdooContacts.current = true;
+        setOdooContacts(data.contacts);
+        setIsOdooContactsIncomplete(data.status === "incomplete");
+
+        if (data.status === "incomplete") {
+          console.warn(
+            "Odoo contact list is incomplete because the result cap was reached",
+            {
+              maxContacts: data.pagination.maxContacts,
+            },
+          );
+        }
+      } catch {
+        if (requestId !== odooContactsRequestId.current) return;
+
+        console.error("Unable to load Odoo contacts");
+        setOdooContacts([]);
+        setIsOdooContactsIncomplete(false);
+        setOdooContactsError(true);
+      } finally {
+        if (requestId === odooContactsRequestId.current) {
+          setIsLoadingOdooContacts(false);
+        }
+
+        if (requestId === odooContactsRequestId.current) {
+          odooContactsLoadPromise.current = null;
+        }
+      }
+    })();
+
+    odooContactsLoadPromise.current = loadPromise;
+    return loadPromise;
   };
 
   const removeCollaborator = (index: number) => {
@@ -220,8 +518,25 @@ export const Collaborators: React.FC<CollaboratorsProps> = ({
     field: keyof ProjectCollaboratorsProps,
     value: string,
   ) => {
+    const updatedCollaborators = collaborators.map((collaborator, i) => {
+      if (i !== index) return collaborator;
+
+      if (field === "name" && value !== collaborator.name) {
+        const { odooId, ...collaboratorWithoutOdooId } = collaborator;
+        void odooId;
+        return { ...collaboratorWithoutOdooId, name: value };
+      }
+
+      return { ...collaborator, [field]: value };
+    });
+    onChange(updatedCollaborators);
+  };
+
+  const selectOdooContact = (index: number, contact: OdooContact) => {
     const updatedCollaborators = collaborators.map((collaborator, i) =>
-      i === index ? { ...collaborator, [field]: value } : collaborator,
+      i === index
+        ? { ...collaborator, name: contact.name, odooId: contact.id }
+        : collaborator,
     );
     onChange(updatedCollaborators);
   };
@@ -300,6 +615,12 @@ export const Collaborators: React.FC<CollaboratorsProps> = ({
                     onRemove={removeCollaborator}
                     onUpdate={updateCollaborator}
                     onWebsiteBlur={handleWebsiteBlur}
+                    onContactSelect={selectOdooContact}
+                    onNameFocus={loadOdooContacts}
+                    odooContacts={odooContacts}
+                    isLoadingOdooContacts={isLoadingOdooContacts}
+                    odooContactsError={odooContactsError}
+                    isOdooContactsIncomplete={isOdooContactsIncomplete}
                   />
                 ))}
               </div>

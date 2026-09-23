@@ -2,6 +2,6 @@
 verify_jwt = true
 entrypoint = "./functions/odoo-project-sync/index.ts"
 
-[functions.odoo-project-sync-partner-name]
+[functions.odoo-contacts]
 verify_jwt = true
-entrypoint = "./functions/odoo-project-sync-partner-name/index.ts"
+entrypoint = "./functions/odoo-contacts/index.ts"

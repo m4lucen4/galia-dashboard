@@ -57,6 +57,7 @@ export type ProjectCollaboratorsProps = {
   profession: string;
   name: string;
   website?: string;
+  odooId?: number;
 };
 
 export type ProjectDataProps = {
