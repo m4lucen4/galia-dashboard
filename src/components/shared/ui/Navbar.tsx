@@ -177,8 +177,8 @@ export default function Navbar() {
                   </MenuItem>
                   {userData?.role === "admin" && (
                     <MenuItem>
-                      <Link to="/wiki/admin" className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden">
-                        Gestionar wiki
+                      <Link to="/administration" className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden">
+                        {t("menu.administration")}
                       </Link>
                     </MenuItem>
                   )}

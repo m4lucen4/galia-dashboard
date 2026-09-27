@@ -30,6 +30,7 @@ import { Archive } from "../features/archive/screens/Archive";
 import { MyWeb } from "../features/myWeb/screens/MyWeb";
 import { lazy, Suspense } from "react";
 const WikiAdmin = lazy(() => import("@/features/documentation/screens/WikiAdmin").then((module) => ({ default: module.WikiAdmin })));
+const Administration = lazy(() => import("@/features/administration/screens/Administration").then((module) => ({ default: module.Administration })));
 
 export const AppRoutes = () => (
   <Routes>
@@ -39,6 +40,7 @@ export const AppRoutes = () => (
     </Route>
     <Route element={<AdminRoute />}>
       <Route path="/users" element={<Users />} />
+      <Route path="/administration" element={<Suspense fallback={<div className="p-8">Cargando administración…</div>}><Administration /></Suspense>} />
       <Route path="/wiki/admin" element={<Suspense fallback={<div className="p-8">Cargando editor…</div>}><WikiAdmin /></Suspense>} />
     </Route>
     <Route element={<PublicRoute />}>

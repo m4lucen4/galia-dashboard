@@ -25,6 +25,7 @@
     "projects": "Projects",
     "publishes": "Publications",
     "map": "Map",
+    "administration": "Administration",
     "gpts": "My GPTs",
     "wiki": "Wiki",
     "multimedia": "Multimedia",
@@ -395,6 +396,15 @@
     "visibility": "Visibility",
     "private": "Private",
     "public": "Public"
+  },
+  "administration": {
+    "title": "Administration",
+    "description": "Manage the platform's administrative tools.",
+    "wiki": {
+      "title": "Wiki management",
+      "description": "Create, edit, and publish wiki content.",
+      "action": "Manage wiki"
+    }
   },
   "subscription": {
     "restrictedAction": "You need an active subscription to perform this action"
