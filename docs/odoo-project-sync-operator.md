@@ -2,60 +2,47 @@
 
 ## Status
 
-The collaborator mapping table, normal Edge Function handler, direct `pg_net` sender, and the single `public.projects` trigger are deployed to production. The last recorded deployment is v14 of `odoo-project-sync` with JWT verification and the user-owned `ODOO_SYNC_ENABLED=true` environment gate. Its deployed customer resolver used the historical external-key chain. The current local direct-ID policy is not deployed or remotely audited. The sender adds no queue, Cron, dashboard feedback, catch-up, or automatic retry.
+This runbook describes the checked-in `odoo-project-sync` handler. Local configuration sets `verify_jwt = true` and uses `index.ts` as its entrypoint.
 
-## Deployed baseline
+Historical task evidence records a version 16 deployment of that function with source readback matching the then-local handler. It records neither a current remote audit nor a user-driven project create/edit after that deployment. Do not infer the current deployed receiver, sender route, secret state, or Odoo result from this repository.
 
-1. Migration `20260921150302_add_odoo_collaborator_partner_mappings.sql` is recorded as version `20260921150302`. It created the only integration table, `public.odoo_collaborator_partner_mappings`, for service-only collaborator UUID to existing Odoo partner ID mappings.
-2. The last recorded deployment is version 14 (`e15c0a47-e8d6-4637-8eec-cc249eb38c4c`), status `ACTIVE`, with `verify_jwt=true`, entrypoint `index.ts`, and bundle SHA-256 `11650718033de79d667254b396cd5272d8d8644a38e77cde21290b396c772d4a`. Its source readback matched the then-local Maps and collaborator changes, but its customer resolver still used the historical external-key contract. The bundle SHA identifies the deployed bundle, not a byte-hash proof of the reviewed source. `ACTIVE` means hosting is ready, not that synchronization is enabled or Odoo is verified.
-3. Readback confirmed the mapping table is empty, RLS is enabled with no policies, anon/authenticated CRUD is denied, and service-role CRUD is allowed. The policy-free RLS advisory is intentional for this server-only table; no public access policy is required.
-4. Migration `20260921181019_prepare_odoo_direct_webhook.sql` is recorded as version `20260921181019`. Readback confirmed `pg_net` 0.14.0, `public.odoo_project_webhook()` as `SECURITY DEFINER` with `search_path=pg_catalog`, and no EXECUTE privilege for anon, authenticated, or service_role. It uses the verified `net.http_post(text, jsonb, jsonb, jsonb, integer)` signature. No HTTP enqueue, invocation, Vault lookup, trigger attachment, Odoo request, project 421 change, extra business table, Cron, or platform bootstrap was performed.
-5. Migration `20260921181906_attach_odoo_project_webhook.sql` is recorded as version `20260921181906`. Readback confirmed exactly one non-internal `public.projects` trigger: `odoo_project_sync`, enabled, `AFTER INSERT OR UPDATE OR DELETE FOR EACH ROW`, executing `public.odoo_project_webhook()`. `SET LOCAL lock_timeout = '5s'` precedes its `CREATE TRIGGER`. No project 421 update, manual HTTP enqueue, Odoo call, or Edge Function change was performed.
+## Operator quick path
 
-## Current operational status
+1. Do not populate `odoo_collaborator_partner_mappings`. It is a historical migration artifact; the checked-in handler does not read it.
+2. In the collaborator UI, select an existing Odoo contact from the suggestions. The selection saves its numeric `odooId` in `projects.projectCollaborators` JSONB.
+3. Treat an absent `odooId` as an instruction not to synchronize that collaborator. Do not manually mutate JSONB, use exact-name matching, or create a contact as a substitute.
+4. Before any remote investigation or corrective action, obtain explicit authorization for the destination, operation, and credential/session. Do not manually invoke the function, enqueue HTTP, write Odoo data, replay an event, or inspect secret values.
 
-1. The user reports the required Edge Function secrets are configured and that synchronization works. This is user confirmation, not a fresh secret or remote configuration audit; no values are recorded. Required names are `ODOO_SYNC_ENABLED`, `ODOO_JSON2_URL`, `ODOO_API_KEY`, `ODOO_PROJECT_SYNC_WORKER_SECRET`, and `ODOO_CATEGORY_MAPPINGS`; `ODOO_DATABASE` and `ODOO_SYNC_EXTRA_IMAGE_HOSTS` are optional. Set `ODOO_DATABASE` only when the Odoo host requires database selection; when omitted or blank, the function omits `X-Odoo-Database`. `SUPABASE_URL` and the matching legacy `SUPABASE_SERVICE_ROLE_KEY` are runtime values. DELETE needs only the Odoo connection/authentication settings; category and image settings are evaluated only for a live source row.
-2. Populate collaborator mappings only for existing Odoo contacts. INSERT/UPDATE synchronizes the parent and collaborators with valid mappings; unmapped collaborators are skipped with a bounded, non-PII warning and retain their Galia data. The function never guesses, creates, or changes `res.partner` records, and never removes an existing Odoo collaborator merely because its source mapping is absent.
-3. **Current local source policy — not deployed:** each INSERT/UPDATE resolves `projects.user → userData.uid → userData.odoo_id`, validates a positive signed 32-bit integer, and writes it directly to `project.project.partner_id`. There is no `res.partner` customer call and no fallback to `userData.id` or `x_studio_mocklab_id`. Invalid/null IDs fail closed with `invalid_project_customer_id`; missing owner/account and owner-query failures retain their existing reason codes. The reported contact-28 mismatch for project 426 owner `id=51, odoo_id=13` is user-reported, not a fresh remote audit.
-4. Vault readiness was checked without exposing values: both `odoo_webhook_service_role` and `odoo_webhook_worker_secret` have exactly one nonempty value with no line breaks; the service-role value is JWT-shaped. This does not prove JWT cryptographic validity, service identity, or that the worker secret matches the Edge secret.
-5. The function sends only `{ type, schema, table, record, old_record }` with project IDs, matching the handler's current-row reread contract. `pg_net` enqueues after commit; no replay, backfill, or delivery guarantee exists. HTTP outcomes are recorded by `net._http_response`, not returned to the original project mutation.
-6. The approved scope is unfiltered future synchronization with normal project titles; the function has no title-prefix filter. Do not manually write Odoo, create another Dashboard UI webhook, manually invoke HTTP, enqueue a request, or replay a project.
-7. Project 421 produced the recorded live UPDATE delivery. The visible description and customer are user-confirmed working after the v10/v11 corrections. This does not independently prove a fresh post-hook INSERT, physical DELETE, gallery deltas, or collaborator reconciliation; ask the user whether these have already been exercised before proposing a destructive pilot.
-8. The pilot does not backfill events. When explicitly authorized, inspect only sanitized `net._http_response` metadata and redacted logs; do not read request headers, Vault plaintext, or secrets.
+## Local handler behavior
 
-The managed Database Webhook feature remains uninitialized because its `supabase_functions` schema is missing and the enable action is absent. Do not create platform-owned schemas, roles, Docker bootstrap objects, or another UI webhook to repair it. The custom direct trigger does not change that UI state. Do not add a second SQL trigger, Cron job, queue, or custom business table.
-
-## Authentication and activation
-
-The Edge gateway JWT check and the function both require the exact service-role token. The function also requires the shared `x-odoo-sync-worker-secret`, compared in constant time. Do not put either secret in browser code, SQL, logs, URLs, or source files.
-
-The active normal handler evaluates `ODOO_SYNC_ENABLED` exactly as `"true"`. A valid authenticated webhook returns `204` without any Odoo call while the flag is absent or any other value. When `ODOO_DATABASE` is omitted or blank, it omits `X-Odoo-Database`; a non-blank value is trimmed and sent. Enabling starts with future changes only; the webhook does not backfill existing projects.
-
-## Sync behavior
-
-| Event | Behavior |
+| Area | Checked-in behavior |
 | --- | --- |
-| INSERT / UPDATE | Ignores snapshot business fields and rereads the current `public.projects` row by ID with service role. The current local policy resolves the persisted owner to its validated direct `odoo_id` and writes it as `partner_id`; cloned projects naturally use their current owner. It searches projects by exact `x_mocklab_id`, including archived records: zero creates, one writes supplied fields, more than one fails. A missing current row follows the delete path. |
-| DELETE | Uses `old_record.id`, searches the same exact ID including archived records, physically unlinks exactly one remote project, and treats zero matches as success. Duplicates fail. |
-| Gallery | Uses only canonical allowed public HTTPS URLs from `image_data`. It creates URL attachments with deterministic `mocklab-project:<projectId>:<sha256(url)>` names, adds/removes only verified `type='url'` owned gallery relations, and never copies binaries or deletes `ir.attachment` rows. |
-| Collaborators | Uses UUID markers in `x_name` plus `x_origen='formulario'` to identify ownership. It updates/removes only verified owned rows, preserves manually reclassified rows, and does not manage the legacy `x_studio_contactos_relacionados` field. |
+| Activation | Synchronization runs only when `ODOO_SYNC_ENABLED` is exactly `"true"`; otherwise an authenticated request returns `204` without an Odoo call. |
+| Authentication | The handler requires the gateway JWT check, the exact service-role bearer token, and the `x-odoo-sync-worker-secret` header. Never place these values in browser code, SQL, logs, URLs, or source files. |
+| Events | INSERT and UPDATE reread the current `public.projects` row by ID. DELETE uses `old_record.id`. A missing current row follows the delete path. |
+| Customer | INSERT and UPDATE resolve `projects.user → userData.uid → userData.odoo_id`, validate a positive signed 32-bit integer, and write it to `project.project.partner_id`. There is no fallback to `userData.id` or `x_studio_mocklab_id`. |
+| Project identity | The handler searches Odoo projects by exact `x_mocklab_id`, including archived records: zero matches create, one match updates or deletes, and multiple matches fail. |
+| Collaborators | Each selected `odooId` is validated and confirmed against an existing Odoo `res.partner` before project or collaborator writes. The handler creates, updates, or removes only rows with its project-scoped UUID marker and `x_origen = formulario`; manual, unmarked, and reclassified rows are preserved. |
+| Description | The escaped description is written to both `description` and `x_studio_html_field_292_1jh13q299`; an empty value clears both. |
+| Google Maps | Legacy `{lat,lng}` JSON is supported. Links must be credential-free HTTPS on `google.com`, `www.google.com`, `maps.google.com`, or `maps.app.goo.gl`; legacy `goo.gl` links must use `/maps` or a path below it. Regional hosts and redirects are unsupported. |
+| Gallery | Only allowed public HTTPS URLs from `image_data` are synchronized as deterministic URL attachments. Reconciliation changes only verified gallery relations; it never copies binaries or deletes `ir.attachment` records. |
+| Delete | DELETE unlinks only one exact matched Odoo project and treats no match as success. It does not require owner, category, or image configuration. |
 
-Nullable optional fields are sent as `false` to clear their mapped Odoo fields. The function never broad-writes stage, CRM, tags, photo-owner, manual attachment, or manual collaborator data. Customer resolution does not alter role filters, photo ownership, or collaborator ownership behavior.
+An invalid collaborator ID, a selected contact that cannot be resolved, an invalid owner customer ID, an unmapped category, or an ambiguous remote identity fails the request closed. The handler does not create or modify `res.partner` records.
 
-## Failure handling and limits
+## Configuration names
 
-- Invalid input, missing configuration, owner/customer mapping failures, unmapped categories, duplicate remote identities, and ambiguous owned child markers fail with a non-2xx response and a redacted backend log containing correlation ID, event type, project ID where available, and a stable reason code. Unmapped collaborators are skipped and warned without personal data. Response bodies remain generic.
-- There are no blind retries after a remote timeout or write ambiguity. Operators must inspect logs and reconcile manually.
-- The function validates payload identity before network access, bounds requests to 10 seconds each and 45 seconds overall, and does not log Odoo response bodies, descriptions, images, or secrets.
-- Current-row checks before create and after success reduce stale resurrection, but this is not a distributed transaction. Database Webhooks do not guarantee ordering, delivery, exactly-once processing, or complete concurrent-delete protection. Duplicate requests can still cause operator-owned reconciliation.
-- The sender function catches only errors inside its credential lookup/enqueue branch so a configured delivery failure logs a fixed tag, project ID, event, and SQLSTATE while preserving the Mocklab mutation. It explicitly rethrows query cancellation. It never logs secret values, HTTP headers, SQL error text, or payload business fields.
-- An UPDATE after a DELETE rereads the missing source and issues a delete/no-op rather than recreating stale snapshot data.
-- The prior project 421 update was reported at `2026-09-21T18:24:39.195Z`; `pg_net` request 1 returned HTTP 200 `synced` at `2026-09-21T18:24:39.999Z` with correlation `b2a7a9b7-fd6c-4300-bbb2-f74c08c79bcb`. The user subsequently confirmed the visible description, customer, and overall integration work. This is user-reported end-to-end proof, not a fresh independent API audit; fresh INSERT, DELETE, gallery, and collaborator cases remain individually unrecorded.
+Required names are `ODOO_SYNC_ENABLED`, `ODOO_JSON2_URL`, `ODOO_API_KEY`, `ODOO_PROJECT_SYNC_WORKER_SECRET`, and `ODOO_CATEGORY_MAPPINGS`. `ODOO_DATABASE` and `ODOO_SYNC_EXTRA_IMAGE_HOSTS` are optional. `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are runtime values.
 
-## Advisory context
+When `ODOO_DATABASE` is absent or blank, the handler omits `X-Odoo-Database`; otherwise it trims and sends the value. DELETE requires only the Odoo connection and authentication settings because category and image settings are evaluated only for a current source row.
 
-The production security advisor reports `rls_enabled_no_policy` for the new mapping table. This is expected because access is intentionally service-only: https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy. Other reported warnings were pre-existing and unrelated; no changes were made to them.
+## Delivery limits and recovery
 
-## Historical note
+- The checked-in direct sender is asynchronous and future-change only. It provides no queue, backfill, replay, Cron, dashboard feedback, automatic retry, ordering, or exactly-once guarantee.
+- The handler bounds each Odoo request to 10 seconds and the full run to 45 seconds. It returns generic response bodies and logs only correlation metadata and stable reason codes.
+- Do not blindly retry after a timeout or uncertain write. Obtain authorization, inspect only sanitized response metadata and redacted logs, then reconcile manually.
+- Do not add a second trigger, a Dashboard webhook, a queue, Cron, or platform bootstrap objects as a recovery mechanism.
 
-The previous local outbox and scheduler migrations were never applied and have been removed. The earlier version 1 disabled-entrypoint deployment, version 10 description-mapping deployment, and prior no-trigger state are historical only; version 11 is the active normal-handler deployment and migration `20260921181906` attached the current trigger. The 24 historical mocked handler checks and seven customer-mapping VM cases validate handler behavior only; they are not proof of post-deployment Odoo delivery. There is no legacy queue or Cron state to activate or recover.
+## Historical context
+
+Earlier local outbox and scheduler migrations were removed without being applied. The UUID-to-partner mapping table belongs to an earlier collaborator approach and remains a historical schema artifact. The exact-name collaborator receiver is separate local-only work and must not be routed alongside this handler. Historical mocked checks and deployment readbacks demonstrate only the recorded local or point-in-time conditions; they are not evidence of current remote configuration or successful end-to-end synchronization. In particular, the version 16 record is historical deployment evidence, not a current audit.

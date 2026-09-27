@@ -26,6 +26,7 @@
     "publishes": "Publicaciones",
     "map": "Mapa",
     "adminPanel": "Administración",
+    "administration": "Administración",
     "gpts": "Mis GPTs",
     "wiki": "Wiki",
     "multimedia": "Multimedia",
@@ -397,6 +398,15 @@
     "visibility": "Visibilidad",
     "private": "Privado",
     "public": "Público"
+  },
+  "administration": {
+    "title": "Administración",
+    "description": "Gestiona las herramientas administrativas de la plataforma.",
+    "wiki": {
+      "title": "Gestión de la wiki",
+      "description": "Crea, edita y publica los contenidos de la wiki.",
+      "action": "Gestionar wiki"
+    }
   },
   "footer": {
     "allRightsReserved": "Todos los derechos reservados.",
