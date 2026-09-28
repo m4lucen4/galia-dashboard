@@ -437,6 +437,21 @@
     "deleteConfirmTitle": "Eliminar elements?",
     "deleteConfirmDescription": "Estàs a punt d'eliminar {{count}} element(s). Aquesta acció no es pot desfer. Vols continuar?",
     "noImages": "No hi ha imatges disponibles",
-    "uploadImagesFirst": "Puja imatges primer a la secció Multimèdia"
+    "uploadImagesFirst": "Puja imatges primer a la secció Multimèdia",
+    "move": "Mou",
+    "moving": "Movent...",
+    "moveDestinationTitle": "Mou imatges",
+    "moveDestinationDescription": "Tria la carpeta de destinació per a {{count}} imatge(s).",
+    "loadingFolders": "Carregant carpetes...",
+    "folderLoadError": "No s'han pogut carregar les carpetes. Tanca aquest diàleg i torna-ho a provar.",
+    "noSubfolders": "No hi ha subcarpetes en aquesta ubicació.",
+    "moveFailedTitle": "No s'han pogut moure les imatges",
+    "moveErrors": {
+      "referenced": "Una o més imatges estan vinculades a un projecte i no es poden moure.",
+      "validation": "No es pot completar el moviment amb les imatges o carpeta seleccionades.",
+      "conflict": "Ja existeix una imatge amb el mateix nom a la carpeta de destinació.",
+      "partial": "No s'han pogut moure totes les imatges. Revisa la biblioteca abans de tornar-ho a provar.",
+      "failed": "No s'han pogut moure les imatges. Torna-ho a provar."
+    }
   }
 }

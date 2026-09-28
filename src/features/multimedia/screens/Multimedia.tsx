@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAppSelector, useAppDispatch } from "../../../redux/hooks";
 import { RootState } from "../../../redux/store";
 import {
@@ -6,10 +6,13 @@ import {
   createFolder,
   uploadFiles,
   deleteItems,
+  moveItems,
+  MoveMediaFailure,
 } from "../../../redux/actions/MultimediaActions";
 import {
   setCurrentPath,
   toggleSelectItem,
+  clearSelection,
 } from "../../../redux/slices/MultimediaSlice";
 import { FileItem as FileItemType } from "../../../types";
 
@@ -19,10 +22,26 @@ import { FileGrid } from "../components/FileGrid";
 import { FileUploader } from "../components/FileUploader";
 import { ImagePreviewModal } from "../components/ImagePreviewModal";
 import { CreateFolderModal } from "../components/CreateFolderModal";
+import { MoveDestinationModal } from "../components/MoveDestinationModal";
 import { useTranslation } from "react-i18next";
 import { SocialMediaPreset } from "../../../helpers/imageOptimizer";
 import { Alert } from "../../../components/shared/ui/Alert";
 import { TrashIcon } from "@heroicons/react/24/outline";
+
+const moveFailureStatuses = new Set<MoveMediaFailure["status"]>([
+  "referenced",
+  "validation",
+  "conflict",
+  "partial",
+  "failed",
+]);
+
+const isMoveMediaFailure = (value: unknown): value is MoveMediaFailure =>
+  typeof value === "object" &&
+  value !== null &&
+  "status" in value &&
+  typeof value.status === "string" &&
+  moveFailureStatuses.has(value.status as MoveMediaFailure["status"]);
 
 export const Multimedia = () => {
   const dispatch = useAppDispatch();
@@ -37,16 +56,24 @@ export const Multimedia = () => {
     createFolderLoading,
     uploadLoading,
     deleteLoading,
+    moveLoading,
   } = useAppSelector((state: RootState) => state.multimedia);
 
   const [showUploader, setShowUploader] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileItemType | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showMoveDestination, setShowMoveDestination] = useState(false);
+  const [moveFailure, setMoveFailure] = useState<MoveMediaFailure | null>(null);
   const [showUploadError, setShowUploadError] = useState(false);
   const [uploadErrorFileName, setUploadErrorFileName] = useState<string>("");
   const [optimizationPreset, setOptimizationPreset] =
     useState<SocialMediaPreset>("social");
+  const currentPathRef = useRef(currentPath);
+
+  useEffect(() => {
+    currentPathRef.current = currentPath;
+  }, [currentPath]);
 
   useEffect(() => {
     if (user) {
@@ -119,6 +146,36 @@ export const Multimedia = () => {
     setShowDeleteConfirm(false);
   };
 
+  const selectedFiles = files.filter((file) => selectedItems.includes(file.path));
+
+  const handleMoveConfirm = async (destinationPath: string) => {
+    const result = await dispatch(
+      moveItems({
+        userId: user.id,
+        items: selectedFiles.map(({ path, name }) => ({ path, name })),
+        destinationPath,
+      }),
+    );
+
+    await dispatch(
+      fetchMediaItems({ userId: user.id, path: currentPathRef.current }),
+    );
+
+    setShowMoveDestination(false);
+
+    if (moveItems.fulfilled.match(result)) {
+      dispatch(clearSelection());
+      return;
+    }
+
+    const failure = result.payload;
+    setMoveFailure(
+      isMoveMediaFailure(failure)
+        ? failure
+        : { status: "failed", message: "Unable to move media" },
+    );
+  };
+
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
   };
@@ -139,6 +196,9 @@ export const Multimedia = () => {
           onDelete={handleDeleteClick}
           onUpload={() => setShowUploader(true)}
           deleteLoading={deleteLoading}
+          onMove={() => setShowMoveDestination(true)}
+          moveLoading={moveLoading}
+          canMove={selectedFiles.length > 0}
         />
 
         <div className="p-4 border-b">
@@ -233,6 +293,17 @@ export const Multimedia = () => {
         loading={createFolderLoading}
       />
 
+      {showMoveDestination && (
+        <MoveDestinationModal
+          isOpen={showMoveDestination}
+          userId={user.id}
+          selectedCount={selectedFiles.length}
+          moving={moveLoading}
+          onClose={() => setShowMoveDestination(false)}
+          onConfirm={handleMoveConfirm}
+        />
+      )}
+
       <ImagePreviewModal
         isOpen={!!previewFile}
         onClose={() => setPreviewFile(null)}
@@ -258,6 +329,14 @@ export const Multimedia = () => {
           title="Error en la subida de imagen"
           description={`Hay un problema en la subida de la imagen ${uploadErrorFileName}, asegúrese que tiene un tamaño válido y el nombre del archivo no tiene caracteres especiales`}
           onAccept={() => setShowUploadError(false)}
+        />
+      )}
+
+      {moveFailure && (
+        <Alert
+          title={t("multimedia.moveFailedTitle")}
+          description={t(`multimedia.moveErrors.${moveFailure.status}`)}
+          onAccept={() => setMoveFailure(null)}
         />
       )}
     </div>

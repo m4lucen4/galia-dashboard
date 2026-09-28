@@ -4,6 +4,7 @@ const bucketName = "user-media";
 const protectedProjectRoot = "/proyectos";
 const listLimit = 1_000;
 const linkPageSize = 1_000;
+const maxLinkPages = 10_000;
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -165,15 +166,44 @@ const getAllLinkRows = async (
   query: () => PaginatedQuery,
 ) => {
   const rows: LinkRow[] = [];
+  const rowFingerprints = new Set<string>();
   let from = 0;
+  let pageCount = 0;
 
   while (true) {
     const { data, error } = await query().range(from, from + linkPageSize - 1);
     if (error || !data) throw new MoveError("failed", "Unable to inspect linked images");
+    if (data.length === 0) return rows;
+    if (data.length > linkPageSize || pageCount >= maxLinkPages) {
+      throw new MoveError("failed", "Unable to inspect linked images");
+    }
 
-    rows.push(...(data as LinkRow[]));
-    if (data.length < linkPageSize) return rows;
-    from += linkPageSize;
+    let newRowCount = 0;
+    for (const row of data) {
+      let fingerprint: string;
+      try {
+        const serializedRow = JSON.stringify(row);
+        if (!serializedRow) {
+          throw new MoveError("failed", "Unable to inspect linked images");
+        }
+        fingerprint = serializedRow;
+      } catch {
+        throw new MoveError("failed", "Unable to inspect linked images");
+      }
+
+      if (!rowFingerprints.has(fingerprint)) {
+        rowFingerprints.add(fingerprint);
+        rows.push(row);
+        newRowCount += 1;
+      }
+    }
+
+    if (newRowCount === 0) {
+      throw new MoveError("failed", "Unable to inspect linked images");
+    }
+
+    from += data.length;
+    pageCount += 1;
   }
 };
 

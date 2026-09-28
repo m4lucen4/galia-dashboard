@@ -444,6 +444,21 @@
     "deleteConfirmTitle": "¿Eliminar elementos?",
     "deleteConfirmDescription": "Estás a punto de eliminar {{count}} elemento(s). Esta acción no se puede deshacer. ¿Deseas continuar?",
     "noImages": "No hay imágenes disponibles",
-    "uploadImagesFirst": "Sube imágenes primero en la sección Multimedia"
+    "uploadImagesFirst": "Sube imágenes primero en la sección Multimedia",
+    "move": "Mover",
+    "moving": "Moviendo...",
+    "moveDestinationTitle": "Mover imágenes",
+    "moveDestinationDescription": "Elige la carpeta de destino para {{count}} imagen(es).",
+    "loadingFolders": "Cargando carpetas...",
+    "folderLoadError": "No se han podido cargar las carpetas. Cierra y vuelve a intentarlo.",
+    "noSubfolders": "No hay subcarpetas en esta ubicación.",
+    "moveFailedTitle": "No se han podido mover las imágenes",
+    "moveErrors": {
+      "referenced": "Una o más imágenes están vinculadas a un proyecto y no se pueden mover.",
+      "validation": "No se puede completar el movimiento con las imágenes o carpeta seleccionadas.",
+      "conflict": "Ya existe una imagen con el mismo nombre en la carpeta de destino.",
+      "partial": "No se han podido mover todas las imágenes. Revisa la biblioteca antes de volver a intentarlo.",
+      "failed": "No se han podido mover las imágenes. Vuelve a intentarlo."
+    }
   }
 }
