@@ -8,6 +8,8 @@ const FONT_OPTIONS: { label: string; value: string }[] = [
   { label: "Inter", value: "Inter" },
   { label: "Lato", value: "Lato" },
   { label: "Merriweather", value: "Merriweather" },
+  { label: "Cormorant Garamond", value: "Cormorant Garamond" },
+  { label: "Fraunces", value: "Fraunces" },
 ];
 
 interface FontSelectorProps {

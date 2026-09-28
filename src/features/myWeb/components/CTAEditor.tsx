@@ -172,14 +172,12 @@ export const CTAEditor: React.FC<CTAEditorProps> = ({ component }) => {
         </div>
       </div>
 
-      {/* ── Color del bloque (solo tipo 2) ─────────────────────────────────── */}
-      {form.type === 2 && (
-        <ColorPicker
-          label="Color del bloque"
-          value={form.split_color ?? "#2D3436"}
-          onChange={(color) => handleChange("split_color", color)}
-        />
-      )}
+      {/* ── Background color ───────────────────────────────────────────────── */}
+      <ColorPicker
+        label="Color del bloque"
+        value={form.split_color ?? "#2D3436"}
+        onChange={(color) => handleChange("split_color", color)}
+      />
 
       {/* ── Sección 2: Campos de contenido ─────────────────────────────────── */}
       <div className="space-y-4">
