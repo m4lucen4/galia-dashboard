@@ -62,6 +62,8 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
   const [editSlugError, setEditSlugError] = useState("");
 
   const isCustom = (page: SitePageDataProps) => !PROTECTED_SLUGS.includes(page.slug);
+  const canManagePage = (page: SitePageDataProps) =>
+    isCustom(page) || page.slug === "proyectos";
 
   // ---- Create ----
   const handleSlugChange = (value: string) => {
@@ -259,8 +261,8 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
                     )}
                   </button>
 
-                  {/* Dropdown menu for custom pages */}
-                  {isCustom(page) && (
+                  {/* Dropdown menu for custom pages and projects */}
+                  {canManagePage(page) && (
                     <Menu as="div" className="relative">
                       <MenuButton
                         className={`p-1 mr-1 rounded transition-colors ${
@@ -277,19 +279,21 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
                         anchor="bottom start"
                         className="z-50 mt-1 w-48 rounded-md bg-white border border-gray-200 shadow-lg py-1 focus:outline-none"
                       >
-                        <MenuItem>
-                          {({ focus }) => (
-                            <button
-                              onClick={() => handleStartRename(page)}
-                              className={`flex w-full items-center gap-2 px-3 py-2 text-sm ${
-                                focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
-                              }`}
-                            >
-                              <PencilIcon className="h-4 w-4" />
-                              Renombrar
-                            </button>
-                          )}
-                        </MenuItem>
+                        {isCustom(page) && (
+                          <MenuItem>
+                            {({ focus }) => (
+                              <button
+                                onClick={() => handleStartRename(page)}
+                                className={`flex w-full items-center gap-2 px-3 py-2 text-sm ${
+                                  focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
+                                }`}
+                              >
+                                <PencilIcon className="h-4 w-4" />
+                                Renombrar
+                              </button>
+                            )}
+                          </MenuItem>
+                        )}
 
                         <MenuItem>
                           {({ focus }) => (
@@ -323,7 +327,7 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
                           )}
                         </MenuItem>
 
-                        <div className="border-t border-gray-100 my-1" />
+                        {isCustom(page) && <div className="border-t border-gray-100 my-1" />}
 
                         <MenuItem>
                           {({ focus }) => (
@@ -355,21 +359,25 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
                           )}
                         </MenuItem>
 
-                        <div className="border-t border-gray-100 my-1" />
+                        {isCustom(page) && (
+                          <>
+                            <div className="border-t border-gray-100 my-1" />
 
-                        <MenuItem>
-                          {({ focus }) => (
-                            <button
-                              onClick={() => setDeleteTarget(page.id)}
-                              className={`flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 ${
-                                focus ? "bg-red-50" : ""
-                              }`}
-                            >
-                              <TrashIcon className="h-4 w-4" />
-                              Eliminar
-                            </button>
-                          )}
-                        </MenuItem>
+                            <MenuItem>
+                              {({ focus }) => (
+                                <button
+                                  onClick={() => setDeleteTarget(page.id)}
+                                  className={`flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 ${
+                                    focus ? "bg-red-50" : ""
+                                  }`}
+                                >
+                                  <TrashIcon className="h-4 w-4" />
+                                  Eliminar
+                                </button>
+                              )}
+                            </MenuItem>
+                          </>
+                        )}
                       </MenuItems>
                     </Menu>
                   )}
