@@ -5,6 +5,22 @@ import { FileItem, FolderItem, UploadProgress } from "../../types";
 const BUCKET_NAME = "user-media";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
+type MoveMediaRollbackFailure = {
+  status: "partial" | "failed";
+  message: string;
+  originalError: string;
+  movedCount: number;
+  rolledBackCount: number;
+  rollbackFailedCount: number;
+  rollbackFailedPaths: string[];
+};
+
+export type MoveMediaFailure =
+  | { status: "referenced" | "validation" | "conflict" | "failed"; message: string }
+  | MoveMediaRollbackFailure;
+
+type MoveMediaResponse = MoveMediaFailure | { status: "moved"; movedCount: number };
+
 export const fetchMediaItems = createAsyncThunk(
   "multimedia/fetchMediaItems",
   async (
@@ -308,11 +324,7 @@ export const renameItem = createAsyncThunk(
 export const moveItems = createAsyncThunk(
   "multimedia/moveItems",
   async (
-    {
-      userId,
-      items,
-      destinationPath,
-    }: {
+    args: {
       userId: string;
       items: { path: string; name: string }[];
       destinationPath: string;
@@ -320,29 +332,16 @@ export const moveItems = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const movePromises = items.map(async (item) => {
-        const newPath =
-          destinationPath === "/"
-            ? `/${item.name}`
-            : `${destinationPath}/${item.name}`;
+      const { data, error } = await supabase.functions.invoke<MoveMediaResponse>(
+        "move-user-media",
+        { body: { items: args.items, destinationPath: args.destinationPath } }
+      );
 
-        const oldFullPath = `${userId}${item.path}`;
-        const newFullPath = `${userId}${newPath}`;
+      if (error) throw new Error(error.message || "Error moving items");
+      if (!data) throw new Error("No move response received");
+      if (data.status !== "moved") return rejectWithValue(data);
 
-        const { error } = await supabase.storage
-          .from(BUCKET_NAME)
-          .move(oldFullPath, newFullPath);
-
-        if (error) {
-          throw error;
-        }
-
-        return { oldPath: item.path, newPath };
-      });
-
-      const results = await Promise.all(movePromises);
-
-      return { movedItems: results };
+      return data;
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : "Error moving items"
