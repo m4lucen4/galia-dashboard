@@ -436,6 +436,21 @@
     "deleteConfirmTitle": "Delete items?",
     "deleteConfirmDescription": "You are about to delete {{count}} item(s). This action cannot be undone. Do you want to continue?",
     "noImages": "No images available",
-    "uploadImagesFirst": "Upload images first in the Multimedia section"
+    "uploadImagesFirst": "Upload images first in the Multimedia section",
+    "move": "Move",
+    "moving": "Moving...",
+    "moveDestinationTitle": "Move images",
+    "moveDestinationDescription": "Choose the destination folder for {{count}} image(s).",
+    "loadingFolders": "Loading folders...",
+    "folderLoadError": "Folders could not be loaded. Close this dialog and try again.",
+    "noSubfolders": "There are no subfolders in this location.",
+    "moveFailedTitle": "Images could not be moved",
+    "moveErrors": {
+      "referenced": "One or more images are linked to a project and cannot be moved.",
+      "validation": "The move cannot be completed with the selected images or folder.",
+      "conflict": "An image with the same name already exists in the destination folder.",
+      "partial": "Not all images could be moved. Review the library before trying again.",
+      "failed": "Images could not be moved. Please try again."
+    }
   }
 }

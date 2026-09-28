@@ -2,6 +2,7 @@ import {
   FolderPlusIcon,
   TrashIcon,
   ArrowUpTrayIcon,
+  FolderArrowDownIcon,
 } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 
@@ -10,7 +11,10 @@ interface ToolbarProps {
   onCreateFolder: () => void;
   onDelete: () => void;
   onUpload: () => void;
+  onMove: () => void;
   deleteLoading?: boolean;
+  moveLoading?: boolean;
+  canMove: boolean;
 }
 
 export const Toolbar = ({
@@ -18,7 +22,10 @@ export const Toolbar = ({
   onCreateFolder,
   onDelete,
   onUpload,
+  onMove,
   deleteLoading,
+  moveLoading,
+  canMove,
 }: ToolbarProps) => {
   const { t } = useTranslation();
   return (
@@ -56,6 +63,16 @@ export const Toolbar = ({
               {deleteLoading
                 ? t("multimedia.deleting")
                 : t("multimedia.delete")}
+            </span>
+          </button>
+          <button
+            onClick={onMove}
+            disabled={!canMove || moveLoading}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+          >
+            <FolderArrowDownIcon className="h-5 w-5" />
+            <span>
+              {moveLoading ? t("multimedia.moving") : t("multimedia.move")}
             </span>
           </button>
         </div>

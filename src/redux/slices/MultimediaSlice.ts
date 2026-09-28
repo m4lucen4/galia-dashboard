@@ -6,6 +6,7 @@ import {
   deleteItems,
   renameItem,
   moveItems,
+  MoveMediaFailure,
 } from "../actions/MultimediaActions";
 import { FileItem, FolderItem, UploadProgress } from "../../types";
 
@@ -22,6 +23,7 @@ interface MultimediaState {
   deleteLoading: boolean;
   renameLoading: boolean;
   moveLoading: boolean;
+  moveError: MoveMediaFailure | null;
 }
 
 const initialState: MultimediaState = {
@@ -37,6 +39,7 @@ const initialState: MultimediaState = {
   deleteLoading: false,
   renameLoading: false,
   moveLoading: false,
+  moveError: null,
 };
 
 const multimediaSlice = createSlice({
@@ -181,28 +184,18 @@ const multimediaSlice = createSlice({
     builder
       .addCase(moveItems.pending, (state) => {
         state.moveLoading = true;
+        state.moveError = null;
         state.error = null;
       })
-      .addCase(moveItems.fulfilled, (state, action) => {
+      .addCase(moveItems.fulfilled, (state) => {
         state.moveLoading = false;
-
-        action.payload.movedItems.forEach(({ oldPath, newPath }) => {
-          const file = state.files.find((f) => f.path === oldPath);
-          if (file) {
-            file.path = newPath;
-          }
-
-          const folder = state.folders.find((f) => f.path === oldPath);
-          if (folder) {
-            folder.path = newPath;
-          }
-        });
-
         state.selectedItems = [];
       })
       .addCase(moveItems.rejected, (state, action) => {
         state.moveLoading = false;
-        state.error = action.payload as string;
+        const payload = action.payload as MoveMediaFailure | string | undefined;
+        state.moveError = typeof payload === "object" ? payload : null;
+        state.error = typeof payload === "string" ? payload : payload?.message || "Error moving items";
       });
   },
 });
