@@ -161,66 +161,68 @@ export const EditorialCardsEditor: React.FC<EditorialCardsEditorProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {form.cards.map((card, cardIndex) => {
-        const index = cardIndex as 0 | 1;
-        const isUploading = uploadingCards.has(index);
+    <div className="@container space-y-4">
+      <div className="grid gap-4 @min-[44rem]:grid-cols-2">
+        {form.cards.map((card, cardIndex) => {
+          const index = cardIndex as 0 | 1;
+          const isUploading = uploadingCards.has(index);
 
-        return (
-          <section key={index} className="space-y-4 rounded-md border border-gray-200 p-4">
-            <h4 className="text-sm font-medium text-gray-900">
-              Tarjeta {index + 1}
-            </h4>
-            <ImageUploader
-              label="Imagen"
-              currentUrl={card.image_url || null}
-              onUpload={(file) => handleImageUpload(index, file)}
-              onRemove={() => {
-                imageRequestRef.current[index] += 1;
-                failedUploadsRef.current.delete(index);
-                updateCard(index, { image_url: "" });
-              }}
-              loading={isUploading}
-            />
-            <InputField
-              id={`editorial-card-${index + 1}-title`}
-              type="text"
-              label="Título"
-              value={card.title}
-              onChange={(event) => updateCard(index, { title: event.target.value })}
-              placeholder="Título de la tarjeta"
-            />
-            <RichTextInput
-              label="Descripción"
-              value={card.description}
-              onChange={(description) => updateCard(index, { description })}
-              placeholder="Escribe una descripción..."
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <InputField
-                id={`editorial-card-${index + 1}-button-text`}
-                type="text"
-                label="Texto del botón secundario"
-                value={card.text_secondary_button}
-                onChange={(event) =>
-                  updateCard(index, { text_secondary_button: event.target.value })
-                }
-                placeholder="Ver más"
+          return (
+            <section key={index} className="min-w-0 space-y-4 rounded-md border border-gray-200 p-4">
+              <h4 className="text-sm font-medium text-gray-900">
+                Tarjeta {index + 1}
+              </h4>
+              <ImageUploader
+                label="Imagen"
+                currentUrl={card.image_url || null}
+                onUpload={(file) => handleImageUpload(index, file)}
+                onRemove={() => {
+                  imageRequestRef.current[index] += 1;
+                  failedUploadsRef.current.delete(index);
+                  updateCard(index, { image_url: "" });
+                }}
+                loading={isUploading}
               />
               <InputField
-                id={`editorial-card-${index + 1}-button-url`}
+                id={`editorial-card-${index + 1}-title`}
                 type="text"
-                label="URL del botón secundario"
-                value={card.url_secondary_button}
-                onChange={(event) =>
-                  updateCard(index, { url_secondary_button: event.target.value })
-                }
-                placeholder="https://ejemplo.com o /proyectos"
+                label="Título"
+                value={card.title}
+                onChange={(event) => updateCard(index, { title: event.target.value })}
+                placeholder="Título de la tarjeta"
               />
-            </div>
-          </section>
-        );
-      })}
+              <RichTextInput
+                label="Descripción"
+                value={card.description}
+                onChange={(description) => updateCard(index, { description })}
+                placeholder="Escribe una descripción..."
+              />
+              <div className="grid gap-3">
+                <InputField
+                  id={`editorial-card-${index + 1}-button-text`}
+                  type="text"
+                  label="Texto del botón secundario"
+                  value={card.text_secondary_button}
+                  onChange={(event) =>
+                    updateCard(index, { text_secondary_button: event.target.value })
+                  }
+                  placeholder="Ver más"
+                />
+                <InputField
+                  id={`editorial-card-${index + 1}-button-url`}
+                  type="text"
+                  label="URL del botón secundario"
+                  value={card.url_secondary_button}
+                  onChange={(event) =>
+                    updateCard(index, { url_secondary_button: event.target.value })
+                  }
+                  placeholder="https://ejemplo.com o /proyectos"
+                />
+              </div>
+            </section>
+          );
+        })}
+      </div>
       <div className="flex items-center gap-3">
         <Button
           title={saving ? "Guardando..." : "Guardar cambios"}
