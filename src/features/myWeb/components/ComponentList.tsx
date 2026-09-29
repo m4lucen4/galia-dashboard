@@ -36,6 +36,7 @@ const COMPONENT_TYPES: { type: SiteComponentType; label: string; description?: s
   { type: "rich_text", label: "Texto enriquecido", description: "Bloque de texto con negrita, cursiva y alineación" },
   { type: "separator", label: "Separador", description: "Espaciado vertical entre componentes" },
   { type: "figure", label: "Imagen con pie de foto", description: "Imagen a 50% o ancho completo con texto de pie de foto" },
+  { type: "editorial_cards", label: "Tarjetas editoriales", description: "Dos tarjetas con imagen, texto y enlace" },
 ];
 
 export const ComponentList: React.FC<ComponentListProps> = ({

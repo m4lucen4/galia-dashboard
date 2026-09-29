@@ -14,6 +14,7 @@ import {
   RichTextConfig,
   SeparatorConfig,
   FigureConfig,
+  EditorialCardsConfig,
 } from "../../types";
 import type { RootState } from "../store";
 
@@ -44,7 +45,7 @@ export const fetchSiteComponents = createAsyncThunk(
 function getDefaultConfig(
   type: SiteComponentType,
   options?: { layout?: ProjectListLayout },
-): HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig | ProjectColumnsConfig | RichTextConfig | SeparatorConfig | FigureConfig {
+): HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig | ProjectColumnsConfig | RichTextConfig | SeparatorConfig | FigureConfig | EditorialCardsConfig {
   if (type === "project_list") {
     return { layout: options?.layout ?? "grid-4" };
   }
@@ -126,6 +127,26 @@ function getDefaultConfig(
       image_url: "",
       caption: "",
       size: "full",
+    };
+  }
+  if (type === "editorial_cards") {
+    return {
+      cards: [
+        {
+          image_url: "",
+          title: "",
+          description: "",
+          text_secondary_button: "",
+          url_secondary_button: "",
+        },
+        {
+          image_url: "",
+          title: "",
+          description: "",
+          text_secondary_button: "",
+          url_secondary_button: "",
+        },
+      ],
     };
   }
   return [
@@ -702,6 +723,53 @@ export const uploadFigureImage = createAsyncThunk(
       return { url: urlData.publicUrl };
     } catch (error) {
       return rejectWithValue("Error inesperado al subir imagen del figure");
+    }
+  },
+);
+
+export const uploadEditorialCardImage = createAsyncThunk(
+  "siteComponents/uploadEditorialCardImage",
+  async (
+    {
+      file,
+      componentId,
+      cardIndex,
+    }: {
+      file: File;
+      componentId: string;
+      cardIndex: 0 | 1;
+    },
+    { rejectWithValue, getState },
+  ) => {
+    try {
+      const state = getState() as RootState;
+      const userId = state.auth.user?.uid;
+      if (!userId) return rejectWithValue("Usuario no autenticado");
+
+      const filePath = `${userId}/editorial-cards/${componentId}/card-${cardIndex + 1}.webp`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("sites")
+        .upload(filePath, file, {
+          contentType: file.type,
+          upsert: true,
+        });
+
+      if (uploadError) {
+        return rejectWithValue({
+          message: `Error al subir imagen: ${uploadError.message}`,
+        });
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("sites")
+        .getPublicUrl(filePath);
+      const imageUrl = new URL(urlData.publicUrl);
+      imageUrl.searchParams.set("t", String(Date.now()));
+
+      return { cardIndex, url: imageUrl.toString() };
+    } catch {
+      return rejectWithValue("Error inesperado al subir imagen editorial");
     }
   },
 );
