@@ -10,6 +10,8 @@ const FONT_OPTIONS: { label: string; value: string }[] = [
   { label: "Merriweather", value: "Merriweather" },
   { label: "Cormorant Garamond", value: "Cormorant Garamond" },
   { label: "Fraunces", value: "Fraunces" },
+  { label: "Plus Jakarta Sans", value: "Plus Jakarta Sans" },
+  { label: "Newsreader", value: "Newsreader" },
 ];
 
 interface FontSelectorProps {
