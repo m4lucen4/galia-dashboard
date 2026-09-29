@@ -9,6 +9,7 @@ import {
   upsertCTAComponent,
   saveProjectListOrder,
   saveProjectListHidden,
+  uploadEditorialCardImage,
 } from "../actions/SiteComponentActions";
 import { SiteComponentDataProps, IRequest, SupabaseError } from "../../types";
 
@@ -149,6 +150,19 @@ const siteComponentSlice = createSlice({
         state.uploadRequest = { inProgress: false, messages: "", ok: true };
       })
       .addCase(uploadSlideImage.rejected, (state, action) => {
+        state.uploadRequest = {
+          inProgress: false,
+          messages: getErrorMessage(action.payload),
+          ok: false,
+        };
+      })
+      .addCase(uploadEditorialCardImage.pending, (state) => {
+        state.uploadRequest = { inProgress: true, messages: "", ok: false };
+      })
+      .addCase(uploadEditorialCardImage.fulfilled, (state) => {
+        state.uploadRequest = { inProgress: false, messages: "", ok: true };
+      })
+      .addCase(uploadEditorialCardImage.rejected, (state, action) => {
         state.uploadRequest = {
           inProgress: false,
           messages: getErrorMessage(action.payload),
