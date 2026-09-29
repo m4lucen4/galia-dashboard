@@ -1,0 +1,2 @@
+[functions.project-analytics]
+verify_jwt = false
