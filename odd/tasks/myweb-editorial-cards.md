@@ -12,7 +12,7 @@
 
 ## Checklist
 
-- [x] **MEC-01 — Register and edit editorial cards:** Added typed two-card config/defaults, picker, dispatcher and editor with existing rich-text/image controls, per-card scoped upload, title and secondary CTA fields, and explicit save. Uploads are queued; failures are visible, and save uses a stable snapshot without overwriting newer local edits. Route: delegated (type, actions, picker, dispatcher, editor). **Verification:** `pnpm build`, focused ESLint for five modified files and `git diff --check` passed. `SiteComponentActions.ts` has 14 pre-existing lint errors (unused catch variables), reproduced against `HEAD`; no new lint errors identified there. No browser/authenticated site runtime available; upload, persistence after reload and public rendering remain unverified manually. **Rollback boundary:** new type/default, picker, dispatcher, editor and upload thunk. **Commit:** pending.
+- [x] **MEC-01 — Register and edit editorial cards:** Added typed two-card config/defaults, picker, dispatcher and editor with existing rich-text/image controls, per-card scoped upload, title and secondary CTA fields, and explicit save. Uploads are queued; failures are visible, and save uses a stable snapshot without overwriting newer local edits. Route: delegated (type, actions, picker, dispatcher, editor). **Verification:** `pnpm build`, focused ESLint for five modified files and `git diff --check` passed. `SiteComponentActions.ts` has 14 pre-existing lint errors (unused catch variables), reproduced against the pre-change base; no new lint errors identified there. No browser/authenticated site runtime available; upload, persistence after reload and public rendering remain unverified manually. **Rollback boundary:** new type/default, picker, dispatcher, editor and upload thunk. **Commit:** `b058934` (`feat(myweb): add two-column editorial cards`). **RDD:** medium, `under_budget` (373 authored changed lines against branch point); no review started; boundary remains `e688e7d` until a later due slice.
 
 ## Acceptance criteria
 
@@ -24,4 +24,4 @@
 
 ## Progress and next step
 
-- MEC-01 source implemented and static checks passed; manual authenticated flow and public renderer are still pending. Next: commit this work unit, record its identity and give a `mocklab-sites` prompt without editing the sibling repository.
+- MEC-01 committed with static checks passed; manual authenticated flow and public renderer are still pending. The new renderer is a separate change for `mocklab-sites`; provide a prompt without editing that repository. Unrelated dirty work remains untouched.
