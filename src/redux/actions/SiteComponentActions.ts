@@ -47,7 +47,7 @@ function getDefaultConfig(
   options?: { layout?: ProjectListLayout },
 ): HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig | ContactConfig | ProjectColumnsConfig | RichTextConfig | SeparatorConfig | FigureConfig | EditorialCardsConfig {
   if (type === "project_list") {
-    return { layout: options?.layout ?? "grid-4" };
+    return { layout: options?.layout ?? "grid-4", show_descriptions: true };
   }
   if (type === "cta") {
     return {
@@ -669,6 +669,65 @@ export const saveProjectListDetailType = createAsyncThunk(
       return { component: data as SiteComponentDataProps, detail_type };
     } catch (error) {
       return rejectWithValue("Error inesperado al guardar tipo de detalle");
+    }
+  },
+);
+
+export const saveProjectListShowDescriptions = createAsyncThunk(
+  "siteComponents/saveProjectListShowDescriptions",
+  async (
+    {
+      pageId,
+      show_descriptions,
+    }: {
+      pageId: string;
+      show_descriptions: boolean;
+    },
+    { rejectWithValue, getState, dispatch },
+  ) => {
+    try {
+      const state = getState() as RootState;
+      const existing = state.siteComponent.components.find(
+        (c) => c.page_id === pageId && c.type === "project_list",
+      );
+
+      if (existing) {
+        const currentConfig = existing.config as ProjectListConfig;
+        await dispatch(
+          updateSiteComponent({
+            componentId: existing.id,
+            updates: { config: { ...currentConfig, show_descriptions } },
+          }),
+        ).unwrap();
+        return { show_descriptions };
+      }
+
+      const position = state.siteComponent.components.filter(
+        (c) => c.page_id === pageId,
+      ).length;
+
+      const { data, error } = await supabase
+        .from("site_components")
+        .insert({
+          page_id: pageId,
+          type: "project_list",
+          position,
+          visible: true,
+          config: { layout: "grid-4", show_descriptions },
+        })
+        .select()
+        .single();
+
+      if (error) {
+        return rejectWithValue({
+          message: `Error al guardar descripciones: ${error.message}`,
+          status: error.code,
+        });
+      }
+
+      return { component: data as SiteComponentDataProps, show_descriptions };
+    } catch {
+      return rejectWithValue("Error inesperado al guardar descripciones");
     }
   },
 );

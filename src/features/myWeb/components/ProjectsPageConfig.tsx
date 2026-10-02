@@ -3,7 +3,13 @@ import { SitePageDataProps, ProjectListConfig, ProjectListLayout, SiteComponentD
 import { LayoutSelector } from "./LayoutSelector";
 import { DetailTypeSelector } from "./DetailTypeSelector";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { upsertProjectListComponent, saveProjectListOrder, saveProjectListHidden, saveProjectListDetailType } from "../../../redux/actions/SiteComponentActions";
+import {
+  upsertProjectListComponent,
+  saveProjectListOrder,
+  saveProjectListHidden,
+  saveProjectListDetailType,
+  saveProjectListShowDescriptions,
+} from "../../../redux/actions/SiteComponentActions";
 import { fetchProjects, fetchProjectsByUserId } from "../../../redux/actions/ProjectActions";
 import { InformationCircleIcon, ChevronUpIcon, ChevronDownIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
@@ -33,6 +39,7 @@ export const ProjectsPageConfig: React.FC<ProjectsPageConfigProps> = ({
   const currentOrder: string[] | undefined = config?.project_order;
   const hiddenProjects: string[] = config?.hidden_projects ?? [];
   const currentDetailType: 1 | 2 = config?.detail_type ?? 1;
+  const showDescriptions = config?.show_descriptions ?? true;
 
   useEffect(() => {
     if (projects.length === 0 && user?.uid) {
@@ -66,6 +73,10 @@ export const ProjectsPageConfig: React.FC<ProjectsPageConfigProps> = ({
 
   const handleDetailTypeChange = (detail_type: 1 | 2) => {
     dispatch(saveProjectListDetailType({ pageId: page.id, detail_type }));
+  };
+
+  const handleShowDescriptionsChange = (show_descriptions: boolean) => {
+    dispatch(saveProjectListShowDescriptions({ pageId: page.id, show_descriptions }));
   };
 
   const handleToggleHidden = (projectId: string) => {
@@ -110,6 +121,21 @@ export const ProjectsPageConfig: React.FC<ProjectsPageConfigProps> = ({
           onChange={handleDetailTypeChange}
           disabled={saveRequest.inProgress}
         />
+      </div>
+
+      <div className="space-y-1">
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-900">
+          <input
+            type="checkbox"
+            checked={showDescriptions}
+            onChange={(event) => handleShowDescriptionsChange(event.target.checked)}
+            disabled={saveRequest.inProgress}
+          />
+          Mostrar descripciones en las tarjetas
+        </label>
+        <p className="text-sm text-gray-600">
+          Se aplica a las tarjetas de ambos layouts de proyectos, no al detalle del proyecto.
+        </p>
       </div>
 
       <div>
