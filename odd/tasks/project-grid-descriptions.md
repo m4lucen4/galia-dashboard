@@ -1,0 +1,18 @@
+# Project grid descriptions — implementation tasks
+
+**Repository locator:** `odd/tasks/project-grid-descriptions.md`
+**Objective:** Let studios choose whether project descriptions appear in the public project grid.
+**Problem / why:** The builder needs a persisted, backward-compatible visibility setting for project descriptions without affecting project detail pages.
+**Authorized scope:** `src/types/index.tsx`, `src/redux/actions/SiteComponentActions.ts`, `src/features/myWeb/components/ProjectsPageConfig.tsx`, `skills/myWeb.md`, and this tracker. Do not modify `../mocklab-sites`, unrelated dirty files, dependencies, database schema, remote services, or source files during this documentation-only preparation.
+**Constraints:** Use English for code and documentation artifacts; use Spanish UI copy. Preserve the existing JSON config and all fields when saving one setting. No tests: repository `AGENTS.md` states there is no test suite, and no configured TDD workflow was found. Do not invent a test runner.
+**Route:** delegated direct for T1 (three nontrivial source files plus documentation and write preparation).
+**Delivery strategy:** ask-on-risk; forecast ~100–180 authored changed lines. Reassess if implementation exceeds the forecast. No commit, push, PR, remote operation, or access to `mocklab-sites` is authorized.
+**Repository hygiene:** Existing changes in `synology/photo_processor/config.json` and untracked `.atl/` are unrelated and must remain intact.
+
+## Checklist
+
+- [x] **T1 — Add project-grid description visibility:** Implemented `ProjectListConfig.show_descriptions` with a dashboard fallback of `true`, preserving explicit `false`. New project-list configs default to `show_descriptions: true`. Added `saveProjectListShowDescriptions`, which spreads the existing project-list config and overrides only `show_descriptions`; the creation path saves the requested value. Registered the new thunk in `SiteComponentSlice` so the direct-insert path adds the returned component to Redux and all outcomes update `saveRequest`. Added a Spanish checkbox in `ProjectsPageConfig`, controlled from Redux config and disabled while `saveRequest.inProgress`; its note scopes the setting to both grid layouts and excludes project details. Updated `skills/myWeb.md` with the field, thunk behavior, fallback contract, and unverified public-renderer integration requirements. **Acceptance inspection:** Existing-config saves spread `layout`, `project_order`, `hidden_projects`, and `detail_type`; the checkbox uses `config?.show_descriptions ?? true`; the missing-component insert returns a component that the registered lifecycle adds to state. **Verification:** The required ESLint command failed with 16 diagnostics. The same command run against the `HEAD` versions through stdin produced the same 16 diagnostics, proving they are baseline: 2 existing React Compiler preservation errors in `ProjectsPageConfig.tsx` and 14 unused `catch (error)` bindings in `SiteComponentActions.ts`. The added thunk and slice lifecycle produced no additional lint diagnostics. `pnpm build` passed. `git diff --check` passed. **Runtime harness:** Manual authenticated browser save-and-reload remains pending because browser access is unavailable. **Rollback boundary:** the new config property, specialized thunk and slice lifecycle, checkbox/save wiring, and documentation entry only. **Commit evidence:** Pending; no commit was requested. **Full mirror #1555:** Updated and read back after the correction.
+
+## Progress and next step
+
+- Source implementation is complete. Targeted lint remains blocked only by verified baseline diagnostics; build and whitespace checks passed. Manual browser verification and commit creation remain pending.

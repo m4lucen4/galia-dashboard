@@ -386,6 +386,7 @@ export type ProjectListConfig = {
   project_order?: string[];
   hidden_projects?: string[];
   detail_type?: 1 | 2;
+  show_descriptions?: boolean;
 };
 
 export type CTAConfig = {

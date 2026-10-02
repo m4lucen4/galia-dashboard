@@ -94,6 +94,7 @@ Only exists on the `"proyectos"` page. Config is a **single object**:
   project_order?: string[];    // project IDs in display order
   hidden_projects?: string[];  // project IDs to exclude from the public site
   detail_type?: 1 | 2;         // project detail page design (default: 1)
+  show_descriptions?: boolean; // project-card descriptions in both grid layouts (default: true)
 }
 ```
 
@@ -169,6 +170,7 @@ All request state follows `IRequest = { inProgress: boolean; messages: string; o
 - `saveProjectListOrder({ pageId, project_order })` — persists display order (array of project IDs)
 - `saveProjectListHidden({ pageId, hidden_projects })` — persists hidden project IDs
 - `saveProjectListDetailType({ pageId, detail_type })` — persists detail page design type (1 | 2); each thunk spreads the existing config and overrides only its own field
+- `saveProjectListShowDescriptions({ pageId, show_descriptions })` — persists project-card description visibility while preserving the other project-list config fields
 
 ---
 
@@ -230,8 +232,10 @@ MyWeb (screen)
 - Only supports a `project_list` component, managed via `upsertProjectListComponent`
 - Content is auto-populated from the user's projects — editors cannot add arbitrary components here
 - Users can **reorder** projects (up/down arrows → `saveProjectListOrder`), **hide** individual ones (eye toggle → `saveProjectListHidden`), and choose the **detail page design** (card selector → `saveProjectListDetailType`)
+- Users can choose whether descriptions appear on cards in both project grid layouts (`saveProjectListShowDescriptions`); the dashboard treats a missing `show_descriptions` value as `true` while preserving explicit `false`
 - Hidden projects appear dimmed + strikethrough in the dashboard; the **public site must filter `hidden_projects`** before rendering
 - `detail_type` (1 or 2) must be consumed by the public site to render the correct project detail template
+- Public renderer integration is unverified in this repository: it must treat a missing `show_descriptions` value as `true`, use the value only for `grid-4` and `grid-alternating` project cards, and never use it for project-detail layouts
 
 ### "home" page cannot be hidden
 - The `handleToggleVisible` in `PageList` has a guard: `if (page.slug === "home") return`
