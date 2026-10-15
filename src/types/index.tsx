@@ -418,6 +418,8 @@ export type ContactConfig = {
 };
 
 export type SitePageDataProps = {
+  page_type?: "page" | "home_anchor" | null;
+  target_component_id?: string | null;
   id: string;
   site_id: string;
   title: string;
@@ -431,6 +433,7 @@ export type SitePageDataProps = {
 };
 
 export type SiteComponentDataProps = {
+  anchor_id?: string | null;
   id: string;
   page_id: string;
   type: SiteComponentType;

@@ -55,6 +55,8 @@ The `myWeb` feature lets architecture studios create and publish a public portfo
   position: number      // 1-based ordering
   visible: boolean
   show_in_nav: boolean
+  page_type?: "page" | "home_anchor" | null // missing/null means ordinary page
+  target_component_id?: string | null     // stable home block identity for links
   created_at: string
   updated_at: string
 }
@@ -74,6 +76,7 @@ The `myWeb` feature lets architecture studios create and publish a public portfo
   position: number   // 0-based ordering
   visible: boolean
   config: HeaderSlideConfig[] | ProjectListConfig | CTAConfig | BodyConfig | ContentConfig
+  anchor_id?: string | null // optional home-only metadata; never inside config
   created_at: string
   updated_at: string
 }
@@ -140,7 +143,7 @@ Three slices, all in `src/redux/slices/` and `src/redux/actions/`:
 |---|---|---|
 | `state.site` | `site: SiteDataProps \| null` | `fetchRequest`, `saveRequest`, `publishRequest`, `uploadRequest` |
 | `state.sitePage` | `pages: SitePageDataProps[]` | `fetchRequest`, `saveRequest` |
-| `state.siteComponent` | `components: SiteComponentDataProps[]` | `fetchRequest`, `saveRequest`, `uploadRequest` |
+| `state.siteComponent` | `components: SiteComponentDataProps[]`, independent `homeAnchors` options | `fetchRequest`, `saveRequest`, `deleteRequest`, `uploadRequest`, `homeAnchorRequest` |
 
 All request state follows `IRequest = { inProgress: boolean; messages: string; ok: boolean }`.
 
@@ -187,24 +190,30 @@ MyWeb (screen)
     │   ├── "Guardar" → calls configFormRef.current?.save()
     │   ├── "Vista previa" → opens https://sites.mocklab.app/{slug}
     │   └── "Publicar / Despublicar" → publishSite dispatch
-    ├── SiteConfigForm (forwardRef — imperative save via ref)
+    ├── [active Configuración tab] → SiteConfigForm (forwardRef — imperative save via ref)
     │   ├── InputField × n (studio_name, slug, social URLs, meta_description)
     │   ├── ImageUploader × 2 (logo_url, favicon_url)
     │   ├── ColorPicker × 3 (primary_color, secondary_color, background_color)
     │   ├── FontSelector × 2 (title_font, font/body)
     │   └── NavbarTypeSelector
-    └── PageList
-        └── [each page accordion]
-            └── PageEditor
-                ├── [slug === "proyectos"] → ProjectsPageConfig
-                │   └── LayoutSelector → upsertProjectListComponent
-                └── [other pages] → ComponentList
-                    └── [each component accordion]
-                        └── ComponentEditor (switch on type)
-                            ├── header  → HeaderEditor → SlideEditor[]
-                            ├── cta     → CTAEditor
-                            ├── body    → BodyEditor
-                            └── content → ContentEditor
+    ├── MyWebTabBar (actual page navigation; PageList is not used here)
+    │   ├── Configuración tab
+    │   ├── Page tabs + dropdown rename/nav/visibility/reorder/delete
+    │   └── Inline creation: ordinary title + slug OR link title + home-anchor selector
+    └── [active page tab] → PageEditor
+        ├── [page_type === "home_anchor"] → AnchorDestinationEditor (no component fetch/editor)
+        ├── [legal slugs] → LegalPageEditor
+        ├── [slug === "proyectos"] → ProjectsPageConfig
+        │   └── LayoutSelector → upsertProjectListComponent
+        └── [ordinary pages] → ComponentList
+            └── [each component accordion]
+                ├── [home only] → ComponentAnchorEditor (shared metadata editor)
+                └── ComponentEditor (switch on type)
+                    ├── header  → HeaderEditor → SlideEditor[]
+                    ├── cta     → CTAEditor
+                    ├── body    → BodyEditor
+                    ├── content → ContentEditor
+                    └── contact/project_columns/rich_text/separator/figure/editorial_cards editors
 ```
 
 ---
@@ -243,6 +252,31 @@ Language changes through `updateSite` require all three fields. Invalid lists (i
 
 **Rollout:** apply `supabase/migrations/20261015204500_add_site_enabled_languages.sql` first, deploy the compatible public renderer second, then deploy the dashboard. The migration assumes `public.sites.default_language` already exists, adds nullable `text[]` with a nonempty/supported/duplicate-free/no-null/default-membership CHECK for explicit rows, and neither backfills nor rejects legacy NULL lists. It includes a transactional PostgREST schema-cache reload notification; confirm the new column is exposed before deploying writes. Migration execution and production deployment are separate operator actions, not performed by implementation verification.
 
+### Home menu anchors
+
+**Quick path:** expand a block on Inicio, save an optional reference such as `#ancla1`, then create a new **Enlace a Inicio** from `MyWebTabBar`, selecting that existing anchor. The resulting tab edits only title/destination, not components. Ordinary page creation remains title + slug; existing pages cannot be converted.
+
+| Contract | Behavior |
+|---|---|
+| `site_components.anchor_id` | Nullable top-level metadata, stored without `#`. The same editor wraps all ten editable home block types, including separator/contact. Other pages never expose it. Config JSON formats are unchanged. |
+| Normalization | Trim surrounding whitespace, accept one optional leading `#`, then require `^[a-z][a-z0-9-]{0,79}$`; no automatic lowercase conversion. Empty input clears an unreferenced anchor. |
+| Reserved IDs | Reject `page-content`, `mobile-menu`, `menu-toggle`, `btn-view-grid`, `btn-view-list`, `keyword-select`, `active-pills`, `view-grid`, `view-list`, and every `cookie-`, `toggle-`, `contact-` prefix. |
+| `site_pages.page_type` | Legacy NULL/missing and `page` are ordinary pages. `home_anchor` is link-only, with an internally generated `home-anchor-{UUID}` slug; users do not edit that slug. |
+| `target_component_id` | References a home component in the same site with a nonempty valid anchor. Rename changes the public fragment, not this association. Hidden targets remain selectable/retargetable; the public renderer suppresses their menu entries. |
+| Integrity | Unique anchor per home page. Clearing/deleting a referenced target rejects until menu links are removed/retargeted. Rejected deletion keeps its confirmation and Spanish error visible. |
+| Unsaved config | Metadata/visibility/position updates preserve the current Redux `config` object identity when the update argument omits `config`; config-driven editors must not reset their local drafts. Actual config saves still replace it. |
+| Options | `fetchHomeAnchors` loads into separate options state, never `siteComponent.components`. Request IDs ignore stale successes/failures; `useHomeAnchors` refreshes after component changes and offers manual retry. |
+
+**Migration and rollout (operator actions, not automatic):**
+1. Verify prerequisites against the real schema: `public.site_pages`/`public.site_components` UUID IDs, UUID `site_id`/`page_id`, existing page `content`, unique `(site_id, slug)`, and owner policies exposing same-site pages/components/references. No live schema was inspected. Invoker triggers intentionally do not bypass RLS; audit these policy assumptions before applying.
+2. Apply `supabase/migrations/20261016000100_add_home_menu_anchors.sql`. It adds nullable fields, checks, scoped uniqueness, a RESTRICT FK and invoker validation triggers with explicit schemas/safe search paths. It leaves existing RLS and legacy JSON/data unchanged. Ownership (`site_id`), protected slugs and page type become stable on updates; existing page conversion is forbidden. Target validation locks the component `FOR UPDATE`, serializing link creation/retargeting against target clear/delete/move. Confirm the PostgREST schema-cache notification exposed the fields.
+3. Deploy the compatible public renderer, covering SSR and browser rebuilding, home hashes, other-page links, hidden targets and direct internal-slug redirects; only then deploy this dashboard. Renderer route convention is `/{site.slug}/`, not an assumed custom-domain mapping.
+4. Verify real database concurrency and RLS with separate sessions: link-create versus anchor-clear in both lock orders, duplicate anchor writes, same-site/foreign targets, referenced delete/clear, non-home metadata, protected slug/type writes and component insertion into a link page. Real database/browser proof is still required; in-memory dashboard probes do not prove SQL execution or public navigation.
+
+Local implementation verification applied the exact migration to disposable PostgreSQL 17 fixture tables and passed sequential integrity checks plus both concurrency orders for link creation versus target clear/delete/config saves. This does not verify deployed schema prerequisites or authenticated Supabase/RLS behavior. Dashboard inline Redux/React probes and renderer SSR/VM checks passed; real browser layout/scrolling remains unverified.
+
+For rollback, first withdraw dashboard link creation and coordinate renderer behavior for existing link records; do not blindly remove columns while link-only pages remain. Migration execution, deployment and any rollback/data decisions are separately authorized operator work.
+
 ### Slug rules
 - Valid: `^[a-z0-9-]+$`
 - Auto-generated from `studio_name` via NFD normalization (strip accents → lowercase → spaces/hyphens)
@@ -259,8 +293,8 @@ Language changes through `updateSite` require all three fields. Invalid lists (i
 - Public renderer integration is unverified in this repository: it must treat a missing `show_descriptions` value as `true`, use the value only for `grid-4` and `grid-alternating` project cards, and never use it for project-detail layouts
 
 ### "home" page cannot be hidden
-- The `handleToggleVisible` in `PageList` has a guard: `if (page.slug === "home") return`
-- The visibility toggle button is `disabled` in the UI for the home page
+- `MyWebTabBar.handleToggleVisible` guards `page.slug === "home"`.
+- The tab bar exposes page management only for custom pages and `proyectos`; home has no visibility dropdown. The old `PageList` component is not present in this checkout.
 
 ### Supabase Storage paths (bucket: `sites`, all `upsert: true`)
 ```
@@ -289,11 +323,15 @@ The public site lives at `../mocklab-sites` (separate project, Astro 6 + Tailwin
 
 | File | Purpose |
 |---|---|
-| `src/features/myWeb/screens/MyWeb.tsx` | Main screen: creation flow + two-column editor layout |
+| `src/features/myWeb/screens/MyWeb.tsx` | Main screen: site creation, tab navigation and active config/page editor |
 | `src/features/myWeb/components/SiteConfigForm.tsx` | General site settings form (imperative ref pattern) |
 | `src/features/myWeb/components/PublishButton.tsx` | Publish toggle, save shortcut, preview link |
-| `src/features/myWeb/components/PageList.tsx` | Page list with reorder/visibility/nav controls |
-| `src/features/myWeb/components/PageEditor.tsx` | Routes to `ProjectsPageConfig` or `ComponentList` |
+| `src/features/myWeb/components/MyWebTabBar.tsx` | Active page navigation, inline create, rename/nav/visibility/reorder/delete |
+| `src/features/myWeb/components/ComponentAnchorEditor.tsx` | Home-only block metadata, independent of config |
+| `src/features/myWeb/components/AnchorDestinationEditor.tsx` | Link-only page title and destination |
+| `src/hooks/useHomeAnchors.ts` | Independent option refresh after component edits |
+| `src/helpers/siteAnchors.ts` | Shared normalization/reserved IDs and Spanish integrity errors |
+| `src/features/myWeb/components/PageEditor.tsx` | Routes link-only pages to destination settings; normal pages to their content editor |
 | `src/features/myWeb/components/ComponentList.tsx` | Component CRUD + reorder per page |
 | `src/features/myWeb/components/ComponentEditor.tsx` | Switch dispatcher to type-specific editor |
 | `src/features/myWeb/components/HeaderEditor.tsx` | Multi-slide editor (blur-to-persist) |

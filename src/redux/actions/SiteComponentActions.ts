@@ -17,6 +17,26 @@ import {
   EditorialCardsConfig,
 } from "../../types";
 import type { RootState } from "../store";
+import { normalizeAnchor, anchorError, type HomeAnchorOption } from "../../helpers/siteAnchors";
+
+// Separate request: never replaces the active page's editable components.
+export const fetchHomeAnchors = createAsyncThunk(
+  "siteComponents/fetchHomeAnchors",
+  async (siteId: string, { rejectWithValue }) => {
+    try {
+      const { data: home, error: pageError } = await supabase.from("site_pages")
+        .select("id").eq("site_id", siteId).eq("slug", "home").single();
+      if (pageError) return rejectWithValue("No se pudo cargar Inicio: " + pageError.message);
+      const { data, error } = await supabase.from("site_components")
+        .select("id,anchor_id,type,visible,position").eq("page_id", home.id)
+        .not("anchor_id", "is", null).order("position", { ascending: true });
+      if (error) return rejectWithValue("No se pudieron cargar las anclas: " + error.message);
+      return { siteId, anchors: (data ?? []).filter((c) => c.anchor_id) as HomeAnchorOption[] };
+    } catch {
+      return rejectWithValue("No se pudieron cargar las anclas de Inicio");
+    }
+  },
+);
 
 export const fetchSiteComponents = createAsyncThunk(
   "siteComponents/fetchSiteComponents",
@@ -178,6 +198,10 @@ export const addSiteComponent = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
+      const { data: page, error: pageError } = await supabase.from("site_pages")
+        .select("page_type").eq("id", pageId).single();
+      if (pageError) return rejectWithValue("No se pudo comprobar la página");
+      if (page?.page_type === "home_anchor") return rejectWithValue("Los enlaces a Inicio no admiten componentes");
       const defaultConfig = getDefaultConfig(type, options);
 
       const { data, error } = await supabase
@@ -215,22 +239,46 @@ export const updateSiteComponent = createAsyncThunk(
     }: {
       componentId: string;
       updates: Partial<
-        Pick<SiteComponentDataProps, "config" | "visible" | "position">
+        Pick<SiteComponentDataProps, "config" | "visible" | "position" | "anchor_id">
       >;
     },
     { rejectWithValue },
   ) => {
     try {
+      const validated = { ...updates };
+      if ("anchor_id" in updates) {
+        try { validated.anchor_id = normalizeAnchor(updates.anchor_id); }
+        catch (error) { return rejectWithValue((error as Error).message); }
+        const { data: component, error: componentError } = await supabase.from("site_components")
+          .select("page_id").eq("id", componentId).single();
+        if (componentError) return rejectWithValue("No se pudo comprobar el componente");
+        const { data: page, error: pageError } = await supabase.from("site_pages")
+          .select("slug,page_type").eq("id", component.page_id).single();
+        if (pageError || page?.slug !== "home" || page?.page_type === "home_anchor") {
+          return rejectWithValue("Las anclas solo se pueden configurar en Inicio");
+        }
+        if (validated.anchor_id) {
+          const { data: duplicates, error } = await supabase.from("site_components")
+            .select("id").eq("page_id", component.page_id).eq("anchor_id", validated.anchor_id).neq("id", componentId);
+          if (error) return rejectWithValue("No se pudo comprobar si el ancla ya existe");
+          if (duplicates?.length) return rejectWithValue("Ya existe un ancla con ese nombre en Inicio. Elige otro nombre.");
+        } else {
+          const { data: references, error } = await supabase.from("site_pages")
+            .select("id").eq("target_component_id", componentId).limit(1);
+          if (error) return rejectWithValue("No se pudieron comprobar los enlaces al ancla");
+          if (references?.length) return rejectWithValue("El ancla está enlazada desde el menú. Cambia o elimina esos enlaces antes de quitarla.");
+        }
+      }
       const { data, error } = await supabase
         .from("site_components")
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update({ ...validated, updated_at: new Date().toISOString() })
         .eq("id", componentId)
         .select()
         .single();
 
       if (error) {
         return rejectWithValue({
-          message: `Error al actualizar componente: ${error.message}`,
+          message: `Error al actualizar componente: ${anchorError(error)}`,
           status: error.code,
         });
       }
@@ -246,6 +294,10 @@ export const deleteSiteComponent = createAsyncThunk(
   "siteComponents/deleteSiteComponent",
   async (componentId: string, { rejectWithValue }) => {
     try {
+      const { data: references, error: referenceError } = await supabase.from("site_pages")
+        .select("id").eq("target_component_id", componentId).limit(1);
+      if (referenceError) return rejectWithValue("No se pudieron comprobar los enlaces al ancla");
+      if (references?.length) return rejectWithValue("El ancla está enlazada desde el menú. Cambia o elimina esos enlaces antes de borrar el componente.");
       const { error } = await supabase
         .from("site_components")
         .delete()
@@ -253,7 +305,7 @@ export const deleteSiteComponent = createAsyncThunk(
 
       if (error) {
         return rejectWithValue({
-          message: `Error al eliminar componente: ${error.message}`,
+          message: `Error al eliminar componente: ${anchorError(error)}`,
           status: error.code,
         });
       }

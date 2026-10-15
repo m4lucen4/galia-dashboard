@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useHomeAnchors } from "../../../hooks/useHomeAnchors";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import {
   PlusIcon,
@@ -44,7 +45,10 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
   onPageCreated,
 }) => {
   const dispatch = useAppDispatch();
-  const { createRequest, saveRequest } = useAppSelector((state) => state.sitePage);
+  const { createRequest, saveRequest, deleteRequest } = useAppSelector((state) => state.sitePage);
+  const { anchors, request: anchorRequest, refresh } = useHomeAnchors(siteId);
+  const [newPageType, setNewPageType] = useState<"page" | "home_anchor">("page");
+  const [newTarget, setNewTarget] = useState("");
 
   // Create form state
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -76,14 +80,18 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
   };
 
   const handleCreate = async () => {
-    if (!newTitle.trim() || !newSlug.trim() || !SLUG_REGEX.test(newSlug)) return;
+    if (!isCreateFormValid) return;
     const result = await dispatch(
-      createSitePage({ siteId, title: newTitle.trim(), slug: newSlug.trim() })
+      createSitePage(newPageType === "home_anchor"
+        ? { siteId, title: newTitle.trim(), page_type: "home_anchor", target_component_id: newTarget }
+        : { siteId, title: newTitle.trim(), slug: newSlug.trim() })
     );
     if (createSitePage.fulfilled.match(result)) {
       const { page } = result.payload;
       setNewTitle("");
       setNewSlug("");
+      setNewTarget("");
+      setNewPageType("page");
       setShowCreateForm(false);
       onPageCreated?.(page.id);
     }
@@ -93,12 +101,16 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
     setNewTitle("");
     setNewSlug("");
     setSlugError("");
+    setNewTarget("");
+    setNewPageType("page");
     setShowCreateForm(false);
     dispatch(clearPageErrors());
   };
 
   const isCreateFormValid =
-    newTitle.trim() !== "" && newSlug.trim() !== "" && SLUG_REGEX.test(newSlug);
+    newTitle.trim() !== "" && (newPageType === "home_anchor"
+      ? !anchorRequest.inProgress && anchors.some((anchor) => anchor.id === newTarget)
+      : newSlug.trim() !== "" && SLUG_REGEX.test(newSlug));
 
   // ---- Rename ----
   const handleStartRename = (page: SitePageDataProps) => {
@@ -122,7 +134,7 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
   const handleSaveRename = async (page: SitePageDataProps) => {
     if (!editTitle.trim() || !editSlug.trim() || editSlugError) return;
     const updates: { title: string; slug?: string } = { title: editTitle.trim() };
-    if (editSlug.trim() !== page.slug) {
+    if (page.page_type !== "home_anchor" && editSlug.trim() !== page.slug) {
       if (PROTECTED_SLUGS.includes(editSlug.trim())) return;
       updates.slug = editSlug.trim();
     }
@@ -171,11 +183,13 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
   };
 
   // ---- Delete ----
-  const handleDelete = () => {
-    if (!deleteTarget) return;
-    dispatch(deleteSitePage(deleteTarget));
-    if (activeTabId === deleteTarget) onTabChange("config");
-    setDeleteTarget(null);
+  const handleDelete = async () => {
+    if (!deleteTarget || deleteRequest.inProgress) return;
+    const result = await dispatch(deleteSitePage(deleteTarget));
+    if (deleteSitePage.fulfilled.match(result)) {
+      if (activeTabId === deleteTarget) onTabChange("config");
+      setDeleteTarget(null);
+    }
   };
 
   return (
@@ -209,7 +223,7 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
                       placeholder="Título"
                       className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-black w-28"
                     />
-                    <div>
+                    {page.page_type !== "home_anchor" && <div>
                       <input
                         type="text"
                         value={editSlug}
@@ -223,7 +237,7 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
                       {editSlugError && (
                         <p className="text-xs text-red-500 mt-0.5">{editSlugError}</p>
                       )}
-                    </div>
+                    </div>}
                   </div>
                   <button
                     onClick={() => handleSaveRename(page)}
@@ -402,6 +416,12 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
           <div className="border-t border-gray-200 bg-gray-50 px-4 py-4">
             <p className="text-sm font-medium text-gray-700 mb-3">Nueva página</p>
             <div className="flex flex-wrap items-start gap-3">
+              <label className="block text-xs text-gray-500">Tipo
+                <select className="block border rounded-md p-2 text-sm" value={newPageType} onChange={(e) => setNewPageType(e.target.value as "page" | "home_anchor")}>
+                  <option value="page">Página con componentes</option>
+                  <option value="home_anchor">Enlace a Inicio</option>
+                </select>
+              </label>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Título</label>
                 <input
@@ -413,7 +433,16 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
                   className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black w-48"
                 />
               </div>
-              <div>
+              {newPageType === "home_anchor" ? <div>
+                <label className="block text-xs text-gray-500 mb-1" htmlFor="new-anchor-target">Ancla de Inicio</label>
+                <select id="new-anchor-target" className="border rounded-md p-2 text-sm" value={newTarget} onChange={(e) => setNewTarget(e.target.value)} disabled={anchorRequest.inProgress}>
+                  <option value="">Selecciona un ancla</option>
+                  {anchors.map((anchor) => <option key={anchor.id} value={anchor.id}>#{anchor.anchor_id} · {anchor.type}{!anchor.visible ? " (oculto)" : ""}</option>)}
+                </select>
+                {!anchors.length && !anchorRequest.inProgress && <p className="text-xs">Añade primero un ancla a un componente de Inicio.</p>}
+                {anchorRequest.messages && <p role="alert">{anchorRequest.messages}</p>}
+                <button type="button" onClick={refresh} className="block text-xs underline">Actualizar anclas</button>
+              </div> : <div>
                 <label className="block text-xs text-gray-500 mb-1">
                   Slug <span className="text-gray-400">(aparece en la URL)</span>
                 </label>
@@ -427,7 +456,7 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
                   }`}
                 />
                 {slugError && <p className="text-xs text-red-500 mt-1">{slugError}</p>}
-              </div>
+              </div>}
               <div className="flex items-end gap-2 pt-5">
                 <Button
                   title={createRequest.inProgress ? "Creando..." : "Crear"}
@@ -444,10 +473,12 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
         )}
       </div>
 
+      {saveRequest.messages && !saveRequest.ok && <p role="alert" className="text-sm text-red-600">{saveRequest.messages}</p>}
       {deleteTarget && (
         <Alert
           title="Eliminar página"
-          description="¿Estás seguro de que deseas eliminar esta página? Se eliminarán también todos sus componentes. Esta acción no se puede deshacer."
+          disabledConfirmButton={deleteRequest.inProgress}
+          description={`¿Estás seguro de que deseas eliminar esta página? Se eliminarán también todos sus componentes. Esta acción no se puede deshacer.${deleteRequest.messages && !deleteRequest.ok ? ` ${deleteRequest.messages}` : ""}`}
           onAccept={handleDelete}
           onCancel={() => setDeleteTarget(null)}
         />

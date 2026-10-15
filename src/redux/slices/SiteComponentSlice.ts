@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {
   fetchSiteComponents,
+  fetchHomeAnchors,
   addSiteComponent,
   updateSiteComponent,
   deleteSiteComponent,
@@ -14,7 +15,13 @@ import {
 } from "../actions/SiteComponentActions";
 import { SiteComponentDataProps, IRequest, SupabaseError } from "../../types";
 
+import type { HomeAnchorOption } from "../../helpers/siteAnchors";
+
 interface SiteComponentState {
+  homeAnchors: HomeAnchorOption[];
+  homeAnchorSiteId: string | null;
+  homeAnchorRequestId: string | null;
+  homeAnchorRequest: IRequest;
   components: SiteComponentDataProps[];
   fetchRequest: IRequest;
   saveRequest: IRequest;
@@ -29,6 +36,10 @@ const defaultRequest: IRequest = {
 };
 
 const initialState: SiteComponentState = {
+  homeAnchors: [],
+  homeAnchorSiteId: null,
+  homeAnchorRequestId: null,
+  homeAnchorRequest: { ...defaultRequest },
   components: [],
   fetchRequest: { ...defaultRequest },
   saveRequest: { ...defaultRequest },
@@ -55,9 +66,30 @@ const siteComponentSlice = createSlice({
     },
     clearComponents: (state) => {
       state.components = [];
+      state.homeAnchors = [];
+      state.homeAnchorSiteId = null;
+      state.homeAnchorRequestId = null;
+      state.homeAnchorRequest = { ...defaultRequest };
     },
   },
   extraReducers: (builder) => {
+    builder
+      .addCase(fetchHomeAnchors.pending, (state, action) => {
+        state.homeAnchorSiteId = action.meta.arg;
+        state.homeAnchorRequestId = action.meta.requestId;
+        state.homeAnchors = [];
+        state.homeAnchorRequest = { inProgress: true, messages: "", ok: false };
+      })
+      .addCase(fetchHomeAnchors.fulfilled, (state, action) => {
+        if (state.homeAnchorRequestId !== action.meta.requestId) return;
+        state.homeAnchors = action.payload.anchors;
+        state.homeAnchorRequest = { inProgress: false, messages: "", ok: true };
+      })
+      .addCase(fetchHomeAnchors.rejected, (state, action) => {
+        if (state.homeAnchorRequestId !== action.meta.requestId) return;
+        state.homeAnchorRequest = { inProgress: false, messages: getErrorMessage(action.payload), ok: false };
+      });
+
     // Fetch components
     builder
       .addCase(fetchSiteComponents.pending, (state) => {
@@ -101,7 +133,9 @@ const siteComponentSlice = createSlice({
       .addCase(updateSiteComponent.fulfilled, (state, action) => {
         const updated = action.payload.component;
         state.components = state.components.map((c) =>
-          c.id === updated.id ? updated : c,
+          c.id === updated.id
+            ? { ...updated, ...(!("config" in action.meta.arg.updates) ? { config: c.config } : {}) }
+            : c,
         );
         state.saveRequest = { inProgress: false, messages: "", ok: true };
       })
