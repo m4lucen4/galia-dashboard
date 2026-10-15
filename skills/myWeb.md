@@ -35,6 +35,9 @@ The `myWeb` feature lets architecture studios create and publish a public portfo
   instagram_url?: string | null
   facebook_url?: string | null
   linkedin_url?: string | null
+  default_language?: string       // resolved to an enabled es/en/ca code
+  enabled_languages?: ("es" | "en" | "ca")[] | null
+  multilanguage?: boolean         // derived from enabled_languages.length > 1 on save
   published: boolean
   created_at: string
   updated_at: string
@@ -221,6 +224,24 @@ MyWeb (screen)
 `ImageUploader` accepts an optional `onRemove` prop — when present, an `×` button appears on the image corner. The caller decides what "remove" means:
 - `logo_url` → `updateSite({ logo_url: "" })` (field is non-nullable `string`)
 - `favicon_url` → `updateSite({ favicon_url: null })` (field is `string | null`)
+
+### Selectable public-site languages
+
+`src/helpers/siteLanguages.ts` owns dashboard read normalization, write validation and selection transitions. The form offers ES/EN/CA checkboxes and a default only from the enabled set. The last checkbox cannot be cleared; removing the default selects the first remaining code in canonical `es,en,ca` order.
+
+| Configuration | Read behavior |
+|---|---|
+| Valid explicit nonempty, duplicate-free `enabled_languages` | Use that list in canonical order |
+| Missing/invalid list, legacy `multilanguage: true` | ES/EN only; Catalan is opt-in |
+| Missing/invalid list, legacy mono-language | Supported `default_language`, otherwise EN |
+| Missing/disabled default | EN if enabled, otherwise first enabled |
+| New dashboard-created site | Explicit `default_language: "es"`, `enabled_languages: ["es"]`, `multilanguage: false` |
+
+Language changes through `updateSite` require all three fields. Invalid lists (including null, empty, duplicates or unsupported codes) and disabled defaults reject before any Supabase request, without loading a row to complete the tuple. A valid save derives `multilanguage` from the list; unrelated partial updates, such as image removal, do not rewrite languages.
+
+**Scope:** only fixed public interface labels are localized. Authored page titles, project descriptions, component text and legal bodies remain unchanged. A public selector appears only for multiple enabled languages; the renderer validates site-scoped visitor preferences against this set.
+
+**Rollout:** apply `supabase/migrations/20261015204500_add_site_enabled_languages.sql` first, deploy the compatible public renderer second, then deploy the dashboard. The migration assumes `public.sites.default_language` already exists, adds nullable `text[]` with a nonempty/supported/duplicate-free/no-null/default-membership CHECK for explicit rows, and neither backfills nor rejects legacy NULL lists. It includes a transactional PostgREST schema-cache reload notification; confirm the new column is exposed before deploying writes. Migration execution and production deployment are separate operator actions, not performed by implementation verification.
 
 ### Slug rules
 - Valid: `^[a-z0-9-]+$`
