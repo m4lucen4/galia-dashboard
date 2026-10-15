@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { SiteComponentDataProps, SiteComponentType, ProjectColumnsConfig } from "../../../types";
 import { ComponentEditor } from "./ComponentEditor";
+import { ComponentAnchorEditor } from "./ComponentAnchorEditor";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { fetchProjects, fetchProjectsByUserId } from "../../../redux/actions/ProjectActions";
 import {
@@ -23,6 +24,7 @@ import {
 
 interface ComponentListProps {
   pageId: string;
+  isHome?: boolean;
   components: SiteComponentDataProps[];
 }
 
@@ -41,10 +43,12 @@ const COMPONENT_TYPES: { type: SiteComponentType; label: string; description?: s
 
 export const ComponentList: React.FC<ComponentListProps> = ({
   pageId,
+  isHome = false,
   components,
 }) => {
   const dispatch = useAppDispatch();
   const { projects } = useAppSelector((state) => state.project);
+  const { deleteRequest } = useAppSelector((state) => state.siteComponent);
   const user = useAppSelector((state) => state.auth.user);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -72,9 +76,10 @@ export const ComponentList: React.FC<ComponentListProps> = ({
     setShowAddMenu(false);
   };
 
-  const handleDelete = () => {
-    if (deleteTarget) {
-      dispatch(deleteSiteComponent(deleteTarget));
+  const handleDelete = async () => {
+    if (!deleteTarget || deleteRequest.inProgress) return;
+    const result = await dispatch(deleteSiteComponent(deleteTarget));
+    if (deleteSiteComponent.fulfilled.match(result)) {
       setDeleteTarget(null);
       if (expandedId === deleteTarget) setExpandedId(null);
     }
@@ -225,6 +230,7 @@ export const ComponentList: React.FC<ComponentListProps> = ({
 
             {expandedId === component.id && (
               <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+                {isHome && <ComponentAnchorEditor key={`${component.id}:${component.anchor_id ?? ""}`} component={component} />}
                 <ComponentEditor component={component} />
               </div>
             )}
@@ -235,7 +241,8 @@ export const ComponentList: React.FC<ComponentListProps> = ({
       {deleteTarget && (
         <Alert
           title="Eliminar componente"
-          description="¿Estás seguro de que deseas eliminar este componente? Esta acción no se puede deshacer."
+          disabledConfirmButton={deleteRequest.inProgress}
+          description={`¿Estás seguro de que deseas eliminar este componente? Esta acción no se puede deshacer.${deleteRequest.messages && !deleteRequest.ok ? ` ${deleteRequest.messages}` : ""}`}
           onAccept={handleDelete}
           onCancel={() => setDeleteTarget(null)}
         />

@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { SitePageDataProps } from "../../../types";
 import { ComponentList } from "./ComponentList";
+import { AnchorDestinationEditor } from "./AnchorDestinationEditor";
 import { ProjectsPageConfig } from "./ProjectsPageConfig";
 import { LegalPageEditor } from "./LegalPageEditor";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
@@ -15,10 +16,14 @@ export const PageEditor: React.FC<PageEditorProps> = ({ page }) => {
   const { components } = useAppSelector((state) => state.siteComponent);
 
   useEffect(() => {
-    if (page.slug !== "aviso-legal" && page.slug !== "politica-cookies") {
+    if (page.page_type !== "home_anchor" && page.slug !== "aviso-legal" && page.slug !== "politica-cookies") {
       dispatch(fetchSiteComponents(page.id));
     }
-  }, [dispatch, page.id, page.slug]);
+  }, [dispatch, page.id, page.slug, page.page_type]);
+
+  if (page.page_type === "home_anchor") {
+    return <AnchorDestinationEditor key={`${page.id}:${page.title}:${page.target_component_id}`} page={page} />;
+  }
 
   if (page.slug === "aviso-legal" || page.slug === "politica-cookies") {
     return <LegalPageEditor page={page} />;
@@ -30,5 +35,5 @@ export const PageEditor: React.FC<PageEditorProps> = ({ page }) => {
     return <ProjectsPageConfig page={page} components={pageComponents} />;
   }
 
-  return <ComponentList pageId={page.id} components={pageComponents} />;
+  return <ComponentList pageId={page.id} components={pageComponents} isHome={page.slug === "home"} />;
 };
