@@ -465,6 +465,7 @@ export type SiteDataProps = {
   linkedin_url?: string | null;
   full_width?: boolean;
   default_language?: string;
+  enabled_languages?: import("@/helpers/siteLanguages").SiteLanguage[] | null;
   multilanguage?: boolean;
   published: boolean;
   created_at: string;

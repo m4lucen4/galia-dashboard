@@ -14,6 +14,14 @@ import { ColorPicker } from "./ColorPicker";
 import { FontSelector } from "./FontSelector";
 import { NavbarTypeSelector } from "./NavbarTypeSelector";
 import { Switch } from "../../../components/shared/ui/Switch";
+import {
+  SITE_LANGUAGES,
+  resolveSiteLanguages,
+  toggleSiteLanguage,
+  validateSiteLanguages,
+} from "@/helpers/siteLanguages";
+
+const LANGUAGE_LABELS = { es: "Español (ES)", en: "Inglés (EN)", ca: "Catalán (CA)" };
 
 export interface SiteConfigFormHandle {
   save: () => void;
@@ -51,8 +59,7 @@ export const SiteConfigForm = forwardRef<
     navbar_hidden: site.navbar_hidden ?? false,
     footer_hidden: site.footer_hidden ?? false,
     full_width: site.full_width ?? false,
-    default_language: site.default_language || "es",
-    multilanguage: site.multilanguage ?? false,
+    ...resolveSiteLanguages(site),
     instagram_url: site.instagram_url || "",
     facebook_url: site.facebook_url || "",
     linkedin_url: site.linkedin_url || "",
@@ -82,8 +89,7 @@ export const SiteConfigForm = forwardRef<
       navbar_hidden: site.navbar_hidden ?? false,
       footer_hidden: site.footer_hidden ?? false,
       full_width: site.full_width ?? false,
-      default_language: site.default_language || "es",
-      multilanguage: site.multilanguage ?? false,
+      ...resolveSiteLanguages(site),
       instagram_url: site.instagram_url || "",
       facebook_url: site.facebook_url || "",
       linkedin_url: site.linkedin_url || "",
@@ -145,6 +151,7 @@ export const SiteConfigForm = forwardRef<
       return;
     }
 
+    const languages = validateSiteLanguages(form);
     dispatch(
       updateSite({
         siteId: site.id,
@@ -162,8 +169,9 @@ export const SiteConfigForm = forwardRef<
           navbar_hidden: form.navbar_hidden,
           footer_hidden: form.footer_hidden,
           full_width: form.full_width,
-          default_language: form.default_language,
-          multilanguage: form.multilanguage,
+          enabled_languages: languages.enabled_languages,
+          default_language: languages.default_language,
+          multilanguage: languages.multilanguage,
           instagram_url: form.instagram_url || null,
           facebook_url: form.facebook_url || null,
           linkedin_url: form.linkedin_url || null,
@@ -368,12 +376,31 @@ export const SiteConfigForm = forwardRef<
 
       {/* Idioma */}
       <div className="space-y-4">
-        <p className="text-sm font-medium text-black">Idioma</p>
+        <fieldset>
+          <legend className="text-sm font-medium text-black mb-2">Idiomas de la web</legend>
+          <div className="flex flex-wrap gap-3">
+            {SITE_LANGUAGES.map((lang) => (
+              <label key={lang} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form.enabled_languages.includes(lang)}
+                  disabled={form.enabled_languages.length === 1 && form.enabled_languages.includes(lang)}
+                  onChange={() => setForm((prev) => ({ ...prev, ...toggleSiteLanguage(prev, lang) }))}
+                />
+                {LANGUAGE_LABELS[lang]}
+              </label>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            Selecciona al menos un idioma. Solo se traducen los textos fijos de la interfaz, no tu contenido.
+            El selector público aparece al elegir varios idiomas.
+          </p>
+        </fieldset>
 
         <div>
           <p className="text-xs text-gray-500 mb-2">Idioma por defecto de la web</p>
           <div className="flex gap-3">
-            {(["es", "en"] as const).map((lang) => (
+            {form.enabled_languages.map((lang) => (
               <label
                 key={lang}
                 className={`flex items-center gap-2 px-4 py-2 rounded-md border cursor-pointer text-sm transition-colors ${
@@ -390,26 +417,12 @@ export const SiteConfigForm = forwardRef<
                   onChange={() => setForm((prev) => ({ ...prev, default_language: lang }))}
                   className="sr-only"
                 />
-                {lang === "es" ? "Español" : "English"}
+                {LANGUAGE_LABELS[lang]}
               </label>
             ))}
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-black">Web multi-idioma</p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Muestra un selector de idioma en la web. Los visitantes podrán cambiar entre Español e Inglés.
-            </p>
-          </div>
-          <Switch
-            checked={form.multilanguage}
-            onChange={() =>
-              setForm((prev) => ({ ...prev, multilanguage: !prev.multilanguage }))
-            }
-          />
-        </div>
       </div>
 
       {/* Redes sociales */}

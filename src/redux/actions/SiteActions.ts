@@ -2,6 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { supabase } from "../../helpers/supabase";
 import { SiteDataProps } from "../../types";
 import type { RootState } from "../store";
+import { validateSiteLanguages } from "@/helpers/siteLanguages";
 
 export type CreateSiteProps = {
   studio_name: string;
@@ -65,6 +66,9 @@ export const createSite = createAsyncThunk(
           user_id: userId,
           studio_name: siteData.studio_name,
           slug: siteData.slug,
+          default_language: "es",
+          enabled_languages: ["es"],
+          multilanguage: false,
         })
         .select()
         .single();
@@ -94,6 +98,18 @@ export const updateSite = createAsyncThunk(
       const userId = state.auth.user?.uid;
       if (!userId) return rejectWithValue("Usuario no autenticado");
 
+      // Validate before even the slug lookup; unrelated updates remain partial.
+      let validatedUpdates = updates;
+      if (["enabled_languages", "default_language", "multilanguage"].some(
+        (field) => Object.prototype.hasOwnProperty.call(updates, field),
+      )) {
+        try {
+          validatedUpdates = { ...updates, ...validateSiteLanguages(updates) };
+        } catch (error) {
+          return rejectWithValue(error instanceof Error ? error.message : "Idiomas no válidos");
+        }
+      }
+
       // If slug is being updated, check uniqueness
       if (updates.slug) {
         const { data: existing } = await supabase
@@ -101,7 +117,7 @@ export const updateSite = createAsyncThunk(
           .select("id")
           .eq("slug", updates.slug)
           .neq("id", siteId)
-          .single();
+          .maybeSingle();
 
         if (existing) {
           return rejectWithValue("Este slug ya está en uso");
@@ -110,7 +126,7 @@ export const updateSite = createAsyncThunk(
 
       const { data, error } = await supabase
         .from("sites")
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update({ ...validatedUpdates, updated_at: new Date().toISOString() })
         .eq("id", siteId)
         .eq("user_id", userId)
         .select()
