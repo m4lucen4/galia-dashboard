@@ -50,6 +50,25 @@
     "createAccount": "Crear un compte",
     "registrationSuccess": "El teu compte ha estat activat correctament. Ja pots iniciar sessió."
   },
+  "billing": {
+    "excludingVat": "IVA no inclòs",
+    "vatAtCheckout": "S’hi afegirà un 21 % d’IVA",
+    "optionalMyWeb": "Afegir myWeb (opcional)",
+    "myWebDescription": "Accés al constructor de la teva pàgina web.",
+    "subtotal": "Subtotal sense IVA",
+    "vat": "IVA (21 %)",
+    "total": "Total amb IVA",
+    "refresh": "Actualitzar subscripció",
+    "myWebStatus": "myWeb: {{status}}",
+    "included": "inclòs",
+    "notIncluded": "no contractat",
+    "removalScheduled": "myWeb continuarà disponible fins al {{date}} i no es renovarà.",
+    "addMyWeb": "Afegir myWeb",
+    "removeMyWeb": "Treure myWeb a la renovació",
+    "completePayment": "Completar el pagament pendent de myWeb",
+    "addConfirmation": "myWeb costa 18,50 €/mes o 177,60 €/any, sense IVA, amb la mateixa periodicitat que Profesional. Es cobrarà ara la part proporcional més el 21 % d’IVA. L’accés s’activarà en confirmar el pagament.",
+    "removeConfirmation": "L’extra myWeb no es renovarà. Mantindràs l’accés fins que acabi el període pagat; Profesional continuarà sense canvis."
+  },
   "register": {
     "title": "Crear compte",
     "subtitle": "Omple les teves dades per registrar-te",

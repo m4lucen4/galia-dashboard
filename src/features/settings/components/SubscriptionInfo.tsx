@@ -2,29 +2,33 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CreditCardIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { fetchSubscription, cancelSubscription, reactivateSubscription, startSubscription } from "../../../redux/actions/SubscriptionActions";
+import { fetchSubscription, cancelSubscription, reactivateSubscription, startSubscription, updateMyWeb } from "../../../redux/actions/SubscriptionActions";
 import { clearSubscriptionErrors } from "../../../redux/slices/SubscriptionSlice";
 import { Alert } from "../../../components/shared/ui/Alert";
 import { formatDateToDDMMYYYY } from "../../../helpers";
 import { supabase } from "../../../helpers/supabase";
 import { PlanSelector } from "../../register/components/PlanSelector";
-import { SubscriptionPlanType, BillingPeriod } from "../../../types";
-import { InformationCircleIcon } from "@heroicons/react/24/solid";
+import type { BillingPeriod } from "@/types";
+import { formatMoney } from "@/helpers/subscriptionPricing";
 
 export const SubscriptionInfo = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dispatch = useAppDispatch();
   const [showCancelAlert, setShowCancelAlert] = useState(false);
   const [showReactivateAlert, setShowReactivateAlert] = useState(false);
   const [billingPortalLoading, setBillingPortalLoading] = useState(false);
-  const [newPlan, setNewPlan] = useState<SubscriptionPlanType>("professional");
+  const [newMyWeb, setNewMyWeb] = useState(false);
+  const [confirmMyWeb, setConfirmMyWeb] = useState(false);
   const [newPeriod, setNewPeriod] = useState<BillingPeriod>("monthly");
 
-  const { subscription, fetchSubscriptionRequest, cancelSubscriptionRequest, reactivateSubscriptionRequest, startSubscriptionRequest } =
+  const { subscription, fetchSubscriptionRequest, cancelSubscriptionRequest, reactivateSubscriptionRequest, startSubscriptionRequest, updateMyWebRequest } =
     useAppSelector((state) => state.subscription);
 
   useEffect(() => {
-    dispatch(fetchSubscription());
+    const refresh = () => { dispatch(fetchSubscription()); };
+    refresh();
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
   }, [dispatch]);
 
   const handleCancelSubscription = async () => {
@@ -70,25 +74,27 @@ export const SubscriptionInfo = () => {
     );
   }
 
+  if (!subscription && fetchSubscriptionRequest.messages) {
+    return <div role="alert" className="space-y-3 text-sm text-red-600">
+      <p>{fetchSubscriptionRequest.messages}</p>
+      <button type="button" onClick={() => dispatch(fetchSubscription())}>{t("billing.refresh")}</button>
+    </div>;
+  }
+
   if (!subscription) {
     const handleStartSubscription = () => {
-      dispatch(startSubscription({ plan_type: newPlan, billing_period: newPeriod }));
+      dispatch(startSubscription({ plan_type: "professional", billing_period: newPeriod, myweb: newMyWeb }));
     };
 
     return (
       <div className="space-y-5">
         <p className="text-sm text-gray-500">{t("settings.noSubscription")}</p>
         <PlanSelector
-          selectedPlan={newPlan}
           selectedPeriod={newPeriod}
-          onPlanChange={setNewPlan}
+          myweb={newMyWeb}
+          onMyWebChange={setNewMyWeb}
           onPeriodChange={setNewPeriod}
         />
-        {newPlan === "student" && (
-          <div className="flex gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
-            <InformationCircleIcon className="h-5 w-5 shrink-0 text-blue-500 mt-0.5" />
-          </div>
-        )}
         {startSubscriptionRequest.messages && (
           <p className="text-sm text-red-600">{startSubscriptionRequest.messages}</p>
         )}
@@ -107,11 +113,19 @@ export const SubscriptionInfo = () => {
   const planLabel =
     subscription.plan_type === "student" ? t("register.student") : t("register.professional");
 
-  const priceMap: Record<string, Record<string, string>> = {
-    student:      { monthly: "9,00 €",   annual: "86,40 €" },
-    professional: { monthly: "30,25 €",  annual: "182,40 €" },
+  const isNewCatalog = subscription.catalog_version === "profesional_myweb_v1";
+  const price = typeof subscription.amount_excluding_tax === "number"
+    ? formatMoney(subscription.amount_excluding_tax, i18n.language, subscription.currency || "EUR") : "";
+  const handleMyWebChange = async () => {
+    setConfirmMyWeb(false);
+    const result = await dispatch(updateMyWeb({
+      stripe_subscription_id: subscription.stripe_subscription_id, enabled: !subscription.myweb,
+    }));
+    if (updateMyWeb.fulfilled.match(result)) {
+      await dispatch(fetchSubscription());
+      if (result.payload.pending_payment && result.payload.payment_url) window.location.assign(result.payload.payment_url);
+    }
   };
-  const price = priceMap[subscription.plan_type]?.[subscription.billing_period] ?? "";
   const periodLabel =
     subscription.billing_period === "monthly"
       ? `${t("register.monthly")} (${price})`
@@ -183,6 +197,28 @@ export const SubscriptionInfo = () => {
         <CreditCardIcon className="h-4 w-4" />
         {billingPortalLoading ? t("shared.loading") : t("settings.managePaymentMethod")}
       </button>
+
+      {isNewCatalog && (
+        <div className="space-y-3 rounded-lg border border-gray-200 p-4 text-sm">
+          <p className="text-xs text-gray-500">{t("billing.excludingVat")} · {t("billing.vatAtCheckout")}</p>
+          <p className="font-semibold">{t("billing.myWebStatus", { status: t(subscription.myweb ? "billing.included" : "billing.notIncluded") })}</p>
+          {subscription.myweb_cancel_at ? <p>{t("billing.removalScheduled", { date: formatDateToDDMMYYYY(subscription.myweb_cancel_at) })}</p> : (
+            subscription.status === "active" && !subscription.cancel_at_period_end && !subscription.myweb_payment_url && <button
+              type="button" disabled={updateMyWebRequest.inProgress} onClick={() => setConfirmMyWeb(true)}
+              className="rounded-lg border border-gray-900 px-4 py-2 disabled:opacity-50">
+              {t(subscription.myweb ? "billing.removeMyWeb" : "billing.addMyWeb")}
+            </button>
+          )}
+          {subscription.myweb_payment_url && <a className="block underline" href={subscription.myweb_payment_url}>{t("billing.completePayment")}</a>}
+          {updateMyWebRequest.messages && <p role="alert" className="text-red-600">{updateMyWebRequest.messages}</p>}
+          {confirmMyWeb && <Alert
+            title={t(subscription.myweb ? "billing.removeMyWeb" : "billing.addMyWeb")}
+            description={t(subscription.myweb ? "billing.removeConfirmation" : "billing.addConfirmation")}
+            onAccept={handleMyWebChange} onCancel={() => setConfirmMyWeb(false)}
+            disabledConfirmButton={updateMyWebRequest.inProgress}
+          />}
+        </div>
+      )}
 
       {(subscription.cancel_at_period_end || cancelSubscriptionRequest.ok) && subscription.current_period_end && (
         <div className="rounded-md bg-yellow-50 border border-yellow-200 p-3 text-xs text-yellow-800">

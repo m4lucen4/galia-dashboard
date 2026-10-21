@@ -14,22 +14,13 @@ export const fetchSubscription = createAsyncThunk(
         return rejectWithValue("No authenticated user");
       }
 
-      const { data, error } = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("user_id", uid)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (error) {
-        return rejectWithValue({
-          message: `Error getting subscription: ${error.message}`,
-          status: error.code,
-        });
-      }
-
-      return data;
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch("/api/get-subscription", {
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      const data = await response.json();
+      if (!response.ok) return rejectWithValue(data.error || "Error getting subscription");
+      return data as import("../../types").SubscriptionDataProps | null;
     } catch (error: unknown) {
       const appError: SupabaseError = {
         message:
@@ -44,7 +35,7 @@ export const fetchSubscription = createAsyncThunk(
 export const startSubscription = createAsyncThunk(
   "subscription/startSubscription",
   async (
-    payload: { plan_type: SubscriptionPlanType; billing_period: BillingPeriod },
+    payload: { plan_type: SubscriptionPlanType; billing_period: BillingPeriod; myweb: boolean },
     { rejectWithValue, getState }
   ) => {
     try {
@@ -55,12 +46,13 @@ export const startSubscription = createAsyncThunk(
         return rejectWithValue("No user data available");
       }
 
-      const { plan_type, billing_period } = payload;
+      const { plan_type, billing_period, myweb } = payload;
       const uid = userData.uid;
 
+      const { data: { session } } = await supabase.auth.getSession();
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
         body: JSON.stringify({
           uid,
           email: userData.email,
@@ -69,6 +61,7 @@ export const startSubscription = createAsyncThunk(
           phone: userData.phone || "",
           plan_type,
           billing_period,
+          myweb,
         }),
       });
 
@@ -87,6 +80,25 @@ export const startSubscription = createAsyncThunk(
         status: 500,
       };
       return rejectWithValue(appError);
+    }
+  },
+);
+
+export const updateMyWeb = createAsyncThunk(
+  "subscription/updateMyWeb",
+  async (payload: { stripe_subscription_id: string; enabled: boolean }, { rejectWithValue }) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch("/api/update-myweb", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (!response.ok) return rejectWithValue(data.error || "No se ha podido cambiar myWeb");
+      return data as { success: boolean; pending_payment?: boolean; payment_url?: string | null; removal_at?: string };
+    } catch {
+      return rejectWithValue("No se ha podido cambiar myWeb. Actualiza la suscripción antes de volver a intentarlo.");
     }
   },
 );

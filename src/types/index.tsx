@@ -281,6 +281,13 @@ export type SubscriptionDataProps = {
   cancel_at_period_end: boolean;
   created_at: string;
   updated_at: string;
+  catalog_version?: string;
+  amount_excluding_tax?: number;
+  currency?: string;
+  myweb?: boolean;
+  myweb_cancel_at?: string | null;
+  myweb_payment_url?: string | null;
+  has_web?: boolean;
 };
 
 export type RegisterFormData = {
@@ -291,6 +298,7 @@ export type RegisterFormData = {
   password: string;
   plan_type: SubscriptionPlanType;
   billing_period: BillingPeriod;
+  myweb: boolean;
 };
 
 // Site Builder types

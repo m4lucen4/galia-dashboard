@@ -49,6 +49,25 @@
     "createAccount": "Create an account",
     "registrationSuccess": "Your account has been successfully activated. You can now log in."
   },
+  "billing": {
+    "excludingVat": "VAT excluded",
+    "vatAtCheckout": "21% VAT will be added",
+    "optionalMyWeb": "Add myWeb (optional)",
+    "myWebDescription": "Access your website builder.",
+    "subtotal": "Subtotal excluding VAT",
+    "vat": "VAT (21%)",
+    "total": "Total including VAT",
+    "refresh": "Refresh subscription",
+    "myWebStatus": "myWeb: {{status}}",
+    "included": "included",
+    "notIncluded": "not subscribed",
+    "removalScheduled": "myWeb remains available until {{date}} and will not renew.",
+    "addMyWeb": "Add myWeb",
+    "removeMyWeb": "Remove myWeb at renewal",
+    "completePayment": "Complete pending myWeb payment",
+    "addConfirmation": "myWeb costs €18.50/month or €177.60/year excluding VAT, matching your Profesional billing period. The prorated amount plus 21% VAT will be charged now. Access activates after payment confirmation.",
+    "removeConfirmation": "The myWeb extra will not renew. Access remains until the paid period ends; Profesional continues unchanged."
+  },
   "register": {
     "title": "Create account",
     "subtitle": "Fill in your details to register",

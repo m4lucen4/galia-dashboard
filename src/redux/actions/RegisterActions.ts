@@ -18,7 +18,7 @@ export const registerUser = createAsyncThunk(
       if (existingUser && !existingUser.active) {
         // User already registered but never paid — reuse the existing uid
         uid = existingUser.uid;
-      } else if (existingUser && existingUser.active) {
+      } else if (existingUser?.active) {
         return rejectWithValue("email_already_exists");
       } else {
         // 2. Create user in Supabase Auth
@@ -61,9 +61,10 @@ export const registerUser = createAsyncThunk(
       }
 
       // 4. Create Stripe Checkout Session
+      const { data: { session } } = await supabase.auth.getSession();
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
         body: JSON.stringify({
           uid,
           email: formData.email,
@@ -72,6 +73,7 @@ export const registerUser = createAsyncThunk(
           phone: formData.phone,
           plan_type: formData.plan_type,
           billing_period: formData.billing_period,
+          myweb: formData.myweb,
         }),
       });
 
