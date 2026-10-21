@@ -41,7 +41,64 @@ async function stripeGet(path: string) {
   const res = await fetch(`https://api.stripe.com/v1${path}`, {
     headers: { Authorization: `Bearer ${stripeSecretKey}` },
   });
+  if (!res.ok) throw new Error(`Stripe lookup failed (${res.status})`);
   return res.json();
+}
+
+const catalogVersion = "profesional_myweb_v1";
+
+function newPriceIds(component: "PROFESSIONAL_V1" | "MYWEB") {
+  return ["MONTHLY", "ANNUAL"].map(period => Deno.env.get(`STRIPE_${component}_${period}_PRICE_ID`)).filter(Boolean);
+}
+
+// Claim durable ownership before the authoritative read. Reading Stripe alone does not
+// stop an older overlapping invocation from writing a stale entitlement last.
+async function syncNewSubscription(subscriptionId: string, supabase: any) {
+  const candidate = await stripeGet(`/subscriptions/${subscriptionId}`);
+  if (candidate.metadata?.catalog_version !== catalogVersion) return false;
+  const ownerToken = crypto.randomUUID();
+  const args = { p_subscription_id: subscriptionId, p_owner_token: ownerToken };
+  const { data: claimed, error: claimError } = await supabase.rpc("claim_subscription_projection", args);
+  if (claimError) throw claimError;
+  if (!claimed) throw new Error("Subscription projection busy; Stripe must retry this event");
+  let applied = false;
+  try {
+    const subscription = await stripeGet(`/subscriptions/${subscriptionId}`);
+    if (subscription.metadata?.catalog_version !== catalogVersion) throw new Error("Subscription catalog changed during projection");
+    const uid = subscription.metadata.uid;
+    if (newPriceIds("PROFESSIONAL_V1").length !== 2 || newPriceIds("MYWEB").length !== 2) {
+      throw new Error("All four new catalog price IDs must be configured");
+    }
+    const base = subscription.items?.data?.find((item: any) => newPriceIds("PROFESSIONAL_V1").includes(item.price?.id));
+    if (!uid || !base) throw new Error("New subscription catalog configuration is missing or invalid");
+    const web = subscription.items.data.find((item: any) => newPriceIds("MYWEB").includes(item.price?.id));
+    const active = ["active", "trialing"].includes(subscription.status);
+    const iso = (value: number | null) => value ? new Date(value * 1000).toISOString() : null;
+    const { data, error } = await supabase.rpc("apply_subscription_projection", {
+      ...args,
+      p_projection: {
+        user_id: uid,
+        stripe_customer_id: subscription.customer,
+        stripe_subscription_id: subscription.id,
+        billing_period: base.price.recurring.interval === "year" ? "annual" : "monthly",
+        status: active ? "active" : subscription.status === "canceled" ? "cancelled" : subscription.status,
+        current_period_start: iso(base.current_period_start ?? subscription.current_period_start),
+        current_period_end: iso(base.current_period_end ?? subscription.current_period_end),
+        cancel_at_period_end: subscription.cancel_at_period_end || !!(subscription.cancel_at && subscription.cancel_at <= (base.current_period_end ?? subscription.current_period_end)),
+        active,
+        has_web: subscription.metadata.manual_has_web === "true" || (active && !!web),
+      },
+    });
+    if (error) throw error;
+    if (!data) throw new Error("Subscription projection lease expired; Stripe must retry this event");
+    applied = true;
+    return true;
+  } finally {
+    if (!applied) {
+      const { error } = await supabase.rpc("release_subscription_projection", args);
+      if (error) console.error("Could not release projection lease; it will expire:", error);
+    }
+  }
 }
 
 Deno.serve(async (req) => {
@@ -74,14 +131,23 @@ Deno.serve(async (req) => {
         await handleCheckoutCompleted(event.data.object, supabase);
         break;
       case "customer.subscription.updated":
+      case "customer.subscription.pending_update_applied":
+      case "customer.subscription.pending_update_expired":
+        if (await syncNewSubscription(event.data.object.id, supabase)) break;
         await handleSubscriptionUpdated(event.data.object, supabase);
         break;
       case "customer.subscription.deleted":
+        if (await syncNewSubscription(event.data.object.id, supabase)) break;
         await handleSubscriptionDeleted(event.data.object, supabase);
         break;
       case "invoice.payment_failed":
-        await handlePaymentFailed(event.data.object, supabase);
+      case "invoice.paid": {
+        const invoice = event.data.object;
+        const subscriptionId = invoice.subscription ?? invoice.parent?.subscription_details?.subscription;
+        if (subscriptionId && await syncNewSubscription(subscriptionId, supabase)) break;
+        if (event.type === "invoice.payment_failed") await handlePaymentFailed(invoice, supabase);
         break;
+      }
       default:
         console.error(`Unhandled event: ${event.type}`);
     }
@@ -123,6 +189,10 @@ async function handleCheckoutCompleted(session: any, supabase: any) {
   const currentPeriodStart = periodStart ? new Date(periodStart * 1000).toISOString() : null;
   const currentPeriodEnd = periodEnd ? new Date(periodEnd * 1000).toISOString() : null;
 
+  const isNewCatalog = subscription.metadata?.catalog_version === catalogVersion;
+  if (isNewCatalog) {
+    await syncNewSubscription(stripeSubscriptionId, supabase);
+  } else {
   const { error: activateError } = await supabase
     .from("userData")
     .update({ active: true })
@@ -147,6 +217,7 @@ async function handleCheckoutCompleted(session: any, supabase: any) {
     );
 
   if (subError) console.error("Error creating subscription:", subError);
+  }
 
   try {
     const fullName = [first_name, last_name].filter(Boolean).join(" ") || "Usuario";
