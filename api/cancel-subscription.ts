@@ -1,4 +1,6 @@
 import { default as Stripe } from "stripe";
+import { BillingError } from "./_lib/billing";
+import { setManagedScheduleCancellation } from "./_lib/mywebSchedule";
 import { createClient } from "@supabase/supabase-js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
@@ -62,13 +64,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Cancel at period end (not immediately)
-    await stripe.subscriptions.update(stripe_subscription_id, {
-      cancel_at_period_end: true,
-    });
+    if (!await setManagedScheduleCancellation(stripe_subscription_id, true)) {
+      await stripe.subscriptions.update(stripe_subscription_id, {
+        cancel_at_period_end: true,
+      });
+    }
 
     return res.status(200).json({ success: true });
   } catch (error) {
     console.error("Error cancelling subscription:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(error instanceof BillingError ? error.status : 500)
+      .json({ error: error instanceof BillingError ? error.message : "Internal server error" });
   }
 }

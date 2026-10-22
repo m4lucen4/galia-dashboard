@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useAppDispatch } from "@/redux/hooks";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { AppDispatch } from "../../../redux/store";
 import { registerUser } from "../../../redux/actions/RegisterActions";
-import { RegisterFormData, SubscriptionPlanType, BillingPeriod } from "../../../types";
+import { RegisterFormData, BillingPeriod } from "../../../types";
 import { InputField } from "../../../components/shared/ui/InputField";
 import { Button } from "../../../components/shared/ui/Button";
 import { Card } from "../../../components/shared/ui/Card";
@@ -47,7 +46,7 @@ const validateForm = (formData: RegisterFormData): FormErrors => {
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }) => {
   const { t } = useTranslation();
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
 
   const [formData, setFormData] = useState<RegisterFormData>({
     first_name: "",
@@ -57,6 +56,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
     password: "",
     plan_type: "professional",
     billing_period: "monthly",
+    myweb: false,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -73,8 +73,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
     }
   };
 
-  const handlePlanChange = (plan: SubscriptionPlanType) => {
-    setFormData((prev) => ({ ...prev, plan_type: plan }));
+  const handleMyWebChange = (myweb: boolean) => {
+    setFormData((prev) => ({ ...prev, myweb }));
   };
 
   const handlePeriodChange = (period: BillingPeriod) => {
@@ -192,9 +192,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
                 {t("register.planType")}
               </label>
               <PlanSelector
-                selectedPlan={formData.plan_type}
                 selectedPeriod={formData.billing_period}
-                onPlanChange={handlePlanChange}
+                myweb={formData.myweb}
+                onMyWebChange={handleMyWebChange}
                 onPeriodChange={handlePeriodChange}
               />
             </div>

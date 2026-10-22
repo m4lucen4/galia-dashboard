@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { fetchSubscription } from "../actions/SubscriptionActions";
 import {
   checkAuthState,
   login,
@@ -60,6 +61,11 @@ const authSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    builder.addCase(fetchSubscription.fulfilled, (state, action) => {
+      if (state.user && typeof action.payload?.has_web === "boolean") {
+        state.user.has_web = action.payload.has_web;
+      }
+    });
     builder
       .addCase(login.pending, (state) => {
         state.loginRequest = {

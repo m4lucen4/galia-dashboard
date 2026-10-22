@@ -126,6 +126,14 @@ STRIPE_STUDENT_MONTHLY_PRICE_ID=
 STRIPE_STUDENT_ANNUAL_PRICE_ID=
 STRIPE_PROFESSIONAL_MONTHLY_PRICE_ID=
 STRIPE_PROFESSIONAL_ANNUAL_PRICE_ID=
+# Nuevo catálogo: no sobrescribir los identificadores anteriores
+STRIPE_PROFESSIONAL_V1_MONTHLY_PRICE_ID=
+STRIPE_PROFESSIONAL_V1_ANNUAL_PRICE_ID=
+STRIPE_MYWEB_MONTHLY_PRICE_ID=
+STRIPE_MYWEB_ANNUAL_PRICE_ID=
+STRIPE_VAT_21_TAX_RATE_ID=
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
 
 # Email
 RESEND_API_KEY=
@@ -133,6 +141,8 @@ RESEND_API_KEY=
 # NAS / Multimedia
 VITE_NAS_PROXY_URL=
 ```
+
+El catálogo Profesional + myWeb, sus importes sin IVA y el orden de despliegue se describen en [Suscripciones](docs/subscriptions.md). Antes de habilitarlo, configura una tasa manual exclusiva del 21 % en Stripe; marcar los precios como `exclusive` no basta.
 
 ## Instalación y desarrollo
 

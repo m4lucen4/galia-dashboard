@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchSubscription, cancelSubscription, reactivateSubscription, startSubscription } from "../actions/SubscriptionActions";
+import { fetchSubscription, cancelSubscription, reactivateSubscription, startSubscription, updateMyWeb } from "../actions/SubscriptionActions";
 import { SubscriptionDataProps, IRequest, SupabaseError } from "../../types";
 
 interface SubscriptionState {
@@ -8,10 +8,12 @@ interface SubscriptionState {
   cancelSubscriptionRequest: IRequest;
   reactivateSubscriptionRequest: IRequest;
   startSubscriptionRequest: IRequest;
+  updateMyWebRequest: IRequest;
 }
 
 const initialState: SubscriptionState = {
   subscription: null,
+  updateMyWebRequest: { inProgress: false, messages: "", ok: false },
   fetchSubscriptionRequest: {
     inProgress: false,
     messages: "",
@@ -45,6 +47,16 @@ const subscriptionSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    builder
+      .addCase(updateMyWeb.pending, state => {
+        state.updateMyWebRequest = { inProgress: true, messages: "", ok: false };
+      })
+      .addCase(updateMyWeb.fulfilled, state => {
+        state.updateMyWebRequest = { inProgress: false, messages: "", ok: true };
+      })
+      .addCase(updateMyWeb.rejected, (state, action) => {
+        state.updateMyWebRequest = { inProgress: false, messages: String(action.payload || "No se ha podido cambiar myWeb"), ok: false };
+      });
     builder
       .addCase(fetchSubscription.pending, (state) => {
         state.fetchSubscriptionRequest = {
