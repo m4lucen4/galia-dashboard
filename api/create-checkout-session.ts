@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { BillingError, CATALOG_VERSION, authenticatedUser, catalogPrice, database, stripeClient, vatRate } from "./_lib/billing";
+import { BillingError, CATALOG_VERSION, authenticatedUser, catalogPrice, database, stripeClient, vatRate } from "./_lib/billing.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Credentials", "true");

@@ -1,6 +1,6 @@
 import { default as Stripe } from "stripe";
-import { BillingError } from "./_lib/billing";
-import { setManagedScheduleCancellation } from "./_lib/mywebSchedule";
+import { BillingError } from "./_lib/billing.js";
+import { setManagedScheduleCancellation } from "./_lib/mywebSchedule.js";
 import { createClient } from "@supabase/supabase-js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 

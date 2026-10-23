@@ -1,4 +1,4 @@
-import { BillingError, CATALOG_VERSION, newBaseItem, stripeClient } from "./billing";
+import { BillingError, CATALOG_VERSION, newBaseItem, stripeClient } from "./billing.js";
 
 // Keep whole-subscription cancellation compatible with a pending myWeb-only removal.
 // Call only after the existing HTTP handler has checked subscription ownership.

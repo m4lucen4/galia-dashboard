@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { randomUUID } from "node:crypto";
-import { BillingError, CATALOG_VERSION, catalogPrice, newBaseItem, ownedSubscription, vatRate, webItem } from "./_lib/billing";
+import { BillingError, CATALOG_VERSION, catalogPrice, newBaseItem, ownedSubscription, vatRate, webItem } from "./_lib/billing.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });

@@ -38,6 +38,12 @@ Estado remoto comprobado: la migración ya está instalada y `stripe-webhook` es
 
 La publicación conjunta de API/dashboard y las pruebas reales siguen pendientes. Deben publicarse los archivos nuevos y los cambios actuales, no limitarse a redesplegar una revisión antigua. La corrección de inicialización del SDK pertenece a las API de Vercel y no requiere volver a publicar el webhook de Supabase. No se han ejecutado cobros de prueba ni invocado las RPC con datos reales desde esta verificación. Crear el catálogo no cambia ninguna suscripción existente.
 
+### Ejecución de la API de suscripciones
+
+Los imports relativos de las funciones deben incluir la extensión del JavaScript emitido (`./_lib/billing.js`, `./_lib/mywebSchedule.js`), aunque el archivo fuente sea TypeScript. Node ejecuta estas funciones como ESM; un import sin extensión provoca `ERR_MODULE_NOT_FOUND` antes de entrar en el handler y Vercel devuelve texto en vez de JSON.
+
+En local, `pnpm dev` inicia únicamente Vite: no ejecuta `/api`. Para comprobar Ajustes → Suscripción con las funciones, utiliza `vercel dev` con el proyecto vinculado, la sesión de Vercel autenticada y las variables de servidor configuradas. No copies las claves de servidor a variables `VITE_*`. Después de publicar la corrección en producción, comprueba `/api/get-subscription` y el portal con una sesión autenticada; la comprobación offline de carga ESM no sustituye esa prueba.
+
 ## Comportamiento
 
 | Acción | Cobro y acceso |
