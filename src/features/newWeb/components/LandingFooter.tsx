@@ -12,7 +12,10 @@ export const LandingFooter = () => (
       </p>
       <nav aria-label="Información legal y documentación" className="flex flex-wrap gap-x-6 gap-y-3 font-['Geist_Mono',monospace] text-sm">
         <a href="/wiki" className="rounded-sm underline underline-offset-4">Documentación</a>
+        <a href="/privacy#legal-notice" className="rounded-sm underline underline-offset-4">Aviso legal</a>
         <a href="/privacy" className="rounded-sm underline underline-offset-4">Política de privacidad</a>
+        <a href="/cookies" className="rounded-sm underline underline-offset-4">Política de cookies</a>
+        <a href="/terms" className="rounded-sm underline underline-offset-4">Términos de uso</a>
       </nav>
     </Container>
   </footer>

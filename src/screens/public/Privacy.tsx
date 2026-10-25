@@ -5,11 +5,11 @@ export const Privacy = () => {
     <LegalPage
       document="privacy"
       title="Política de privacidad"
-      description="AVISO LEGAL, POLÍTICA DE COOKIES Y CONDICIONES DE PUBLICACIÓN DE WWW.MOCKLAB.APP"
+      description="Información sobre el titular de Mocklab, el uso de la plataforma y el tratamiento de datos personales."
     >
       <div>
         <section>
-          <h2>
+          <h2 id="legal-notice" className="scroll-mt-28">
             1. DATOS IDENTIFICATIVOS
           </h2>
           <p>
@@ -38,16 +38,13 @@ export const Privacy = () => {
             2. FINALIDAD Y CONDICIONES DE PUBLICACIÓN
           </h2>
           <p>
-            El acceso a la plataforma www.mocklab.app está reservado a autores y
-            colaboradores de la Guía de Arquitectura para la gestión, edición y
-            aportación de contenidos destinados a publicarse en
-            www.guiadearquitectura.com y en sus redes sociales asociadas. El
-            acceso mediante pasarelas de login social (ej. LinkedIn o Instagram)
-            es voluntario e implica el uso de datos básicos de perfil. Al
-            aceptar las Condiciones de Publicación (mediante el tick
-            correspondiente), el autor otorga a Nacho Villegas SL una cesión de
-            derechos no exclusiva para la difusión de dichos textos y reportajes
-            fotográficos.
+            Mocklab es una plataforma para estudios de arquitectura y diseño
+            que permite gestionar proyectos, archivos multimedia, publicaciones
+            en redes sociales y una web de portafolio. La conexión con redes
+            sociales es voluntaria y se solicita desde la cuenta del usuario.
+            El uso del servicio y las condiciones de publicación de contenidos
+            se describen en los{" "}
+            <a href="/terms" className="underline underline-offset-4">términos de uso</a>.
           </p>
         </section>
 
@@ -111,14 +108,17 @@ export const Privacy = () => {
           </h2>
           <ul>
             <li>
-              <strong>Finalidad:</strong> Tratamos los datos de los usuarios
-              colaboradores para gestionar su cuenta, permitir la edición y
-              publicar su contenido en los dominios de la empresa, así como para
-              la gestión administrativa derivada.
+              <strong>Finalidad:</strong> Gestionar las cuentas y suscripciones,
+              prestar las funciones de gestión y publicación solicitadas por el
+              usuario, atender consultas y realizar la gestión administrativa
+              derivada del servicio.
             </li>
             <li>
               <strong>Legitimación:</strong> La ejecución del contrato de
-              prestación de servicios de la plataforma Mocklab.app.
+              prestación de servicios y las medidas precontractuales solicitadas,
+              así como el cumplimiento de las obligaciones legales aplicables.
+              La atención de consultas sobre el servicio no autoriza el envío
+              de publicidad.
             </li>
             <li>
               <strong>Destinatarios e Infraestructura:</strong> Se utilizan
@@ -140,14 +140,14 @@ export const Privacy = () => {
             6. POLÍTICA DE COOKIES
           </h2>
           <p>
-            Mocklab.app utiliza cookies técnicas y funcionales que son
-            estrictamente necesarias para el funcionamiento de la plataforma
-            (como las de Supabase para mantener la sesión segura del usuario),
-            las cuales no requieren consentimiento previo. También se utilizan
-            cookies estadísticas (como Google Analytics) para analizar el uso
-            interno, las cuales requieren consentimiento. El usuario puede
-            gestionarlas desde su navegador, advirtiendo que la plataforma no
-            funcionará correctamente si se desactivan las cookies funcionales.
+            Mocklab utiliza almacenamiento técnico para la sesión del usuario
+            y para las conexiones con redes sociales que este solicita. No
+            incorpora analítica de audiencia ni píxeles publicitarios. Puedes
+            consultar los nombres, las finalidades, la duración y las opciones
+            de gestión en la{" "}
+            <a href="/cookies" className="underline underline-offset-4">política de cookies</a>.
+            No se solicita consentimiento para categorías opcionales que no se
+            utilizan.
           </p>
         </section>
 

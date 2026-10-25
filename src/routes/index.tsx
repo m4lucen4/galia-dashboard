@@ -19,6 +19,7 @@ import { HasWebRoute } from "./HasWebRoute";
 
 import { NewWeb } from "@/features/newWeb/screen/NewWeb";
 import { Privacy } from "../screens/public/Privacy";
+import { Cookies } from "../screens/public/Cookies";
 import { Terms } from "../screens/public/Terms";
 import { InstagramCallback } from "../features/settings/screens/InstagramCallback";
 import { LinkedInCallback } from "../features/settings/screens/LinkedInCallback";
@@ -36,6 +37,7 @@ export const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<NewWeb />} />
     <Route path="/privacy" element={<Privacy />} />
+    <Route path="/cookies" element={<Cookies />} />
     <Route path="/terms" element={<Terms />} />
     <Route element={<NonAuthenticatedRoute />}>
       <Route path="/login" element={<LoginScreen />} />

@@ -6,7 +6,7 @@ import { LandingFooter } from "@/features/newWeb/components/LandingFooter";
 import "@/features/newWeb/fonts.css";
 
 type LegalPageProps = {
-  document: "privacy" | "terms";
+  document: "privacy" | "terms" | "cookies";
   title: string;
   description: string;
   children: ReactNode;
@@ -15,6 +15,7 @@ type LegalPageProps = {
 const documents = [
   { id: "privacy", href: "/privacy", label: "Política de privacidad" },
   { id: "terms", href: "/terms", label: "Términos de uso" },
+  { id: "cookies", href: "/cookies", label: "Política de cookies" },
 ] as const;
 
 export const LegalPage = ({ document, title, description, children }: LegalPageProps) => (

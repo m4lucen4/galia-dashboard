@@ -27,6 +27,11 @@ i18n
     resources,
     fallbackLng: "es",
     debug: false,
+    detection: {
+      // Detect language without reading or writing persistent browser storage.
+      order: ["querystring", "navigator", "htmlTag"],
+      caches: [],
+    },
     interpolation: {
       escapeValue: false,
     },
