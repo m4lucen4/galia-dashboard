@@ -1,18 +1,15 @@
-import { useNavigate } from "react-router-dom";
-import { Button } from "../../components/shared/ui/Button";
+import { LegalPage } from "@/features/newWeb/components/legal/LegalPage";
 
 export const Terms = () => {
-  const navigate = useNavigate();
   return (
-    <div className="container mx-auto p-4">
-      <h3 className="text-base/7 font-semibold text-gray-900 mb-4">
-        CONTRATO DE ADHESIÓN Y TÉRMINOS DE SUSCRIPCIÓN PARA EL USO DE LA
-        PLATAFORMA MOCKLAB.APP
-      </h3>
-      <Button title="Volver" onClick={() => navigate("/")} />
-      <div className="space-y-6 mt-8 text-gray-700">
+    <LegalPage
+      document="terms"
+      title="Términos de uso"
+      description="CONTRATO DE ADHESIÓN Y TÉRMINOS DE SUSCRIPCIÓN PARA EL USO DE LA PLATAFORMA MOCKLAB.APP"
+    >
+      <div>
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2>
             1. Partes contratantes
           </h2>
           <p>
@@ -26,7 +23,7 @@ export const Terms = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2>
             2. Objeto del contrato
           </h2>
           <p>
@@ -45,10 +42,10 @@ export const Terms = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2>
             3. Uso de Inteligencia Artificial (IA) y servicios de terceros
           </h2>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             3.1. Tecnología empleada
           </h3>
           <p>
@@ -60,7 +57,7 @@ export const Terms = () => {
             en todo caso su Política de Privacidad y los avisos legales
             correspondientes.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             3.2. Alcance del procesamiento
           </h3>
           <p>
@@ -71,7 +68,7 @@ export const Terms = () => {
             contenido del Suscriptor para entrenar modelos de inteligencia
             artificial, propios ni de terceros.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             3.3. Responsabilidad sobre el resultado
           </h3>
           <p>
@@ -81,7 +78,7 @@ export const Terms = () => {
             borradores al uso final previsto. El Suscriptor es responsable de
             revisar y validar todo contenido antes de su publicación.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             3.4. Retención de datos por proveedores de IA
           </h3>
           <p>
@@ -91,7 +88,7 @@ export const Terms = () => {
             IA utilizados, así como sobre cualquier transferencia internacional
             de datos que pudiera derivarse de dicho procesamiento.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             3.5. Opción de uso sin procesamiento por IA
           </h3>
           <p>
@@ -104,10 +101,10 @@ export const Terms = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2>
             4. Protección del contenido y propiedad intelectual
           </h2>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             4.1. Titularidad del Suscriptor
           </h3>
           <p>
@@ -118,7 +115,7 @@ export const Terms = () => {
             cederá a terceros para ningún fin distinto de la prestación del
             servicio contratado.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             4.2. Licencia operativa
           </h3>
           <p>
@@ -129,7 +126,7 @@ export const Terms = () => {
             Suscriptor. Esta licencia se extingue automáticamente en el momento
             en que el Suscriptor cancele su suscripción.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             4.3. Eliminación del contenido tras la cancelación
           </h3>
           <p>
@@ -139,7 +136,7 @@ export const Terms = () => {
             procederá a la eliminación definitiva del contenido del Suscriptor
             de sus sistemas, salvo obligación legal en contrario.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             4.4. Protección frente al uso no autorizado (Anti-Scraping)
           </h3>
           <p>
@@ -152,10 +149,10 @@ export const Terms = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2>
             5. Responsabilidad exclusiva sobre el material publicado
           </h2>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             5.1. Rol de mocklab
           </h3>
           <p>
@@ -165,14 +162,14 @@ export const Terms = () => {
             caso sobre el Suscriptor, con independencia del grado de
             automatización utilizado en el proceso de publicación.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             5.2. Responsabilidad del Suscriptor
           </h3>
           <p>
             Al subir y publicar material a través de mocklab.app, el Suscriptor
             confirma y asume la responsabilidad de que:
           </p>
-          <ul className="list-disc ml-6 mt-2">
+          <ul>
             <li>
               Es titular legítimo de los derechos de autor de las fotografías y
               textos, o cuenta con autorización expresa del autor para su uso en
@@ -190,7 +187,7 @@ export const Terms = () => {
               terceros.
             </li>
           </ul>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             5.3. Responsabilidad de mocklab frente al Suscriptor
           </h3>
           <p>
@@ -200,7 +197,7 @@ export const Terms = () => {
             de mocklab quedará limitada al importe de las cuotas abonadas por el
             Suscriptor durante los tres meses anteriores al incidente.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             5.4. Reclamaciones de terceros
           </h3>
           <p>
@@ -213,10 +210,10 @@ export const Terms = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2>
             6. Disponibilidad del servicio y copias de seguridad
           </h2>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             6.1. Disponibilidad del servicio
           </h3>
           <p>
@@ -226,7 +223,7 @@ export const Terms = () => {
             producirse cortes por causas técnicas, de mantenimiento o ajenas al
             proveedor.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             6.2. Mantenimientos programados
           </h3>
           <p>
@@ -234,7 +231,7 @@ export const Terms = () => {
             en franjas horarias de baja actividad, notificando al Suscriptor
             mediante aviso en la propia plataforma.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             6.3. Incidencias no planificadas
           </h3>
           <p>
@@ -243,7 +240,7 @@ export const Terms = () => {
             sobre el estado de resolución a través de los canales habituales de
             soporte.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             6.4. Copias de seguridad
           </h3>
           <p>
@@ -258,14 +255,14 @@ export const Terms = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2>
             7. Condiciones y política de pagos
           </h2>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             7.1. Modalidades de suscripción
           </h3>
           <p>mocklab ofrece las siguientes modalidades de suscripción:</p>
-          <ul className="list-disc ml-6 mt-2">
+          <ul>
             <li>
               <strong>Suscripción mensual:</strong> facturada y cobrada de forma
               recurrente cada mes natural desde la fecha de activación.
@@ -281,7 +278,7 @@ export const Terms = () => {
             en euros (€) y se entienden con el IVA incluido o desglosado según
             se indique en cada caso.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             7.2. Métodos de pago aceptados
           </h3>
           <p>
@@ -295,7 +292,7 @@ export const Terms = () => {
             único responsable de la custodia de dichos datos conforme a la
             normativa PCI-DSS.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             7.3. Facturación y plazos
           </h3>
           <p>
@@ -307,7 +304,7 @@ export const Terms = () => {
             activación de la suscripción, y las sucesivas en la fecha de
             renovación correspondiente.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             7.4. Renovación automática
           </h3>
           <p>
@@ -317,7 +314,7 @@ export const Terms = () => {
             presente contrato. El cargo correspondiente al nuevo período se
             realizará el mismo día de la renovación.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             7.5. Impagos y consecuencias
           </h3>
           <p>
@@ -325,7 +322,7 @@ export const Terms = () => {
             cualquier causa imputable al Suscriptor (fondos insuficientes,
             tarjeta caducada, rechazo de la entidad financiera, etc.), mocklab:
           </p>
-          <ul className="list-disc ml-6 mt-2">
+          <ul>
             <li>
               Notificará al Suscriptor del impago a través del correo electrónico
               registrado en su cuenta.
@@ -354,7 +351,7 @@ export const Terms = () => {
             en su caso, los gastos de gestión de cobro razonables y debidamente
             justificados.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             7.6. Política de reembolsos
           </h3>
           <p>
@@ -365,7 +362,7 @@ export const Terms = () => {
             al reembolso proporcional del período no disfrutado en los
             siguientes supuestos:
           </p>
-          <ul className="list-disc ml-6 mt-2">
+          <ul>
             <li>
               Incumplimiento grave del servicio imputable a mocklab que haya
               sido comunicado y no subsanado en un plazo razonable.
@@ -382,7 +379,7 @@ export const Terms = () => {
             que las motive. mocklab resolverá cada solicitud en un plazo máximo
             de 15 días hábiles.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             7.7. Modificación de tarifas
           </h3>
           <p>
@@ -393,7 +390,7 @@ export const Terms = () => {
             la nueva tarifa, podrá cancelar su suscripción antes de la fecha de
             renovación sin penalización alguna.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             7.8. Impuestos y obligaciones fiscales
           </h3>
           <p>
@@ -408,28 +405,28 @@ export const Terms = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2>
             8. Protección de datos personales
           </h2>
           <p>
             De conformidad con el Reglamento (UE) 2016/679 (RGPD) y la Ley
             Orgánica 3/2018 (LOPDGDD), se informa al Suscriptor de lo siguiente:
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             8.1. Responsable del tratamiento
           </h3>
           <p>
             MOCKLAB MEDIA S.L., con NIF B90271891 y domicilio en Calle Arroyo
             52, local 2, 41008 Sevilla. Contacto: hola@nachovillegas.com.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             8.2. Finalidad
           </h3>
           <p>
             Gestionar la suscripción y el acceso a la plataforma mocklab.app,
             así como la comunicación e información relacionada con el servicio.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             8.3. Base jurídica
           </h3>
           <p>
@@ -437,7 +434,7 @@ export const Terms = () => {
             consentimiento expreso del Suscriptor para el envío de comunicaciones
             informativas.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             8.4. Encargados del tratamiento
           </h3>
           <p>
@@ -445,7 +442,7 @@ export const Terms = () => {
             encargados del tratamiento, con quienes tiene suscritos los
             correspondientes contratos de encargo conforme al art. 28 RGPD:
           </p>
-          <ul className="list-disc ml-6 mt-2">
+          <ul>
             <li>
               <strong>Supabase:</strong> infraestructura técnica, backend y
               autenticación.
@@ -462,7 +459,7 @@ export const Terms = () => {
             instrucciones de mocklab y para las finalidades descritas, sin poder
             utilizarlos para fines propios.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             8.5. Transferencias internacionales
           </h3>
           <p>
@@ -474,7 +471,7 @@ export const Terms = () => {
             información detallada sobre estas garantías escribiendo a
             hola@nachovillegas.com.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             8.6. Derechos del Suscriptor
           </h3>
           <p>
@@ -485,7 +482,7 @@ export const Terms = () => {
             Protección de Datos (www.aepd.es) si considera que el tratamiento de
             sus datos no se ajusta a la normativa vigente.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             8.7. Información adicional
           </h3>
           <p>
@@ -496,10 +493,10 @@ export const Terms = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2>
             9. Duración, resolución y ley aplicable
           </h2>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             9.1. Entrada en vigor y duración
           </h3>
           <p>
@@ -509,7 +506,7 @@ export const Terms = () => {
             equivalentes salvo que cualquiera de las partes comunique su voluntad
             de no renovar antes del vencimiento.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             9.2. Cancelación por el Suscriptor
           </h3>
           <p>
@@ -519,7 +516,7 @@ export const Terms = () => {
             salvo en los supuestos previstos en la cláusula 7.6 del presente
             contrato.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             9.3. Modificaciones del contrato y de las tarifas
           </h3>
           <p>
@@ -531,7 +528,7 @@ export const Terms = () => {
             alguna. La continuación del uso de la plataforma tras dicha fecha
             implicará la aceptación de las nuevas condiciones.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             9.4. Suspensión o cancelación por mocklab
           </h3>
           <p>
@@ -542,7 +539,7 @@ export const Terms = () => {
             Suscriptor cualquier decisión de cancelación con un mínimo de 30
             días de antelación.
           </p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+          <h3>
             9.5. Ley aplicable y jurisdicción
           </h3>
           <p>
@@ -553,6 +550,6 @@ export const Terms = () => {
           </p>
         </section>
       </div>
-    </div>
+    </LegalPage>
   );
 };

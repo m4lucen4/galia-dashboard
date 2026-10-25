@@ -1,25 +1,22 @@
-import { useNavigate } from "react-router-dom";
-import { Button } from "../../components/shared/ui/Button";
+import { LegalPage } from "@/features/newWeb/components/legal/LegalPage";
 
 export const Privacy = () => {
-  const navigate = useNavigate();
   return (
-    <div className="container mx-auto p-4">
-      <h3 className="text-base/7 font-semibold text-gray-900 mb-4">
-        AVISO LEGAL, POLÍTICA DE COOKIES Y CONDICIONES DE PUBLICACIÓN DE
-        WWW.MOCKLAB.APP
-      </h3>
-      <Button title="Volver" onClick={() => navigate("/")} />
-      <div className="space-y-6 mt-8 text-gray-700">
+    <LegalPage
+      document="privacy"
+      title="Política de privacidad"
+      description="AVISO LEGAL, POLÍTICA DE COOKIES Y CONDICIONES DE PUBLICACIÓN DE WWW.MOCKLAB.APP"
+    >
+      <div>
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2>
             1. DATOS IDENTIFICATIVOS
           </h2>
           <p>
             En cumplimiento del deber de información (LSSI-CE), se informa de
             los siguientes datos de la plataforma Mocklab:
           </p>
-          <ul className="list-disc ml-6 mt-2">
+          <ul>
             <li>
               <strong>Titular:</strong> Nacho Villegas SL (NIF: B90271891).
             </li>
@@ -37,7 +34,7 @@ export const Privacy = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2>
             2. FINALIDAD Y CONDICIONES DE PUBLICACIÓN
           </h2>
           <p>
@@ -55,7 +52,7 @@ export const Privacy = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2>
             3. GARANTÍAS Y RESPONSABILIDAD EXCLUSIVA DEL USUARIO SOBRE EL
             CONTENIDO MULTIMEDIA
           </h2>
@@ -65,7 +62,7 @@ export const Privacy = () => {
             que suba a la Plataforma. Al aportar contenido, el usuario declara y
             garantiza jurídicamente que:
           </p>
-          <ul className="list-disc ml-6 mt-2">
+          <ul>
             <li>
               Es el titular original de los derechos o posee las autorizaciones
               expresas y por escrito de los creadores/fotógrafos para licenciar
@@ -96,7 +93,7 @@ export const Privacy = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2>
             4. PROPIEDAD INTELECTUAL Y EXENCIÓN DE RESPONSABILIDAD TÉCNICA
           </h2>
           <p>
@@ -109,10 +106,10 @@ export const Privacy = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2>
             5. POLÍTICA DE PRIVACIDAD (RGPD)
           </h2>
-          <ul className="list-disc ml-6 mt-2">
+          <ul>
             <li>
               <strong>Finalidad:</strong> Tratamos los datos de los usuarios
               colaboradores para gestionar su cuenta, permitir la edición y
@@ -139,7 +136,7 @@ export const Privacy = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2>
             6. POLÍTICA DE COOKIES
           </h2>
           <p>
@@ -155,7 +152,7 @@ export const Privacy = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2>
             7. LEY APLICABLE Y JURISDICCIÓN
           </h2>
           <p>
@@ -165,6 +162,6 @@ export const Privacy = () => {
           </p>
         </section>
       </div>
-    </div>
+    </LegalPage>
   );
 };

@@ -35,6 +35,8 @@ const Administration = lazy(() => import("@/features/administration/screens/Admi
 export const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<NewWeb />} />
+    <Route path="/privacy" element={<Privacy />} />
+    <Route path="/terms" element={<Terms />} />
     <Route element={<NonAuthenticatedRoute />}>
       <Route path="/login" element={<LoginScreen />} />
       <Route path="/register" element={<RegisterScreen />} />
@@ -45,8 +47,6 @@ export const AppRoutes = () => (
       <Route path="/wiki/admin" element={<Suspense fallback={<div className="p-8">Cargando editor…</div>}><WikiAdmin /></Suspense>} />
     </Route>
     <Route element={<PublicRoute />}>
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/terms" element={<Terms />} />
       <Route path="/wiki" element={<Documentation />} />
       <Route path="/wiki/:sectionId/:sectionSlug?" element={<Documentation />} />
     </Route>
