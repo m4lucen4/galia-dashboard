@@ -17,7 +17,7 @@ import { AdminRoute } from "./AdminRoute";
 import { AdminWebRoute } from "./AdminWebRoute";
 import { HasWebRoute } from "./HasWebRoute";
 
-import { Web } from "../features/web/screen/Web";
+import { NewWeb } from "@/features/newWeb/screen/NewWeb";
 import { Privacy } from "../screens/public/Privacy";
 import { Terms } from "../screens/public/Terms";
 import { InstagramCallback } from "../features/settings/screens/InstagramCallback";
@@ -34,6 +34,7 @@ const Administration = lazy(() => import("@/features/administration/screens/Admi
 
 export const AppRoutes = () => (
   <Routes>
+    <Route path="/" element={<NewWeb />} />
     <Route element={<NonAuthenticatedRoute />}>
       <Route path="/login" element={<LoginScreen />} />
       <Route path="/register" element={<RegisterScreen />} />
@@ -44,7 +45,6 @@ export const AppRoutes = () => (
       <Route path="/wiki/admin" element={<Suspense fallback={<div className="p-8">Cargando editor…</div>}><WikiAdmin /></Suspense>} />
     </Route>
     <Route element={<PublicRoute />}>
-      <Route path="/" element={<Web />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/wiki" element={<Documentation />} />
@@ -71,7 +71,6 @@ export const AppRoutes = () => (
     <Route element={<PasswordResetRoute />}>
       <Route path="/reset-password" element={<RecoveryPasswordScreen />} />
     </Route>
-    <Route path="/" element={<Navigate to="/" replace />} />
     <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>
 );
