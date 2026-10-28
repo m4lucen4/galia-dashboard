@@ -57,13 +57,13 @@ export const AppRoutes = () => (
       <Route path="/home" element={<Home />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/settings" element={<Settings />} />
+      <Route path="/my-gpts" element={<MyGpts />} />
     </Route>
     <Route element={<ProtectedRoute />}>
       <Route path="/projects" element={<Projects />} />
       <Route path="/projects-analytics" element={<ProjectsAnalytics />} />
       <Route path="/multimedia" element={<Multimedia />} />
       <Route path="/preview-projects" element={<PreviewProjects />} />
-      <Route path="/my-gpts" element={<MyGpts />} />
       <Route path="/auth/linkedin/callback" element={<LinkedInCallback />} />
       <Route path="/auth/instagram/callback" element={<InstagramCallback />} />
     </Route>
