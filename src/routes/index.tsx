@@ -11,7 +11,6 @@ import { MyGpts } from "../features/adminPanel/screens/MyGpts";
 import { Documentation } from "../features/documentation/screens/Documentation";
 
 import { ProtectedRoute } from "./ProtectedRoute";
-import { PublicRoute } from "./PublicRoute";
 import { PasswordResetRoute } from "./PasswordResetRoute";
 import { AdminRoute } from "./AdminRoute";
 import { AdminWebRoute } from "./AdminWebRoute";
@@ -54,16 +53,14 @@ export const AppRoutes = () => (
     </Route>
     <Route path="/articulos" element={<Suspense fallback={<ArticlesLoading />}><Articles /></Suspense>} />
     <Route path="/articulos/:sectionId/:sectionSlug?" element={<Suspense fallback={<ArticlesLoading />}><Articles /></Suspense>} />
-    <Route element={<PublicRoute />}>
-      <Route path="/wiki" element={<Documentation />} />
-      <Route path="/wiki/:sectionId/:sectionSlug?" element={<Documentation />} />
-    </Route>
+    <Route path="/wiki" element={<Documentation />} />
+    <Route path="/wiki/:sectionId/:sectionSlug?" element={<Documentation />} />
     <Route element={<ProtectedRoute layout="sidebar" />}>
       <Route path="/home" element={<Home />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/settings" element={<Settings />} />
     </Route>
     <Route element={<ProtectedRoute />}>
-      <Route path="/settings" element={<Settings />} />
       <Route path="/projects" element={<Projects />} />
       <Route path="/projects-analytics" element={<ProjectsAnalytics />} />
       <Route path="/multimedia" element={<Multimedia />} />

@@ -144,6 +144,8 @@
     "hasWeb": "Has website"
   },
   "settings": {
+    "connectInstagram": "Connect Instagram",
+    "connectLinkedIn": "Connect LinkedIn",
     "title": "Settings",
     "description": "Configure your social networks and preferences.",
     "socialNetworks": "Social Networks",

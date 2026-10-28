@@ -145,6 +145,8 @@
     "hasWeb": "Tiene página web"
   },
   "settings": {
+    "connectInstagram": "Conectar Instagram",
+    "connectLinkedIn": "Conectar LinkedIn",
     "title": "Ajustes",
     "description": "Configura tus redes sociales y preferencias.",
     "socialNetworks": "Redes Sociales",

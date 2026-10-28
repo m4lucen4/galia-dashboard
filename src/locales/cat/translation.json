@@ -145,6 +145,8 @@
     "hasWeb": "Té pàgina web"
   },
   "settings": {
+    "connectInstagram": "Connectar Instagram",
+    "connectLinkedIn": "Connectar LinkedIn",
     "title": "Configuració",
     "description": "Configura les teves xarxes socials i preferències.",
     "socialNetworks": "Xarxes Socials",
