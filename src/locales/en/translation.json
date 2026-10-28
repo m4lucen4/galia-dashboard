@@ -373,6 +373,12 @@
     }
   },
   "profile": {
+    "sections": {
+      "personal": "Personal details",
+      "location": "Address",
+      "professional": "Professional details",
+      "preferences": "Preferences"
+    },
     "title": "Profile",
     "description": "Manage your profile and preferences",
     "changePassword": "Change password",

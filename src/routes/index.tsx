@@ -58,9 +58,9 @@ export const AppRoutes = () => (
     </Route>
     <Route element={<ProtectedRoute layout="sidebar" />}>
       <Route path="/home" element={<Home />} />
+      <Route path="/profile" element={<Profile />} />
     </Route>
     <Route element={<ProtectedRoute />}>
-      <Route path="/profile" element={<Profile />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/projects" element={<Projects />} />
       <Route path="/projects-analytics" element={<ProjectsAnalytics />} />

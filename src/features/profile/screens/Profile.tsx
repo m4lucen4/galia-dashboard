@@ -13,6 +13,8 @@ import { ChangePassword } from "../components/ChangePassword";
 import { FormButtons } from "../components/FormButtons";
 import { ProfileForm } from "../components/ProfileForm";
 import { useProfileHandlers } from "../useProfileHandlers";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import { LockClosedIcon } from "@heroicons/react/24/outline";
 
 export const Profile = () => {
   const user = useAppSelector((state: RootState) => state.auth.user);
@@ -98,30 +100,35 @@ export const Profile = () => {
   }
 
   return (
-    <div className="w-full min-w-0 py-4">
-      <h3 className="text-base/7 font-semibold text-gray-900">
-        {t("profile.title")}
-      </h3>
-      <div className="flex justify-between items-center mb-4">
-        <p className="mt-1 max-w-2xl text-sm/6 text-gray-500">
-          {t("profile.description")}
-        </p>
-        <span
-          className="text-sm/6 text-gray-500 hover:text-black cursor-pointer underline"
-          onClick={handleChangePassword}
-        >
-          {t("profile.changePassword")}
-        </span>
-      </div>
-      {formData && userData && (
-        <div>
-          <form onSubmit={handleSubmit}>
+    <div className="min-w-0 space-y-10">
+      <header className="flex flex-wrap items-end justify-between gap-5 border-b border-[#010000]/15 pb-8">
+        <div className="min-w-0 space-y-3">
+          <h1 className="text-4xl leading-[1.05] font-medium tracking-[-0.04em] sm:text-5xl">
+            {t("profile.title")}
+          </h1>
+          <p className="text-base leading-relaxed text-[#010000]/65">
+            {t("profile.description")}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <PillButton variant="outline" onClick={handleChangePassword}>
+            <LockClosedIcon className="size-4 shrink-0" aria-hidden="true" />
+            {t("profile.changePassword")}
+          </PillButton>
+          {formData && userData && (
             <FormButtons
+              formId="profile-form"
               isEditing={isEditing}
               isLoading={userUpdateRequest?.inProgress || false}
               onEdit={handleEdit}
               onCancel={handleCancel}
             />
+          )}
+        </div>
+      </header>
+      {formData && userData && (
+        <div>
+          <form id="profile-form" onSubmit={handleSubmit}>
             <ProfileForm
               formData={formData}
               userData={userData}

@@ -375,6 +375,12 @@
     }
   },
   "profile": {
+    "sections": {
+      "personal": "Datos personales",
+      "location": "Dirección",
+      "professional": "Datos profesionales",
+      "preferences": "Preferencias"
+    },
     "title": "Perfil",
     "description": "Gestiona tu perfil y preferencias",
     "changePassword": "Cambiar contraseña",

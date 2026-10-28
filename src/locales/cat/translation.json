@@ -374,6 +374,12 @@
     }
   },
   "profile": {
+    "sections": {
+      "personal": "Dades personals",
+      "location": "Adreça",
+      "professional": "Dades professionals",
+      "preferences": "Preferències"
+    },
     "title": "Perfil",
     "description": "Gestiona el teu perfil i preferències",
     "changePassword": "Canviar contrasenya",

@@ -1,4 +1,4 @@
-import { InputField } from "../../../components/shared/ui/InputField";
+import { TextField } from "@/components/shared/ui/TextField";
 import { Alert } from "../../../components/shared/ui/Alert";
 import { LockClosedIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
@@ -40,26 +40,28 @@ export const ChangePassword = ({
       onAccept={onAccept}
       onCancel={onCancel}
     >
-      <InputField
-        id="password"
-        label={t("profile.newPassword")}
-        type="password"
-        value={newPassword}
-        onChange={onPasswordChange}
-        required
-        error={passwordError}
-        disabled={isLoading}
-      />
-      <InputField
-        id="repeatPassword"
-        label={t("profile.confirmPassword")}
-        type="password"
-        value={repeatPassword}
-        onChange={onPasswordChange}
-        required
-        disabled={isLoading}
-        error=""
-      />
+      <div className="mt-6 space-y-5 text-left">
+        <TextField
+          id="password"
+          label={t("profile.newPassword")}
+          type="password"
+          value={newPassword}
+          onChange={onPasswordChange}
+          required
+          error={passwordError}
+          disabled={isLoading}
+        />
+        <TextField
+          id="repeatPassword"
+          label={t("profile.confirmPassword")}
+          type="password"
+          value={repeatPassword}
+          onChange={onPasswordChange}
+          required
+          disabled={isLoading}
+          error=""
+        />
+      </div>
     </Alert>
   );
 };
