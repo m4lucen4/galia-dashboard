@@ -45,8 +45,10 @@ export const AppRoutes = () => (
       <Route path="/login" element={<LoginScreen />} />
       <Route path="/register" element={<RegisterScreen />} />
     </Route>
-    <Route element={<AdminRoute />}>
+    <Route element={<AdminRoute layout="sidebar" />}>
       <Route path="/users" element={<Users />} />
+    </Route>
+    <Route element={<AdminRoute />}>
       <Route path="/administration" element={<Suspense fallback={<div className="p-8">Cargando administración…</div>}><Administration /></Suspense>} />
       <Route path="/wiki/admin" element={<Suspense fallback={<div className="p-8">Cargando editor…</div>}><WikiAdmin /></Suspense>} />
     </Route>

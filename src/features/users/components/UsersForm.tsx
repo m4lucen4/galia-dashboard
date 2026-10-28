@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { CreateUserProps } from "../../../redux/actions/UserActions";
-import { Button } from "../../../components/shared/ui/Button";
+import { CreateUserProps } from "@/redux/actions/UserActions";
+import { PillButton } from "@/components/shared/ui/PillButton";
 import { useTranslation } from "react-i18next";
 import { UserFormMainData } from "./UserFormMainData";
 import { UserFormAdditionalData } from "./UserFormAdditionalData";
 import { UserFormCompanyData } from "./UserFormCompanyData";
-import { usePasswordValidation } from "../../../hooks/usePasswordValidation";
+import { usePasswordValidation } from "@/hooks/usePasswordValidation";
 
 interface UsersFormProps {
   initialData?: CreateUserProps;
@@ -101,42 +101,42 @@ export const UsersForm: React.FC<UsersFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <UserFormMainData
-        formData={formData}
-        handleChange={handleChange}
-        isEditMode={isEditMode}
-        passwordError={passwordError}
-        isAdmin={isAdmin}
-      />
-
-      <div className="my-6 border-t border-gray-300" />
-
-      <UserFormAdditionalData
-        formData={formData}
-        handleChange={handleChange}
-        handleCountryChange={handleCountryChange}
-        handleProvinceIdChange={handleProvinceIdChange}
-        handleProvinceTextChange={handleProvinceTextChange}
-      />
-
-      <div className="my-6 border-t border-gray-300" />
-
-      <UserFormCompanyData
-        formData={formData}
-        handleChange={handleChange}
-        isAdmin={isAdmin}
-        isEditMode={isEditMode}
-      />
-
-      <div className="mt-6">
-        <Button
-          fullWidth
-          title={isEditMode ? t("users.editUser") : t("users.createUser")}
-          disabled={loading}
-          type="submit"
+    <form onSubmit={handleSubmit} className="min-w-0 space-y-6 [&_label]:text-sm [&_label]:font-medium">
+      <fieldset className="min-w-0 rounded-[28px] border border-[#010000]/20 p-5 sm:p-6">
+        <legend className="px-2 text-xl font-medium tracking-[-0.03em]">{t("users.sections.personal")}</legend>
+        <UserFormMainData
+          formData={formData}
+          handleChange={handleChange}
+          isEditMode={isEditMode}
+          passwordError={passwordError}
+          isAdmin={isAdmin}
         />
-      </div>
+      </fieldset>
+
+      <fieldset className="min-w-0 rounded-[28px] border border-[#010000]/20 p-5 sm:p-6">
+        <legend className="px-2 text-xl font-medium tracking-[-0.03em]">{t("users.sections.location")}</legend>
+        <UserFormAdditionalData
+          formData={formData}
+          handleChange={handleChange}
+          handleCountryChange={handleCountryChange}
+          handleProvinceIdChange={handleProvinceIdChange}
+          handleProvinceTextChange={handleProvinceTextChange}
+        />
+      </fieldset>
+
+      <fieldset className="min-w-0 rounded-[28px] border border-[#010000]/20 p-5 sm:p-6">
+        <legend className="px-2 text-xl font-medium tracking-[-0.03em]">{t("users.sections.professional")}</legend>
+        <UserFormCompanyData
+          formData={formData}
+          handleChange={handleChange}
+          isAdmin={isAdmin}
+          isEditMode={isEditMode}
+        />
+      </fieldset>
+
+      <PillButton className="w-full" disabled={loading} type="submit">
+        {isEditMode ? t("users.editUser") : t("users.createUser")}
+      </PillButton>
     </form>
   );
 };

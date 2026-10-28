@@ -1,10 +1,11 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { CreateUserProps } from "../../../redux/actions/UserActions";
-import { InputField } from "../../../components/shared/ui/InputField";
-import { InputAutoComplete } from "../../../components/shared/ui/InputAutoComplete";
-import countriesData from "../../../assets/regions/countries.json";
-import provincesData from "../../../assets/regions/provinces.json";
+import { CreateUserProps } from "@/redux/actions/UserActions";
+import { TextField } from "@/components/shared/ui/TextField";
+import { userControlClassName } from "./userFormStyles";
+import { InputAutoComplete } from "@/components/shared/ui/InputAutoComplete";
+import countriesData from "@/assets/regions/countries.json";
+import provincesData from "@/assets/regions/provinces.json";
 
 const SPAIN_ID = 68;
 const countriesOptions = countriesData.result.records.map((c) => ({
@@ -42,26 +43,29 @@ export const UserFormAdditionalData: React.FC<UserFormAdditionalDataProps> = ({
   const { t } = useTranslation();
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid min-w-0 grid-cols-1 gap-5 md:grid-cols-2">
       <div className="md:col-span-2">
-        <InputField
+        <TextField
           id="address"
           label={t("users.address")}
+          className={userControlClassName}
           type="text"
           value={formData.address || ""}
           onChange={handleChange}
         />
       </div>
-      <InputField
+      <TextField
         id="city"
         label={t("users.city")}
+        className={userControlClassName}
         type="text"
         value={formData.city || ""}
         onChange={handleChange}
       />
-      <InputField
+      <TextField
         id="postal_code"
         label={t("users.postalCode")}
+        className={userControlClassName}
         type="text"
         value={formData.postal_code || ""}
         onChange={handleChange}
@@ -72,6 +76,7 @@ export const UserFormAdditionalData: React.FC<UserFormAdditionalDataProps> = ({
         value={formData.country ?? null}
         onChange={handleCountryChange}
         options={countriesOptions}
+        className={userControlClassName}
       />
       {formData.country !== null &&
         (formData.country === SPAIN_ID ? (
@@ -81,11 +86,13 @@ export const UserFormAdditionalData: React.FC<UserFormAdditionalDataProps> = ({
             value={formData.province_id ?? null}
             onChange={handleProvinceIdChange}
             options={provincesOptions}
+            className={userControlClassName}
           />
         ) : (
-          <InputField
+          <TextField
             id="province"
             label={t("users.province")}
+            className={userControlClassName}
             type="text"
             value={formData.province || ""}
             onChange={handleProvinceTextChange}

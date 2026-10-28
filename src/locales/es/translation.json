@@ -1,5 +1,7 @@
 {
   "shared": {
+    "clearSearch": "Limpiar búsqueda",
+    "search": "Buscar",
     "confirm": "Confirmar",
     "cancel": "Cancelar",
     "working": "Trabajando en tu proyecto",
@@ -100,6 +102,16 @@
     "generalError": "Ha ocurrido un error. Por favor, inténtalo de nuevo."
   },
   "users": {
+    "searchLabel": "Buscar usuarios por nombre, correo electrónico o empresa",
+    "searchPlaceholder": "Nombre, correo o empresa",
+    "noSearchResults": "No hay usuarios que coincidan con la búsqueda.",
+    "closeForm": "Cerrar formulario",
+    "sections": {
+      "personal": "Datos personales y acceso",
+      "location": "Dirección",
+      "professional": "Datos profesionales"
+    },
+    "empty": "No hay usuarios registrados.",
     "title": "Usuarios",
     "description": "Gestiona los usuarios de la plataforma.",
     "createUser": "Crear Usuario",

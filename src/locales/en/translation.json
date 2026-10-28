@@ -1,5 +1,7 @@
 {
   "shared": {
+    "clearSearch": "Clear search",
+    "search": "Search",
     "confirm": "Confirm",
     "cancel": "Cancel",
     "working": "Working on your project",
@@ -99,6 +101,16 @@
     "generalError": "An error occurred. Please try again."
   },
   "users": {
+    "searchLabel": "Search users by name, email or company",
+    "searchPlaceholder": "Name, email or company",
+    "noSearchResults": "No users match your search.",
+    "closeForm": "Close form",
+    "sections": {
+      "personal": "Personal details and access",
+      "location": "Address",
+      "professional": "Professional details"
+    },
+    "empty": "No registered users",
     "title": "Users",
     "description": "Manage platform users.",
     "createUser": "Create User",

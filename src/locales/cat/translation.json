@@ -1,5 +1,7 @@
 {
   "shared": {
+    "clearSearch": "Netejar la cerca",
+    "search": "Cercar",
     "confirm": "Confirmar",
     "cancel": "Cancel·lar",
     "working": "Treballant en el teu projecte",
@@ -100,6 +102,16 @@
     "generalError": "S'ha produït un error. Si us plau, torna-ho a intentar."
   },
   "users": {
+    "searchLabel": "Cercar usuaris per nom, correu electrònic o empresa",
+    "searchPlaceholder": "Nom, correu o empresa",
+    "noSearchResults": "No hi ha usuaris que coincideixin amb la cerca.",
+    "closeForm": "Tancar formulari",
+    "sections": {
+      "personal": "Dades personals i accés",
+      "location": "Adreça",
+      "professional": "Dades professionals"
+    },
+    "empty": "No hi ha usuaris registrats.",
     "title": "Usuaris",
     "description": "Gestiona els usuaris de la plataforma.",
     "createUser": "Crear Usuari",
