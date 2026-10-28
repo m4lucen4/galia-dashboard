@@ -1,13 +1,15 @@
 import { useState } from "react";
 import {
+  Description,
   Dialog,
   DialogBackdrop,
   DialogPanel,
   DialogTitle,
 } from "@headlessui/react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import { Button } from "./Button";
+import { PillButton } from "./PillButton";
 import { useTranslation } from "react-i18next";
+import "@/features/newWeb/fonts.css";
 
 interface AlertProps {
   title: string;
@@ -51,59 +53,42 @@ export const Alert: React.FC<AlertProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={handleOutsideClick} className="relative z-60">
+    <Dialog open={open} onClose={handleOutsideClick} className="relative z-60 font-['Hanken_Grotesk',system-ui,sans-serif] text-[#010000]">
       <DialogBackdrop
         transition
-        className="fixed inset-0 bg-gray-500/75 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+        className="fixed inset-0 bg-[#010000]/45 transition-opacity duration-200 data-closed:opacity-0 motion-reduce:transition-none"
       />
-
       <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-        <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+        <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
           <DialogPanel
             transition
-            className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+            className="relative w-full max-w-lg rounded-[28px] border border-[#010000]/15 bg-[#d8e4d6] p-6 text-left shadow-xl data-closed:opacity-0 motion-safe:transition motion-safe:duration-200 motion-safe:ease-out motion-safe:data-closed:translate-y-2 motion-safe:data-closed:scale-95 sm:p-8"
           >
-            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div className="sm:flex sm:items-start">
-                <div className="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-gray-800 sm:mx-0 sm:size-10">
-                  <Icon aria-hidden="true" className={iconClassName} />
-                </div>
-                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                  <DialogTitle
-                    as="h3"
-                    className="text-base font-semibold text-black"
-                  >
-                    {title}
-                  </DialogTitle>
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-800">{description}</p>
-                  </div>
-                  <div className="mt-4">{children}</div>
-                </div>
+            <div className="flex items-center gap-4">
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#010000]">
+                <Icon aria-hidden="true" className={iconClassName} />
               </div>
+              <DialogTitle as="h3" className="min-w-0 text-2xl leading-tight font-medium tracking-[-0.03em]">
+                {title}
+              </DialogTitle>
             </div>
-            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:py-4">
-              <div className="flex w-full gap-2 sm:justify-end">
-                <div className="w-full sm:w-auto">
-                  <Button
-                    title={t("shared.confirm")}
-                    disabled={disabledConfirmButton}
-                    fullWidth
-                    onClick={handleAccept}
-                  />
-                </div>
-
-                {onCancel && (
-                  <div className="w-full sm:w-auto">
-                    <Button
-                      title={t("shared.cancel")}
-                      secondary
-                      fullWidth
-                      onClick={handleCancel}
-                    />
-                  </div>
-                )}
-              </div>
+            <Description className="mt-3 text-sm leading-relaxed text-[#010000]/75">
+              {description}
+            </Description>
+            {children && <div className="mt-5">{children}</div>}
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <PillButton
+                disabled={disabledConfirmButton}
+                className="w-full sm:w-auto sm:min-w-32"
+                onClick={handleAccept}
+              >
+                {t("shared.confirm")}
+              </PillButton>
+              {onCancel && (
+                <PillButton variant="outline" className="w-full sm:w-auto sm:min-w-32" onClick={handleCancel}>
+                  {t("shared.cancel")}
+                </PillButton>
+              )}
             </div>
           </DialogPanel>
         </div>
