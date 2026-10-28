@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useAppDispatch } from "@/redux/hooks";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { registerUser } from "../../../redux/actions/RegisterActions";
 import { RegisterFormData, BillingPeriod } from "../../../types";
-import { InputField } from "../../../components/shared/ui/InputField";
-import { Button } from "../../../components/shared/ui/Button";
-import { Card } from "../../../components/shared/ui/Card";
-import { PlanSelector } from "./PlanSelector";
+import { TextField } from "@/components/shared/ui/TextField";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import { AuthPanel, AuthHeading, AuthActionLink } from "@/components/shared/auth/AuthLayout";
+import { RegistrationMemberships } from "./RegistrationMemberships";
 
 interface RegisterFormProps {
   registerInProgress: boolean;
@@ -104,17 +103,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
   };
 
   return (
-    <Card>
+    <AuthPanel>
       <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
           {/* Left column: form fields */}
           <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-800">{t("register.title")}</h3>
-              <p className="text-sm text-gray-400">{t("register.subtitle")}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <InputField
+            <AuthHeading title={t("register.title")} subtitle={t("register.subtitle")} />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <TextField
                 label={t("register.firstName")}
                 id="first_name"
                 onChange={handleChange}
@@ -123,7 +119,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
                 value={formData.first_name}
                 error={errors.first_name}
               />
-              <InputField
+              <TextField
                 label={t("register.lastName")}
                 id="last_name"
                 onChange={handleChange}
@@ -134,7 +130,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
               />
             </div>
 
-            <InputField
+            <TextField
               label={t("register.email")}
               id="email"
               onChange={handleChange}
@@ -144,7 +140,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
               error={errors.email}
             />
 
-            <InputField
+            <TextField
               label={t("register.phone")}
               id="phone"
               onChange={handleChange}
@@ -154,7 +150,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
               error={errors.phone}
             />
 
-            <InputField
+            <TextField
               label={t("register.password")}
               id="password"
               onChange={handleChange}
@@ -169,15 +165,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
                 type="checkbox"
                 checked={acceptedTerms}
                 onChange={(e) => setAcceptedTerms(e.target.checked)}
-                className="mt-0.5 h-4 w-4 shrink-0 accent-black cursor-pointer"
+                className="mt-0.5 size-5 shrink-0 cursor-pointer accent-[#010000]"
               />
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-[#010000]/75">
                 {t("register.acceptTerms.prefix")}{" "}
                 <a
                   href="/terms"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline text-gray-800 hover:text-black"
+                  className="rounded-sm underline underline-offset-4"
                 >
                   {t("register.acceptTerms.link")}
                 </a>
@@ -188,10 +184,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
           {/* Right column: plan selector + actions */}
           <div className="flex flex-col gap-6">
             <div className="space-y-3">
-              <label className="text-xl font-semibold text-gray-800">
+              <h2 className="text-2xl font-medium tracking-[-0.03em]">
                 {t("register.planType")}
-              </label>
-              <PlanSelector
+              </h2>
+              <RegistrationMemberships
                 selectedPeriod={formData.billing_period}
                 myweb={formData.myweb}
                 onMyWebChange={handleMyWebChange}
@@ -201,27 +197,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
 
 
             {generalError && (
-              <p className="text-sm text-red-600">{generalError}</p>
+              <p role="alert" className="text-sm font-medium">{generalError}</p>
             )}
 
             <div className="mt-auto space-y-3">
-              <Button
-                title={t("register.submit")}
-                disabled={registerInProgress || !acceptedTerms}
-                type="submit"
-                fullWidth
-              />
+              <PillButton disabled={registerInProgress || !acceptedTerms} type="submit" className="w-full">
+                {t("register.submit")}
+              </PillButton>
 
-              <Link
-                to="/login"
-                className="w-full flex items-center justify-center py-2 px-4 border border-black rounded-md text-sm font-medium text-black hover:bg-gray-100 transition-colors"
-              >
-                {t("register.goToLogin")}
-              </Link>
+              <AuthActionLink to="/login">{t("register.goToLogin")}</AuthActionLink>
             </div>
           </div>
         </div>
       </form>
-    </Card>
+    </AuthPanel>
   );
 };

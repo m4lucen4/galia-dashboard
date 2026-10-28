@@ -43,6 +43,8 @@
     "descriptionLoginError": "Parece que hubo un error al iniciar sesión. Por favor, verifica tus credenciales e inténtalo de nuevo.",
     "titleRecoveryPassword": "Recuperar contraseña",
     "descriptionRecoveryPassword": "Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
+    "recoveryEmailRequired": "Introduce tu correo electrónico.",
+    "recoveryEmailInvalid": "Introduce un correo electrónico válido.",
     "goBackWeb": "Volver a la web",
     "titleInactiveUser": "Usuario inactivo",
     "descriptionInactiveUser": "Tu usuario no se encuentra activo. Por favor, contacta con un administrador.",

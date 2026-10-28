@@ -42,6 +42,8 @@
     "descriptionLoginError": "There was an error logging in. Please check your credentials and try again.",
     "titleRecoveryPassword": "Recover Password",
     "descriptionRecoveryPassword": "Enter your email address and we will send you a link to reset your password.",
+    "recoveryEmailRequired": "Enter your email address.",
+    "recoveryEmailInvalid": "Enter a valid email address.",
     "goBackWeb": "Go back to the website",
     "titleInactiveUser": "Inactive user",
     "descriptionInactiveUser": "Your account is not active. Please contact an administrator.",

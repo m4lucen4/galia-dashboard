@@ -1,18 +1,18 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useAppSelector } from "@/redux/hooks";
 import { useTranslation } from "react-i18next";
 import { RootState } from "../../../redux/store";
 import { RegisterForm } from "../components/RegisterForm";
-import logoImage from "../../../assets/mocklab-grey.webp";
+import { AuthLayout } from "@/components/shared/auth/AuthLayout";
 
 export const RegisterScreen = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const authenticated = useSelector((state: RootState) => state.auth.authenticated);
-  const { registerRequest } = useSelector((state: RootState) => state.register);
+  const authenticated = useAppSelector((state: RootState) => state.auth.authenticated);
+  const { registerRequest } = useAppSelector((state: RootState) => state.register);
 
   const paymentCancelled = searchParams.get("payment") === "cancelled";
 
@@ -31,24 +31,17 @@ export const RegisterScreen = () => {
   }, [authenticated, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl w-full space-y-8">
-        <div className="flex justify-center">
-          <img
-            src={logoImage}
-            alt="Logo"
-            className="h-10 md:h-12 w-auto mx-auto object-contain"
-          />
-        </div>
+    <AuthLayout wide>
+      <div className="space-y-6">
 
         {paymentCancelled && (
-          <div className="rounded-md bg-yellow-50 border border-yellow-200 p-4 text-sm text-yellow-800">
+          <div className="rounded-3xl bg-[#fbea71] p-5 text-sm">
             {t("register.paymentCancelled")}
           </div>
         )}
 
         <RegisterForm registerInProgress={registerRequest.inProgress} />
       </div>
-    </div>
+    </AuthLayout>
   );
 };
