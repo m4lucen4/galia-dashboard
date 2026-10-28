@@ -18,6 +18,7 @@ import { AdminWebRoute } from "./AdminWebRoute";
 import { HasWebRoute } from "./HasWebRoute";
 
 import { NewWeb } from "@/features/newWeb/screen/NewWeb";
+import { ArticlesLoading } from "@/features/newWeb/components/articles/ArticlesLayout";
 import { Privacy } from "../screens/public/Privacy";
 import { Cookies } from "../screens/public/Cookies";
 import { Terms } from "../screens/public/Terms";
@@ -30,6 +31,7 @@ import { Multimedia } from "@/features/multimedia/screens/Multimedia";
 import { Archive } from "../features/archive/screens/Archive";
 import { MyWeb } from "../features/myWeb/screens/MyWeb";
 import { lazy, Suspense } from "react";
+const Articles = lazy(() => import("@/features/newWeb/screen/Articles").then((module) => ({ default: module.Articles })));
 const WikiAdmin = lazy(() => import("@/features/documentation/screens/WikiAdmin").then((module) => ({ default: module.WikiAdmin })));
 const Administration = lazy(() => import("@/features/administration/screens/Administration").then((module) => ({ default: module.Administration })));
 
@@ -48,6 +50,8 @@ export const AppRoutes = () => (
       <Route path="/administration" element={<Suspense fallback={<div className="p-8">Cargando administración…</div>}><Administration /></Suspense>} />
       <Route path="/wiki/admin" element={<Suspense fallback={<div className="p-8">Cargando editor…</div>}><WikiAdmin /></Suspense>} />
     </Route>
+    <Route path="/articulos" element={<Suspense fallback={<ArticlesLoading />}><Articles /></Suspense>} />
+    <Route path="/articulos/:sectionId/:sectionSlug?" element={<Suspense fallback={<ArticlesLoading />}><Articles /></Suspense>} />
     <Route element={<PublicRoute />}>
       <Route path="/wiki" element={<Documentation />} />
       <Route path="/wiki/:sectionId/:sectionSlug?" element={<Documentation />} />

@@ -1,3 +1,4 @@
+import { ButtonLink } from "@/features/newWeb/components/ui/Button";
 import { Container } from "@/features/newWeb/components/ui/Container";
 import { Pill } from "@/features/newWeb/components/ui/Pill";
 import { SectionTitle } from "@/features/newWeb/components/ui/SectionTitle";
@@ -49,6 +50,9 @@ export const WebsiteBuilderSection = () => (
               </Pill>
             ))}
           </div>
+          <ButtonLink href="/register" className="w-full max-w-full self-start px-8 py-4 text-[#fbea71] sm:w-72">
+            Empezar
+          </ButtonLink>
         </div>
         <PortfolioPreview
           className="lg:col-span-6 lg:col-start-7"

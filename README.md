@@ -95,6 +95,7 @@ galia-dashboard/
 | `/register` | No autenticado | Registro + selección de plan |
 | `/privacy` | Público | Política de privacidad |
 | `/wiki` | Público | Documentación |
+| `/articulos` | Público | Artículos de la nueva web |
 | `/home` | Autenticado | Dashboard principal |
 | `/profile` | Autenticado | Perfil de usuario |
 | `/settings` | Autenticado | Integraciones y suscripción |
@@ -106,6 +107,18 @@ galia-dashboard/
 | `/my-gpts` | Admin | Panel de GPTs |
 | `/auth/linkedin/callback` | Sistema | Callback OAuth LinkedIn |
 | `/auth/instagram/callback` | Sistema | Callback OAuth Instagram |
+
+## Secciones de artículos en la wiki
+
+En `/wiki/admin`, al crear o editar una sección, activa **Sección de artículos** para excluir la sección completa, sus subsecciones y artículos de la wiki pública, su buscador y sus enlaces directos. Todo el contenido sigue visible y editable en el gestor; no se modifica su publicación, historial ni imágenes.
+
+- La clasificación se guarda en `wiki_sections.is_article_section`. Las secciones existentes conservan `false` y su comportamiento anterior.
+- Al desmarcarla, su contenido publicado vuelve a estar disponible en la wiki. Los artículos movidos heredan la clasificación de su sección de destino.
+- Es una separación visual, no una opción de privacidad.
+- `/articulos` y `/articulos/:sectionId/:sectionSlug?` muestran únicamente contenido publicado de secciones marcadas, con índice, búsqueda y enlaces a artículos. Reutilizan el gestor y las imágenes de la wiki, pero tienen estado y consultas propios para no mezclar ambas vistas.
+- La página Artículos utiliza la cabecera, pie, tipografías y componentes de la nueva web. Durante la descarga de la página y de los artículos mantiene ese diseño con espacios de carga reservados, sin añadir el pie antiguo ni mostrar el estado vacío antes de terminar. Sus enlaces del navbar vuelven a las anclas de la home: por ejemplo, **Precios** lleva a `/#precios`. En la home se conservan los enlaces locales `#precios`, etc. Al cargar la portada con un ancla, el desplazamiento se aplica después de montar su contenido y respeta la preferencia de movimiento reducido.
+- Antes de habilitar `/articulos`, aplica también [`20261028160000_articles_public_reader.sql`](supabase/migrations/20261028160000_articles_public_reader.sql), después de la migración de clasificación. Añade las tres funciones `articles_public_*`, sin modificar las consultas de la wiki normal ni las políticas de acceso.
+- **Antes de desplegar el frontend**, aplica [`20261028152541_wiki_article_sections.sql`](supabase/migrations/20261028152541_wiki_article_sections.sql) en el proyecto Supabase correspondiente. Requiere el esquema wiki existente y actualiza las tres funciones `wiki_public_*`; no cambia RLS ni Storage.
 
 ## Variables de entorno
 

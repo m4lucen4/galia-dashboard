@@ -2,6 +2,7 @@ import ambitoPortfolio from "@/assets/newWeb/case-studies/ambito-portfolio.jpg";
 import ele2fPortfolio from "@/assets/newWeb/case-studies/ele2f-portfolio.jpg";
 import donairePortfolio from "@/assets/newWeb/case-studies/donaire-portfolio.jpg";
 import { CaseStudyCard, type CaseStudyCardProps } from "@/features/newWeb/components/ui/CaseStudyCard";
+import { ButtonLink } from "@/features/newWeb/components/ui/Button";
 import { Container } from "@/features/newWeb/components/ui/Container";
 import { SectionTitle } from "@/features/newWeb/components/ui/SectionTitle";
 
@@ -58,6 +59,9 @@ export const CaseStudiesSection = () => (
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {cases.map((study) => <CaseStudyCard key={study.studio} {...study} />)}
       </div>
+      <ButtonLink href="/register" className="w-full max-w-full self-center px-8 py-4 text-[#fbea71] sm:w-72">
+        Empezar
+      </ButtonLink>
     </Container>
   </section>
 );

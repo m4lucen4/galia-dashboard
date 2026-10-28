@@ -2,6 +2,7 @@ import projectForm from "@/assets/newWeb/how-it-works/project-form.png";
 import preparedPosts from "@/assets/newWeb/how-it-works/prepared-posts.png";
 import publishingCalendar from "@/assets/newWeb/how-it-works/publishing-calendar.png";
 import { StepCard } from "@/features/newWeb/components/howItWorks/StepCard";
+import { ButtonLink } from "@/features/newWeb/components/ui/Button";
 import { Container } from "@/features/newWeb/components/ui/Container";
 import { SectionTitle } from "@/features/newWeb/components/ui/SectionTitle";
 import { StatusLegend } from "@/features/newWeb/components/ui/StatusLegend";
@@ -71,6 +72,9 @@ export const HowItWorksSection = () => (
           />
         ))}
       </div>
+      <ButtonLink href="/register" className="w-full max-w-full self-center px-8 py-4 text-[#fbea71] sm:w-72">
+        Empezar
+      </ButtonLink>
     </Container>
   </section>
 );

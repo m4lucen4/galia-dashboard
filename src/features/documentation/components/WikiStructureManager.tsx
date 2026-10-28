@@ -29,6 +29,13 @@ type FormTarget =
   | { kind: "articleSlug"; article: WikiAdminArticle }
   | { kind: "moveArticle"; article: WikiAdminArticle; subsection: WikiAdminSubsection };
 
+type StructureFormValues = {
+  title: string;
+  slug: string;
+  isArticleSection: boolean;
+  subsectionId?: string;
+};
+
 type Props = {
   structure: WikiAdminSection[];
   selectedArticleId: string | null;
@@ -81,7 +88,7 @@ const StructureFormDialog = ({
   request: IRequest;
   busy: boolean;
   onClose: () => void;
-  onSubmit: (values: { title: string; slug: string; subsectionId?: string }) => Promise<void>;
+  onSubmit: (values: StructureFormValues) => Promise<void>;
 }) => {
   const existingTitle = target.kind === "section" || target.kind === "subsection"
     ? target.item?.title ?? ""
@@ -96,6 +103,9 @@ const StructureFormDialog = ({
   const [title, setTitle] = useState(existingTitle);
   const [slug, setSlug] = useState(existingSlug);
   const [slugEdited, setSlugEdited] = useState(Boolean(existingSlug));
+  const [isArticleSection, setIsArticleSection] = useState(
+    target.kind === "section" ? target.item?.is_article_section ?? false : false,
+  );
   const [subsectionId, setSubsectionId] = useState(
     target.kind === "moveArticle" ? target.subsection.id : "",
   );
@@ -115,7 +125,7 @@ const StructureFormDialog = ({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    await onSubmit({ title: title.trim(), slug: slugify(slug), subsectionId });
+    await onSubmit({ title: title.trim(), slug: slugify(slug), isArticleSection, subsectionId });
   };
 
   return (
@@ -166,6 +176,25 @@ const StructureFormDialog = ({
             Solo letras minúsculas, números y guiones. Se normaliza al guardar.
           </span>
         </label>
+        {target.kind === "section" && (
+          <div className="mt-4">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700" htmlFor="wiki-article-section">
+              <input
+                id="wiki-article-section"
+                type="checkbox"
+                checked={isArticleSection}
+                disabled={busy}
+                onChange={(event) => setIsArticleSection(event.target.checked)}
+                aria-describedby="wiki-article-section-description"
+                className="size-4 rounded border-gray-300 accent-gray-900"
+              />
+              Sección de artículos
+            </label>
+            <p id="wiki-article-section-description" className="mt-1 text-xs text-gray-500">
+              La sección, sus subsecciones y artículos no aparecerán en la wiki pública. Podrás seguir gestionándolos aquí.
+            </p>
+          </div>
+        )}
         {isMove && (
           <label className="mt-4 block text-sm font-medium text-gray-700" htmlFor="wiki-article-subsection">
             Subseción de destino
@@ -220,14 +249,14 @@ export const WikiStructureManager = ({ structure, selectedArticleId, request, on
     return true;
   };
 
-  const submitForm = async ({ title, slug, subsectionId }: { title: string; slug: string; subsectionId?: string }) => {
+  const submitForm = async ({ title, slug, isArticleSection, subsectionId }: StructureFormValues) => {
     if (!formTarget) return;
 
     let completed = false;
     if (formTarget.kind === "section") {
       completed = formTarget.item
-        ? await execute(dispatch(updateWikiSection({ id: formTarget.item.id, title, slug })))
-        : await execute(dispatch(createWikiSection({ title, slug, position: appendPosition(structure) })));
+        ? await execute(dispatch(updateWikiSection({ id: formTarget.item.id, title, slug, is_article_section: isArticleSection })))
+        : await execute(dispatch(createWikiSection({ title, slug, position: appendPosition(structure), is_article_section: isArticleSection })));
     }
     if (formTarget.kind === "subsection") {
       completed = formTarget.item
@@ -319,7 +348,10 @@ export const WikiStructureManager = ({ structure, selectedArticleId, request, on
         {structure.map((section, sectionIndex) => (
           <div key={section.id} className="border-t pt-4 first:border-t-0 first:pt-0">
             <div className="flex items-center justify-between gap-2">
-              <p className="font-semibold">{section.title}</p>
+              <div>
+                <p className="font-semibold">{section.title}</p>
+                {section.is_article_section && <span className="text-xs text-gray-500">Sección de artículos · No visible en la wiki pública</span>}
+              </div>
               <div className="flex gap-2 text-xs">
                 <button type="button" aria-label={`Subir ${section.title}`} disabled={request.inProgress || sectionIndex === 0} onClick={() => void move(null, structure.map((item) => item.id), section.id, -1, "section")} className="underline disabled:opacity-40">↑</button>
                 <button type="button" aria-label={`Bajar ${section.title}`} disabled={request.inProgress || sectionIndex === structure.length - 1} onClick={() => void move(null, structure.map((item) => item.id), section.id, 1, "section")} className="underline disabled:opacity-40">↓</button>

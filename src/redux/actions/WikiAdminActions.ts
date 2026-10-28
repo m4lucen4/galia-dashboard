@@ -34,6 +34,7 @@ export type WikiAdminSection = {
   title: string;
   slug: string;
   position: number;
+  is_article_section: boolean;
   wiki_subsections: WikiAdminSubsection[];
 };
 
@@ -115,7 +116,7 @@ export const fetchWikiAdminStructure = createAsyncThunk<WikiAdminSection[], void
   async (_, { rejectWithValue }) => {
     const { data, error } = await supabase
       .from("wiki_sections")
-      .select("id,title,slug,position,wiki_subsections(id,title,slug,position,wiki_articles(id,subsection_id,slug,position,state,current_revision_id,wiki_article_drafts(version,title,summary,content,updated_at,published_version)))")
+      .select("id,title,slug,position,is_article_section,wiki_subsections(id,title,slug,position,wiki_articles(id,subsection_id,slug,position,state,current_revision_id,wiki_article_drafts(version,title,summary,content,updated_at,published_version)))")
       .order("position");
 
     if (error) return rejectWithValue(fail(error.message, error.code));
@@ -137,7 +138,7 @@ export const fetchWikiHistory = createAsyncThunk<WikiRevision[], string, { rejec
   },
 );
 
-export const createWikiSection = createAsyncThunk<string, { title: string; slug: string; position: number }, { rejectValue: Failure }>(
+export const createWikiSection = createAsyncThunk<string, { title: string; slug: string; position: number; is_article_section: boolean }, { rejectValue: Failure }>(
   "wikiAdmin/createSection",
   async (input, { rejectWithValue }) => {
     const { data, error } = await supabase
@@ -151,12 +152,12 @@ export const createWikiSection = createAsyncThunk<string, { title: string; slug:
   },
 );
 
-export const updateWikiSection = createAsyncThunk<void, { id: string; title: string; slug: string }, { rejectValue: Failure }>(
+export const updateWikiSection = createAsyncThunk<void, { id: string; title: string; slug: string; is_article_section: boolean }, { rejectValue: Failure }>(
   "wikiAdmin/updateSection",
   async (input, { rejectWithValue }) => {
     const { error } = await supabase
       .from("wiki_sections")
-      .update({ title: input.title, slug: input.slug, updated_at: new Date().toISOString() })
+      .update({ title: input.title, slug: input.slug, is_article_section: input.is_article_section, updated_at: new Date().toISOString() })
       .eq("id", input.id);
 
     if (error) return rejectWithValue(fail(error.message));

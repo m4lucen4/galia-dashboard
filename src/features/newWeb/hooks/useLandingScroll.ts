@@ -12,4 +12,15 @@ export const useLandingScroll = () => {
       root.classList.remove(...addedClasses);
     };
   }, []);
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(hash.slice(1))?.scrollIntoView({ block: "start" });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 };

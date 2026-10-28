@@ -1,0 +1,44 @@
+.articles-content :where(p, ul, ol, h1, h2, h3, blockquote, figcaption, a) {
+  color: inherit;
+}
+
+.articles-content :where(h1, h2, h3, strong) {
+  font-weight: 500;
+}
+
+.articles-content :where(h1, h2, h3) {
+  letter-spacing: -0.035em;
+  scroll-margin-top: 7rem;
+}
+
+.articles-content :where(a) {
+  text-underline-offset: 0.25em;
+}
+
+.articles-content :where(pre, code) {
+  font-family: "Geist Mono", monospace;
+}
+
+.articles-content :where(code) {
+  background-color: transparent;
+}
+
+.articles-content :where(pre) {
+  border-radius: 1.5rem;
+  background-color: #010000;
+  color: #d8e4d6;
+}
+
+.articles-content :where(aside, figure > div) {
+  border: 1.5px solid #010000;
+  border-radius: 1.5rem;
+  background-color: transparent;
+}
+
+.articles-content :where(blockquote, hr, table, th, td) {
+  border-color: #010000;
+}
+
+.articles-content :where(figcaption) {
+  font-family: "Geist Mono", monospace;
+}

@@ -11,6 +11,7 @@ export const LandingFooter = () => (
         © 2026 Mocklab. Todos los derechos reservados.
       </p>
       <nav aria-label="Información legal y documentación" className="flex flex-wrap gap-x-6 gap-y-3 font-['Geist_Mono',monospace] text-sm">
+        <a href="/articulos" className="rounded-sm underline underline-offset-4">Artículos</a>
         <a href="/wiki" className="rounded-sm underline underline-offset-4">Documentación</a>
         <a href="/privacy#legal-notice" className="rounded-sm underline underline-offset-4">Aviso legal</a>
         <a href="/privacy" className="rounded-sm underline underline-offset-4">Política de privacidad</a>

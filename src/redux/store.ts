@@ -14,6 +14,7 @@ import siteComponentReducer from "./slices/SiteComponentSlice";
 import subscriptionReducer from "./slices/SubscriptionSlice";
 import registerReducer from "./slices/RegisterSlice";
 import wikiReducer from "./slices/WikiSlice";
+import articlesReducer from "./slices/ArticlesSlice";
 import wikiAdminReducer from "./slices/WikiAdminSlice";
 
 export const store = configureStore({
@@ -33,6 +34,7 @@ export const store = configureStore({
     subscription: subscriptionReducer,
     register: registerReducer,
     wiki: wikiReducer,
+    articles: articlesReducer,
     wikiAdmin: wikiAdminReducer,
   },
 });
