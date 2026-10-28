@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Editor } from "@tiptap/react";
+import { PillButton } from "@/components/shared/ui/PillButton";
 
 const safeHref = (href: string) => /^(https?:\/\/[^\s]+|mailto:[^\s]+|\/[^\s]*|#[^\s]*)$/.test(href);
 
@@ -11,17 +12,17 @@ type ToolbarButtonProps = {
 };
 
 const ToolbarButton = ({ name, active = false, disabled, onClick }: ToolbarButtonProps) => (
-  <button
+  <PillButton
     type="button"
     title={name}
     aria-label={name}
     aria-pressed={active}
     disabled={disabled}
     onClick={onClick}
-    className={`rounded px-2 py-1 text-sm disabled:opacity-50 ${active ? "bg-gray-900 text-white" : "bg-gray-100 hover:bg-gray-200"}`}
+    className={`min-h-9 px-3 py-2 text-xs ${active ? "bg-[#010000] text-[#d8e4d6]" : "border-[#010000]/20 bg-transparent text-[#010000] hover:bg-[#010000]/10"}`}
   >
     {name}
-  </button>
+  </PillButton>
 );
 
 type Props = {
@@ -54,7 +55,7 @@ export const WikiEditorToolbar = ({ editor, disabled, onError }: Props) => {
   );
 
   return (
-    <div className="border-y border-gray-200 py-3">
+    <div className="border-y border-[#010000]/15 py-4">
       <div className="flex flex-wrap gap-2">
         {[1, 2, 3].map((level) => button(
           `Título ${level}`,
@@ -91,9 +92,9 @@ export const WikiEditorToolbar = ({ editor, disabled, onError }: Props) => {
         <div className="mt-3 flex flex-wrap items-end gap-2">
           <label className="text-sm font-medium" htmlFor="wiki-link">
             Enlace
-            <input id="wiki-link" value={href} onChange={(event) => setHref(event.target.value)} placeholder="https:// o /ruta" className="mt-1 block rounded border border-gray-300 px-3 py-2" />
+            <input id="wiki-link" value={href} onChange={(event) => setHref(event.target.value)} placeholder="https:// o /ruta" className="mt-2 block w-full min-w-0 rounded-2xl border border-[#010000]/25 bg-transparent px-4 py-3" />
           </label>
-          <button type="button" onClick={setLink} className="rounded bg-gray-900 px-3 py-2 text-sm text-white">Aplicar</button>
+          <button type="button" onClick={setLink} className="min-h-11 rounded-full bg-[#010000] px-5 py-2 text-sm text-[#d8e4d6]">Aplicar</button>
           <button type="button" onClick={() => setLinkOpen(false)} className="px-3 py-2 text-sm underline">Cancelar</button>
         </div>
       )}

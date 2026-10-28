@@ -34,8 +34,8 @@ export const Home = () => {
 
   const showSubscriptionBanner =
     needsSubscriptionCheck &&
-    fetchSubscriptionRequest.ok &&
-    !hasValidSubscription;
+    (userData?.active === false ||
+      (fetchSubscriptionRequest.ok && !hasValidSubscription));
 
   // Verificar si hay error
   const hasError =

@@ -18,7 +18,7 @@ export const DashboardSettingsMenu = ({ collapsed = false }: { collapsed?: boole
   const [logoutError, setLogoutError] = useState(false);
   const items = [
     { key: "profile", href: "/profile" },
-    { key: "settings", href: "/settings" },
+    { key: "socialWeb", href: "/settings" },
     { key: "wiki", href: "/wiki" },
     ...(user?.role === "admin" ? [{ key: "administration", href: "/administration" }] : []),
   ];

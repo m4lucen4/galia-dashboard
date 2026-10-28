@@ -1,4 +1,5 @@
 import { SettingsSection } from "../components/SettingsSection";
+import { MyWebInactiveInfo } from "../components/MyWebInactiveInfo";
 import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
@@ -134,27 +135,27 @@ export const Settings = () => {
           </SettingsSection>
         )}
         <SettingsSection
-          title={authUser?.has_web ? t("settings.socialNetworksAndWeb") : t("settings.socialNetworks")}
+          title={t("settings.socialNetworksAndWeb")}
           subtitle={t("settings.socialNetworksDescription")}
         >
-          <div className={`grid grid-cols-1 gap-4 ${authUser?.has_web ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {/* Mi Web */}
-            {authUser?.has_web && (
-              <div className="flex min-w-0 flex-col items-center rounded-3xl border border-[#010000]/15 p-5 text-center">
-                <button
-                  type="button"
-                  onClick={() => navigate("/my-web")}
-                  className="rounded-full border border-[#010000]/20 bg-[#fbea71] p-4 transition-colors hover:bg-[#d8e4d6] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#010000]"
-                  title={t("settings.myWeb")}
-                >
-                  <WebIcon size={32} className="text-[#010000]" />
-                </button>
-                <p className="mt-4 text-base font-medium">
-                  {t("settings.myWeb")}
-                </p>
-                <p className="mt-1 text-xs text-[#010000]/65">{t("settings.goToMyWeb")}</p>
+            <div className="flex min-w-0 flex-col items-center rounded-3xl border border-[#010000]/15 p-5 text-center">
+              <button
+                type="button"
+                disabled={authUser?.has_web !== true}
+                onClick={() => navigate("/my-web")}
+                className="rounded-full border border-[#010000]/20 bg-[#fbea71] p-4 transition-colors enabled:hover:bg-[#d8e4d6] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#010000] disabled:cursor-not-allowed disabled:bg-[#010000]/5 disabled:opacity-40"
+                title={t("settings.myWeb")}
+              >
+                <WebIcon size={32} className="text-[#010000]" />
+              </button>
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <p className="text-base font-medium">{t("settings.myWeb")}</p>
+                {authUser?.has_web !== true && <MyWebInactiveInfo />}
               </div>
-            )}
+              <p className="mt-1 text-xs text-[#010000]/65">{t("settings.goToMyWeb")}</p>
+            </div>
 
             {/* Instagram */}
             <InstagramConnect

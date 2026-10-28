@@ -132,7 +132,7 @@ const StructureFormDialog = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <form
         aria-labelledby="wiki-structure-dialog-title"
-        className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl"
+        className="max-h-[calc(100svh-2rem)] w-full max-w-lg overflow-y-auto rounded-[28px] border border-[#010000]/20 bg-[#d8e4d6] p-6 text-[#010000] shadow-xl"
         onSubmit={(event) => void handleSubmit(event)}
       >
         <h2 id="wiki-structure-dialog-title" className="text-lg font-bold text-gray-900">
@@ -153,7 +153,7 @@ const StructureFormDialog = ({
                 setTitle(nextTitle);
                 if (!slugEdited) setSlug(slugify(nextTitle));
               }}
-              className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+              className="mt-2 w-full rounded-2xl border border-[#010000]/25 bg-transparent px-4 py-3"
             />
           </label>
         )}
@@ -170,7 +170,7 @@ const StructureFormDialog = ({
               setSlug(event.target.value);
               setSlugEdited(true);
             }}
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-2 w-full rounded-2xl border border-[#010000]/25 bg-transparent px-4 py-3"
           />
           <span className="mt-1 block text-xs font-normal text-gray-500">
             Solo letras minúsculas, números y guiones. Se normaliza al guardar.
@@ -202,7 +202,7 @@ const StructureFormDialog = ({
               id="wiki-article-subsection"
               value={subsectionId}
               onChange={(event) => setSubsectionId(event.target.value)}
-              className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+              className="mt-2 w-full rounded-2xl border border-[#010000]/25 bg-[#d8e4d6] px-4 py-3"
             >
               {structure.flatMap((section) => section.wiki_subsections.map((subsection) => (
                 <option key={subsection.id} value={subsection.id}>
@@ -219,7 +219,7 @@ const StructureFormDialog = ({
           <button
             type="submit"
             disabled={busy || !slugify(slug) || (needsTitle && !title.trim()) || (isMove && !subsectionId)}
-            className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-11 rounded-full bg-[#010000] px-5 py-2 text-sm font-medium text-[#d8e4d6] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy ? "Guardando…" : "Guardar"}
           </button>
@@ -329,10 +329,10 @@ export const WikiStructureManager = ({ structure, selectedArticleId, request, on
   };
 
   return (
-    <aside className="rounded-xl bg-white p-4 shadow-sm">
+    <aside className="min-w-0 rounded-[28px] border border-[#010000]/20 p-5 sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold">Gestionar wiki</h1>
+          <h2 className="text-xl font-medium tracking-[-0.03em]">Gestionar wiki</h2>
           <Link to="/wiki" onClick={(event) => { event.preventDefault(); onNavigate("/wiki"); }} className="mt-1 inline-block text-sm underline">Ver wiki pública</Link>
         </div>
         <button type="button" onClick={() => void refresh()} disabled={request.inProgress} className="text-sm underline disabled:opacity-50">
@@ -340,19 +340,19 @@ export const WikiStructureManager = ({ structure, selectedArticleId, request, on
         </button>
       </div>
       {request.messages && <p className={`mt-3 text-sm ${request.ok ? "text-green-700" : "text-red-700"}`}>{request.messages}</p>}
-      <button type="button" onClick={() => setFormTarget({ kind: "section" })} disabled={busy} className="mt-4 rounded bg-gray-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50">
+      <button type="button" onClick={() => setFormTarget({ kind: "section" })} disabled={busy} className="mt-5 min-h-11 rounded-full bg-[#010000] px-5 py-2 text-sm font-medium text-[#d8e4d6] disabled:opacity-50">
         Crear sección
       </button>
       {structure.length === 0 && <p className="mt-4 text-sm text-gray-600">Empezá creando una sección. Después podrás añadir una subsección y su primer artículo.</p>}
       <div className="mt-5 space-y-5">
         {structure.map((section, sectionIndex) => (
-          <div key={section.id} className="border-t pt-4 first:border-t-0 first:pt-0">
-            <div className="flex items-center justify-between gap-2">
-              <div>
+          <div key={section.id} className="border-t border-[#010000]/15 pt-5 first:border-t-0 first:pt-0">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="min-w-0 break-words">
                 <p className="font-semibold">{section.title}</p>
                 {section.is_article_section && <span className="text-xs text-gray-500">Sección de artículos · No visible en la wiki pública</span>}
               </div>
-              <div className="flex gap-2 text-xs">
+              <div className="flex flex-wrap items-center gap-3 text-xs">
                 <button type="button" aria-label={`Subir ${section.title}`} disabled={request.inProgress || sectionIndex === 0} onClick={() => void move(null, structure.map((item) => item.id), section.id, -1, "section")} className="underline disabled:opacity-40">↑</button>
                 <button type="button" aria-label={`Bajar ${section.title}`} disabled={request.inProgress || sectionIndex === structure.length - 1} onClick={() => void move(null, structure.map((item) => item.id), section.id, 1, "section")} className="underline disabled:opacity-40">↓</button>
                 <button type="button" onClick={() => setFormTarget({ kind: "section", item: section })} disabled={request.inProgress} className="underline disabled:opacity-40">Editar</button>
@@ -363,10 +363,10 @@ export const WikiStructureManager = ({ structure, selectedArticleId, request, on
             {section.wiki_subsections.length === 0 && <p className="mt-2 text-xs text-gray-500">Esta sección todavía no tiene subsecciones.</p>}
             <div className="mt-3 space-y-3">
               {section.wiki_subsections.map((subsection, subsectionIndex) => (
-                <div key={subsection.id} className="ml-3 border-l border-gray-200 pl-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm text-gray-700">{subsection.title}</p>
-                    <div className="flex gap-2 text-xs">
+                <div key={subsection.id} className="ml-1 min-w-0 border-l border-[#010000]/20 pl-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="min-w-0 text-sm break-words text-[#010000]/75">{subsection.title}</p>
+                    <div className="flex flex-wrap items-center gap-3 text-xs">
                       <button type="button" aria-label={`Subir ${subsection.title}`} disabled={request.inProgress || subsectionIndex === 0} onClick={() => void move(section.id, section.wiki_subsections.map((item) => item.id), subsection.id, -1, "subsection")} className="underline disabled:opacity-40">↑</button>
                       <button type="button" aria-label={`Bajar ${subsection.title}`} disabled={request.inProgress || subsectionIndex === section.wiki_subsections.length - 1} onClick={() => void move(section.id, section.wiki_subsections.map((item) => item.id), subsection.id, 1, "subsection")} className="underline disabled:opacity-40">↓</button>
                       <button type="button" onClick={() => setFormTarget({ kind: "subsection", section, item: subsection })} disabled={request.inProgress} className="underline disabled:opacity-40">Editar</button>
@@ -375,8 +375,8 @@ export const WikiStructureManager = ({ structure, selectedArticleId, request, on
                   </div>
                   <button type="button" onClick={() => setFormTarget({ kind: "article", subsection })} disabled={request.inProgress} className="mt-2 text-xs underline disabled:opacity-40">Crear artículo</button>
                   {subsection.wiki_articles.map((article, articleIndex) => (
-                    <div key={article.id} className="mt-2 rounded bg-gray-50 p-2">
-                        <button type="button" onClick={() => onSelectArticle(article.id)} disabled={disabled} className={`block w-full text-left text-sm disabled:opacity-50 ${article.id === selectedArticleId ? "font-semibold text-gray-900" : "text-gray-700"}`}>
+                    <div key={article.id} className={`mt-3 rounded-2xl border p-3 ${article.id === selectedArticleId ? "border-[#010000]/40 bg-white/25" : "border-[#010000]/10"}`}>
+                        <button type="button" onClick={() => onSelectArticle(article.id)} disabled={disabled} className={`block w-full text-left text-sm break-words disabled:opacity-50 ${article.id === selectedArticleId ? "font-semibold text-[#010000]" : "text-[#010000]/75"}`}>
                         {article.draft?.title ?? article.slug} · {stateLabel(article.state)}
                       </button>
                       <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-xs">
