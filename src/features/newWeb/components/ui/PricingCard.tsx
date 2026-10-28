@@ -8,11 +8,12 @@ export type PricingCardProps = ComponentPropsWithoutRef<"article"> & {
   secondary: ReactNode;
   features: readonly string[];
   action: ReactNode;
+  addon?: ReactNode;
   tone?: "yellow" | "outline";
 };
 
 export const PricingCard = ({
-  label, price, secondary, features, action, tone = "outline", className, ...props
+  label, price, secondary, features, action, addon, tone = "outline", className, ...props
 }: PricingCardProps) => (
   <article
     className={twMerge(
@@ -40,5 +41,6 @@ export const PricingCard = ({
     <ul className="flex flex-col gap-2.5">
       {features.map((feature) => <li key={feature}>{feature}</li>)}
     </ul>
+    {addon}
   </article>
 );

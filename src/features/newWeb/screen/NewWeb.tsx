@@ -10,6 +10,7 @@ import { HowItWorksSection } from "@/features/newWeb/components/howItWorks/HowIt
 import { OutputChannelsSection } from "@/features/newWeb/components/channels/OutputChannelsSection";
 import { LandingHeader } from "@/features/newWeb/components/LandingHeader";
 import { LandingHero } from "@/features/newWeb/components/hero/LandingHero";
+import { WhatsAppButton } from "@/features/newWeb/components/WhatsAppButton";
 import { useLandingScroll } from "@/features/newWeb/hooks/useLandingScroll";
 import "@/features/newWeb/fonts.css";
 
@@ -38,6 +39,7 @@ export const NewWeb = () => {
         <ContactSection />
       </main>
       <LandingFooter />
+      <WhatsAppButton />
     </div>
   );
 };
