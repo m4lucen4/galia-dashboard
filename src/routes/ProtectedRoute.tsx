@@ -6,12 +6,15 @@ import { checkAuthState } from "../redux/actions/AuthActions";
 import { LoadingSpinner } from "../components/shared/ui/LoadingSpinner";
 
 import Navbar from "../components/shared/ui/Navbar";
+import { DashboardPage } from "@/components/shared/ui/DashboardPage";
+import { DashboardLayout } from "@/components/shared/navigation/DashboardLayout";
 
 interface ProtectedRouteProps {
   children?: React.ReactNode;
+  layout?: "default" | "sidebar";
 }
 
-export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ children, layout = "default" }: ProtectedRouteProps) => {
   const { authenticated } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch<AppDispatch>();
   const [isChecking, setIsChecking] = useState(true);
@@ -33,12 +36,16 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <Navigate to="/login" replace />;
   }
 
+  if (layout === "sidebar") {
+    return <DashboardLayout>{children || <Outlet />}</DashboardLayout>;
+  }
+
   return (
     <>
       <Navbar />
-      <div className="container mx-auto mt-6 px-4">
+      <DashboardPage>
         {children || <Outlet />}
-      </div>
+      </DashboardPage>
     </>
   );
 };

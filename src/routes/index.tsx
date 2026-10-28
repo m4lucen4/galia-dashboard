@@ -56,8 +56,10 @@ export const AppRoutes = () => (
       <Route path="/wiki" element={<Documentation />} />
       <Route path="/wiki/:sectionId/:sectionSlug?" element={<Documentation />} />
     </Route>
-    <Route element={<ProtectedRoute />}>
+    <Route element={<ProtectedRoute layout="sidebar" />}>
       <Route path="/home" element={<Home />} />
+    </Route>
+    <Route element={<ProtectedRoute />}>
       <Route path="/profile" element={<Profile />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/projects" element={<Projects />} />

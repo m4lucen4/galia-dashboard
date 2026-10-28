@@ -217,7 +217,7 @@ export const WikiAdmin = () => {
   const draftChangedSincePublication = Boolean(draft && draft.published_version !== draft.version);
   const canPublish = selected?.state !== "archived" && (dirty || draftChangedSincePublication);
 
-  return <main className="min-h-screen bg-gray-50 p-4 sm:p-8"><div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
+  return <main className="min-h-screen bg-gray-50 py-4 sm:py-8"><div className="grid w-full min-w-0 gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
     <WikiStructureManager structure={structure} selectedArticleId={selectedArticleId} request={isLocked || dirty ? { ...editorRequest, inProgress: true } : structureActionRequest.inProgress ? structureActionRequest : structureRequest} onSelectArticle={selectArticle} onNavigate={requestNavigation} disabled={isLocked} />
     <section className="rounded-xl bg-white p-5 shadow-sm">{!selected || !draft ? <div className="py-20 text-center text-gray-600">Seleccione o cree un artículo para editarlo.</div> : <>
       <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm text-gray-500">{selected.state === "archived" ? "Archivado" : dirty ? "Cambios sin guardar" : selected.state === "published" ? "Publicado" : "Borrador"}</p>{editorRequest.messages && <p className={`text-sm ${editorRequest.ok ? "text-green-700" : "text-red-700"}`}>{editorRequest.messages}</p>}</div>

@@ -181,7 +181,7 @@ export const Multimedia = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="w-full min-w-0 py-4">
       <div className="mb-6">
         <h3 className="text-2xl font-semibold text-gray-900 mb-2">
           {t("multimedia.title")}

@@ -5,7 +5,7 @@ export const Administration = () => {
   const { t } = useTranslation();
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="w-full min-w-0 py-4">
       <h3 className="text-base/7 font-semibold text-gray-900">
         {t("administration.title")}
       </h3>
