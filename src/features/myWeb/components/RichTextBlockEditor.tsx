@@ -4,7 +4,7 @@ import { useAppDispatch } from "@/redux/hooks";
 import { updateSiteComponent } from "@/redux/actions/SiteComponentActions";
 import { PillButton } from "@/components/shared/ui/PillButton";
 import { RichTextInput } from "@/features/myWeb/components/RichTextInput";
-import { myWebPanelClassName, myWebOptionClassName, myWebSelectedOptionClassName } from "@/features/myWeb/components/myWebStyles";
+import { myWebEditorClassName, myWebFieldGridClassName, myWebOptionClassName, myWebSelectedOptionClassName } from "@/features/myWeb/components/myWebStyles";
 
 interface RichTextBlockEditorProps {
   component: SiteComponentDataProps;
@@ -54,54 +54,54 @@ export const RichTextBlockEditor: React.FC<RichTextBlockEditorProps> = ({
   };
 
   return (
-    <div className={`text-[#010000] ${myWebPanelClassName}`}>
-      {/* ── Alineación ──────────────────────────────────────────────────────── */}
-      <div>
-        <p className="text-sm font-medium text-gray-900 mb-2">Alineación</p>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            aria-pressed={form.alignment === "left"}
-            onClick={() => setForm((prev) => ({ ...prev, alignment: "left" }))}
-            className={`min-h-11 ${myWebOptionClassName} ${form.alignment === "left" ? myWebSelectedOptionClassName : ""}`}
-          >
-            ← Izquierda
-          </button>
-          <button
-            type="button"
-            aria-pressed={form.alignment === "right"}
-            onClick={() => setForm((prev) => ({ ...prev, alignment: "right" }))}
-            className={`min-h-11 ${myWebOptionClassName} ${form.alignment === "right" ? myWebSelectedOptionClassName : ""}`}
-          >
-            Derecha →
-          </button>
-        </div>
-      </div>
-
-      {/* ── Ancho ───────────────────────────────────────────────────────────── */}
-      <div>
-        <p className="text-sm font-medium text-gray-900 mb-2">Ancho</p>
-        <div className="flex flex-wrap gap-2">
-          {(
-            [
-              { value: "full", label: "Completo" },
-              { value: "two-thirds", label: "2/3" },
-              { value: "half", label: "50%" },
-            ] as const
-          ).map(({ value, label }) => (
+    <div className={`${myWebEditorClassName} text-[#010000]`}>
+      <div className={myWebFieldGridClassName}>
+        {/* Alignment and width share one responsive control plane. */}
+        <div>
+          <p className="text-sm font-medium text-gray-900 mb-2">Alineación</p>
+          <div className="flex flex-wrap gap-2">
             <button
-              key={value}
               type="button"
-              aria-pressed={(form.width ?? "full") === value}
-              onClick={() => setForm((prev) => ({ ...prev, width: value }))}
-              className={`min-h-11 ${myWebOptionClassName} ${(form.width ?? "full") === value ? myWebSelectedOptionClassName : ""}`}
+              aria-pressed={form.alignment === "left"}
+              onClick={() => setForm((prev) => ({ ...prev, alignment: "left" }))}
+              className={`min-h-11 ${myWebOptionClassName} ${form.alignment === "left" ? myWebSelectedOptionClassName : ""}`}
             >
-              {label}
+              ← Izquierda
             </button>
-          ))}
+            <button
+              type="button"
+              aria-pressed={form.alignment === "right"}
+              onClick={() => setForm((prev) => ({ ...prev, alignment: "right" }))}
+              className={`min-h-11 ${myWebOptionClassName} ${form.alignment === "right" ? myWebSelectedOptionClassName : ""}`}
+            >
+              Derecha →
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-medium text-gray-900 mb-2">Ancho</p>
+          <div className="flex flex-wrap gap-2">
+            {(
+              [
+                { value: "full", label: "Completo" },
+                { value: "two-thirds", label: "2/3" },
+                { value: "half", label: "50%" },
+              ] as const
+            ).map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={(form.width ?? "full") === value}
+                onClick={() => setForm((prev) => ({ ...prev, width: value }))}
+                className={`min-h-11 ${myWebOptionClassName} ${(form.width ?? "full") === value ? myWebSelectedOptionClassName : ""}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-
       {/* ── Contenido ───────────────────────────────────────────────────────── */}
       <RichTextInput
         label="Contenido"

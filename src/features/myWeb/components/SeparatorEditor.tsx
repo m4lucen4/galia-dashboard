@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { SiteComponentDataProps, SeparatorConfig } from "@/types";
 import { useAppDispatch } from "@/redux/hooks";
 import { updateSiteComponent } from "@/redux/actions/SiteComponentActions";
-import { myWebPanelClassName, myWebOptionClassName, myWebSelectedOptionClassName, myWebMutedClassName } from "@/features/myWeb/components/myWebStyles";
+import { myWebGroupClassName, myWebOptionClassName, myWebSelectedOptionClassName, myWebMutedClassName } from "@/features/myWeb/components/myWebStyles";
 
 interface SeparatorEditorProps {
   component: SiteComponentDataProps;
@@ -45,7 +45,7 @@ export const SeparatorEditor: React.FC<SeparatorEditorProps> = ({ component }) =
   };
 
   return (
-    <div className={myWebPanelClassName}>
+    <div className={`${myWebGroupClassName} max-w-md`}>
       <h4 className="text-base font-medium">Tamaño del separador</h4>
       <p className={myWebMutedClassName}>El espacio se guarda al seleccionar un tamaño.</p>
       <div className="grid grid-cols-3 gap-3">
@@ -63,7 +63,7 @@ export const SeparatorEditor: React.FC<SeparatorEditorProps> = ({ component }) =
               className="w-full rounded bg-[#010000]/20"
               style={{ height: `${barHeight}px` }}
             />
-            <span className="text-xs font-medium text-gray-700">{label}</span>
+            <span className="text-sm font-medium text-gray-700">{label}</span>
           </button>
         ))}
       </div>

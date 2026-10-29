@@ -8,7 +8,7 @@ import {
 import { ImageUploader } from "@/features/myWeb/components/ImageUploader";
 import { PillButton } from "@/components/shared/ui/PillButton";
 import { InputField } from "@/components/shared/ui/InputField";
-import { myWebPanelClassName, myWebOptionClassName, myWebSelectedOptionClassName, myWebLegacyControlsClassName } from "@/features/myWeb/components/myWebStyles";
+import { myWebEditorClassName, myWebGroupClassName, myWebFieldGridClassName, myWebOptionClassName, myWebSelectedOptionClassName, myWebLegacyControlsClassName } from "@/features/myWeb/components/myWebStyles";
 
 interface FigureEditorProps {
   component: SiteComponentDataProps;
@@ -80,97 +80,95 @@ export const FigureEditor: React.FC<FigureEditorProps> = ({ component }) => {
   };
 
   return (
-    <div className={`@container text-[#010000] ${myWebPanelClassName} ${myWebLegacyControlsClassName}`}>
-      {/* ── Imagen ────────────────────────────────────────────────────────── */}
-      <ImageUploader
-        label="Imagen"
-        currentUrl={form.image_url || null}
-        onUpload={handleImageUpload}
-        onRemove={() =>
-          setForm((prev) => ({ ...prev, image_url: "" }))
-        }
-        loading={uploading || uploadRequest.inProgress}
-      />
-
-      {/* ── Pie de foto ───────────────────────────────────────────────────── */}
-      <InputField
-        id="figure-caption"
-        type="text"
-        label="Pie de foto"
-        value={form.caption}
-        onChange={(e) =>
-          setForm((prev) => ({ ...prev, caption: e.target.value }))
-        }
-        placeholder="Escribe un pie de foto..."
-      />
-
-      {/* ── Tamaño ────────────────────────────────────────────────────────── */}
-      <div>
-        <p className="text-sm font-medium text-gray-900 mb-3">Tamaño</p>
-        <div className="grid grid-cols-2 gap-3">
-          {SIZE_OPTIONS.map(({ value, label, description }) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={form.size === value}
-              onClick={() => setForm((prev) => ({ ...prev, size: value }))}
-              className={`${myWebOptionClassName} ${form.size === value ? myWebSelectedOptionClassName : ""}`}
-            >
-              <span
-                className={`block text-sm font-medium ${
-                  form.size === value ? "text-gray-900" : "text-gray-700"
-                }`}
-              >
-                {label}
-              </span>
-              <span className="block text-xs text-gray-400 mt-0.5">
-                {description}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Enlace ────────────────────────────────────────────────────────── */}
-      <div>
-        <p className="text-sm font-medium text-gray-900 mb-3">Enlace (opcional)</p>
-        <div className="grid grid-cols-3 gap-2 mb-3">
-          {(["none", "internal", "external"] as const).map((option) => {
-            const current = form.link_type ?? "none";
-            const labels = { none: "Sin enlace", internal: "Interno", external: "Externo" };
-            return (
-              <button
-                key={option}
-                type="button"
-                aria-pressed={current === option}
-                onClick={() =>
-                  setForm((prev) => ({
-                    ...prev,
-                    link_type: option === "none" ? undefined : option,
-                    link_url: option === "none" ? "" : prev.link_url,
-                  }))
-                }
-                className={`min-h-11 text-sm font-medium ${myWebOptionClassName} ${current === option ? myWebSelectedOptionClassName : ""}`}
-              >
-                {labels[option]}
-              </button>
-            );
-          })}
-        </div>
-        {form.link_type && (
-          <InputField
-            id="figure-link-url"
-            type="text"
-            label={form.link_type === "internal" ? "Ruta interna (ej. sobre-nosotros)" : "URL externa"}
-            value={form.link_url ?? ""}
-            onChange={(e) =>
-              setForm((prev) => ({ ...prev, link_url: e.target.value }))
+    <div className={`${myWebEditorClassName} text-[#010000] ${myWebLegacyControlsClassName}`}>
+      <div className={myWebFieldGridClassName}>
+        <section className={myWebGroupClassName}>
+          <ImageUploader
+            label="Imagen"
+            currentUrl={form.image_url || null}
+            onUpload={handleImageUpload}
+            onRemove={() =>
+              setForm((prev) => ({ ...prev, image_url: "" }))
             }
-            placeholder={form.link_type === "internal" ? "sobre-nosotros" : "https://..."}
+            loading={uploading || uploadRequest.inProgress}
           />
-        )}
+          <InputField
+            id="figure-caption"
+            type="text"
+            label="Pie de foto"
+            value={form.caption}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, caption: e.target.value }))
+            }
+            placeholder="Escribe un pie de foto..."
+          />
+        </section>
+        <section className={myWebGroupClassName}>
+          <div>
+            <p className="text-sm font-medium text-gray-900 mb-3">Tamaño</p>
+            <div className="flex flex-wrap gap-2">
+              {SIZE_OPTIONS.map(({ value, label, description }) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={form.size === value}
+                  onClick={() => setForm((prev) => ({ ...prev, size: value }))}
+                  className={`min-h-11 ${myWebOptionClassName} ${form.size === value ? myWebSelectedOptionClassName : ""}`}
+                >
+                  <span
+                    className={`block text-sm font-medium ${
+                      form.size === value ? "text-gray-900" : "text-gray-700"
+                    }`}
+                  >
+                    {label}
+                  </span>
+                  <span className="block text-sm text-gray-500 mt-0.5">
+                    {description}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-900 mb-3">Enlace (opcional)</p>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {(["none", "internal", "external"] as const).map((option) => {
+                const current = form.link_type ?? "none";
+                const labels = { none: "Sin enlace", internal: "Interno", external: "Externo" };
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    aria-pressed={current === option}
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        link_type: option === "none" ? undefined : option,
+                        link_url: option === "none" ? "" : prev.link_url,
+                      }))
+                    }
+                    className={`min-h-11 text-sm font-medium ${myWebOptionClassName} ${current === option ? myWebSelectedOptionClassName : ""}`}
+                  >
+                    {labels[option]}
+                  </button>
+                );
+              })}
+            </div>
+            {form.link_type && (
+              <InputField
+                id="figure-link-url"
+                type="text"
+                label={form.link_type === "internal" ? "Ruta interna (ej. sobre-nosotros)" : "URL externa"}
+                value={form.link_url ?? ""}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, link_url: e.target.value }))
+                }
+                placeholder={form.link_type === "internal" ? "sobre-nosotros" : "https://..."}
+              />
+            )}
+          </div>
+        </section>
       </div>
-
       {/* ── Guardar ───────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-3">
         <PillButton onClick={handleSave} disabled={saving}>

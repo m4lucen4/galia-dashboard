@@ -13,7 +13,7 @@ import { PillButton } from "@/components/shared/ui/PillButton";
 import { InputField } from "@/components/shared/ui/InputField";
 import { ImageUploader } from "@/features/myWeb/components/ImageUploader";
 import { RichTextInput } from "@/features/myWeb/components/RichTextInput";
-import { myWebPanelClassName, myWebLegacyControlsClassName } from "@/features/myWeb/components/myWebStyles";
+import { myWebEditorClassName, myWebGroupClassName, myWebFieldGridClassName, myWebLegacyControlsClassName } from "@/features/myWeb/components/myWebStyles";
 
 interface EditorialCardsEditorProps {
   component: SiteComponentDataProps;
@@ -162,14 +162,14 @@ export const EditorialCardsEditor: React.FC<EditorialCardsEditorProps> = ({
   };
 
   return (
-    <div className={`@container space-y-5 text-[#010000] ${myWebLegacyControlsClassName}`}>
+    <div className={`${myWebEditorClassName} text-[#010000] ${myWebLegacyControlsClassName}`}>
       <div className="grid gap-4 @min-[44rem]:grid-cols-2">
         {form.cards.map((card, cardIndex) => {
           const index = cardIndex as 0 | 1;
           const isUploading = uploadingCards.has(index);
 
           return (
-            <section key={index} className={myWebPanelClassName}>
+            <section key={index} className={`@container ${myWebGroupClassName}`}>
               <h4 className="text-base font-medium">
                 Tarjeta {index + 1}
               </h4>
@@ -198,7 +198,7 @@ export const EditorialCardsEditor: React.FC<EditorialCardsEditorProps> = ({
                 onChange={(description) => updateCard(index, { description })}
                 placeholder="Escribe una descripción..."
               />
-              <div className="grid gap-3">
+              <div className={`${myWebFieldGridClassName} @min-[24rem]:grid-cols-2`}>
                 <InputField
                   id={`editorial-card-${index + 1}-button-text`}
                   type="text"

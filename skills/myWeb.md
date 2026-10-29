@@ -14,6 +14,14 @@ The `myWeb` feature lets architecture studios create and publish a public portfo
 
 Keep `components/myWebStyles.ts` feature-local. Reuse shared `PillButton` without changing shared defaults; never introduce a universal save-all operation when composing these sections.
 
+### Configuration layout and density
+
+- Use `previews/LayoutChoice` for distribution choices: a contained **96 × 56 px** thumbnail beside the full wrapping label, not a proportional SVG canvas filling the card. The choice row has an 80 px minimum height and preserves selected/disabled semantics.
+- `myWebEditorClassName` bounds editor width; `myWebGroupClassName` supplies light inner groups without repeating the outer 28 px panel. `myWebFieldGridClassName` and `myWebChoiceGridClassName` respond to container width rather than viewport width.
+- Keep related fields together: image plus URL, media/logo versus copy/action, left/right content, and statistic number plus legend. Stack on narrow containers; retain all fields and the existing conditional visibility.
+- Keep action targets at least 44 px and body labels legible. Do not reduce density by hiding settings, collapsing slides by default, shrinking text, or changing editor mounting/save ownership.
+- Rich-text contents have an 80 px minimum and a 256 px scrolling ceiling; this is dashboard presentation only, not a change to stored HTML or public typography. Already-bounded upload/icon/navigation previews and ordering lists do not need blanket resizing.
+
 ---
 
 ## Access
