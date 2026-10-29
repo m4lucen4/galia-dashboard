@@ -1,30 +1,25 @@
 import React, { useState } from "react";
-import { useHomeAnchors } from "../../../hooks/useHomeAnchors";
-import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
-import {
-  PlusIcon,
-  EllipsisHorizontalIcon,
-  PencilIcon,
-  ChevronUpIcon,
-  ChevronDownIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  Bars3Icon,
-  TrashIcon,
-  CheckIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
-import { SitePageDataProps } from "../../../types";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { useHomeAnchors } from "@/hooks/useHomeAnchors";
+import { PlusIcon, CheckIcon, XMarkIcon, LinkIcon } from "@heroicons/react/24/outline";
+import { SitePageDataProps } from "@/types";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   createSitePage,
   deleteSitePage,
   updateSitePage,
   reorderSitePages,
-} from "../../../redux/actions/SitePageActions";
-import { clearPageErrors } from "../../../redux/slices/SitePageSlice";
-import { Alert } from "../../../components/shared/ui/Alert";
-import { Button } from "../../../components/shared/ui/Button";
+} from "@/redux/actions/SitePageActions";
+import { clearPageErrors } from "@/redux/slices/SitePageSlice";
+import { Alert } from "@/components/shared/ui/Alert";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import { CreatePageForm } from "@/features/myWeb/components/pages/CreatePageForm";
+import { PageTabMenu } from "@/features/myWeb/components/pages/PageTabMenu";
+import {
+  myWebControlClassName,
+  myWebIconButtonClassName,
+  myWebLabelClassName,
+  myWebMutedClassName,
+} from "@/features/myWeb/components/myWebStyles";
 
 interface MyWebTabBarProps {
   pages: SitePageDataProps[];
@@ -193,287 +188,73 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
   };
 
   return (
-    <>
-      <div className="border-b border-gray-200 bg-white">
-        <div className="flex items-center overflow-x-auto scrollbar-hide px-4 gap-1">
-          {/* Config tab */}
-          <button
-            onClick={() => onTabChange("config")}
-            className={`shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-              activeTabId === "config"
-                ? "border-black text-black"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
-          >
+    <div className="min-w-0 space-y-4 text-[#010000]">
+      <div className="min-w-0 rounded-[28px] border border-[#010000]/20 p-3 sm:p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-medium">Páginas y navegación</h2>
+            <p className={myWebMutedClassName}>Organiza tus páginas y los enlaces a secciones de Inicio.</p>
+          </div>
+          <PillButton variant="outline" onClick={() => setShowCreateForm(true)}>
+            <PlusIcon aria-hidden="true" className="size-5" />Nueva página
+          </PillButton>
+        </div>
+        <nav aria-label="Páginas de tu web" className="flex min-w-0 items-center gap-2 overflow-x-auto p-1 pb-3">
+          <PillButton variant={activeTabId === "config" ? "solid" : "outline"} onClick={() => onTabChange("config")} aria-current={activeTabId === "config" ? "page" : undefined} className="shrink-0">
             Configuración
-          </button>
-
-          {/* Page tabs */}
+          </PillButton>
           {pages.map((page, index) => (
-            <div key={page.id} className="shrink-0 flex items-center">
+            <div key={page.id} className="flex shrink-0 items-center gap-1">
               {renamingId === page.id ? (
-                <div className="flex items-center gap-1 px-2 py-2">
-                  <div className="flex flex-col gap-1">
-                    <input
-                      autoFocus
-                      type="text"
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Escape") handleCancelRename(); }}
-                      placeholder="Título"
-                      className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-black w-28"
-                    />
-                    {page.page_type !== "home_anchor" && <div>
-                      <input
-                        type="text"
-                        value={editSlug}
-                        onChange={(e) => handleEditSlugChange(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Escape") handleCancelRename(); }}
-                        placeholder="slug"
-                        className={`border rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-black w-28 ${
-                          editSlugError ? "border-red-400" : "border-gray-300"
-                        }`}
-                      />
-                      {editSlugError && (
-                        <p className="text-xs text-red-500 mt-0.5">{editSlugError}</p>
-                      )}
-                    </div>}
+                <div className="flex items-center gap-2 rounded-2xl border border-[#010000]/20 p-3">
+                  <div className="w-48 space-y-2">
+                    <label className={myWebLabelClassName}>
+                      Título
+                      <input autoFocus value={editTitle} onChange={(event) => setEditTitle(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") handleCancelRename(); }} className={myWebControlClassName} />
+                    </label>
+                    {page.page_type !== "home_anchor" && (
+                      <label className={myWebLabelClassName}>
+                        Slug
+                        <input value={editSlug} onChange={(event) => handleEditSlugChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") handleCancelRename(); }} className={myWebControlClassName} aria-invalid={!!editSlugError} aria-describedby={editSlugError ? `rename-error-${page.id}` : undefined} />
+                        {editSlugError && <span id={`rename-error-${page.id}`} className="block text-xs text-red-700">{editSlugError}</span>}
+                      </label>
+                    )}
                   </div>
-                  <button
-                    onClick={() => handleSaveRename(page)}
-                    disabled={!editTitle.trim() || !editSlug.trim() || !!editSlugError || saveRequest.inProgress}
-                    className="p-1 text-green-600 hover:text-green-700 disabled:opacity-30"
-                    title="Guardar"
-                  >
-                    <CheckIcon className="h-4 w-4" />
+                  <button onClick={() => handleSaveRename(page)} disabled={!editTitle.trim() || !editSlug.trim() || !!editSlugError || saveRequest.inProgress} className={myWebIconButtonClassName} aria-label={`Guardar nombre de ${page.title}`}>
+                    <CheckIcon aria-hidden="true" className="size-5" />
                   </button>
-                  <button
-                    onClick={handleCancelRename}
-                    className="p-1 text-gray-400 hover:text-gray-600"
-                    title="Cancelar"
-                  >
-                    <XMarkIcon className="h-4 w-4" />
+                  <button onClick={handleCancelRename} className={myWebIconButtonClassName} aria-label={`Cancelar cambio de nombre de ${page.title}`}>
+                    <XMarkIcon aria-hidden="true" className="size-5" />
                   </button>
                 </div>
               ) : (
-                <div className={`flex items-center border-b-2 transition-colors ${
-                  activeTabId === page.id
-                    ? "border-black"
-                    : "border-transparent"
-                }`}>
-                  <button
-                    onClick={() => onTabChange(page.id)}
-                    className={`px-3 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
-                      activeTabId === page.id
-                        ? "text-black"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    {page.title}
-                    {!page.visible && (
-                      <span className="ml-1 text-xs text-gray-400">(oculta)</span>
-                    )}
-                  </button>
-
-                  {/* Dropdown menu for custom pages and projects */}
+                <>
+                  <PillButton variant={activeTabId === page.id ? "solid" : "outline"} onClick={() => onTabChange(page.id)} aria-current={activeTabId === page.id ? "page" : undefined}>
+                    {page.page_type === "home_anchor" && <LinkIcon aria-hidden="true" className="size-4" />}
+                    <span className="whitespace-nowrap">{page.title}</span>
+                    {page.page_type === "home_anchor" && <span className="whitespace-nowrap text-xs opacity-65">Enlace a Inicio</span>}
+                    {!page.visible && <span className="text-xs opacity-65">(oculta)</span>}
+                  </PillButton>
                   {canManagePage(page) && (
-                    <Menu as="div" className="relative">
-                      <MenuButton
-                        className={`p-1 mr-1 rounded transition-colors ${
-                          activeTabId === page.id
-                            ? "text-gray-600 hover:text-black hover:bg-gray-100"
-                            : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                        }`}
-                        title="Opciones de página"
-                      >
-                        <EllipsisHorizontalIcon className="h-4 w-4" />
-                      </MenuButton>
-
-                      <MenuItems
-                        anchor="bottom start"
-                        className="z-50 mt-1 w-48 rounded-md bg-white border border-gray-200 shadow-lg py-1 focus:outline-none"
-                      >
-                        {isCustom(page) && (
-                          <MenuItem>
-                            {({ focus }) => (
-                              <button
-                                onClick={() => handleStartRename(page)}
-                                className={`flex w-full items-center gap-2 px-3 py-2 text-sm ${
-                                  focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
-                                }`}
-                              >
-                                <PencilIcon className="h-4 w-4" />
-                                Renombrar
-                              </button>
-                            )}
-                          </MenuItem>
-                        )}
-
-                        <MenuItem>
-                          {({ focus }) => (
-                            <button
-                              onClick={() => handleToggleNav(page)}
-                              className={`flex w-full items-center gap-2 px-3 py-2 text-sm ${
-                                focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
-                              }`}
-                            >
-                              <Bars3Icon className="h-4 w-4" />
-                              {page.show_in_nav ? "Ocultar del menú" : "Mostrar en menú"}
-                            </button>
-                          )}
-                        </MenuItem>
-
-                        <MenuItem>
-                          {({ focus }) => (
-                            <button
-                              onClick={() => handleToggleVisible(page)}
-                              className={`flex w-full items-center gap-2 px-3 py-2 text-sm ${
-                                focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
-                              }`}
-                            >
-                              {page.visible ? (
-                                <EyeSlashIcon className="h-4 w-4" />
-                              ) : (
-                                <EyeIcon className="h-4 w-4" />
-                              )}
-                              {page.visible ? "Ocultar página" : "Mostrar página"}
-                            </button>
-                          )}
-                        </MenuItem>
-
-                        {isCustom(page) && <div className="border-t border-gray-100 my-1" />}
-
-                        <MenuItem>
-                          {({ focus }) => (
-                            <button
-                              onClick={() => handleMoveUp(index)}
-                              disabled={index === 0}
-                              className={`flex w-full items-center gap-2 px-3 py-2 text-sm disabled:opacity-40 ${
-                                focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
-                              }`}
-                            >
-                              <ChevronUpIcon className="h-4 w-4" />
-                              Mover arriba
-                            </button>
-                          )}
-                        </MenuItem>
-
-                        <MenuItem>
-                          {({ focus }) => (
-                            <button
-                              onClick={() => handleMoveDown(index)}
-                              disabled={index >= pages.length - 1}
-                              className={`flex w-full items-center gap-2 px-3 py-2 text-sm disabled:opacity-40 ${
-                                focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
-                              }`}
-                            >
-                              <ChevronDownIcon className="h-4 w-4" />
-                              Mover abajo
-                            </button>
-                          )}
-                        </MenuItem>
-
-                        {isCustom(page) && (
-                          <>
-                            <div className="border-t border-gray-100 my-1" />
-
-                            <MenuItem>
-                              {({ focus }) => (
-                                <button
-                                  onClick={() => setDeleteTarget(page.id)}
-                                  className={`flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 ${
-                                    focus ? "bg-red-50" : ""
-                                  }`}
-                                >
-                                  <TrashIcon className="h-4 w-4" />
-                                  Eliminar
-                                </button>
-                              )}
-                            </MenuItem>
-                          </>
-                        )}
-                      </MenuItems>
-                    </Menu>
+                    <PageTabMenu page={page} custom={isCustom(page)} first={index === 0} last={index >= pages.length - 1}
+                      onRename={() => handleStartRename(page)} onToggleNav={() => handleToggleNav(page)}
+                      onToggleVisible={() => handleToggleVisible(page)} onMoveUp={() => handleMoveUp(index)}
+                      onMoveDown={() => handleMoveDown(index)} onDelete={() => setDeleteTarget(page.id)} />
                   )}
-                </div>
+                </>
               )}
             </div>
           ))}
-
-          {/* Add new page button */}
-          <button
-            onClick={() => setShowCreateForm(true)}
-            className="shrink-0 flex items-center gap-1 px-3 py-3 text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap border-b-2 border-transparent"
-            title="Nueva página"
-          >
-            <PlusIcon className="h-4 w-4" />
-            <span className="hidden sm:inline">Nueva página</span>
-          </button>
-        </div>
-
-        {/* Inline create form */}
-        {showCreateForm && (
-          <div className="border-t border-gray-200 bg-gray-50 px-4 py-4">
-            <p className="text-sm font-medium text-gray-700 mb-3">Nueva página</p>
-            <div className="flex flex-wrap items-start gap-3">
-              <label className="block text-xs text-gray-500">Tipo
-                <select className="block border rounded-md p-2 text-sm" value={newPageType} onChange={(e) => setNewPageType(e.target.value as "page" | "home_anchor")}>
-                  <option value="page">Página con componentes</option>
-                  <option value="home_anchor">Enlace a Inicio</option>
-                </select>
-              </label>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Título</label>
-                <input
-                  type="text"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="Ej: Sobre nosotros"
-                  autoFocus
-                  className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black w-48"
-                />
-              </div>
-              {newPageType === "home_anchor" ? <div>
-                <label className="block text-xs text-gray-500 mb-1" htmlFor="new-anchor-target">Ancla de Inicio</label>
-                <select id="new-anchor-target" className="border rounded-md p-2 text-sm" value={newTarget} onChange={(e) => setNewTarget(e.target.value)} disabled={anchorRequest.inProgress}>
-                  <option value="">Selecciona un ancla</option>
-                  {anchors.map((anchor) => <option key={anchor.id} value={anchor.id}>#{anchor.anchor_id} · {anchor.type}{!anchor.visible ? " (oculto)" : ""}</option>)}
-                </select>
-                {!anchors.length && !anchorRequest.inProgress && <p className="text-xs">Añade primero un ancla a un componente de Inicio.</p>}
-                {anchorRequest.messages && <p role="alert">{anchorRequest.messages}</p>}
-                <button type="button" onClick={refresh} className="block text-xs underline">Actualizar anclas</button>
-              </div> : <div>
-                <label className="block text-xs text-gray-500 mb-1">
-                  Slug <span className="text-gray-400">(aparece en la URL)</span>
-                </label>
-                <input
-                  type="text"
-                  value={newSlug}
-                  onChange={(e) => handleSlugChange(e.target.value)}
-                  placeholder="Ej: sobre-nosotros"
-                  className={`border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black w-48 ${
-                    slugError ? "border-red-400" : "border-gray-300"
-                  }`}
-                />
-                {slugError && <p className="text-xs text-red-500 mt-1">{slugError}</p>}
-              </div>}
-              <div className="flex items-end gap-2 pt-5">
-                <Button
-                  title={createRequest.inProgress ? "Creando..." : "Crear"}
-                  onClick={handleCreate}
-                  disabled={!isCreateFormValid || createRequest.inProgress}
-                />
-                <Button title="Cancelar" onClick={handleCancelCreate} secondary />
-              </div>
-            </div>
-            {createRequest.messages && !createRequest.ok && (
-              <p className="text-xs text-red-500 mt-2">{createRequest.messages}</p>
-            )}
-          </div>
-        )}
+        </nav>
       </div>
-
-      {saveRequest.messages && !saveRequest.ok && <p role="alert" className="text-sm text-red-600">{saveRequest.messages}</p>}
+      {showCreateForm && (
+        <CreatePageForm pageType={newPageType} title={newTitle} slug={newSlug} slugError={slugError} target={newTarget}
+          anchors={anchors} anchorsLoading={anchorRequest.inProgress} anchorMessage={anchorRequest.messages}
+          creating={createRequest.inProgress} error={createRequest.messages && !createRequest.ok ? createRequest.messages : ""}
+          valid={isCreateFormValid} onTypeChange={setNewPageType} onTitleChange={setNewTitle} onSlugChange={handleSlugChange}
+          onTargetChange={setNewTarget} onRefresh={refresh} onCreate={handleCreate} onCancel={handleCancelCreate} />
+      )}
+      {saveRequest.messages && !saveRequest.ok && <p role="alert" className="text-sm text-red-700">{saveRequest.messages}</p>}
       {deleteTarget && (
         <Alert
           title="Eliminar página"
@@ -483,6 +264,6 @@ export const MyWebTabBar: React.FC<MyWebTabBarProps> = ({
           onCancel={() => setDeleteTarget(null)}
         />
       )}
-    </>
+    </div>
   );
 };
