@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useContext, useState, type ReactNode } from "react";
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
@@ -7,6 +7,7 @@ import { DashboardPage } from "@/components/shared/ui/DashboardPage";
 import { Tooltip } from "@/components/shared/ui/Tooltip";
 import { DashboardNavigation } from "./DashboardNavigation";
 import { DashboardSettingsMenu } from "./DashboardSettingsMenu";
+import { DashboardSidebarContext } from "./DashboardSidebarContext";
 import "@/features/newWeb/fonts.css";
 
 type SidebarContentProps = {
@@ -19,7 +20,7 @@ const SidebarContent = ({ onNavigate, collapsed = false, onToggle }: SidebarCont
   <div className={`flex min-h-full flex-col gap-10 py-6 ${collapsed ? "px-3" : "px-6"}`}>
     <div className={`flex h-12 shrink-0 items-center gap-3 ${collapsed ? "justify-center" : "justify-between"}`}>
       {!collapsed && (
-        <Link to="/home" onClick={onNavigate} className="shrink-0 rounded-full" aria-label="Mocklab: inicio">
+        <Link to="/" onClick={onNavigate} className="shrink-0 rounded-full" aria-label="Mocklab: volver a la web">
           <BrandMark />
         </Link>
       )}
@@ -38,7 +39,8 @@ const SidebarContent = ({ onNavigate, collapsed = false, onToggle }: SidebarCont
 
 export const DashboardLayout = ({ children }: { children: ReactNode }) => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const localSidebarState = useState(false);
+  const [collapsed, setCollapsed] = useContext(DashboardSidebarContext) ?? localSidebarState;
 
   return (
     <div className="min-h-svh bg-[#d8e4d6] font-['Hanken_Grotesk',system-ui,sans-serif] text-[#010000] [&_:where(a,button):focus-visible]:outline-2 [&_:where(a,button):focus-visible]:outline-solid [&_:where(a,button):focus-visible]:outline-current [&_:where(a,button):focus-visible]:outline-offset-4">
@@ -47,7 +49,7 @@ export const DashboardLayout = ({ children }: { children: ReactNode }) => {
         <SidebarContent collapsed={collapsed} onToggle={() => setCollapsed((value) => !value)} />
       </aside>
       <header className="flex items-center justify-between gap-4 border-b border-[#010000]/15 p-5 lg:hidden">
-        <Link to="/home" aria-label="Mocklab: inicio"><BrandMark /></Link>
+        <Link to="/" aria-label="Mocklab: volver a la web"><BrandMark /></Link>
         <button type="button" onClick={() => setMenuOpen(true)} aria-label="Abrir menú" aria-expanded={menuOpen} className="rounded-full border border-[#010000] p-3">
           <Bars3Icon className="size-5" aria-hidden="true" />
         </button>

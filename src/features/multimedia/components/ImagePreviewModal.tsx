@@ -10,6 +10,7 @@ import { FileItem } from "../../../types";
 import { useTranslation } from "react-i18next";
 
 interface ImagePreviewModalProps {
+  variant?: "default" | "dashboard";
   isOpen: boolean;
   onClose: () => void;
   file: FileItem | null;
@@ -19,13 +20,14 @@ export const ImagePreviewModal = ({
   isOpen,
   onClose,
   file,
+  variant = "default",
 }: ImagePreviewModalProps) => {
   const { t } = useTranslation();
   if (!file) return null;
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-60" onClose={onClose}>
+      <Dialog as="div" className={variant === "dashboard" ? "relative z-60 font-['Hanken_Grotesk',system-ui,sans-serif] text-[#010000]" : "relative z-60"} onClose={onClose}>
         <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
@@ -49,10 +51,11 @@ export const ImagePreviewModal = ({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <DialogPanel className="relative w-full max-w-6xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all">
+              <DialogPanel className={variant === "dashboard" ? "relative w-full max-w-6xl transform overflow-hidden rounded-[28px] border border-[#010000]/20 bg-[#d8e4d6] shadow-xl transition-all [&_.bg-white]:bg-transparent [&_.bg-gray-100]:bg-[#010000]/5 [&_h3]:break-all [&_h3]:text-[#010000] [&_p]:break-all [&_p]:font-['Geist_Mono',monospace] [&_p]:text-[#010000]/75 [&_button]:focus-visible:outline-2 [&_button]:focus-visible:outline-offset-4 [&_button]:focus-visible:outline-[#010000]" : "relative w-full max-w-6xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all"}>
                 <div className="absolute top-4 right-4 z-10">
                   <button
                     onClick={onClose}
+                    aria-label={variant === "dashboard" ? t("multimedia.close") : undefined}
                     className="rounded-full bg-gray-900 bg-opacity-50 p-2 text-white hover:bg-opacity-75 transition-all"
                   >
                     <XMarkIcon className="h-6 w-6" />

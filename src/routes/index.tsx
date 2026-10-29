@@ -60,9 +60,9 @@ export const AppRoutes = () => (
       <Route path="/my-gpts" element={<MyGpts />} />
       <Route path="/projects" element={<Projects />} />
       <Route path="/projects-analytics" element={<ProjectsAnalytics />} />
+      <Route path="/multimedia" element={<Multimedia />} />
     </Route>
     <Route element={<ProtectedRoute />}>
-      <Route path="/multimedia" element={<Multimedia />} />
       <Route path="/preview-projects" element={<PreviewProjects />} />
       <Route path="/auth/linkedin/callback" element={<LinkedInCallback />} />
       <Route path="/auth/instagram/callback" element={<InstagramCallback />} />

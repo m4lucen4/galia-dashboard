@@ -26,14 +26,14 @@ export const FileGrid = ({
 
   if (allItems.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
+      <div className="flex items-center justify-center min-h-64 text-center text-[#010000]/65">
         <p>{t("multimedia.noFilesOrFolder")}</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+    <div className="grid grid-cols-1 min-[360px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-5">
       {allItems.map((item) => (
         <FileItem
           key={item.path}

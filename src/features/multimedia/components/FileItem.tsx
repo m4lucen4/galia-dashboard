@@ -23,12 +23,12 @@ export const FileItem = ({
   return (
     <div
       className={`
-        relative group rounded-lg border-2 cursor-pointer
+        relative min-w-0 group rounded-[28px] border cursor-pointer overflow-hidden
         transition-all duration-200
         ${
           isSelected
-            ? "border-blue-500 bg-blue-50"
-            : "border-gray-200 hover:border-gray-300 hover:shadow-md"
+            ? "border-[#010000] bg-[#010000]/10 ring-1 ring-[#010000]"
+            : "border-[#010000]/20 hover:border-[#010000]/60 hover:bg-[#010000]/5"
         }
       `}
       onClick={onSelect}
@@ -37,11 +37,11 @@ export const FileItem = ({
     >
       {isSelected && (
         <div className="absolute top-2 right-2 z-10">
-          <CheckCircleIconSolid className="h-6 w-6 text-blue-600" />
+          <CheckCircleIconSolid className="h-6 w-6 text-[#010000]" />
         </div>
       )}
 
-      <div className="aspect-square relative bg-gray-100 rounded-t-lg overflow-hidden">
+      <div className="aspect-square relative bg-[#010000]/5 overflow-hidden">
         {isFile && fileItem ? (
           <img
             src={fileItem.url}
@@ -51,17 +51,17 @@ export const FileItem = ({
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <FolderIcon className="h-20 w-20 text-gray-400" />
+            <FolderIcon className="h-20 w-20 text-[#010000]/60" />
           </div>
         )}
       </div>
 
       <div className="p-3">
-        <p className="text-sm font-medium text-gray-900 truncate">
+        <p className="text-sm font-medium text-[#010000] break-all">
           {item.name}
         </p>
         {isFile && fileItem && (
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="font-['Geist_Mono',monospace] text-xs text-[#010000]/65 mt-2">
             {(fileItem.size / 1024).toFixed(0)} KB
           </p>
         )}

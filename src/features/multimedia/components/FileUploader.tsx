@@ -15,6 +15,7 @@ import {
 } from "../../../helpers/imageOptimizer";
 
 interface FileUploaderProps {
+  variant?: "default" | "dashboard";
   onFilesSelected: (files: File[]) => void;
   disabled?: boolean;
   preset?: SocialMediaPreset;
@@ -24,6 +25,7 @@ export const FileUploader = ({
   onFilesSelected,
   disabled,
   preset = "social",
+  variant = "default",
 }: FileUploaderProps) => {
   const { t } = useTranslation();
   const [optimizing, setOptimizing] = useState(false);
@@ -97,10 +99,10 @@ export const FileUploader = ({
   });
 
   return (
-    <div>
+    <div className={variant === "dashboard" ? "min-w-0 text-[#010000] [&_p]:text-[#010000]/75 [&_span]:break-all [&_span]:text-[#010000]/75 [&_svg]:text-[#010000] [&_.truncate]:whitespace-normal [&_.truncate]:break-all [&_.bg-white]:rounded-[28px] [&_.bg-white]:border-[#010000]/20 [&_.bg-white]:bg-transparent [&_.bg-blue-600]:bg-[#010000] [&_.border-blue-600]:border-[#010000] [&_.text-xs]:font-['Geist_Mono',monospace]" : undefined}>
       <div
         {...getRootProps()}
-        className={`
+        className={variant === "dashboard" ? `rounded-[28px] border border-dashed border-[#010000]/40 p-5 text-center sm:p-8 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#010000] ${isDragActive ? "bg-[#010000]/10" : "hover:bg-[#010000]/5"} ${disabled || optimizing ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}` : `
         border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
         transition-colors duration-200
         ${
