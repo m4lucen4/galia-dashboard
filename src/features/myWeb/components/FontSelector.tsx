@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useId } from "react";
+import { myWebControlClassName, myWebLabelClassName } from "@/features/myWeb/components/myWebStyles";
 
 const FONT_OPTIONS: { label: string; value: string }[] = [
   { label: "Franklin Gothic Book", value: "Libre Franklin" },
@@ -25,13 +26,15 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
   onChange,
   label = "Fuente",
 }) => {
+  const id = useId();
   return (
-    <div>
-      <label className="text-sm text-black">{label}</label>
+    <div className="min-w-0 space-y-2">
+      <label htmlFor={id} className={myWebLabelClassName}>{label}</label>
       <select
+        id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-gray-800 sm:text-sm/6"
+        className={myWebControlClassName}
       >
         {FONT_OPTIONS.map((font) => (
           <option key={font.value} value={font.value} style={{ fontFamily: font.value }}>

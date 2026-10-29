@@ -1,4 +1,5 @@
 import React from "react";
+import { myWebLabelClassName, myWebOptionClassName, myWebSelectedOptionClassName } from "@/features/myWeb/components/myWebStyles";
 
 interface NavbarOption {
   value: number;
@@ -63,9 +64,9 @@ export const NavbarTypeSelector: React.FC<NavbarTypeSelectorProps> = ({
   onChange,
 }) => {
   return (
-    <div>
-      <label className="text-sm text-black">Tipo de navegación</label>
-      <div className="mt-1 grid grid-cols-2 gap-3">
+    <fieldset className="min-w-0 space-y-2">
+      <legend className={myWebLabelClassName}>Tipo de navegación</legend>
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
         {NAVBAR_OPTIONS.map((option) => {
           const selected = value === option.value;
           return (
@@ -73,11 +74,8 @@ export const NavbarTypeSelector: React.FC<NavbarTypeSelectorProps> = ({
               key={option.value}
               type="button"
               onClick={() => onChange(option.value)}
-              className={`flex flex-col gap-2 rounded-md border-2 p-3 text-left transition-colors ${
-                selected
-                  ? "border-black bg-gray-50 text-black"
-                  : "border-gray-200 bg-white text-gray-500 hover:border-gray-400"
-              }`}
+              aria-pressed={selected}
+              className={`${myWebOptionClassName} flex min-h-11 flex-col gap-2 ${selected ? myWebSelectedOptionClassName : ""}`}
             >
               <div className="h-8 w-full text-gray-600">
                 {option.preview}
@@ -90,6 +88,6 @@ export const NavbarTypeSelector: React.FC<NavbarTypeSelectorProps> = ({
           );
         })}
       </div>
-    </div>
+    </fieldset>
   );
 };
