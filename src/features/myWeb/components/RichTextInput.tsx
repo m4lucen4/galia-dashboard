@@ -124,7 +124,7 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
         "aria-label": label || "Contenido de texto",
         "aria-invalid": error ? "true" : "false",
         class:
-          "rich-text-editor min-h-[7rem] px-4 py-3 text-sm text-[#010000] focus-visible:outline-2 focus-visible:outline-offset-[-2px]",
+          "rich-text-editor min-h-20 max-h-64 overflow-y-auto px-4 py-3 text-sm text-[#010000] focus-visible:outline-2 focus-visible:outline-offset-[-2px]",
       },
     },
   });

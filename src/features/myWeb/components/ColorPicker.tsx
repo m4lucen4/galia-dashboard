@@ -14,7 +14,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 }) => {
   const id = useId();
   return (
-    <div className="min-w-0 space-y-2">
+    <div className="min-w-0 max-w-sm space-y-2">
       <label htmlFor={id} className={myWebLabelClassName}>{label}</label>
       <div className="flex min-w-0 items-center gap-3">
         <input

@@ -3,7 +3,7 @@ import { SitePageDataProps, ProjectListConfig, ProjectListLayout, SiteComponentD
 import { LayoutSelector } from "@/features/myWeb/components/LayoutSelector";
 import { DetailTypeSelector } from "@/features/myWeb/components/DetailTypeSelector";
 import { ProjectOrderList } from "@/features/myWeb/components/projects/ProjectOrderList";
-import { myWebMutedClassName, myWebPanelClassName } from "@/features/myWeb/components/myWebStyles";
+import { myWebEditorClassName, myWebFieldGridClassName, myWebGroupClassName, myWebMutedClassName } from "@/features/myWeb/components/myWebStyles";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   upsertProjectListComponent,
@@ -98,30 +98,32 @@ export const ProjectsPageConfig: React.FC<ProjectsPageConfigProps> = ({
   const isLoadingProjects = projectsFetchRequest.inProgress || projectFetchByUserIdRequest.inProgress;
 
   return (
-    <div className="min-w-0 space-y-5 text-[#010000]">
+    <div className={`${myWebEditorClassName} text-[#010000]`}>
       <p className={myWebMutedClassName}>Esta página muestra automáticamente todos tus proyectos. Personaliza su presentación y visibilidad.</p>
-      <section className={myWebPanelClassName} aria-labelledby={`project-layout-${page.id}`}>
-        <h3 id={`project-layout-${page.id}`} className="text-lg font-medium">Presentación de las tarjetas</h3>
-        <LayoutSelector value={currentLayout} onChange={handleLayoutChange} disabled={saveRequest.inProgress} />
-        <div className="space-y-1">
-          <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl text-sm font-medium">
-            <input
-              type="checkbox"
-              checked={showDescriptions}
-              onChange={(event) => handleShowDescriptionsChange(event.target.checked)}
-              disabled={saveRequest.inProgress}
-              className="size-5 shrink-0 accent-[#010000] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]"
-            />
-            Mostrar descripciones en las tarjetas
-          </label>
-          <p className={myWebMutedClassName}>Se aplica a las tarjetas de ambos diseños de proyectos, no al detalle del proyecto.</p>
-        </div>
-      </section>
-      <section className={myWebPanelClassName} aria-labelledby={`project-detail-${page.id}`}>
-        <h3 id={`project-detail-${page.id}`} className="text-lg font-medium">Diseño del detalle de proyecto</h3>
-        <DetailTypeSelector value={currentDetailType} onChange={handleDetailTypeChange} disabled={saveRequest.inProgress} />
-      </section>
-      <section className={myWebPanelClassName} aria-label="Proyectos de tu web">
+      <div className={myWebFieldGridClassName}>
+        <section className={myWebGroupClassName} aria-labelledby={`project-layout-${page.id}`}>
+          <h3 id={`project-layout-${page.id}`} className="text-lg font-medium">Presentación de las tarjetas</h3>
+          <LayoutSelector value={currentLayout} onChange={handleLayoutChange} disabled={saveRequest.inProgress} />
+          <div className="space-y-1">
+            <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={showDescriptions}
+                onChange={(event) => handleShowDescriptionsChange(event.target.checked)}
+                disabled={saveRequest.inProgress}
+                className="size-5 shrink-0 accent-[#010000] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]"
+              />
+              Mostrar descripciones en las tarjetas
+            </label>
+            <p className={myWebMutedClassName}>Se aplica a las tarjetas de ambos diseños de proyectos, no al detalle del proyecto.</p>
+          </div>
+        </section>
+        <section className={myWebGroupClassName} aria-labelledby={`project-detail-${page.id}`}>
+          <h3 id={`project-detail-${page.id}`} className="text-lg font-medium">Diseño del detalle de proyecto</h3>
+          <DetailTypeSelector value={currentDetailType} onChange={handleDetailTypeChange} disabled={saveRequest.inProgress} />
+        </section>
+      </div>
+      <section className="min-w-0 border-t border-[#010000]/15 pt-5" aria-label="Proyectos de tu web">
         <ProjectOrderList
           projects={sortedProjects}
           hiddenProjects={hiddenProjects}

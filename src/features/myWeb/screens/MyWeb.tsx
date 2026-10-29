@@ -92,7 +92,7 @@ export const MyWeb: React.FC = () => {
   const activePage = pages.find((p) => p.id === activeTabId);
 
   return (
-    <div className="flex min-h-0 w-full min-w-0 flex-col gap-6 text-[#010000]">
+    <div className="mx-auto flex min-h-0 w-full min-w-0 max-w-6xl flex-col gap-6 text-[#010000]">
       <header className="space-y-2">
         <h1 className="text-3xl font-medium tracking-[-0.04em] sm:text-4xl">Mi Web</h1>
         <p className={myWebMutedClassName}>

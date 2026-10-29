@@ -28,7 +28,7 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
 }) => {
   const id = useId();
   return (
-    <div className="min-w-0 space-y-2">
+    <div className="min-w-0 max-w-sm space-y-2">
       <label htmlFor={id} className={myWebLabelClassName}>{label}</label>
       <select
         id={id}

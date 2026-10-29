@@ -1,5 +1,5 @@
 import React from "react";
-import { myWebOptionClassName, myWebSelectedOptionClassName } from "@/features/myWeb/components/myWebStyles";
+import { LayoutChoice } from "@/features/myWeb/components/previews/LayoutChoice";
 
 type DetailType = 1 | 2;
 
@@ -76,31 +76,18 @@ export const DetailTypeSelector: React.FC<DetailTypeSelectorProps> = ({
   disabled = false,
 }) => {
   return (
-    <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-      {OPTIONS.map((option) => {
-        const selected = value === option.value;
-        return (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => !disabled && onChange(option.value)}
-            disabled={disabled}
-            aria-pressed={selected}
-            className={`${myWebOptionClassName} flex min-h-11 flex-col gap-2 ${selected ? myWebSelectedOptionClassName : ""}`}
-          >
-            <div className="h-20 w-full text-[#010000]/70">
-              {option.preview}
-            </div>
-            <div>
-              <p className="text-sm font-medium leading-tight">{option.label}</p>
-              <p className="mt-1 text-sm leading-relaxed text-[#010000]/65">{option.description}</p>
-            </div>
-            {selected && (
-              <span className="mt-auto self-end text-xs font-medium text-[#010000]">✓ Seleccionado</span>
-            )}
-          </button>
-        );
-      })}
+    <div className="min-w-0 space-y-2">
+      {OPTIONS.map((option) => (
+        <LayoutChoice
+          key={option.value}
+          label={option.label}
+          description={option.description}
+          preview={option.preview}
+          selected={value === option.value}
+          disabled={disabled}
+          onSelect={() => !disabled && onChange(option.value)}
+        />
+      ))}
     </div>
   );
 };

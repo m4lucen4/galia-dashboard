@@ -5,7 +5,6 @@ import { publishSite } from "@/redux/actions/SiteActions";
 import { PillButton } from "@/components/shared/ui/PillButton";
 import {
   myWebMutedClassName,
-  myWebPanelClassName,
 } from "@/features/myWeb/components/myWebStyles";
 import {
   GlobeAltIcon,
@@ -33,8 +32,8 @@ export const PublishButton: React.FC<PublishButtonProps> = ({
   const previewUrl = `https://sites.mocklab.app/${site.slug}`;
 
   return (
-    <section aria-label="Publicación de tu web" className={myWebPanelClassName}>
-      <div className="flex min-w-0 flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+    <section aria-label="Publicación de tu web" className="@container min-w-0 space-y-3 rounded-[28px] border border-[#010000]/20 p-4 sm:p-5">
+      <div className="flex min-w-0 flex-col gap-3 @min-[52rem]:flex-row @min-[52rem]:items-center @min-[52rem]:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <GlobeAltIcon aria-hidden="true" className="mt-1 size-6 shrink-0" />
           <div className="min-w-0 space-y-1">
