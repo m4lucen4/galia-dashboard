@@ -7,7 +7,12 @@ import { ImageUploader } from "@/features/myWeb/components/ImageUploader";
 import { PillButton } from "@/components/shared/ui/PillButton";
 import { RichTextInput } from "@/features/myWeb/components/RichTextInput";
 import { ContentLayoutSelector } from "@/features/myWeb/components/previews/ContentLayoutSelector";
-import { myWebPanelClassName, myWebLegacyControlsClassName } from "@/features/myWeb/components/myWebStyles";
+import {
+  myWebEditorClassName,
+  myWebFieldGridClassName,
+  myWebGroupClassName,
+  myWebLegacyControlsClassName,
+} from "@/features/myWeb/components/myWebStyles";
 
 interface ContentEditorProps {
   component: SiteComponentDataProps;
@@ -83,85 +88,91 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({ component }) => {
   };
 
   return (
-    <div className={`@container space-y-6 text-[#010000] ${myWebLegacyControlsClassName}`}>
+    <div className={`${myWebEditorClassName} text-[#010000] ${myWebLegacyControlsClassName}`}>
       <ContentLayoutSelector value={form.type} onChange={(value) => handleChange("type", value)} />
-      <section className={myWebPanelClassName}>
+      <section className={myWebGroupClassName}>
         <h4 className="text-base font-medium">Textos principales</h4>
-        <InputField
-          id="content-antetitulo"
-          type="text"
-          label="Antetítulo"
-          value={form.antetitulo ?? ""}
-          onChange={(e) => handleChange("antetitulo", e.target.value)}
-          placeholder="Sobre nosotros"
-        />
-        <InputField
-          id="content-titulo"
-          type="text"
-          label="Título"
-          value={form.titulo ?? ""}
-          onChange={(e) => handleChange("titulo", e.target.value)}
-          placeholder="Quiénes somos"
-        />
+        <div className={myWebFieldGridClassName}>
+          <InputField
+            id="content-antetitulo"
+            type="text"
+            label="Antetítulo"
+            value={form.antetitulo ?? ""}
+            onChange={(e) => handleChange("antetitulo", e.target.value)}
+            placeholder="Sobre nosotros"
+          />
+          <InputField
+            id="content-titulo"
+            type="text"
+            label="Título"
+            value={form.titulo ?? ""}
+            onChange={(e) => handleChange("titulo", e.target.value)}
+            placeholder="Quiénes somos"
+          />
+        </div>
       </section>
-      <section className={myWebPanelClassName}>
-        <h4 className="text-base font-medium">Columna izquierda</h4>
-        <RichTextInput
-          label="Texto columna izquierda"
-          value={form.textoIzquierda ?? ""}
-          onChange={(html) => handleChange("textoIzquierda", html)}
-          placeholder="Descripción principal..."
-        />
-      </section>
-      <section className={myWebPanelClassName}>
-        <h4 className="text-base font-medium">Columna derecha</h4>
-        <ImageUploader
-          label="Imagen columna derecha"
-          currentUrl={form.image || null}
-          onUpload={handleImageUpload}
-          onRemove={() => setForm((prev) => ({ ...prev, image: "" }))}
-          loading={uploadingImage}
-        />
-        <RichTextInput
-          label="Texto columna derecha"
-          value={form.textoDerecha ?? ""}
-          onChange={(html) => handleChange("textoDerecha", html)}
-          placeholder="Texto complementario..."
-        />
-      </section>
-      <section className={myWebPanelClassName}>
+      <div className={myWebFieldGridClassName}>
+        <section className={myWebGroupClassName}>
+          <h4 className="text-base font-medium">Columna izquierda</h4>
+          <RichTextInput
+            label="Texto columna izquierda"
+            value={form.textoIzquierda ?? ""}
+            onChange={(html) => handleChange("textoIzquierda", html)}
+            placeholder="Descripción principal..."
+          />
+        </section>
+        <section className={myWebGroupClassName}>
+          <h4 className="text-base font-medium">Columna derecha</h4>
+          <ImageUploader
+            label="Imagen columna derecha"
+            currentUrl={form.image || null}
+            onUpload={handleImageUpload}
+            onRemove={() => setForm((prev) => ({ ...prev, image: "" }))}
+            loading={uploadingImage}
+          />
+          <RichTextInput
+            label="Texto columna derecha"
+            value={form.textoDerecha ?? ""}
+            onChange={(html) => handleChange("textoDerecha", html)}
+            placeholder="Texto complementario..."
+          />
+        </section>
+      </div>
+      <section className={myWebGroupClassName}>
         <h4 className="text-base font-medium">Datos estadísticos</h4>
-        <div className="grid grid-cols-1 gap-4 @min-[28rem]:grid-cols-2">
+        <div className={myWebFieldGridClassName}>
           {([1, 2, 3, 4] as const).map((n) => (
-            <div key={n} className="min-w-0 space-y-3 rounded-2xl border border-[#010000]/20 p-4">
+            <div key={n} className="min-w-0 space-y-3">
               <p className="text-sm font-medium">Dato {n}</p>
-              <InputField
-                id={`content-dato${n}`}
-                type="text"
-                label="Número"
-                value={form[`dato${n}` as keyof ContentConfig] != null ? String(form[`dato${n}` as keyof ContentConfig]) : ""}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  handleChange(
-                    `dato${n}` as keyof ContentConfig,
-                    raw === "" ? undefined : Number(raw),
-                  );
-                }}
-                placeholder="120"
-              />
-              <InputField
-                id={`content-leyenda${n}`}
-                type="text"
-                label="Leyenda"
-                value={(form[`leyenda${n}` as keyof ContentConfig] as string) ?? ""}
-                onChange={(e) =>
-                  handleChange(
-                    `leyenda${n}` as keyof ContentConfig,
-                    e.target.value,
-                  )
-                }
-                placeholder="Proyectos completados"
-              />
+              <div className="grid min-w-0 grid-cols-1 gap-3 @min-[36rem]:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+                <InputField
+                  id={`content-dato${n}`}
+                  type="text"
+                  label="Número"
+                  value={form[`dato${n}` as keyof ContentConfig] != null ? String(form[`dato${n}` as keyof ContentConfig]) : ""}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    handleChange(
+                      `dato${n}` as keyof ContentConfig,
+                      raw === "" ? undefined : Number(raw),
+                    );
+                  }}
+                  placeholder="120"
+                />
+                <InputField
+                  id={`content-leyenda${n}`}
+                  type="text"
+                  label="Leyenda"
+                  value={(form[`leyenda${n}` as keyof ContentConfig] as string) ?? ""}
+                  onChange={(e) =>
+                    handleChange(
+                      `leyenda${n}` as keyof ContentConfig,
+                      e.target.value,
+                    )
+                  }
+                  placeholder="Proyectos completados"
+                />
+              </div>
             </div>
           ))}
         </div>

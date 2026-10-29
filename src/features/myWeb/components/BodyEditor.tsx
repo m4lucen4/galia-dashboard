@@ -6,7 +6,11 @@ import { ImageUploader } from "@/features/myWeb/components/ImageUploader";
 import { PillButton } from "@/components/shared/ui/PillButton";
 import { RichTextInput } from "@/features/myWeb/components/RichTextInput";
 import { BodyLayoutSelector } from "@/features/myWeb/components/previews/BodyLayoutSelector";
-import { myWebControlClassName, myWebPanelClassName } from "@/features/myWeb/components/myWebStyles";
+import {
+  myWebControlClassName,
+  myWebEditorClassName,
+  myWebGroupClassName,
+} from "@/features/myWeb/components/myWebStyles";
 
 interface BodyEditorProps {
   component: SiteComponentDataProps;
@@ -94,44 +98,46 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ component }) => {
   const showDescription = form.type !== 4 && form.type !== 5;
 
   return (
-    <div className="@container min-w-0 space-y-6 text-[#010000]">
+    <div className={`${myWebEditorClassName} text-[#010000]`}>
       <BodyLayoutSelector value={form.type} onChange={handleTypeChange} />
-      <section className={myWebPanelClassName}>
+      <section className={myWebGroupClassName}>
         <h4 className="text-base font-medium">Imágenes y enlaces</h4>
-        {visibleImages.map((n) => (
-          <div key={n} className="min-w-0 space-y-3">
-            <ImageUploader
-              label={`Imagen ${n}`}
-              currentUrl={form[`image_${n}`] || null}
-              onUpload={(file) => handleImageUpload(n, file)}
-              onRemove={() =>
-                setForm((prev) => ({ ...prev, [`image_${n}`]: "" }))
-              }
-              loading={
-                uploadingImage === n ||
-                (uploadingImage === n && uploadRequest.inProgress)
-              }
-            />
-            <label className="block space-y-2 text-sm font-medium">
-              <span>Enlace de imagen {n} (opcional)</span>
-              <input
-                type="text"
-                value={form[`link_${n}` as `link_${1 | 2 | 3}`] ?? ""}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    [`link_${n}`]: e.target.value,
-                  }))
+        <div className="grid min-w-0 grid-cols-1 gap-4 @min-[36rem]:grid-cols-2 @min-[52rem]:grid-cols-3">
+          {visibleImages.map((n) => (
+            <div key={n} className="min-w-0 space-y-3">
+              <ImageUploader
+                label={`Imagen ${n}`}
+                currentUrl={form[`image_${n}`] || null}
+                onUpload={(file) => handleImageUpload(n, file)}
+                onRemove={() =>
+                  setForm((prev) => ({ ...prev, [`image_${n}`]: "" }))
                 }
-                placeholder="https://ejemplo.com  o  /proyectos"
-                className={myWebControlClassName}
+                loading={
+                  uploadingImage === n ||
+                  (uploadingImage === n && uploadRequest.inProgress)
+                }
               />
-            </label>
-          </div>
-        ))}
+              <label className="block space-y-2 text-sm font-medium">
+                <span>Enlace de imagen {n} (opcional)</span>
+                <input
+                  type="text"
+                  value={form[`link_${n}` as `link_${1 | 2 | 3}`] ?? ""}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      [`link_${n}`]: e.target.value,
+                    }))
+                  }
+                  placeholder="https://ejemplo.com  o  /proyectos"
+                  className={myWebControlClassName}
+                />
+              </label>
+            </div>
+          ))}
+        </div>
       </section>
       {showDescription && (
-        <section className={myWebPanelClassName}>
+        <section className={myWebGroupClassName}>
           <RichTextInput
             label="Descripción"
             value={form.description}
