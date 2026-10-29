@@ -1,4 +1,14 @@
 // Feature-local dashboard tokens: public-site colors and shared controls stay untouched.
+// Inner editor groups deliberately avoid repeating the outer dashboard panel chrome.
+export const myWebEditorClassName = "@container w-full min-w-0 max-w-5xl space-y-5";
+export const myWebGroupClassName = "min-w-0 space-y-3";
+export const myWebFieldGridClassName =
+  "grid min-w-0 grid-cols-1 gap-4 @min-[36rem]:grid-cols-2";
+export const myWebChoiceGridClassName =
+  "grid min-w-0 grid-cols-1 gap-2 @min-[30rem]:grid-cols-2 @min-[52rem]:grid-cols-3";
+export const myWebThumbnailClassName =
+  "flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden [&>svg]:h-full [&>svg]:w-full [&>svg]:max-h-full [&>svg]:max-w-full";
+
 export const myWebPanelClassName =
   "min-w-0 space-y-5 rounded-[28px] border border-[#010000]/20 p-5 sm:p-7";
 
