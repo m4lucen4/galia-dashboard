@@ -1,12 +1,14 @@
+import type { ReactNode } from "react";
 import { Table } from "@tanstack/react-table";
 import { useTranslation } from "react-i18next";
 
 type PaginationProps<TData> = {
   table: Table<TData>;
   variant?: "default" | "dashboard";
+  summaryExtra?: ReactNode;
 };
 
-export const Pagination = <TData,>({ table, variant = "default" }: PaginationProps<TData>) => {
+export const Pagination = <TData,>({ table, variant = "default", summaryExtra }: PaginationProps<TData>) => {
   const { t } = useTranslation();
   const dashboard = variant === "dashboard";
   const dashboardButton = "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-[#010000]/30 px-3 py-2 text-sm font-medium text-[#010000] hover:bg-[#010000] hover:text-[#d8e4d6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000] disabled:cursor-not-allowed disabled:opacity-40";
@@ -29,8 +31,8 @@ export const Pagination = <TData,>({ table, variant = "default" }: PaginationPro
           {t("shared.next")}
         </button>
       </div>
-      <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-        <div>
+      <div className={summaryExtra ? "hidden sm:flex-1 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-4" : "hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"}>
+        <div className={summaryExtra ? "flex flex-wrap items-center gap-x-5 gap-y-3" : undefined}>
           <p className={dashboard ? "text-sm text-[#010000]/70" : "text-sm text-gray-700"}>
             {t("shared.showing")}{" "}
             <span className="font-medium">
@@ -52,6 +54,7 @@ export const Pagination = <TData,>({ table, variant = "default" }: PaginationPro
             </span>{" "}
             {t("shared.results")}
           </p>
+          {summaryExtra}
         </div>
         <div>
           <nav

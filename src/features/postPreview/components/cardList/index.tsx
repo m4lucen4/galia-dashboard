@@ -1,4 +1,5 @@
 import React from "react";
+import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { PreviewProjectDataProps } from "../../../../types";
 import { DocumentTextIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { Button } from "../../../../components/shared/ui/Button";
@@ -9,7 +10,7 @@ import { PublishStatusMessage } from "./PublishStatusMessage";
 import { SocialMediaResults } from "./SocialMediaResults";
 import { ProjectInfo } from "./ProjectInfo";
 import { ProjectMenu } from "./ProjectMenu";
-import { CardsPagination } from "../../../../components/shared/ui/CardsPagination";
+import { Pagination } from "@/components/shared/ui/Pagination";
 import { useHasValidSubscription } from "../../../../hooks/useHasValidSubscription";
 
 interface CardsListProps {
@@ -66,11 +67,53 @@ export const CardsList: React.FC<CardsListProps> = ({
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentProjects = sortedProjects.slice(startIndex, endIndex);
+  const paginationState = {
+    pageIndex: currentPage - 1,
+    pageSize: itemsPerPage,
+  };
+  const paginationTable = useReactTable({
+    data: sortedProjects,
+    columns: [],
+    getCoreRowModel: getCoreRowModel(),
+    manualPagination: true,
+    autoResetPageIndex: false,
+    pageCount: totalPages,
+    state: { pagination: paginationState },
+    onPaginationChange: (updater) => {
+      const next = typeof updater === "function" ? updater(paginationState) : updater;
+      onPageChange(next.pageIndex + 1);
+    },
+  });
+  const pagination = totalPages > 1 ? (
+    <div className="overflow-hidden rounded-[28px] border border-[#010000]/20">
+      <Pagination
+        table={paginationTable}
+        variant="dashboard"
+        summaryExtra={
+          <div className="flex items-center gap-3">
+            <label htmlFor="items-per-page" className="text-sm whitespace-nowrap text-[#010000]/70">
+              {t("shared.itemsPerPage")}:
+            </label>
+            <select
+              id="items-per-page"
+              value={itemsPerPage}
+              onChange={(event) => onItemsPerPageChange(Number(event.target.value))}
+              className="rounded-full border border-[#010000]/30 bg-transparent px-3 py-2 text-sm text-[#010000] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]"
+            >
+              <option value={6}>6</option>
+              <option value={12}>12</option>
+              <option value={24}>24</option>
+            </select>
+          </div>
+        }
+      />
+    </div>
+  ) : null;
 
   // Grid view
   if (viewMode === "grid") {
     return (
-      <div className="min-w-0 font-['Hanken_Grotesk',sans-serif] text-[#010000] [&>div:last-child]:rounded-[28px] [&>div:last-child]:border-[#010000]/20 [&>div:last-child]:bg-transparent [&_nav]:font-['Geist_Mono',monospace]">
+      <div className="min-w-0 font-['Hanken_Grotesk',sans-serif] text-[#010000]">
         <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 mb-6">
           {Array.isArray(currentProjects) &&
             currentProjects.map((project: PreviewProjectDataProps) => (
@@ -145,21 +188,14 @@ export const CardsList: React.FC<CardsListProps> = ({
               </div>
             ))}
         </div>
-        <CardsPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={onPageChange}
-          onItemsPerPageChange={onItemsPerPageChange}
-        />
+        {pagination}
       </div>
     );
   }
 
   // List view
   return (
-    <div className="min-w-0 font-['Hanken_Grotesk',sans-serif] text-[#010000] [&>div:last-child]:rounded-[28px] [&>div:last-child]:border-[#010000]/20 [&>div:last-child]:bg-transparent [&_nav]:font-['Geist_Mono',monospace]">
+    <div className="min-w-0 font-['Hanken_Grotesk',sans-serif] text-[#010000]">
       <div className="space-y-4 mb-6">
         {Array.isArray(currentProjects) &&
           currentProjects.map((project: PreviewProjectDataProps) => (
@@ -241,14 +277,7 @@ export const CardsList: React.FC<CardsListProps> = ({
             </div>
           ))}
       </div>
-      <CardsPagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={totalItems}
-        itemsPerPage={itemsPerPage}
-        onPageChange={onPageChange}
-        onItemsPerPageChange={onItemsPerPageChange}
-      />
+      {pagination}
     </div>
   );
 };
