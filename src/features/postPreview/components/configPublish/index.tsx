@@ -234,9 +234,9 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
       : "";
 
   return (
-    <div className="mt-5 min-w-0 space-y-6 rounded-[28px] border border-[#010000]/15 bg-white p-4 font-[Hanken_Grotesk] text-[#010000] sm:p-6">
+    <div className="min-w-0 space-y-6 font-[Hanken_Grotesk] text-[#010000]">
       {/* Instant Publish Checkbox */}
-      <div className="flex items-center gap-3 rounded-full border border-[#010000]/15 bg-[#d8e4d6] px-4 py-3">
+      <div className="flex items-center gap-3 rounded-full border border-[#010000]/15 bg-[#010000]/5 px-4 py-3">
         <input
           id="publishNow"
           name="publishNow"
@@ -256,9 +256,10 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
         </p>
       )}
 
-      <div className="[&_input]:min-w-0 [&_input]:rounded-2xl [&_input]:py-3 [&_input]:font-[Geist_Mono] [&_input]:text-sm [&_input]:outline-[#010000]/20 [&_input:disabled]:cursor-not-allowed [&_input:disabled]:opacity-50 [&_label]:mb-2 [&_label]:block [&_label]:font-medium [&_select]:min-w-0 [&_select]:rounded-2xl [&_select]:py-3 [&_select]:font-[Geist_Mono] [&_select]:text-sm [&_select]:outline-[#010000]/20 [&_select:disabled]:cursor-not-allowed [&_select:disabled]:opacity-50">
+      <div className="[&_label]:mb-2 [&_label]:block [&_label]:font-medium">
         <InputField
           id="publishDate"
+          className="block w-full min-w-0 rounded-2xl border border-[#010000]/20 bg-[#e8eee5] px-3 py-3 font-[Geist_Mono] text-sm text-[#010000] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000] disabled:cursor-not-allowed disabled:opacity-50"
           label={t("previewProjects.publishedAt")}
           type="dateTime"
           value={publishDate}

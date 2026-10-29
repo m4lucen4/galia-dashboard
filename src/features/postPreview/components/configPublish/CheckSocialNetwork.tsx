@@ -34,8 +34,8 @@ export const CheckSocialNetwork: React.FC<CheckSocialNetworkProps> = ({
     <div
       className={`flex flex-wrap items-center gap-y-2 rounded-2xl border px-4 py-3 ${
         isChecked
-          ? "border-[#010000]/25 bg-[#d8e4d6]/60"
-          : "border-[#010000]/15 bg-[#f7f8f5]"
+          ? "border-[#010000]/30 bg-[#010000]/5"
+          : "border-[#010000]/15 bg-transparent"
       }`}
     >
       <input

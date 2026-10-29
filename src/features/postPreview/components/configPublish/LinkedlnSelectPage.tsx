@@ -32,7 +32,7 @@ export const LinkedlnSelectPage: React.FC<LinkedlnSelectPageProps> = ({
       {adminPages && adminPages.length > 0 ? (
         <select
           id="linkedin-page"
-          className="block w-full min-w-0 rounded-full border border-[#010000]/20 bg-white py-3 pl-4 pr-10 text-sm text-[#010000] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]"
+          className="block w-full min-w-0 rounded-full border border-[#010000]/20 bg-[#e8eee5] py-3 pl-4 pr-10 text-sm text-[#010000] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]"
           value={selectedPageId}
           onChange={onChange}
         >
