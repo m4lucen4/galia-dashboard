@@ -17,7 +17,7 @@ Keep `components/myWebStyles.ts` feature-local. Reuse shared `PillButton` withou
 ### Configuration layout and density
 
 - Use `previews/LayoutChoice` for distribution choices: a contained **96 × 56 px** thumbnail beside the full wrapping label, not a proportional SVG canvas filling the card. The choice row has an 80 px minimum height and preserves selected/disabled semantics.
-- `myWebEditorClassName` bounds editor width; `myWebGroupClassName` supplies light inner groups without repeating the outer 28 px panel. `myWebFieldGridClassName` and `myWebChoiceGridClassName` respond to container width rather than viewport width.
+- The workspace, editor containers and section boundaries fill the available dashboard width, like the other sections. Do not cap these outer wrappers with `max-w-*`; compact thumbnails and individual field measures stay independent. `myWebEditorClassName` keeps editors fluid; `myWebGroupClassName` supplies light inner groups without repeating the outer 28 px panel. `myWebFieldGridClassName` and `myWebChoiceGridClassName` respond to container width rather than viewport width.
 - Keep related fields together: image plus URL, media/logo versus copy/action, left/right content, and statistic number plus legend. Stack on narrow containers; retain all fields and the existing conditional visibility.
 - Keep action targets at least 44 px and body labels legible. Do not reduce density by hiding settings, collapsing slides by default, shrinking text, or changing editor mounting/save ownership.
 - Rich-text contents have an 80 px minimum and a 256 px scrolling ceiling; this is dashboard presentation only, not a change to stored HTML or public typography. Already-bounded upload/icon/navigation previews and ordering lists do not need blanket resizing.
@@ -246,7 +246,7 @@ MyWeb (screen)
 | Component | Save mechanism |
 |---|---|
 | `SiteConfigForm` | Imperative `save()` via `forwardRef` + `useImperativeHandle`. The screen owns the ref; `PublishButton` calls the supplied save callback only from the configuration tab. Its optional `showSave` defaults to `true` for existing callers. |
-| `HeaderEditor` | **Blur-to-persist** — local slide state, dispatches on `onBlur`. Avoids saving on every keystroke. Uses a `useRef` to avoid stale closures. |
+| `HeaderEditor` | **Blur-to-persist + explicit save** — text fields still save on blur; **"Guardar cabecera"** also saves the latest slide draft. Background image removal saves immediately. Local progress, success and retryable errors are shown without borrowing another block's request status. The save button is disabled during saves/uploads; success is shown only while the current draft matches the saved snapshot. Uses a synchronous `useRef` for same-event updates and saves. |
 | `BodyEditor` / `ContentEditor` | Explicit **"Guardar cambios"** button — user must save manually. |
 
 ### Clearing images (logo / favicon)
@@ -355,7 +355,7 @@ The public site lives at `../mocklab-sites` (separate project, Astro 6 + Tailwin
 | `src/features/myWeb/components/PageEditor.tsx` | Routes link-only pages to destination settings; normal pages to their content editor |
 | `src/features/myWeb/components/ComponentList.tsx` | Component CRUD + reorder per page |
 | `src/features/myWeb/components/ComponentEditor.tsx` | Switch dispatcher to type-specific editor |
-| `src/features/myWeb/components/HeaderEditor.tsx` | Multi-slide editor (blur-to-persist) |
+| `src/features/myWeb/components/HeaderEditor.tsx` | Multi-slide editor (blur-to-persist, explicit save and local save feedback) |
 | `src/features/myWeb/components/SlideEditor.tsx` | Individual slide form |
 | `src/features/myWeb/components/CTAEditor.tsx` | CTA layout + content form |
 | `src/features/myWeb/components/BodyEditor.tsx` | Image gallery layout selector + upload |

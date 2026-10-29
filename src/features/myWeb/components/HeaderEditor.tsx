@@ -19,6 +19,9 @@ const MAX_SLIDES = 5;
 export const HeaderEditor: React.FC<HeaderEditorProps> = ({ component }) => {
   const dispatch = useAppDispatch();
   const [uploadingSlide, setUploadingSlide] = useState<number | null>(null);
+  const [pendingSaves, setPendingSaves] = useState(0);
+  const [saveError, setSaveError] = useState("");
+  const [savedConfig, setSavedConfig] = useState<string | null>(null);
 
   // Local state for slides — synced from Redux only when component.config changes externally
   const [localSlides, setLocalSlides] = useState<HeaderSlideConfig[]>(() =>
@@ -33,27 +36,42 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({ component }) => {
     localSlidesRef.current = slides;
   }, [component.config]);
 
-  const persistConfig = (newConfig: HeaderSlideConfig[]) => {
-    dispatch(
-      updateSiteComponent({
-        componentId: component.id,
-        updates: { config: newConfig },
-      }),
-    );
+  const persistConfig = async (newConfig: HeaderSlideConfig[]) => {
+    const snapshot = JSON.stringify(newConfig);
+    setPendingSaves((count) => count + 1);
+    setSaveError("");
+    setSavedConfig(null);
+    try {
+      await dispatch(
+        updateSiteComponent({
+          componentId: component.id,
+          updates: { config: newConfig },
+        }),
+      ).unwrap();
+      setSavedConfig(snapshot);
+    } catch (error) {
+      setSaveError(
+        typeof error === "string"
+          ? error
+          : error && typeof error === "object" && "message" in error && typeof error.message === "string"
+            ? error.message
+            : "No se pudo guardar la cabecera. Inténtalo de nuevo.",
+      );
+    } finally {
+      setPendingSaves((count) => count - 1);
+    }
   };
 
-  // Update local state immediately, persist to Redux on blur
+  // Keep the ref synchronous so removal and explicit save can persist within the same event.
   const handleSlideUpdate = (index: number, updated: HeaderSlideConfig) => {
-    setLocalSlides((prev) => {
-      const next = [...prev];
-      next[index] = updated;
-      localSlidesRef.current = next;
-      return next;
-    });
+    const next = [...localSlidesRef.current];
+    next[index] = updated;
+    localSlidesRef.current = next;
+    setLocalSlides(next);
   };
 
   const handleSlideBlur = () => {
-    persistConfig(localSlidesRef.current);
+    void persistConfig(localSlidesRef.current);
   };
 
   const handleAddSlide = () => {
@@ -67,15 +85,17 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({ component }) => {
       url_button: "",
     };
     const newConfig = [...localSlides, newSlide];
+    localSlidesRef.current = newConfig;
     setLocalSlides(newConfig);
-    persistConfig(newConfig);
+    void persistConfig(newConfig);
   };
 
   const handleDeleteSlide = (index: number) => {
     if (localSlides.length <= 1) return;
     const newConfig = localSlides.filter((_, i) => i !== index);
+    localSlidesRef.current = newConfig;
     setLocalSlides(newConfig);
-    persistConfig(newConfig);
+    void persistConfig(newConfig);
   };
 
   const handleImageUpload = async (index: number, file: File) => {
@@ -98,7 +118,7 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({ component }) => {
           <h3 className={myWebHeadingClassName}>
             Diapositivas ({localSlides.length}/{MAX_SLIDES})
           </h3>
-          <p className={myWebMutedClassName}>Los textos se guardan al salir del campo. Máximo 5 diapositivas.</p>
+          <p className={myWebMutedClassName}>Los textos se guardan al salir del campo. También puedes pulsar «Guardar cabecera». Máximo 5 diapositivas.</p>
         </div>
         {localSlides.length < MAX_SLIDES && (
           <PillButton onClick={handleAddSlide} variant="outline">
@@ -122,6 +142,19 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({ component }) => {
             uploadingSlide={uploadingSlide}
           />
         ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-3 border-t border-[#010000]/15 pt-5">
+        <PillButton onClick={handleSlideBlur} disabled={pendingSaves > 0 || uploadingSlide !== null}>
+          {pendingSaves > 0 ? "Guardando…" : "Guardar cabecera"}
+        </PillButton>
+        <p role="status" aria-live="polite" className="text-sm">
+          {pendingSaves > 0
+            ? "Guardando cabecera…"
+            : !saveError && savedConfig === JSON.stringify(localSlides)
+              ? "Cabecera guardada"
+              : ""}
+        </p>
+        {saveError && <p role="alert" className="w-full text-sm text-red-700">{saveError}</p>}
       </div>
     </div>
   );

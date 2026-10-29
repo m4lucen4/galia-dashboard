@@ -12,37 +12,41 @@ export function SiteAppearanceSection({ draft, onChange }: SiteSettingsSectionPr
       title="Colores y tipografía"
       description="Personaliza la identidad visual de tu web, sin cambiar el diseño del panel."
     >
-      <div className={`${myWebFieldGridClassName} max-w-2xl`}>
-        <ColorPicker
-          label="Color primario"
-          value={draft.primary_color}
-          onChange={(primary_color) => onChange({ primary_color })}
-        />
-        <ColorPicker
-          label="Color secundario"
-          value={draft.secondary_color}
-          onChange={(secondary_color) => onChange({ secondary_color })}
-        />
-        <ColorPicker
-          label="Color de fondo"
-          value={draft.background_color}
-          onChange={(background_color) => onChange({ background_color })}
-        />
-        <ColorPicker
-          label="Color terciario"
-          value={draft.tertiary_color}
-          onChange={(tertiary_color) => onChange({ tertiary_color })}
-        />
-        <FontSelector
-          label="Fuente de títulos"
-          value={draft.title_font}
-          onChange={(title_font) => onChange({ title_font })}
-        />
-        <FontSelector
-          label="Fuente de cuerpo"
-          value={draft.font}
-          onChange={(font) => onChange({ font })}
-        />
+      <div className="grid min-w-0 grid-cols-1 items-start gap-6 @min-[52rem]:grid-cols-2">
+        <div className={`${myWebFieldGridClassName} max-w-2xl`}>
+          <ColorPicker
+            label="Color primario"
+            value={draft.primary_color}
+            onChange={(primary_color) => onChange({ primary_color })}
+          />
+          <ColorPicker
+            label="Color secundario"
+            value={draft.secondary_color}
+            onChange={(secondary_color) => onChange({ secondary_color })}
+          />
+          <ColorPicker
+            label="Color de fondo"
+            value={draft.background_color}
+            onChange={(background_color) => onChange({ background_color })}
+          />
+          <ColorPicker
+            label="Color terciario"
+            value={draft.tertiary_color}
+            onChange={(tertiary_color) => onChange({ tertiary_color })}
+          />
+        </div>
+        <div className="min-w-0 space-y-4">
+          <FontSelector
+            label="Fuente de títulos"
+            value={draft.title_font}
+            onChange={(title_font) => onChange({ title_font })}
+          />
+          <FontSelector
+            label="Fuente de cuerpo"
+            value={draft.font}
+            onChange={(font) => onChange({ font })}
+          />
+        </div>
       </div>
     </SettingsSection>
   );

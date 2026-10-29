@@ -31,7 +31,7 @@ export const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ page }) => {
   };
 
   return (
-    <section className={`${myWebPanelClassName} max-w-4xl`} aria-labelledby={`legal-heading-${page.id}`}>
+    <section className={`${myWebPanelClassName} w-full`} aria-labelledby={`legal-heading-${page.id}`}>
       <h3 id={`legal-heading-${page.id}`} className={myWebHeadingClassName}>{page.title}</h3>
       <p id={`legal-help-${page.id}`} className={myWebMutedClassName}>
         Escribe el contenido legal. Se respetarán los saltos de línea y tabulaciones.

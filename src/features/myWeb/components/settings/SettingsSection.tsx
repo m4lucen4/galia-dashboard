@@ -27,13 +27,13 @@ export interface SiteSettingsSectionProps {
   onChange: (updates: Partial<SiteSettingsDraft>) => void;
 }
 
-export function SettingsSection({ title, description, children }: {
+export function SettingsSection({ title, description, children }: Readonly<{
   title: string;
   description: string;
   children: ReactNode;
-}) {
+}>) {
   return (
-    <section className="min-w-0 max-w-3xl space-y-4 border-t border-[#010000]/15 pt-5" aria-label={title}>
+    <section className="w-full min-w-0 space-y-4 border-t border-[#010000]/15 pt-5" aria-label={title}>
       <div className="space-y-1">
         <h3 className={myWebHeadingClassName}>{title}</h3>
         <p className={myWebMutedClassName}>{description}</p>

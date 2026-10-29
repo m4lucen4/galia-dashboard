@@ -232,7 +232,7 @@ export const SiteConfigForm = forwardRef<
         onDefaultChange={(language) => setForm((prev) => ({ ...prev, default_language: language }))}
       />
       <SiteDiscoverySection draft={form} urlErrors={urlErrors} onInputChange={handleChange} />
-      <div className="flex min-w-0 max-w-3xl flex-wrap items-center gap-4 border-t border-[#010000]/15 pt-5">
+      <div className="flex w-full min-w-0 flex-wrap items-center gap-4 border-t border-[#010000]/15 pt-5">
         <PillButton disabled={!canSave} onClick={handleSave}>
           {saveRequest.inProgress ? "Guardando…" : "Guardar configuración"}
         </PillButton>
@@ -241,7 +241,7 @@ export const SiteConfigForm = forwardRef<
           {saved && <p>Guardado correctamente</p>}
         </div>
         {saveRequest.messages && !saveRequest.ok && (
-          <p role="alert" className="min-w-0 break-words text-sm text-red-700">{saveRequest.messages}</p>
+          <p role="alert" className="min-w-0 wrap-break-word text-sm text-red-700">{saveRequest.messages}</p>
         )}
       </div>
     </div>
