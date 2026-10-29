@@ -5,7 +5,7 @@ import { useAppSelector } from "../../../redux/hooks";
 import { RootState } from "../../../redux/store";
 import { useProjectsData } from "../../../hooks/useProjectsData";
 import { supabase } from "../../../helpers/supabase";
-import { Button } from "../../../components/shared/ui/Button";
+import { PillButton } from "@/components/shared/ui/PillButton";
 import { ProjectDataProps } from "../../../types";
 
 type Period = "7days" | "30days" | "sem1" | "sem2" | "custom";
@@ -252,39 +252,41 @@ export const ProjectsAnalytics = () => {
   const isAdmin = user.role === "admin";
 
   return (
-    <div className="w-full min-w-0 py-4">
-      <div className="mb-1">
-        <h3 className="text-base/7 font-semibold text-gray-900">
-          {t("analytics.title")}
-        </h3>
-      </div>
-      <div className="flex justify-between items-center mb-4">
-        <p className="mt-1 max-w-7xl text-sm/6 text-gray-500">
-          {t("analytics.description")}
-        </p>
-      </div>
-
-      <div className="mb-6">
-        <Button
-          title={t("analytics.back")}
+    <div className="min-w-0 space-y-8 bg-[#d8e4d6] font-[Hanken_Grotesk] text-[#010000] sm:space-y-10">
+      <header className="flex flex-wrap items-end justify-between gap-5 border-b border-[#010000]/15 pb-8">
+        <div className="min-w-0 space-y-3">
+          <h1 className="text-4xl leading-[1.05] font-medium tracking-[-0.04em] sm:text-5xl">
+            {t("analytics.title")}
+          </h1>
+          <p className="max-w-3xl text-base leading-relaxed text-[#010000]/65">
+            {t("analytics.description")}
+          </p>
+        </div>
+        <PillButton
+          variant="outline"
           onClick={() => navigate("/projects")}
-          secondary
-        />
-      </div>
+        >
+          {t("analytics.back")}
+        </PillButton>
+      </header>
 
-      <div className="mb-6">
+      <section
+        aria-label={t("analytics.period")}
+        className="rounded-[28px] border border-[#010000]/20 p-5 sm:p-7"
+      >
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="mr-2 text-sm font-medium">
             {t("analytics.period")}:
           </span>
           {PERIOD_OPTIONS.map(({ value, labelKey }) => (
             <button
               key={value}
               onClick={() => handlePeriodChange(value)}
-              className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+              aria-pressed={period === value}
+              className={`min-h-11 rounded-full border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#010000] ${
                 period === value
-                  ? "bg-black text-white border-black"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                  ? "border-[#010000] bg-[#010000] text-[#d8e4d6]"
+                  : "border-[#010000]/25 bg-transparent text-[#010000] hover:border-[#010000] hover:bg-[#010000]/5"
               }`}
             >
               {t(labelKey)}
@@ -293,86 +295,95 @@ export const ProjectsAnalytics = () => {
         </div>
 
         {period === "custom" && (
-          <div className="flex flex-wrap items-center gap-2 mt-3">
+          <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-[#010000]/15 pt-5">
             <input
               type="date"
+              aria-label="Fecha inicial"
               value={customStart}
               onChange={(e) => setCustomStart(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+              className="min-h-11 w-full min-w-0 rounded-full border border-[#010000]/30 bg-transparent px-4 py-2 font-mono text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#010000] sm:w-auto"
             />
-            <span className="text-sm text-gray-400">—</span>
+            <span className="text-sm text-[#010000]/45" aria-hidden="true">—</span>
             <input
               type="date"
+              aria-label="Fecha final"
               value={customEnd}
               onChange={(e) => setCustomEnd(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+              className="min-h-11 w-full min-w-0 rounded-full border border-[#010000]/30 bg-transparent px-4 py-2 font-mono text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#010000] sm:w-auto"
             />
-            <Button title={t("analytics.apply")} onClick={handleApplyCustomRange} />
+            <PillButton onClick={handleApplyCustomRange}>
+              {t("analytics.apply")}
+            </PillButton>
           </div>
         )}
-      </div>
+      </section>
 
       {!isTableLoading && visibleProjects.length > 0 && (
-        <div className="mb-6">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+        <section aria-label={t("analytics.totalsSectionLabel")}>
+          <p className="mb-4 text-xs font-medium uppercase tracking-[0.14em] text-[#010000]/60">
             {t("analytics.totalsSectionLabel")}
           </p>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {[
               { label: t("analytics.pageViews"), value: aggregatedTotals.screenPageViews },
               { label: t("analytics.uniqueUsers"), value: aggregatedTotals.activeUsers },
               { label: t("analytics.sessions"), value: aggregatedTotals.sessions },
             ].map(({ label, value }) => (
-              <div key={label} className="border border-gray-200 rounded-lg px-5 py-4 bg-white">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+              <div key={label} className="min-w-0 rounded-[28px] border border-[#010000]/20 p-6 sm:p-7">
+                <p className="mb-5 text-xs font-medium uppercase tracking-[0.12em] text-[#010000]/60">
                   {label}
                 </p>
                 {allLoading ? (
-                  <p className="text-2xl font-semibold text-gray-300">—</p>
+                  <p className="font-mono text-4xl tracking-tight text-[#010000]/35">—</p>
                 ) : (
-                  <p className="text-2xl font-semibold text-gray-900">
+                  <p className="break-all font-mono text-4xl tracking-tight tabular-nums sm:text-3xl xl:text-4xl">
                     {value.toLocaleString()}
                   </p>
                 )}
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       {isTableLoading ? (
-        <p className="text-sm text-gray-500">{t("analytics.loadingProjects")}</p>
+        <p role="status" className="rounded-[28px] border border-[#010000]/20 p-8 text-sm text-[#010000]/65">{t("analytics.loadingProjects")}</p>
       ) : visibleProjects.length === 0 ? (
-        <p className="text-sm text-gray-500">{t("analytics.noPublishedProjects")}</p>
+        <p role="status" className="rounded-[28px] border border-[#010000]/20 p-8 text-sm text-[#010000]/65">{t("analytics.noPublishedProjects")}</p>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div
+            role="region"
+            aria-label={t("analytics.title")}
+            tabIndex={0}
+            className="overflow-x-auto rounded-[28px] border border-[#010000]/20 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#010000]"
+          >
+            <table className="w-full min-w-[680px] divide-y divide-[#010000]/20">
+              <thead className="bg-[#010000]/5">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-5 py-5 text-left text-xs font-medium uppercase tracking-wider text-[#010000]/65">
                     {t("analytics.projectId")}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-5 py-5 text-left text-xs font-medium uppercase tracking-wider text-[#010000]/65">
                     {t("analytics.projectName")}
                   </th>
                   {isAdmin && (
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" className="px-5 py-5 text-left text-xs font-medium uppercase tracking-wider text-[#010000]/65">
                       {t("projects.createdBy")}
                     </th>
                   )}
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-5 py-5 text-right text-xs font-medium uppercase tracking-wider text-[#010000]/65">
                     {t("analytics.pageViews")}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-5 py-5 text-right text-xs font-medium uppercase tracking-wider text-[#010000]/65">
                     {t("analytics.uniqueUsers")}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-5 py-5 text-right text-xs font-medium uppercase tracking-wider text-[#010000]/65">
                     {t("analytics.sessions")}
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-[#010000]/10">
                 {pagedProjects.map((project) => {
                   const projectId = String(project.id);
                   const entry = analytics[projectId];
@@ -380,9 +391,9 @@ export const ProjectsAnalytics = () => {
                   const hasError = entry && !entry.loading && !!entry.error;
 
                   const metricCell = (value: number | undefined) => {
-                    if (isLoading) return <span className="text-gray-300">—</span>;
+                    if (isLoading) return <span className="text-[#010000]/35">—</span>;
                     if (hasError)
-                      return <span className="text-red-400 text-xs">{t("analytics.noData")}</span>;
+                      return <span className="font-[Hanken_Grotesk] text-xs text-red-800">{t("analytics.noData")}</span>;
                     return <span className="font-medium">{(value ?? 0).toLocaleString()}</span>;
                   };
 
@@ -392,25 +403,25 @@ export const ProjectsAnalytics = () => {
                       : projectId;
 
                   return (
-                    <tr key={projectId} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-xs text-gray-400 font-mono whitespace-nowrap">
+                    <tr key={projectId} className="transition-colors hover:bg-[#010000]/5">
+                      <td className="whitespace-nowrap px-5 py-5 font-mono text-xs text-[#010000]/60">
                         {shortId}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
+                      <td className="min-w-48 px-5 py-5 text-sm font-medium">
                         {project.title || "—"}
                       </td>
                       {isAdmin && (
-                        <td className="px-4 py-3 text-sm text-gray-700">
+                        <td className="px-5 py-5 text-sm text-[#010000]/70">
                           {getAuthorName(project)}
                         </td>
                       )}
-                      <td className="px-4 py-3 text-sm text-right text-gray-900">
+                      <td className="px-5 py-5 text-right font-mono text-sm tabular-nums">
                         {metricCell(entry?.totals?.screenPageViews)}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right text-gray-900">
+                      <td className="px-5 py-5 text-right font-mono text-sm tabular-nums">
                         {metricCell(entry?.totals?.activeUsers)}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right text-gray-900">
+                      <td className="px-5 py-5 text-right font-mono text-sm tabular-nums">
                         {metricCell(entry?.totals?.sessions)}
                       </td>
                     </tr>
@@ -421,8 +432,8 @@ export const ProjectsAnalytics = () => {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-gray-500">
+            <div className="flex flex-col gap-5 border-t border-[#010000]/15 pt-6 xl:flex-row xl:items-center xl:justify-between">
+              <p className="text-sm text-[#010000]/65">
                 {t("shared.showing")}{" "}
                 <span className="font-medium">
                   {(currentPage - 1) * PAGE_SIZE + 1}
@@ -435,27 +446,29 @@ export const ProjectsAnalytics = () => {
                 <span className="font-medium">{visibleProjects.length}</span>{" "}
                 {t("shared.results")}
                 {loadedCount < visibleProjects.length && (
-                  <span className="text-gray-400 ml-2">
+                  <span className="ml-2 text-[#010000]/60">
                     ({loadedCount} {t("analytics.loaded")})
                   </span>
                 )}
               </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  title={t("shared.previous")}
+              <div className="flex flex-wrap items-center gap-3">
+                <PillButton
+                  variant="outline"
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  secondary
-                />
-                <span className="text-sm text-gray-700">
+                >
+                  {t("shared.previous")}
+                </PillButton>
+                <span className="font-mono text-xs tabular-nums text-[#010000]/65">
                   {t("shared.page")} {currentPage} / {totalPages}
                 </span>
-                <Button
-                  title={t("shared.next")}
+                <PillButton
+                  variant="outline"
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  secondary
-                />
+                >
+                  {t("shared.next")}
+                </PillButton>
               </div>
             </div>
           )}
