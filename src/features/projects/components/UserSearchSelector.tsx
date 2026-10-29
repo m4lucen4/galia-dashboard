@@ -48,12 +48,12 @@ export const UserSearchSelector: React.FC<UserSearchSelectorProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 font-['Hanken_Grotesk'] text-[#010000]">
       {/* Input de búsqueda */}
       <div>
         <label
           htmlFor="userSearch"
-          className="block text-sm font-medium text-gray-700 mb-2"
+          className="mb-2 block text-sm font-medium"
         >
           Buscar usuario
         </label>
@@ -63,39 +63,41 @@ export const UserSearchSelector: React.FC<UserSearchSelectorProps> = ({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Buscar por nombre o email..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="min-h-12 w-full rounded-full border-[1.5px] border-[#010000]/50 bg-white/30 px-5 py-3 text-sm placeholder:text-[#010000]/55 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]"
         />
       </div>
 
       {/* Lista de usuarios filtrados */}
-      <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-md">
+      <div className="max-h-48 overflow-y-auto overscroll-contain rounded-[28px] border border-[#010000]/30 bg-white/20">
         {filteredUsers.length > 0 ? (
           filteredUsers.map((user) => (
-            <div
+            <button
               key={user.uid}
-              className={`p-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 ${
-                selectedUser === user.uid ? "bg-blue-50 border-blue-200" : ""
+              type="button"
+              aria-pressed={selectedUser === user.uid}
+              className={`block w-full cursor-pointer border-b border-[#010000]/15 p-4 text-left last:border-b-0 hover:bg-[#010000]/5 focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-[#010000] ${
+                selectedUser === user.uid ? "bg-[#010000]/10" : ""
               }`}
               onClick={() => handleUserClick(user.uid)}
             >
-              <div className="flex items-center space-x-3">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">
+              <span className="flex items-center gap-3">
+                <span className="min-w-0 flex-1 wrap-break-word">
+                  <span className="block text-sm font-semibold">
                     {user.first_name} {user.last_name}
-                  </p>
-                  <p className="text-sm text-gray-500">{user.email}</p>
+                  </span>
+                  <span className="block text-sm text-[#010000]/70">{user.email}</span>
                   {user.company && (
-                    <p className="text-xs text-gray-400">{user.company}</p>
+                    <span className="mt-1 block text-xs text-[#010000]/65">{user.company}</span>
                   )}
                   {user.folder_nas && (
-                    <p className="text-xs text-red-400">
+                    <span className="mt-1 block break-all font-mono text-xs text-[#010000]/65">
                       Carpeta NAS: {user.folder_nas}
-                    </p>
+                    </span>
                   )}
-                </div>
+                </span>
                 {selectedUser === user.uid && (
-                  <div className="shrink-0">
-                    <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span className="shrink-0">
+                    <span className="flex size-5 items-center justify-center rounded-full bg-[#010000]">
                       <svg
                         className="w-2 h-2 text-white"
                         fill="currentColor"
@@ -103,14 +105,14 @@ export const UserSearchSelector: React.FC<UserSearchSelectorProps> = ({
                       >
                         <path d="M6.564.75l-3.59 3.612-1.538-1.55L0 4.26l2.974 2.99L8 2.193z" />
                       </svg>
-                    </div>
-                  </div>
+                    </span>
+                  </span>
                 )}
-              </div>
-            </div>
+              </span>
+            </button>
           ))
         ) : (
-          <div className="p-4 text-center text-gray-500">
+          <div className="px-5 py-7 text-center text-sm leading-relaxed text-[#010000]/65">
             {searchTerm.length >= 3
               ? "No se encontraron usuarios con rol 'customer'"
               : searchTerm.length > 0
