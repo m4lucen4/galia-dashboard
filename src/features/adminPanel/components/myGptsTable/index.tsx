@@ -12,9 +12,9 @@ import { PromptsProps } from "../../../../types";
 import { LoadingSpinner } from "../../../../components/shared/ui/LoadingSpinner";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import { PillButton } from "@/components/shared/ui/PillButton";
-import { PlusIcon } from "@heroicons/react/24/outline";
+import { EllipsisVerticalIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { useTranslation } from "react-i18next";
-import { DeleteIcon, PencilIcon } from "../../../../components/icons";
 import {
   fetchPrompts,
   deletePrompt,
@@ -204,22 +204,39 @@ export const MyGptsTable = () => {
       cell: (props) => {
         const prompt = props.row.original;
         return (
-          <div className="flex space-x-2">
-            <PillButton
-              variant="outline"
-              aria-label={t("admin.editPrompt")}
-              onClick={() => handleEditPrompt(prompt)}
+          <Menu>
+            <MenuButton
+              type="button"
+              aria-label={t("admin.actions")}
+              className="inline-flex size-11 items-center justify-center rounded-full border border-[#010000]/25 text-[#010000] hover:bg-[#FBEA71] data-open:bg-[#FBEA71] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]"
             >
-              <PencilIcon />
-            </PillButton>
-            <PillButton
-              variant="outline"
-              aria-label={t("admin.deletePrompt")}
-              onClick={() => handleDeletePrompt(prompt)}
+              <EllipsisVerticalIcon className="size-5" aria-hidden="true" />
+            </MenuButton>
+            <MenuItems
+              anchor="bottom end"
+              portal
+              className="z-50 w-48 rounded-2xl border border-[#010000]/15 bg-[#F4F7F3] p-1.5 font-['Hanken_Grotesk',system-ui,sans-serif] text-sm text-[#010000] shadow-lg [--anchor-gap:8px] focus:outline-none"
             >
-              <DeleteIcon />
-            </PillButton>
-          </div>
+              <MenuItem>
+                <button
+                  type="button"
+                  className="block w-full rounded-xl px-4 py-2 text-left data-focus:bg-[#FBEA71]"
+                  onClick={() => handleEditPrompt(prompt)}
+                >
+                  {t("admin.editPrompt")}
+                </button>
+              </MenuItem>
+              <MenuItem>
+                <button
+                  type="button"
+                  className="block w-full rounded-xl px-4 py-2 text-left text-red-600 data-focus:bg-[#FBEA71]"
+                  onClick={() => handleDeletePrompt(prompt)}
+                >
+                  {t("admin.deletePrompt")}
+                </button>
+              </MenuItem>
+            </MenuItems>
+          </Menu>
         );
       },
     }),
@@ -265,7 +282,7 @@ export const MyGptsTable = () => {
           onCancel={handleCancelDelete}
           disabledConfirmButton={deletePromptRequest.inProgress}
         >
-          <p className="break-words text-sm font-medium">{pendingDeletePrompt.title}</p>
+          <p className="wrap-break-word text-sm font-medium">{pendingDeletePrompt.title}</p>
         </Alert>
       )}
       <header className="flex flex-wrap items-end justify-between gap-5 border-b border-[#010000]/15 pb-8">
@@ -283,7 +300,7 @@ export const MyGptsTable = () => {
         </PillButton>
       </header>
 
-      <div className="min-w-0 overflow-x-auto rounded-[28px] border border-[#010000]/20">
+      <div className="min-w-0 overflow-x-auto rounded-[28px] border border-[#010000]/20 bg-[#F4F7F3]">
         <Drawer
           variant="dashboard"
           closeLabel={t("admin.closeForm")}
@@ -309,7 +326,7 @@ export const MyGptsTable = () => {
               <div className="mb-2">
                 <InputField
                   id="description"
-                  className="w-full rounded-[24px] border-[1.5px] border-[#010000]/40 bg-transparent px-4 py-3 text-base focus-visible:outline-2 focus-visible:outline-[#010000] focus-visible:outline-offset-2"
+                  className="w-full rounded-3xl border-[1.5px] border-[#010000]/40 bg-transparent px-4 py-3 text-base focus-visible:outline-2 focus-visible:outline-[#010000] focus-visible:outline-offset-2"
                   label={t("admin.promptDescription")}
                   type="textarea"
                   value={formData.description}
@@ -355,13 +372,13 @@ export const MyGptsTable = () => {
           </div>
         ) : (
           <table className="min-w-full divide-y divide-[#010000]/15 table-fixed">
-            <thead className="bg-[#010000]/5">
+            <thead className="bg-[#8C8ABC]">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="px-6 py-5 text-left text-sm font-medium cursor-pointer"
+                      className="px-6 py-5 text-left text-sm font-medium text-[#010000] cursor-pointer"
                       onClick={header.column.getToggleSortingHandler()}
                       style={{ width: `${header.column.getSize()}px` }}
                     >
@@ -382,7 +399,7 @@ export const MyGptsTable = () => {
             </thead>
             <tbody className="divide-y divide-[#010000]/10">
               {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-[#010000]/5">
+                <tr key={row.id} className="hover:bg-[#FBEA71]/25">
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}

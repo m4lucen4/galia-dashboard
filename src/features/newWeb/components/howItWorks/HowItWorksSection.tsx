@@ -15,8 +15,8 @@ const steps = [
     screenshot: {
       src: projectForm,
       alt: "Formulario de edición de proyecto con campos y selector de imágenes",
-      width: 1275,
-      height: 750,
+      width: 1650,
+      height: 930,
     },
     variant: "light",
   },
@@ -27,8 +27,8 @@ const steps = [
     screenshot: {
       src: preparedPosts,
       alt: "Cuadrícula de publicaciones preparadas con vistas previas y botones de publicación",
-      width: 1275,
-      height: 750,
+      width: 1650,
+      height: 930,
     },
     variant: "light",
   },
@@ -39,8 +39,8 @@ const steps = [
     screenshot: {
       src: publishingCalendar,
       alt: "Calendario de programación de publicaciones",
-      width: 850,
-      height: 500,
+      width: 1650,
+      height: 930,
     },
     variant: "dark",
   },

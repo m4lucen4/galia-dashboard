@@ -26,14 +26,14 @@ export const Table = <TData,>({
   const rows = table.getRowModel().rows;
 
   if (!rows.length) {
-    return <div className={dashboard ? "rounded-[28px] border border-[#010000]/20 px-6 py-12 text-center text-[#010000]/65" : "text-center py-8 text-gray-500"}>{emptyMessage}</div>;
+    return <div className={dashboard ? "rounded-[28px] border border-[#010000]/20 bg-[#F4F7F3] px-6 py-12 text-center text-[#010000]/65" : "text-center py-8 text-gray-500"}>{emptyMessage}</div>;
   }
 
   return (
-    <div className={dashboard ? "min-w-0 overflow-hidden rounded-[28px] border border-[#010000]/20" : "bg-white my-6 overflow-hidden"}>
+    <div className={dashboard ? "min-w-0 overflow-hidden rounded-[28px] border border-[#010000]/20 bg-[#F4F7F3]" : "bg-white my-6 overflow-hidden"}>
       <div className="overflow-x-auto">
         <table className={dashboard ? "min-w-full divide-y divide-[#010000]/15" : "min-w-full divide-y divide-gray-200"}>
-          <thead className={dashboard ? "bg-[#010000]/5" : "bg-gray-50"}>
+          <thead className={dashboard ? "bg-[#8C8ABC]" : "bg-gray-50"}>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -61,7 +61,7 @@ export const Table = <TData,>({
             {rows.map((row) => (
               <tr
                 key={row.id}
-                className={getRowClassName?.(row.original) ?? ""}
+                className={getRowClassName?.(row.original) ?? (dashboard ? "hover:bg-[#FBEA71]/25" : "")}
               >
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className={dashboard ? "px-6 py-5 text-sm whitespace-nowrap" : "px-6 py-4 whitespace-nowrap"}>

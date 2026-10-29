@@ -92,7 +92,7 @@ export const UsersTable = ({
       header: t("users.actions"),
       cell: (props) => (
         <div className="flex space-x-2">
-          <PillButton variant="outline" onClick={() => handleEditClick(props.row.original)}>
+          <PillButton variant="outline" className="hover:bg-[#FBEA71] hover:text-[#010000]" onClick={() => handleEditClick(props.row.original)}>
             {t("users.edit")}
           </PillButton>
         </div>
@@ -145,7 +145,7 @@ export const UsersTable = ({
       isLoading={isLoading}
       emptyMessage={emptyMessage ?? t("users.empty")}
       LoadingComponent={LoadingSpinner}
-      getRowClassName={(user) => (user.active ? "" : "bg-[#ff522a]/10")}
+      getRowClassName={(user) => (user.active ? "hover:bg-[#FBEA71]/25" : "bg-[#ff522a]/10 hover:bg-[#ff522a]/10")}
     />
   );
 };

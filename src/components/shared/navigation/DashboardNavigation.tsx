@@ -21,7 +21,7 @@ export const DashboardNavigation = ({ onNavigate, collapsed = false }: { onNavig
       {items.map(({ key, href, icon: Icon }) => (
         <Tooltip key={key} label={t(`menu.${key}`)} disabled={!collapsed}>
           <NavLink to={href} end onClick={onNavigate} className={({ isActive }) =>
-            `flex min-h-12 items-center gap-3 rounded-full py-3 text-sm font-medium ${collapsed ? "justify-center px-3" : "px-4"} ${isActive ? "bg-[#010000] text-[#d8e4d6]" : "text-[#010000] hover:bg-[#010000]/5"}`
+            `flex min-h-12 items-center gap-3 rounded-full py-3 text-sm font-medium ${collapsed ? "justify-center px-3" : "px-4"} ${isActive ? "bg-[#010000] text-[#d8e4d6]" : "text-[#010000] hover:bg-[#fbea71]"}`
           }>
             <Icon className="size-5 shrink-0" aria-hidden="true" />
             <span className={collapsed ? "sr-only" : undefined}>{t(`menu.${key}`)}</span>

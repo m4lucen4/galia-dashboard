@@ -17,7 +17,7 @@ interface ProjectMenuProps {
   onAssignProject: (project: ProjectDataProps) => void;
 }
 
-const menuActionClassName = "flex min-h-11 w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm hover:bg-[#010000]/5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#010000] disabled:cursor-not-allowed disabled:opacity-40";
+const menuActionClassName = "flex min-h-11 w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#010000] disabled:cursor-not-allowed disabled:opacity-40";
 
 export const ActionButtons: React.FC<ProjectMenuProps> = ({
   currentUser,
@@ -69,7 +69,7 @@ export const ActionButtons: React.FC<ProjectMenuProps> = ({
         ref={triggerRef}
         aria-label={t("projects.actions")}
         aria-expanded={isOpen}
-        className="flex size-11 items-center justify-center rounded-full border border-[#010000]/25 text-[#010000] hover:bg-[#010000]/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]"
+        className="flex size-11 items-center justify-center rounded-full border border-[#010000]/25 text-[#010000] hover:bg-[#FBEA71] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]"
         onClick={() => onToggleMenu(project.id)}
       >
         <EllipsisVerticalIcon className="size-5" aria-hidden="true" />
@@ -82,7 +82,7 @@ export const ActionButtons: React.FC<ProjectMenuProps> = ({
                 <button
                   onClick={() => hasValidSubscription && onLaunchProject(project)}
                   disabled={!hasValidSubscription}
-                  className={menuActionClassName}
+                  className={`${menuActionClassName} enabled:hover:bg-[#FBEA71]`}
                 >
                   {!hasValidSubscription && <LockClosedIcon className="h-3.5 w-3.5 shrink-0" />}
                   {t("projects.launchProject")}
@@ -91,7 +91,7 @@ export const ActionButtons: React.FC<ProjectMenuProps> = ({
                 <button
                   onClick={() => hasValidSubscription && onRecoveryProject(project)}
                   disabled={!hasValidSubscription}
-                  className={menuActionClassName}
+                  className={`${menuActionClassName} enabled:hover:bg-[#FBEA71]`}
                 >
                   {!hasValidSubscription && <LockClosedIcon className="h-3.5 w-3.5 shrink-0" />}
                   {t("projects.recoveryProject")}
@@ -101,7 +101,7 @@ export const ActionButtons: React.FC<ProjectMenuProps> = ({
             <li>
               <button
                 onClick={() => onEditProject(project)}
-                className={menuActionClassName}
+                className={`${menuActionClassName} enabled:hover:bg-[#FBEA71]`}
               >
                 {t("projects.editProject")}
               </button>
@@ -110,7 +110,7 @@ export const ActionButtons: React.FC<ProjectMenuProps> = ({
               <li>
                 <button
                   onClick={() => onAssignProject(project)}
-                  className={menuActionClassName}
+                  className={`${menuActionClassName} enabled:hover:bg-[#FBEA71]`}
                 >
                   {t("projects.assignProject")}
                 </button>
@@ -119,7 +119,7 @@ export const ActionButtons: React.FC<ProjectMenuProps> = ({
             <li>
               <button
                 onClick={() => onDeleteProject(project)}
-                className={`${menuActionClassName} text-red-900 hover:bg-red-900/5`}
+                className={`${menuActionClassName} text-red-900 enabled:hover:bg-red-900/5`}
               >
                 {t("projects.deleteTitle")}
               </button>
