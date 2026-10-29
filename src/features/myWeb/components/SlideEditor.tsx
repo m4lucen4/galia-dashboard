@@ -1,10 +1,11 @@
 import React from "react";
-import { HeaderSlideConfig } from "../../../types";
-import { ImageUploader } from "./ImageUploader";
+import { HeaderSlideConfig } from "@/types";
+import { ImageUploader } from "@/features/myWeb/components/ImageUploader";
 import { TrashIcon } from "@heroicons/react/24/outline";
-import { RichTextInput } from "./RichTextInput";
-import { IconPicker } from "./IconPicker";
-import { Switch } from "../../../components/shared/ui/Switch";
+import { RichTextInput } from "@/features/myWeb/components/RichTextInput";
+import { IconPicker } from "@/features/myWeb/components/IconPicker";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import { myWebPanelClassName, myWebControlClassName, myWebOptionClassName, myWebSelectedOptionClassName, myWebIconButtonClassName } from "@/features/myWeb/components/myWebStyles";
 
 // ─── Visual type previews ──────────────────────────────────────────────────────
 
@@ -83,20 +84,20 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
     onUpdate(index, { ...slide, [field]: value });
   };
 
-  const inputClass =
-    "mt-1 block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-gray-800 sm:text-sm/6";
+  const inputClass = myWebControlClassName;
 
   return (
-    <div className="border border-gray-200 rounded-md p-4 bg-gray-50">
+    <section className={myWebPanelClassName}>
       <div className="flex items-center justify-between mb-3">
         <h4 className="text-sm font-medium text-gray-700">
-          Slide {index + 1}
+          Diapositiva {index + 1}
         </h4>
         {canDelete && (
           <button
             type="button"
             onClick={() => onDelete(index)}
-            className="text-red-500 hover:text-red-700 p-1"
+            aria-label={`Eliminar diapositiva ${index + 1}`}
+            className={myWebIconButtonClassName}
           >
             <TrashIcon className="h-4 w-4" />
           </button>
@@ -114,13 +115,10 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                 handleChange("type", value);
                 setTimeout(onBlur, 0);
               }}
-              className={`rounded-md border-2 p-2 text-center transition-colors focus:outline-none ${
-                slide.type === value
-                  ? "border-gray-900 bg-gray-50"
-                  : "border-gray-200 bg-white hover:border-gray-400"
-              }`}
+              aria-pressed={slide.type === value}
+              className={`${myWebOptionClassName} ${slide.type === value ? myWebSelectedOptionClassName : ""}`}
             >
-              <Preview />
+              <span aria-hidden="true"><Preview /></span>
               <span
                 className={`mt-2 block text-xs font-medium ${
                   slide.type === value ? "text-gray-900" : "text-gray-500"
@@ -134,19 +132,16 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
 
         {/* ── Selector de tipo de fondo ── */}
         <div>
-          <label className="text-sm text-black">Fondo</label>
-          <div className="mt-1 flex rounded-md border border-gray-300 overflow-hidden">
+          <p className="text-sm font-medium">Fondo</p>
+          <div className="mt-2 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => {
                 handleChange("background_type", "image");
                 setTimeout(onBlur, 0);
               }}
-              className={`flex-1 py-1.5 text-xs font-medium transition-colors ${
-                (slide.background_type ?? "image") === "image"
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50"
-              }`}
+              aria-pressed={(slide.background_type ?? "image") === "image"}
+              className={`min-h-11 flex-1 ${myWebOptionClassName} ${(slide.background_type ?? "image") === "image" ? myWebSelectedOptionClassName : ""}`}
             >
               Imagen
             </button>
@@ -156,11 +151,8 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                 handleChange("background_type", "vimeo");
                 setTimeout(onBlur, 0);
               }}
-              className={`flex-1 py-1.5 text-xs font-medium transition-colors border-l border-gray-300 ${
-                slide.background_type === "vimeo"
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50"
-              }`}
+              aria-pressed={slide.background_type === "vimeo"}
+              className={`min-h-11 flex-1 ${myWebOptionClassName} ${slide.background_type === "vimeo" ? myWebSelectedOptionClassName : ""}`}
             >
               Vídeo Vimeo
             </button>
@@ -176,8 +168,8 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             loading={uploadingSlide === index}
           />
         ) : (
-          <div>
-            <label className="text-sm text-black">URL de Vimeo</label>
+          <label className="block space-y-2 text-sm font-medium">
+            <span>URL de Vimeo</span>
             <input
               type="text"
               value={slide.vimeo_url ?? ""}
@@ -186,7 +178,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
               className={inputClass}
               placeholder="https://vimeo.com/123456789"
             />
-          </div>
+          </label>
         )}
 
         <div>
@@ -194,16 +186,21 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             <div>
               <p className="text-sm font-medium text-black">Mostrar logo</p>
               <p className="text-xs text-gray-500 mt-0.5">
-                Muestra el logo de la web encima del título en este slide
+                Muestra el logo de la web encima del título en esta diapositiva
               </p>
             </div>
-            <Switch
-              checked={slide.show_logo ?? false}
-              onChange={() => {
+            <PillButton
+              variant="outline"
+              role="switch"
+              aria-label={`Mostrar logo en la diapositiva ${index + 1}`}
+              aria-checked={slide.show_logo ?? false}
+              onClick={() => {
                 handleChange("show_logo", !(slide.show_logo ?? false));
                 setTimeout(onBlur, 0);
               }}
-            />
+            >
+              {slide.show_logo ? "Sí" : "No"}
+            </PillButton>
           </div>
 
           {slide.show_logo && (
@@ -211,18 +208,15 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
               <label className="text-sm text-black">
                 Posición vertical del logo y el título
               </label>
-              <div className="mt-1 flex rounded-md border border-gray-300 overflow-hidden">
+              <div className="mt-2 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => {
                     handleChange("logo_title_align", "bottom");
                     setTimeout(onBlur, 0);
                   }}
-                  className={`flex-1 py-1.5 text-xs font-medium transition-colors ${
-                    (slide.logo_title_align ?? "bottom") === "bottom"
-                      ? "bg-gray-900 text-white"
-                      : "bg-white text-gray-600 hover:bg-gray-50"
-                  }`}
+                  aria-pressed={(slide.logo_title_align ?? "bottom") === "bottom"}
+                  className={`min-h-11 flex-1 ${myWebOptionClassName} ${(slide.logo_title_align ?? "bottom") === "bottom" ? myWebSelectedOptionClassName : ""}`}
                 >
                   Abajo
                 </button>
@@ -232,11 +226,8 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                     handleChange("logo_title_align", "center");
                     setTimeout(onBlur, 0);
                   }}
-                  className={`flex-1 py-1.5 text-xs font-medium transition-colors border-l border-gray-300 ${
-                    slide.logo_title_align === "center"
-                      ? "bg-gray-900 text-white"
-                      : "bg-white text-gray-600 hover:bg-gray-50"
-                  }`}
+                  aria-pressed={slide.logo_title_align === "center"}
+                  className={`min-h-11 flex-1 ${myWebOptionClassName} ${slide.logo_title_align === "center" ? myWebSelectedOptionClassName : ""}`}
                 >
                   Centrado
                 </button>
@@ -245,29 +236,29 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
           )}
         </div>
 
-        <div>
-          <label className="text-sm text-black">Título</label>
+        <label className="block space-y-2 text-sm font-medium">
+          <span>Título</span>
           <input
             type="text"
             value={slide.title}
             onChange={(e) => handleChange("title", e.target.value)}
             onBlur={onBlur}
             className={inputClass}
-            placeholder="Título del slide"
+            placeholder="Título de la diapositiva"
           />
-        </div>
+        </label>
 
         <RichTextInput
           label="Descripción"
           value={slide.description}
           onChange={(html) => handleChange("description", html)}
           onBlur={onBlur}
-          placeholder="Descripción del slide"
+          placeholder="Descripción de la diapositiva"
         />
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-sm text-black">Texto del botón</label>
+        <div className="grid grid-cols-1 gap-3 @min-[28rem]:grid-cols-2">
+          <label className="block space-y-2 text-sm font-medium">
+            <span>Texto del botón</span>
             <input
               type="text"
               value={slide.text_button}
@@ -276,9 +267,9 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
               className={inputClass}
               placeholder="Ver más"
             />
-          </div>
-          <div>
-            <label className="text-sm text-black">URL del botón</label>
+          </label>
+          <label className="block space-y-2 text-sm font-medium">
+            <span>URL del botón</span>
             <input
               type="text"
               value={slide.url_button}
@@ -287,7 +278,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
               className={inputClass}
               placeholder="#seccion"
             />
-          </div>
+          </label>
         </div>
 
         <IconPicker
@@ -298,6 +289,6 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
           }}
         />
       </div>
-    </div>
+    </section>
   );
 };

@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import { SiteComponentDataProps, HeaderSlideConfig } from "../../../types";
-import { SlideEditor } from "./SlideEditor";
-import { useAppDispatch } from "../../../redux/hooks";
+import { SiteComponentDataProps, HeaderSlideConfig } from "@/types";
+import { SlideEditor } from "@/features/myWeb/components/SlideEditor";
+import { useAppDispatch } from "@/redux/hooks";
 import {
   updateSiteComponent,
   uploadSlideImage,
-} from "../../../redux/actions/SiteComponentActions";
+} from "@/redux/actions/SiteComponentActions";
 import { PlusIcon } from "@heroicons/react/24/outline";
-import { Button } from "../../../components/shared/ui/Button";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import { myWebHeadingClassName, myWebMutedClassName } from "@/features/myWeb/components/myWebStyles";
 
 interface HeaderEditorProps {
   component: SiteComponentDataProps;
@@ -91,18 +92,19 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({ component }) => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-700">
-          Slides ({localSlides.length}/{MAX_SLIDES})
-        </h3>
+    <div className="@container min-w-0 space-y-5 text-[#010000]">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className={myWebHeadingClassName}>
+            Diapositivas ({localSlides.length}/{MAX_SLIDES})
+          </h3>
+          <p className={myWebMutedClassName}>Los textos se guardan al salir del campo. Máximo 5 diapositivas.</p>
+        </div>
         {localSlides.length < MAX_SLIDES && (
-          <Button
-            title="Añadir slide"
-            icon={<PlusIcon className="h-4 w-4" />}
-            onClick={handleAddSlide}
-            secondary
-          />
+          <PillButton onClick={handleAddSlide} variant="outline">
+            <PlusIcon className="h-4 w-4" aria-hidden="true" />
+            Añadir diapositiva
+          </PillButton>
         )}
       </div>
 
