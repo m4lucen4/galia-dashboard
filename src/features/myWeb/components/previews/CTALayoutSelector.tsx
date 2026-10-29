@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import type { CTAConfig } from "@/types";
-import { myWebOptionClassName, myWebSelectedOptionClassName } from "@/features/myWeb/components/myWebStyles";
+import { myWebChoiceGridClassName } from "@/features/myWeb/components/myWebStyles";
+import { LayoutChoice } from "@/features/myWeb/components/previews/LayoutChoice";
 
 const PreviewSplit: FC = () => (
   <svg viewBox="0 0 120 70" className="w-full h-auto" fill="none">
@@ -49,18 +50,15 @@ export function CTALayoutSelector({ value, onChange }: {
   return (
     <fieldset className="min-w-0 space-y-3">
       <legend className="text-sm font-medium">Diseño de la llamada a la acción</legend>
-      <div className="grid grid-cols-1 gap-3 @min-[28rem]:grid-cols-3">
+      <div className={myWebChoiceGridClassName}>
         {TYPE_OPTIONS.map(({ value: option, label, Preview }) => (
-          <button
+          <LayoutChoice
             key={option}
-            type="button"
-            aria-pressed={value === option}
-            onClick={() => onChange(option)}
-            className={`${myWebOptionClassName} ${value === option ? myWebSelectedOptionClassName : ""}`}
-          >
-            <span aria-hidden="true"><Preview /></span>
-            <span className="mt-2 block text-sm font-medium">{label}</span>
-          </button>
+            label={label}
+            preview={<Preview />}
+            selected={value === option}
+            onSelect={() => onChange(option)}
+          />
         ))}
       </div>
     </fieldset>
