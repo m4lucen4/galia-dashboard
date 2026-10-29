@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { SiteComponentDataProps, ContentConfig } from "../../../types";
-import { useAppDispatch } from "../../../redux/hooks";
-import {
-  updateSiteComponent,
-  uploadContentImage,
-} from "../../../redux/actions/SiteComponentActions";
-import { InputField } from "../../../components/shared/ui/InputField";
-import { ImageUploader } from "./ImageUploader";
-import { Button } from "../../../components/shared/ui/Button";
-import { RichTextInput } from "./RichTextInput";
+import { SiteComponentDataProps, ContentConfig } from "@/types";
+import { useAppDispatch } from "@/redux/hooks";
+import { updateSiteComponent, uploadContentImage } from "@/redux/actions/SiteComponentActions";
+import { InputField } from "@/components/shared/ui/InputField";
+import { ImageUploader } from "@/features/myWeb/components/ImageUploader";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import { RichTextInput } from "@/features/myWeb/components/RichTextInput";
+import { ContentLayoutSelector } from "@/features/myWeb/components/previews/ContentLayoutSelector";
+import { myWebPanelClassName, myWebLegacyControlsClassName } from "@/features/myWeb/components/myWebStyles";
 
 interface ContentEditorProps {
   component: SiteComponentDataProps;
@@ -30,65 +29,6 @@ const defaultContentConfig: ContentConfig = {
   leyenda4: "",
   type: 1,
 };
-
-// ─── Visual previews ──────────────────────────────────────────────────────────
-
-const PreviewType1: React.FC = () => (
-  <svg viewBox="0 0 120 80" className="w-full h-auto" fill="none">
-    {/* Antetítulo */}
-    <rect x="10" y="6" width="30" height="3" rx="1" fill="#D1D5DB" />
-    {/* Título */}
-    <rect x="10" y="13" width="70" height="6" rx="1" fill="#6B7280" />
-    {/* Divisor */}
-    <line x1="10" y1="25" x2="110" y2="25" stroke="#E5E7EB" strokeWidth="1" />
-    {/* Columna izquierda — texto */}
-    <rect x="10" y="30" width="45" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="10" y="36" width="40" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="10" y="42" width="43" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="10" y="48" width="35" height="3" rx="1" fill="#D1D5DB" />
-    {/* Columna derecha — datos (2x2) */}
-    <rect x="65" y="30" width="18" height="7" rx="1" fill="#9CA3AF" />
-    <rect x="87" y="30" width="18" height="7" rx="1" fill="#9CA3AF" />
-    <rect x="65" y="41" width="18" height="7" rx="1" fill="#9CA3AF" />
-    <rect x="87" y="41" width="18" height="7" rx="1" fill="#9CA3AF" />
-    {/* Leyendas */}
-    <rect x="65" y="50" width="18" height="2" rx="1" fill="#D1D5DB" />
-    <rect x="87" y="50" width="18" height="2" rx="1" fill="#D1D5DB" />
-    <rect x="65" y="61" width="18" height="2" rx="1" fill="#D1D5DB" />
-    <rect x="87" y="61" width="18" height="2" rx="1" fill="#D1D5DB" />
-  </svg>
-);
-
-const PreviewType2: React.FC = () => (
-  <svg viewBox="0 0 120 80" className="w-full h-auto" fill="none">
-    {/* Foto izquierda */}
-    <rect x="4" y="4" width="48" height="72" rx="2" fill="#D1D5DB" />
-    {/* Antetítulo */}
-    <rect x="60" y="8" width="22" height="3" rx="1" fill="#D1D5DB" />
-    {/* Título */}
-    <rect x="60" y="15" width="50" height="6" rx="1" fill="#6B7280" />
-    {/* Texto */}
-    <rect x="60" y="26" width="52" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="60" y="32" width="46" height="3" rx="1" fill="#D1D5DB" />
-    <rect x="60" y="38" width="50" height="3" rx="1" fill="#D1D5DB" />
-    {/* Datos (2x2) */}
-    <rect x="60" y="48" width="22" height="7" rx="1" fill="#9CA3AF" />
-    <rect x="86" y="48" width="22" height="7" rx="1" fill="#9CA3AF" />
-    <rect x="60" y="59" width="22" height="7" rx="1" fill="#9CA3AF" />
-    <rect x="86" y="59" width="22" height="7" rx="1" fill="#9CA3AF" />
-  </svg>
-);
-
-const TYPE_OPTIONS: {
-  value: 1 | 2;
-  label: string;
-  Preview: React.FC;
-}[] = [
-  { value: 1, label: "Título + dos columnas", Preview: PreviewType1 },
-  { value: 2, label: "Foto + contenido", Preview: PreviewType2 },
-];
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export const ContentEditor: React.FC<ContentEditorProps> = ({ component }) => {
   const dispatch = useAppDispatch();
@@ -143,108 +83,58 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({ component }) => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* ── Selector de tipo ────────────────────────────────────────────────── */}
-      <div>
-        <p className="text-sm font-medium text-gray-900 mb-3">
-          Tipo de diseño
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          {TYPE_OPTIONS.map(({ value, label, Preview }) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => handleChange("type", value)}
-              className={`rounded-md border-2 p-2 text-center transition-colors focus:outline-none ${
-                form.type === value
-                  ? "border-gray-900 bg-gray-50"
-                  : "border-gray-200 bg-white hover:border-gray-400"
-              }`}
-            >
-              <Preview />
-              <span
-                className={`mt-2 block text-xs font-medium ${
-                  form.type === value ? "text-gray-900" : "text-gray-500"
-                }`}
-              >
-                {label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Textos principales ──────────────────────────────────────────────── */}
-      <div>
-        <p className="text-sm font-medium text-gray-900 mb-3">
-          Textos principales
-        </p>
-        <div className="space-y-3">
-          <InputField
-            id="content-antetitulo"
-            type="text"
-            label="Antetítulo"
-            value={form.antetitulo ?? ""}
-            onChange={(e) => handleChange("antetitulo", e.target.value)}
-            placeholder="Sobre nosotros"
-          />
-          <InputField
-            id="content-titulo"
-            type="text"
-            label="Título"
-            value={form.titulo ?? ""}
-            onChange={(e) => handleChange("titulo", e.target.value)}
-            placeholder="Quiénes somos"
-          />
-        </div>
-      </div>
-
-      {/* ── Columna izquierda ───────────────────────────────────────────────── */}
-      <div>
-        <p className="text-sm font-medium text-gray-900 mb-3">
-          Columna izquierda
-        </p>
+    <div className={`@container space-y-6 text-[#010000] ${myWebLegacyControlsClassName}`}>
+      <ContentLayoutSelector value={form.type} onChange={(value) => handleChange("type", value)} />
+      <section className={myWebPanelClassName}>
+        <h4 className="text-base font-medium">Textos principales</h4>
+        <InputField
+          id="content-antetitulo"
+          type="text"
+          label="Antetítulo"
+          value={form.antetitulo ?? ""}
+          onChange={(e) => handleChange("antetitulo", e.target.value)}
+          placeholder="Sobre nosotros"
+        />
+        <InputField
+          id="content-titulo"
+          type="text"
+          label="Título"
+          value={form.titulo ?? ""}
+          onChange={(e) => handleChange("titulo", e.target.value)}
+          placeholder="Quiénes somos"
+        />
+      </section>
+      <section className={myWebPanelClassName}>
+        <h4 className="text-base font-medium">Columna izquierda</h4>
         <RichTextInput
           label="Texto columna izquierda"
           value={form.textoIzquierda ?? ""}
           onChange={(html) => handleChange("textoIzquierda", html)}
           placeholder="Descripción principal..."
         />
-      </div>
-
-      {/* ── Columna derecha ─────────────────────────────────────────────────── */}
-      <div>
-        <p className="text-sm font-medium text-gray-900 mb-3">
-          Columna derecha
-        </p>
-        <div className="space-y-3">
-          <ImageUploader
-            label="Imagen columna derecha"
-            currentUrl={form.image || null}
-            onUpload={handleImageUpload}
-            onRemove={() => setForm((prev) => ({ ...prev, image: "" }))}
-            loading={uploadingImage}
-          />
-          <RichTextInput
-            label="Texto columna derecha"
-            value={form.textoDerecha ?? ""}
-            onChange={(html) => handleChange("textoDerecha", html)}
-            placeholder="Texto complementario..."
-          />
-        </div>
-      </div>
-
-      {/* ── Datos estadísticos ──────────────────────────────────────────────── */}
-      <div>
-        <p className="text-sm font-medium text-gray-900 mb-3">
-          Datos estadísticos
-        </p>
-        <div className="grid grid-cols-2 gap-4">
+      </section>
+      <section className={myWebPanelClassName}>
+        <h4 className="text-base font-medium">Columna derecha</h4>
+        <ImageUploader
+          label="Imagen columna derecha"
+          currentUrl={form.image || null}
+          onUpload={handleImageUpload}
+          onRemove={() => setForm((prev) => ({ ...prev, image: "" }))}
+          loading={uploadingImage}
+        />
+        <RichTextInput
+          label="Texto columna derecha"
+          value={form.textoDerecha ?? ""}
+          onChange={(html) => handleChange("textoDerecha", html)}
+          placeholder="Texto complementario..."
+        />
+      </section>
+      <section className={myWebPanelClassName}>
+        <h4 className="text-base font-medium">Datos estadísticos</h4>
+        <div className="grid grid-cols-1 gap-4 @min-[28rem]:grid-cols-2">
           {([1, 2, 3, 4] as const).map((n) => (
-            <div
-              key={n}
-              className="rounded-md border border-gray-200 p-3 space-y-2"
-            >
+            <div key={n} className="min-w-0 space-y-3 rounded-2xl border border-[#010000]/20 p-4">
+              <p className="text-sm font-medium">Dato {n}</p>
               <InputField
                 id={`content-dato${n}`}
                 type="text"
@@ -275,18 +165,12 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({ component }) => {
             </div>
           ))}
         </div>
-      </div>
-
-      {/* ── Guardar ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3">
-        <Button
-          title={saving ? "Guardando..." : "Guardar cambios"}
-          onClick={handleSave}
-          disabled={saving}
-        />
-        {saved && (
-          <span className="text-sm text-green-600">Cambios guardados</span>
-        )}
+      </section>
+      <div className="flex flex-wrap items-center gap-3">
+        <PillButton onClick={handleSave} disabled={saving}>
+          {saving ? "Guardando..." : "Guardar cambios"}
+        </PillButton>
+        {saved && <span role="status" className="text-sm">Cambios guardados</span>}
       </div>
     </div>
   );
