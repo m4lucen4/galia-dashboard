@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { SiteComponentDataProps, RichTextConfig } from "../../../types";
-import { useAppDispatch } from "../../../redux/hooks";
-import { updateSiteComponent } from "../../../redux/actions/SiteComponentActions";
-import { Button } from "../../../components/shared/ui/Button";
-import { RichTextInput } from "./RichTextInput";
+import { SiteComponentDataProps, RichTextConfig } from "@/types";
+import { useAppDispatch } from "@/redux/hooks";
+import { updateSiteComponent } from "@/redux/actions/SiteComponentActions";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import { RichTextInput } from "@/features/myWeb/components/RichTextInput";
+import { myWebPanelClassName, myWebOptionClassName, myWebSelectedOptionClassName } from "@/features/myWeb/components/myWebStyles";
 
 interface RichTextBlockEditorProps {
   component: SiteComponentDataProps;
@@ -53,30 +54,24 @@ export const RichTextBlockEditor: React.FC<RichTextBlockEditorProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className={`text-[#010000] ${myWebPanelClassName}`}>
       {/* ── Alineación ──────────────────────────────────────────────────────── */}
       <div>
         <p className="text-sm font-medium text-gray-900 mb-2">Alineación</p>
-        <div className="flex rounded-md border border-gray-300 overflow-hidden w-fit">
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
+            aria-pressed={form.alignment === "left"}
             onClick={() => setForm((prev) => ({ ...prev, alignment: "left" }))}
-            className={`px-4 py-1.5 text-xs font-medium transition-colors ${
-              form.alignment === "left"
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-600 hover:bg-gray-50"
-            }`}
+            className={`min-h-11 ${myWebOptionClassName} ${form.alignment === "left" ? myWebSelectedOptionClassName : ""}`}
           >
             ← Izquierda
           </button>
           <button
             type="button"
+            aria-pressed={form.alignment === "right"}
             onClick={() => setForm((prev) => ({ ...prev, alignment: "right" }))}
-            className={`px-4 py-1.5 text-xs font-medium transition-colors border-l border-gray-300 ${
-              form.alignment === "right"
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-600 hover:bg-gray-50"
-            }`}
+            className={`min-h-11 ${myWebOptionClassName} ${form.alignment === "right" ? myWebSelectedOptionClassName : ""}`}
           >
             Derecha →
           </button>
@@ -86,23 +81,20 @@ export const RichTextBlockEditor: React.FC<RichTextBlockEditorProps> = ({
       {/* ── Ancho ───────────────────────────────────────────────────────────── */}
       <div>
         <p className="text-sm font-medium text-gray-900 mb-2">Ancho</p>
-        <div className="flex rounded-md border border-gray-300 overflow-hidden w-fit">
+        <div className="flex flex-wrap gap-2">
           {(
             [
               { value: "full", label: "Completo" },
               { value: "two-thirds", label: "2/3" },
               { value: "half", label: "50%" },
             ] as const
-          ).map(({ value, label }, idx) => (
+          ).map(({ value, label }) => (
             <button
               key={value}
               type="button"
+              aria-pressed={(form.width ?? "full") === value}
               onClick={() => setForm((prev) => ({ ...prev, width: value }))}
-              className={`px-4 py-1.5 text-xs font-medium transition-colors ${idx > 0 ? "border-l border-gray-300" : ""} ${
-                (form.width ?? "full") === value
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50"
-              }`}
+              className={`min-h-11 ${myWebOptionClassName} ${(form.width ?? "full") === value ? myWebSelectedOptionClassName : ""}`}
             >
               {label}
             </button>
@@ -119,14 +111,12 @@ export const RichTextBlockEditor: React.FC<RichTextBlockEditorProps> = ({
       />
 
       {/* ── Guardar ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3">
-        <Button
-          title={saving ? "Guardando..." : "Guardar cambios"}
-          onClick={handleSave}
-          disabled={saving}
-        />
+      <div className="flex flex-wrap items-center gap-3">
+        <PillButton onClick={handleSave} disabled={saving}>
+          {saving ? "Guardando..." : "Guardar cambios"}
+        </PillButton>
         {saved && (
-          <span className="text-sm text-green-600">Cambios guardados</span>
+          <span role="status" className="text-sm">Cambios guardados</span>
         )}
       </div>
     </div>

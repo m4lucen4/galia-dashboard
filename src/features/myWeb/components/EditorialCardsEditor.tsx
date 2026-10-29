@@ -3,16 +3,17 @@ import {
   EditorialCardConfig,
   EditorialCardsConfig,
   SiteComponentDataProps,
-} from "../../../types";
-import { useAppDispatch } from "../../../redux/hooks";
+} from "@/types";
+import { useAppDispatch } from "@/redux/hooks";
 import {
   updateSiteComponent,
   uploadEditorialCardImage,
-} from "../../../redux/actions/SiteComponentActions";
-import { Button } from "../../../components/shared/ui/Button";
-import { InputField } from "../../../components/shared/ui/InputField";
-import { ImageUploader } from "./ImageUploader";
-import { RichTextInput } from "./RichTextInput";
+} from "@/redux/actions/SiteComponentActions";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import { InputField } from "@/components/shared/ui/InputField";
+import { ImageUploader } from "@/features/myWeb/components/ImageUploader";
+import { RichTextInput } from "@/features/myWeb/components/RichTextInput";
+import { myWebPanelClassName, myWebLegacyControlsClassName } from "@/features/myWeb/components/myWebStyles";
 
 interface EditorialCardsEditorProps {
   component: SiteComponentDataProps;
@@ -161,15 +162,15 @@ export const EditorialCardsEditor: React.FC<EditorialCardsEditorProps> = ({
   };
 
   return (
-    <div className="@container space-y-4">
+    <div className={`@container space-y-5 text-[#010000] ${myWebLegacyControlsClassName}`}>
       <div className="grid gap-4 @min-[44rem]:grid-cols-2">
         {form.cards.map((card, cardIndex) => {
           const index = cardIndex as 0 | 1;
           const isUploading = uploadingCards.has(index);
 
           return (
-            <section key={index} className="min-w-0 space-y-4 rounded-md border border-gray-200 p-4">
-              <h4 className="text-sm font-medium text-gray-900">
+            <section key={index} className={myWebPanelClassName}>
+              <h4 className="text-base font-medium">
                 Tarjeta {index + 1}
               </h4>
               <ImageUploader
@@ -223,16 +224,14 @@ export const EditorialCardsEditor: React.FC<EditorialCardsEditorProps> = ({
           );
         })}
       </div>
-      <div className="flex items-center gap-3">
-        <Button
-          title={saving ? "Guardando..." : "Guardar cambios"}
-          onClick={handleSave}
-          disabled={saving || uploadingCards.size > 0}
-        />
+      <div className="flex flex-wrap items-center gap-3">
+        <PillButton onClick={handleSave} disabled={saving || uploadingCards.size > 0}>
+          {saving ? "Guardando..." : "Guardar cambios"}
+        </PillButton>
         {uploadingCards.size > 0 && (
-          <span className="text-sm text-gray-500">Subiendo imágenes...</span>
+          <span role="status" className="text-sm text-[#010000]/65">Subiendo imágenes...</span>
         )}
-        {saved && <span className="text-sm text-green-600">Cambios guardados</span>}
+        {saved && <span role="status" className="text-sm">Cambios guardados</span>}
         {errorMessage && (
           <span role="alert" className="text-sm text-red-600">
             {errorMessage}

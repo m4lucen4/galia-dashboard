@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { SiteComponentDataProps, ContactConfig } from "../../../types";
-import { useAppDispatch } from "../../../redux/hooks";
-import { updateSiteComponent } from "../../../redux/actions/SiteComponentActions";
-import { InputField } from "../../../components/shared/ui/InputField";
-import { Button } from "../../../components/shared/ui/Button";
-import { ColorPicker } from "./ColorPicker";
-import { RichTextInput } from "./RichTextInput";
-import { Switch } from "../../../components/shared/ui/Switch";
+import { SiteComponentDataProps, ContactConfig } from "@/types";
+import { useAppDispatch } from "@/redux/hooks";
+import { updateSiteComponent } from "@/redux/actions/SiteComponentActions";
+import { InputField } from "@/components/shared/ui/InputField";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import { ColorPicker } from "@/features/myWeb/components/ColorPicker";
+import { RichTextInput } from "@/features/myWeb/components/RichTextInput";
+import { myWebPanelClassName, myWebOptionClassName, myWebSelectedOptionClassName, myWebIconButtonClassName, myWebLegacyControlsClassName } from "@/features/myWeb/components/myWebStyles";
 import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
 
 interface ContactEditorProps {
@@ -124,25 +124,22 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={`@container space-y-6 text-[#010000] ${myWebLegacyControlsClassName}`}>
       {/* ── Selector de tipo ──────────────────────────────────────────────── */}
       <div>
         <p className="text-sm font-medium text-gray-900 mb-3">Tipo de contacto</p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 @min-[28rem]:grid-cols-2">
           {TYPE_OPTIONS.map(({ value, label, Preview, reverseField }) => {
             const reversed = form[reverseField] ?? false;
             return (
               <div key={value} className="relative">
                 <button
                   type="button"
+                  aria-pressed={form.type === value}
                   onClick={() => handleChange("type", value)}
-                  className={`w-full rounded-md border-2 p-2 text-center transition-colors focus:outline-none ${
-                    form.type === value
-                      ? "border-gray-900 bg-gray-50"
-                      : "border-gray-200 bg-white hover:border-gray-400"
-                  }`}
+                  className={`w-full pb-16 ${myWebOptionClassName} ${form.type === value ? myWebSelectedOptionClassName : ""}`}
                 >
-                  <Preview reversed={reversed} />
+                  <span aria-hidden="true"><Preview reversed={reversed} /></span>
                   <span
                     className={`mt-2 block text-xs font-medium ${
                       form.type === value ? "text-gray-900" : "text-gray-500"
@@ -157,7 +154,9 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
                     e.stopPropagation();
                     handleChange(reverseField, !reversed);
                   }}
-                  className="absolute bottom-2 right-2 rounded bg-white border border-gray-300 p-1 text-gray-500 shadow-sm transition-colors hover:border-gray-400 hover:text-gray-900"
+                  className={`absolute bottom-2 right-2 ${myWebIconButtonClassName}`}
+                  aria-label={`Invertir orden: ${label}`}
+                  aria-pressed={reversed}
                   title="Invertir orden"
                 >
                   <ArrowsRightLeftIcon className="h-3.5 w-3.5" />
@@ -169,7 +168,8 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
       </div>
 
       {/* ── Campos comunes ────────────────────────────────────────────────── */}
-      <div className="space-y-4">
+      <section className={myWebPanelClassName}>
+        <h4 className="text-base font-medium">Presentación del contacto</h4>
         {form.type === 1 && (
           <InputField
             id="contact-antetitulo"
@@ -188,10 +188,15 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
               Muestra el logo de la web encima del título en este componente
             </p>
           </div>
-          <Switch
-            checked={form.show_logo ?? false}
-            onChange={() => handleChange("show_logo", !(form.show_logo ?? false))}
-          />
+          <PillButton
+            variant="outline"
+            role="switch"
+            aria-label="Mostrar logo en el contacto"
+            aria-checked={form.show_logo ?? false}
+            onClick={() => handleChange("show_logo", !(form.show_logo ?? false))}
+          >
+            {form.show_logo ? "Sí" : "No"}
+          </PillButton>
         </div>
 
         <InputField
@@ -209,10 +214,11 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
           onChange={(html) => handleChange("descripcion", html)}
           placeholder="Breve descripción o texto de contacto..."
         />
-      </div>
+      </section>
 
       {/* ── Direcciones ───────────────────────────────────────────────────── */}
-      <div className="space-y-4">
+      <section className={myWebPanelClassName}>
+        <h4 className="text-base font-medium">Direcciones del estudio</h4>
         <InputField
           id="contact-titulo-direccion1"
           type="text"
@@ -246,10 +252,11 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
             />
           </>
         )}
-      </div>
+      </section>
 
       {form.type === 2 && (
-        <div className="space-y-4">
+        <section className={myWebPanelClassName}>
+          <h4 className="text-base font-medium">Formulario de contacto</h4>
           <InputField
             id="contact-form-email"
             type="email"
@@ -266,18 +273,16 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
           <p className="text-xs text-gray-400">
             El formulario de contacto se renderiza automáticamente en el sitio web.
           </p>
-        </div>
+        </section>
       )}
 
       {/* ── Guardar ───────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3">
-        <Button
-          title={saving ? "Guardando..." : "Guardar cambios"}
-          onClick={handleSave}
-          disabled={saving}
-        />
+      <div className="flex flex-wrap items-center gap-3">
+        <PillButton onClick={handleSave} disabled={saving}>
+          {saving ? "Guardando..." : "Guardar cambios"}
+        </PillButton>
         {saved && (
-          <span className="text-sm text-green-600">Cambios guardados</span>
+          <span role="status" className="text-sm">Cambios guardados</span>
         )}
       </div>
     </div>

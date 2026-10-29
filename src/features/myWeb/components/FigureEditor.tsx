@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { SiteComponentDataProps, FigureConfig } from "../../../types";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { SiteComponentDataProps, FigureConfig } from "@/types";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   updateSiteComponent,
   uploadFigureImage,
-} from "../../../redux/actions/SiteComponentActions";
-import { ImageUploader } from "./ImageUploader";
-import { Button } from "../../../components/shared/ui/Button";
-import { InputField } from "../../../components/shared/ui/InputField";
+} from "@/redux/actions/SiteComponentActions";
+import { ImageUploader } from "@/features/myWeb/components/ImageUploader";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import { InputField } from "@/components/shared/ui/InputField";
+import { myWebPanelClassName, myWebOptionClassName, myWebSelectedOptionClassName, myWebLegacyControlsClassName } from "@/features/myWeb/components/myWebStyles";
 
 interface FigureEditorProps {
   component: SiteComponentDataProps;
@@ -79,7 +80,7 @@ export const FigureEditor: React.FC<FigureEditorProps> = ({ component }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={`@container text-[#010000] ${myWebPanelClassName} ${myWebLegacyControlsClassName}`}>
       {/* ── Imagen ────────────────────────────────────────────────────────── */}
       <ImageUploader
         label="Imagen"
@@ -111,12 +112,9 @@ export const FigureEditor: React.FC<FigureEditorProps> = ({ component }) => {
             <button
               key={value}
               type="button"
+              aria-pressed={form.size === value}
               onClick={() => setForm((prev) => ({ ...prev, size: value }))}
-              className={`rounded-md border-2 p-3 text-left transition-colors focus:outline-none ${
-                form.size === value
-                  ? "border-gray-900 bg-gray-50"
-                  : "border-gray-200 bg-white hover:border-gray-400"
-              }`}
+              className={`${myWebOptionClassName} ${form.size === value ? myWebSelectedOptionClassName : ""}`}
             >
               <span
                 className={`block text-sm font-medium ${
@@ -144,6 +142,7 @@ export const FigureEditor: React.FC<FigureEditorProps> = ({ component }) => {
               <button
                 key={option}
                 type="button"
+                aria-pressed={current === option}
                 onClick={() =>
                   setForm((prev) => ({
                     ...prev,
@@ -151,11 +150,7 @@ export const FigureEditor: React.FC<FigureEditorProps> = ({ component }) => {
                     link_url: option === "none" ? "" : prev.link_url,
                   }))
                 }
-                className={`rounded-md border-2 p-2 text-sm font-medium transition-colors focus:outline-none ${
-                  current === option
-                    ? "border-gray-900 bg-gray-50 text-gray-900"
-                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-400"
-                }`}
+                className={`min-h-11 text-sm font-medium ${myWebOptionClassName} ${current === option ? myWebSelectedOptionClassName : ""}`}
               >
                 {labels[option]}
               </button>
@@ -177,14 +172,12 @@ export const FigureEditor: React.FC<FigureEditorProps> = ({ component }) => {
       </div>
 
       {/* ── Guardar ───────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3">
-        <Button
-          title={saving ? "Guardando..." : "Guardar cambios"}
-          onClick={handleSave}
-          disabled={saving}
-        />
+      <div className="flex flex-wrap items-center gap-3">
+        <PillButton onClick={handleSave} disabled={saving}>
+          {saving ? "Guardando..." : "Guardar cambios"}
+        </PillButton>
         {saved && (
-          <span className="text-sm text-green-600">Cambios guardados</span>
+          <span role="status" className="text-sm">Cambios guardados</span>
         )}
       </div>
     </div>
