@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
-import { SitePageDataProps } from "../../../types";
-import { ComponentList } from "./ComponentList";
-import { AnchorDestinationEditor } from "./AnchorDestinationEditor";
-import { ProjectsPageConfig } from "./ProjectsPageConfig";
-import { LegalPageEditor } from "./LegalPageEditor";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { fetchSiteComponents } from "../../../redux/actions/SiteComponentActions";
+import { SitePageDataProps } from "@/types";
+import { ComponentList } from "@/features/myWeb/components/ComponentList";
+import { AnchorDestinationEditor } from "@/features/myWeb/components/AnchorDestinationEditor";
+import { ProjectsPageConfig } from "@/features/myWeb/components/ProjectsPageConfig";
+import { LegalPageEditor } from "@/features/myWeb/components/LegalPageEditor";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { fetchSiteComponents } from "@/redux/actions/SiteComponentActions";
 
 interface PageEditorProps {
   page: SitePageDataProps;
