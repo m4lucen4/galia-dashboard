@@ -58,10 +58,10 @@ export const AppRoutes = () => (
       <Route path="/profile" element={<Profile />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/my-gpts" element={<MyGpts />} />
-    </Route>
-    <Route element={<ProtectedRoute />}>
       <Route path="/projects" element={<Projects />} />
       <Route path="/projects-analytics" element={<ProjectsAnalytics />} />
+    </Route>
+    <Route element={<ProtectedRoute />}>
       <Route path="/multimedia" element={<Multimedia />} />
       <Route path="/preview-projects" element={<PreviewProjects />} />
       <Route path="/auth/linkedin/callback" element={<LinkedInCallback />} />

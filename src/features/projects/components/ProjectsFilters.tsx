@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { Button } from "../../../components/shared/ui/Button";
 
 type OwnerOption = {
   id: string;
@@ -45,13 +44,13 @@ export const ProjectsFilters = ({
   const { t } = useTranslation();
 
   return (
-    <div className="mb-4 flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center">
+    <div className="flex flex-col gap-3 rounded-[28px] border border-[#010000]/20 p-5 sm:p-6 md:flex-row md:flex-wrap md:items-center">
       {isAdmin && (
         <select
           value={ownerFilter}
           onChange={(event) => onOwnerFilterChange(event.target.value)}
           aria-label={t("projects.allOwners")}
-          className="w-full shrink-0 rounded-md border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 md:w-56"
+          className="min-h-11 w-full shrink-0 rounded-full border border-[#010000]/30 bg-transparent px-4 py-2.5 text-sm text-[#010000] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000] md:w-56"
         >
           <option value="">{t("projects.allOwners")}</option>
           {ownerOptions.map((owner) => (
@@ -65,7 +64,7 @@ export const ProjectsFilters = ({
         value={stateFilter}
         onChange={(event) => onStateFilterChange(event.target.value)}
         aria-label={t("projects.allStates")}
-        className="w-full shrink-0 rounded-md border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 md:w-44"
+        className="min-h-11 w-full shrink-0 rounded-full border border-[#010000]/30 bg-transparent px-4 py-2.5 text-sm text-[#010000] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000] md:w-44"
       >
         <option value="">{t("projects.allStates")}</option>
         {uniqueStates.map((state) => (
@@ -80,14 +79,16 @@ export const ProjectsFilters = ({
         onChange={(event) => onTitleFilterChange(event.target.value)}
         placeholder={t("projects.searchByTitle")}
         aria-label={t("projects.searchByTitle")}
-        className="w-full min-w-0 rounded-md border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 md:min-w-64 md:flex-1"
+        className="min-h-11 w-full min-w-0 rounded-full border border-[#010000]/30 bg-transparent px-5 py-2.5 text-sm text-[#010000] placeholder:text-[#010000]/55 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000] md:min-w-64 md:flex-1"
       />
       <div className="shrink-0 self-end md:ml-auto">
-        <Button
-          title={t("projects.cleanFilters")}
+        <button
+          type="button"
           onClick={onClearFilters}
-          secondary
-        />
+          className="min-h-11 rounded-full px-3 py-2 text-sm text-[#010000]/65 underline decoration-[#010000]/30 underline-offset-4 hover:text-[#010000] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]"
+        >
+          {t("projects.cleanFilters")}
+        </button>
       </div>
     </div>
   );

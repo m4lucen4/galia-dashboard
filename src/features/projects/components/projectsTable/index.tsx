@@ -83,7 +83,7 @@ export const ProjectsTable = ({
     }
   };
 
-  // Wrapper functions para que coincidan los tipos
+  // Adapt row actions to project identifiers.
   const handleRecoveryProject = (project: ProjectDataProps) => {
     onRecoveryProject(project.id);
     setOpenMenuId(null);
@@ -142,7 +142,7 @@ export const ProjectsTable = ({
 
         return (
           <div className="flex flex-col gap-2">
-            <span>{info.getValue()}</span>
+            <span className="font-medium">{info.getValue()}</span>
             {hasGoogleMaps && project.showMap && (
               <Badge
                 title={t("projects.extraInfoPublished")}
@@ -168,7 +168,11 @@ export const ProjectsTable = ({
           launched: "Launched",
         };
 
-        return stateFormatMap[state] || state;
+        return (
+          <span className="inline-flex rounded-full border border-[#010000]/20 px-3 py-1 font-mono text-xs">
+            {stateFormatMap[state] || state}
+          </span>
+        );
       },
       size: 100,
     }),
@@ -220,53 +224,61 @@ export const ProjectsTable = ({
   });
 
   if (isLoading) {
-    return <LoadingSpinner fullPage />;
+    return (
+      <div className="flex min-h-64 items-center justify-center rounded-[28px] border border-[#010000]/20" role="status" aria-label={t("projects.title")}>
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   if (!projects.length) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="rounded-[28px] border border-dashed border-[#010000]/30 px-6 py-16 text-center text-sm text-[#010000]/65">
         {t("projects.noProjects")}
       </div>
     );
   }
 
   return (
-    <div className="bg-white my-6 overflow-hidden rounded-lg shadow">
-      <div className="overflow-x-auto pb-28">
-        <table className="min-w-full divide-y divide-gray-200 table-fixed">
-          <thead className="bg-gray-50">
+    <div className="min-w-0 rounded-[28px] border border-[#010000]/20">
+      <div className="overflow-x-auto rounded-t-[28px]">
+        <table className="min-w-full table-fixed divide-y divide-[#010000]/15 text-sm">
+          <thead className="bg-[#010000]/[0.04]">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer bg-gray-100"
-                    onClick={header.column.getToggleSortingHandler()}
+                    className="px-6 py-4 text-left font-mono text-[11px] font-normal uppercase tracking-wider text-[#010000]/60"
+                    aria-sort={header.column.getCanSort() ? (header.column.getIsSorted() === "asc" ? "ascending" : header.column.getIsSorted() === "desc" ? "descending" : "none") : undefined}
                     style={{ width: `${header.column.getSize()}px` }}
                   >
-                    <div className="flex items-center">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                      {{
-                        asc: " 🔼",
-                        desc: " 🔽",
-                      }[header.column.getIsSorted() as string] || null}
-                    </div>
+                    {header.column.getCanSort() ? (
+                      <button
+                        type="button"
+                        className="flex min-h-11 items-center gap-2 rounded-lg text-left uppercase tracking-wider hover:text-[#010000] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]"
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        <span aria-hidden="true">
+                          {{ asc: "↑", desc: "↓" }[header.column.getIsSorted() as string] || "↕"}
+                        </span>
+                      </button>
+                    ) : (
+                      flexRender(header.column.columnDef.header, header.getContext())
+                    )}
                   </th>
                 ))}
               </tr>
             ))}
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="divide-y divide-[#010000]/10">
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50">
+              <tr key={row.id} className="hover:bg-[#010000]/[0.03]">
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
-                    className="px-6 py-4"
+                    className={`px-6 py-5 align-middle ${cell.column.id === "id" ? "font-mono text-xs text-[#010000]/55" : "text-[#010000]/80"}`}
                     style={{ width: `${cell.column.getSize()}px` }}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -277,7 +289,7 @@ export const ProjectsTable = ({
           </tbody>
         </table>
       </div>
-      <Pagination table={table} />
+      <Pagination table={table} variant="dashboard" />
     </div>
   );
 };
