@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { InputField } from "../../../components/shared/ui/InputField";
-import { Button } from "../../../components/shared/ui/Button";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import {
+  projectControlClassName,
+  projectPanelClassName,
+  projectLegendClassName,
+  projectLegacyControlsClassName,
+} from "./projectFormStyles";
 import { ProjectDataProps, UserDataProps } from "../../../types";
 import { CreateProjectProps } from "../../../redux/actions/ProjectActions";
 import { KeywordInput } from "../../../components/shared/ui/KeywordInput";
@@ -82,11 +88,18 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   }, [dispatch, nasFolder]);
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="col-span-2">
+    <form
+      onSubmit={handleSubmit}
+      className="min-w-0 space-y-6 bg-[#d8e4d6] font-['Hanken_Grotesk',system-ui,sans-serif] text-[#010000] [&_label]:text-sm [&_label]:font-medium"
+    >
+      <fieldset className={projectPanelClassName}>
+        <legend className={projectLegendClassName}>
+          {t("projects.projectTitle")}
+        </legend>
         <div className="mb-2">
           <InputField
             id="title"
+            className={projectControlClassName}
             label={t("projects.projectTitle")}
             placeholder={t("projects.projectPlaceholderTitle")}
             type="text"
@@ -98,6 +111,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
         <div className="mb-2">
           <InputField
             id="description"
+            className={projectControlClassName}
             label={t("projects.projectDescription")}
             type="textarea"
             value={formData.description}
@@ -114,8 +128,10 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
           }
           onPromptChange={handleChange}
         />
-        <div className="flex gap-4 mb-2">
-          <div className="flex-1">
+        <div className="grid min-w-0 grid-cols-1 gap-5 md:grid-cols-2">
+          <div
+            className="min-w-0 [&>div>div]:min-h-12 [&>div>div]:rounded-2xl [&>div>div]:border-[#010000]/40 [&>div>div]:bg-transparent [&>div>div]:p-3 [&_input]:min-w-20 [&_button]:focus-visible:outline-2 [&_button]:focus-visible:outline-solid [&_button]:focus-visible:outline-[#010000] [&_button]:focus-visible:outline-offset-2"
+          >
             <KeywordInput
               id="keywords"
               label={t("projects.keywords")}
@@ -125,9 +141,10 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               }
             />
           </div>
-          <div className="flex-1">
+          <div className="min-w-0">
             <InputField
               id="weblink"
+              className={projectControlClassName}
               label={t("projects.web")}
               placeholder="https://example.com"
               type="text"
@@ -136,136 +153,157 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
             />
           </div>
         </div>
+      </fieldset>
+
+      <fieldset className={projectPanelClassName}>
+        <legend className={projectLegendClassName}>
+          {t("projects.projectImages")}
+        </legend>
         {nasFolder && (
-          <div className="my-4">
+          <div>
             <button
               type="button"
               onClick={() => setShowNasModal(true)}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-[#010000] px-5 py-3 text-sm font-medium hover:bg-[#010000]/5 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-[#010000] focus-visible:outline-offset-2"
             >
-              <FolderOpenIcon className="h-5 w-5 text-gray-500" />
+              <FolderOpenIcon className="h-5 w-5 shrink-0" />
               Archivos en NAS
-              <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+              <span className="ml-1 rounded-full border border-current px-2 py-0.5 font-mono text-xs">
                 {nasFiles.filter((f) => !f.isDirectory).length}
               </span>
             </button>
           </div>
         )}
-        <div className="col-span-2 mb-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t("projects.projectImages")} ({totalImagesCount}/10)
-          </label>
+        <div className="min-w-0 space-y-5">
+          <p className="text-sm font-medium">
+            {t("projects.projectImages")}{" "}
+            <span className="font-mono">({totalImagesCount}/10)</span>
+          </p>
           <div className="mt-1">
             <button
               type="button"
               onClick={() => setShowGallerySelector(true)}
               disabled={allImages.length >= 10}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-[#010000] px-5 py-3 text-sm font-medium hover:bg-[#010000]/5 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-[#010000] focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
               <PhotoIcon className="h-5 w-5 mr-2" />
               {t("projects.selectFromGallery")}
             </button>
           </div>
 
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-sm text-[#010000]/65">
             {t("projects.selectFromGalleryHelp")}
           </p>
 
-          {/* Lista de imágenes con drag and drop */}
-          <ImageDragList
-            images={allImages}
-            onReorder={handleReorderImages}
-            onRemove={handleRemoveImage}
-            maxImages={10}
-          />
-
-          <div className="my-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t("projects.howManyPublications")}
-            </label>
-            <div className="flex space-x-1">
-              {[1, 2, 3, 4].map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() =>
-                    setFormData({ ...formData, publications: value })
-                  }
-                  className={`flex-1 py-2 rounded-md transition-colors ${
-                    formData.publications === value
-                      ? "bg-black text-white font-medium"
-                      : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-                  }`}
-                >
-                  {value}
-                </button>
-              ))}
-            </div>
-          </div>
-          <ShowGoogleMaps
-            googleMaps={formData.googleMaps || ""}
-            showMap={!!formData.showMap}
-            isAdmin={user?.role === "admin"}
-            onGoogleMapsChange={handleChange}
-            onShowMapChange={(checked) =>
-              setFormData({ ...formData, showMap: checked })
-            }
-          />
-          <div className="flex space-x-4 mb-2">
-            <div className="flex-1">
-              <SelectField
-                id="category"
-                label={t("projects.category")}
-                value={formData.category || ""}
-                onChange={handleChange}
-                placeholder={t("projects.selectCategory")}
-                required
-                options={[
-                  { value: "residencial", label: "Residencial" },
-                  { value: "docente", label: "Docente" },
-                  { value: "oficinas", label: "Oficinas" },
-                  { value: "planeamiento", label: "Planeamiento" },
-                  { value: "industrial", label: "Industrial" },
-                  { value: "cultural", label: "Cultural" },
-                  { value: "publico", label: "Espacio público" },
-                  { value: "rehabilitacion", label: "Rehabilitación" },
-                  { value: "interiorismo", label: "Interiorismo" },
-                  { value: "sanitario", label: "Sanitario" },
-                ]}
-              />
-            </div>
-            <div className="flex-1">
-              <InputField
-                id="year"
-                label={t("projects.year")}
-                placeholder={t("projects.placeholderYear")}
-                type="number"
-                value={formData.year || ""}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-          <div className="mb-2">
-            <Collaborators
-              collaborators={formData.projectCollaborators || []}
-              onChange={handleProjectCollaboratorsChange}
+          <div
+            className={`${projectLegacyControlsClassName} [&_img]:rounded-2xl [&_img]:border-[#010000]/20 [&_button]:rounded-full [&_button]:bg-[#010000] [&_button]:text-[#d8e4d6] [&_button]:opacity-100 [&_.justify-between]:flex-wrap [&_.justify-between]:gap-2`}
+          >
+            <ImageDragList
+              images={allImages}
+              onReorder={handleReorderImages}
+              onRemove={handleRemoveImage}
+              maxImages={10}
             />
           </div>
         </div>
-      </div>
+      </fieldset>
 
-      <div className="mt-6">
-        <Button
-          fullWidth
-          title={
-            isEditMode ? t("projects.saveChanges") : t("projects.createProject")
+      <fieldset className={projectPanelClassName}>
+        <legend className={projectLegendClassName}>
+          {t("projects.howManyPublications")}
+        </legend>
+        <div className="grid grid-cols-4 gap-2 sm:gap-3">
+          {[1, 2, 3, 4].map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() =>
+                setFormData({ ...formData, publications: value })
+              }
+              aria-pressed={formData.publications === value}
+              className={`min-h-12 rounded-full border border-[#010000]/40 py-3 font-mono transition-colors focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-[#010000] focus-visible:outline-offset-2 ${
+                formData.publications === value
+                  ? "bg-[#010000] text-[#d8e4d6]"
+                  : "bg-transparent text-[#010000] hover:bg-[#010000]/5"
+              }`}
+            >
+              {value}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset className={projectPanelClassName}>
+        <legend className={projectLegendClassName}>
+          {t("projects.category")} / {t("projects.year")}
+        </legend>
+        <ShowGoogleMaps
+          googleMaps={formData.googleMaps || ""}
+          showMap={!!formData.showMap}
+          isAdmin={user?.role === "admin"}
+          onGoogleMapsChange={handleChange}
+          onShowMapChange={(checked) =>
+            setFormData({ ...formData, showMap: checked })
           }
-          disabled={loading}
-          type="submit"
         />
-      </div>
+        <div className="grid min-w-0 grid-cols-1 gap-5 md:grid-cols-2">
+          <div className="min-w-0">
+            <SelectField
+              id="category"
+              className={projectControlClassName}
+              label={t("projects.category")}
+              value={formData.category || ""}
+              onChange={handleChange}
+              placeholder={t("projects.selectCategory")}
+              required
+              options={[
+                { value: "residencial", label: "Residencial" },
+                { value: "docente", label: "Docente" },
+                { value: "oficinas", label: "Oficinas" },
+                { value: "planeamiento", label: "Planeamiento" },
+                { value: "industrial", label: "Industrial" },
+                { value: "cultural", label: "Cultural" },
+                { value: "publico", label: "Espacio público" },
+                { value: "rehabilitacion", label: "Rehabilitación" },
+                { value: "interiorismo", label: "Interiorismo" },
+                { value: "sanitario", label: "Sanitario" },
+              ]}
+            />
+          </div>
+          <div className="min-w-0">
+            <InputField
+              id="year"
+              className={projectControlClassName}
+              label={t("projects.year")}
+              placeholder={t("projects.placeholderYear")}
+              type="number"
+              value={formData.year || ""}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset className={projectPanelClassName}>
+        <legend className={projectLegendClassName}>
+          {t("projects.collaborators")}
+        </legend>
+        <div
+          className={`${projectLegacyControlsClassName} [&_button]:rounded-full [&_div.bg-gray-50]:rounded-2xl [&_div.bg-gray-50]:border-[#010000]/20 [&_div.bg-gray-50]:bg-transparent [&_div.mb-3]:flex-wrap [&_div.mb-3]:gap-3`}
+        >
+          <Collaborators
+            collaborators={formData.projectCollaborators || []}
+            onChange={handleProjectCollaboratorsChange}
+          />
+        </div>
+      </fieldset>
+
+      <PillButton className="w-full" disabled={loading} type="submit">
+        {isEditMode ? t("projects.saveChanges") : t("projects.createProject")}
+      </PillButton>
 
       <MediaGallerySelector
+        variant="dashboard"
         isOpen={showGallerySelector}
         onClose={() => setShowGallerySelector(false)}
         onSelect={handleGallerySelect}

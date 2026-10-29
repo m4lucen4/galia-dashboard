@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { InputField } from "../../../../components/shared/ui/InputField";
 import { Checkbox } from "../../../../components/shared/ui/Checkbox";
+import { projectCheckboxClassName, projectControlClassName } from "../projectFormStyles";
 
 interface ShowGoogleMapsProps {
   googleMaps: string;
@@ -25,10 +26,11 @@ export const ShowGoogleMaps: React.FC<ShowGoogleMapsProps> = ({
   const { t } = useTranslation();
 
   return (
-    <div className="flex items-end space-x-4 mb-2">
-      <div className="flex-1">
+    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:gap-5">
+      <div className="min-w-0 flex-1">
         <InputField
           id="googleMaps"
+          className={projectControlClassName}
           label={t("projects.googleMaps")}
           placeholder={t("projects.placeholderGoogleMaps")}
           type="url"
@@ -38,9 +40,10 @@ export const ShowGoogleMaps: React.FC<ShowGoogleMapsProps> = ({
       </div>
 
       {isAdmin && (
-        <div className="pb-1">
+        <div className="shrink-0">
           <Checkbox
             id="showMap"
+            className={projectCheckboxClassName}
             label="Mostrar?"
             checked={showMap}
             onChange={onShowMapChange}
