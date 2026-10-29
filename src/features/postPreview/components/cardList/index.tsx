@@ -67,19 +67,19 @@ export const CardsList: React.FC<CardsListProps> = ({
   const endIndex = startIndex + itemsPerPage;
   const currentProjects = sortedProjects.slice(startIndex, endIndex);
 
-  // Vista Grid (Cards en cuadrícula)
+  // Grid view
   if (viewMode === "grid") {
     return (
-      <div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
+      <div className="min-w-0 font-['Hanken_Grotesk',sans-serif] text-[#010000] [&>div:last-child]:rounded-[28px] [&>div:last-child]:border-[#010000]/20 [&>div:last-child]:bg-transparent [&_nav]:font-['Geist_Mono',monospace]">
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5 mb-6">
           {Array.isArray(currentProjects) &&
             currentProjects.map((project: PreviewProjectDataProps) => (
               <div
                 key={project.id}
-                className="bg-white border border-black rounded-lg shadow-md overflow-hidden"
+                className="min-w-0 rounded-[28px] border border-[#010000]/25 bg-white/35"
               >
                 {project.image_data && project.image_data.length > 0 ? (
-                  <div className="w-full h-48 overflow-hidden">
+                  <div className="w-full h-52 overflow-hidden rounded-t-[27px] border-b border-[#010000]/15">
                     <img
                       src={
                         project.image_data.find(
@@ -91,14 +91,14 @@ export const CardsList: React.FC<CardsListProps> = ({
                     />
                   </div>
                 ) : (
-                  <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
+                  <div className="w-full h-52 rounded-t-[27px] border-b border-[#010000]/15 bg-[#d8e4d6] flex items-center justify-center">
                     <DocumentTextIcon className="w-12 h-12 text-gray-400" />
                   </div>
                 )}
 
                 <div className="p-5">
-                  <div className="flex justify-between items-start">
-                    <h4 className="font-semibold text-lg text-gray-800 mb-2 line-clamp-2 flex-1">
+                  <div className="flex justify-between items-start gap-3">
+                    <h4 className="min-w-0 font-semibold text-xl leading-tight tracking-tight mb-3 line-clamp-2 flex-1 break-words">
                       {project.id} - {truncateText(project.title, 20)}
                     </h4>
                     <ProjectMenu
@@ -114,7 +114,7 @@ export const CardsList: React.FC<CardsListProps> = ({
                 </div>
 
                 {project.state !== "published" && (
-                  <div className="p-5 pt-0 flex justify-between items-center mt-2">
+                  <div className="p-5 pt-0 flex flex-wrap justify-between items-center gap-3 mt-2 [&_button]:rounded-full [&_button]:min-h-10 [&_button]:border-[#010000]/25">
                     <div className="flex gap-3">
                       <Button
                         icon={<InstagramIcon />}
@@ -157,19 +157,19 @@ export const CardsList: React.FC<CardsListProps> = ({
     );
   }
 
-  // Vista Lista (Cards horizontales)
+  // List view
   return (
-    <div>
-      <div className="space-y-4 mb-4">
+    <div className="min-w-0 font-['Hanken_Grotesk',sans-serif] text-[#010000] [&>div:last-child]:rounded-[28px] [&>div:last-child]:border-[#010000]/20 [&>div:last-child]:bg-transparent [&_nav]:font-['Geist_Mono',monospace]">
+      <div className="space-y-4 mb-6">
         {Array.isArray(currentProjects) &&
           currentProjects.map((project: PreviewProjectDataProps) => (
             <div
               key={project.id}
-              className="bg-white border border-black rounded-lg shadow-md overflow-hidden flex flex-col md:flex-row"
+              className="min-w-0 rounded-[28px] border border-[#010000]/25 bg-white/35 flex flex-col lg:flex-row"
             >
-              {/* Imagen a la izquierda */}
+              {/* Image panel */}
               {project.image_data && project.image_data.length > 0 ? (
-                <div className="w-full md:w-64 h-48 overflow-hidden shrink-0">
+                <div className="w-full lg:w-56 xl:w-64 h-52 lg:h-auto lg:min-h-52 overflow-hidden rounded-t-[27px] lg:rounded-tr-none lg:rounded-l-[27px] shrink-0">
                   <img
                     src={
                       project.image_data.find(
@@ -181,16 +181,16 @@ export const CardsList: React.FC<CardsListProps> = ({
                   />
                 </div>
               ) : (
-                <div className="w-full md:w-64 h-48 bg-gray-200 flex items-center justify-center shrink-0">
+                <div className="w-full lg:w-56 xl:w-64 h-52 lg:h-auto lg:min-h-52 rounded-t-[27px] lg:rounded-tr-none lg:rounded-l-[27px] bg-[#d8e4d6] flex items-center justify-center shrink-0">
                   <DocumentTextIcon className="w-12 h-12 text-gray-400" />
                 </div>
               )}
 
-              {/* Contenido a la derecha */}
-              <div className="flex-1 flex flex-col">
+              {/* Project details */}
+              <div className="min-w-0 flex-1 flex flex-col">
                 <div className="p-5 flex-1">
-                  <div className="flex justify-between items-start mb-3">
-                    <h4 className="font-semibold text-lg text-gray-800 flex-1">
+                  <div className="flex justify-between items-start gap-3 mb-3">
+                    <h4 className="min-w-0 font-semibold text-xl leading-tight tracking-tight flex-1 break-words">
                       {project.id} - {project.title}
                     </h4>
                     <ProjectMenu
@@ -205,10 +205,10 @@ export const CardsList: React.FC<CardsListProps> = ({
                   <ProjectInfo project={project} />
                 </div>
 
-                {/* Botones de acción y resultados */}
-                <div className="border-t border-gray-200">
+                {/* Actions and publication results */}
+                <div className="border-t border-[#010000]/15">
                   {project.state !== "published" && (
-                    <div className="p-5 flex justify-between items-center">
+                    <div className="p-5 flex flex-wrap justify-between items-center gap-3 [&_button]:rounded-full [&_button]:min-h-10 [&_button]:border-[#010000]/25">
                       <div className="flex gap-3">
                         <Button
                           icon={<InstagramIcon />}

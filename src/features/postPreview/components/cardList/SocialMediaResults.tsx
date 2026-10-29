@@ -24,7 +24,7 @@ export const SocialMediaResults: React.FC<SocialMediaResultsProps> = ({
 
   return (
     <div className="px-5 pb-2">
-      <div className="flex gap-2 text-xs">
+      <div className="flex flex-wrap gap-2 text-xs leading-relaxed [&>span]:rounded-full [&>span]:border [&>span]:border-current/20 [&>span]:px-2.5 [&>span]:py-1 [&_svg]:shrink-0">
         {instagramResult === "true" && (
           <span className="flex items-center gap-1 text-green-600">
             <CheckCircleIcon className="h-3 w-3" />

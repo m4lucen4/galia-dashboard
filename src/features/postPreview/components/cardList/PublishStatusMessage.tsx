@@ -12,8 +12,8 @@ export const PublishStatusMessage: React.FC<PublishStatusMessageProps> = ({
   const { t } = useTranslation();
 
   return (
-    <div className="px-5 pb-4 mt-1">
-      <p className="text-xs text-gray-500 italic pt-2">
+    <div className="px-5 pb-5 mt-1">
+      <p className="text-xs leading-relaxed text-[#010000]/65 border-t border-[#010000]/15 pt-3">
         {isDateInPast(publishDate)
           ? t("previewProjects.messagePublished")
           : t("previewProjects.messagePrepublish")}
