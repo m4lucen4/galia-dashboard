@@ -6,7 +6,8 @@ import { InputField } from "@/components/shared/ui/InputField";
 import { PillButton } from "@/components/shared/ui/PillButton";
 import { ColorPicker } from "@/features/myWeb/components/ColorPicker";
 import { RichTextInput } from "@/features/myWeb/components/RichTextInput";
-import { myWebPanelClassName, myWebOptionClassName, myWebSelectedOptionClassName, myWebIconButtonClassName, myWebLegacyControlsClassName } from "@/features/myWeb/components/myWebStyles";
+import { myWebEditorClassName, myWebGroupClassName, myWebFieldGridClassName, myWebLegacyControlsClassName } from "@/features/myWeb/components/myWebStyles";
+import { LayoutChoice } from "@/features/myWeb/components/previews/LayoutChoice";
 import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
 
 interface ContactEditorProps {
@@ -124,43 +125,35 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
   };
 
   return (
-    <div className={`@container space-y-6 text-[#010000] ${myWebLegacyControlsClassName}`}>
+    <div className={`${myWebEditorClassName} text-[#010000] ${myWebLegacyControlsClassName}`}>
       {/* ── Selector de tipo ──────────────────────────────────────────────── */}
       <div>
         <p className="text-sm font-medium text-gray-900 mb-3">Tipo de contacto</p>
-        <div className="grid grid-cols-1 gap-3 @min-[28rem]:grid-cols-2">
+        <div className={myWebFieldGridClassName}>
           {TYPE_OPTIONS.map(({ value, label, Preview, reverseField }) => {
             const reversed = form[reverseField] ?? false;
             return (
-              <div key={value} className="relative">
-                <button
+              <div key={value} className="min-w-0 space-y-2">
+                <LayoutChoice
+                  label={label}
+                  preview={<Preview reversed={reversed} />}
+                  selected={form.type === value}
+                  onSelect={() => handleChange("type", value)}
+                />
+                <PillButton
                   type="button"
-                  aria-pressed={form.type === value}
-                  onClick={() => handleChange("type", value)}
-                  className={`w-full pb-16 ${myWebOptionClassName} ${form.type === value ? myWebSelectedOptionClassName : ""}`}
-                >
-                  <span aria-hidden="true"><Preview reversed={reversed} /></span>
-                  <span
-                    className={`mt-2 block text-xs font-medium ${
-                      form.type === value ? "text-gray-900" : "text-gray-500"
-                    }`}
-                  >
-                    {label}
-                  </span>
-                </button>
-                <button
-                  type="button"
+                  variant="outline"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleChange(reverseField, !reversed);
                   }}
-                  className={`absolute bottom-2 right-2 ${myWebIconButtonClassName}`}
                   aria-label={`Invertir orden: ${label}`}
                   aria-pressed={reversed}
                   title="Invertir orden"
                 >
-                  <ArrowsRightLeftIcon className="h-3.5 w-3.5" />
-                </button>
+                  <ArrowsRightLeftIcon aria-hidden="true" className="h-4 w-4" />
+                  Invertir orden
+                </PillButton>
               </div>
             );
           })}
@@ -168,23 +161,33 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
       </div>
 
       {/* ── Campos comunes ────────────────────────────────────────────────── */}
-      <section className={myWebPanelClassName}>
+      <section className={myWebGroupClassName}>
         <h4 className="text-base font-medium">Presentación del contacto</h4>
-        {form.type === 1 && (
+        <div className={myWebFieldGridClassName}>
+          {form.type === 1 && (
+            <InputField
+              id="contact-antetitulo"
+              type="text"
+              label="Antetítulo"
+              value={form.antetitulo ?? ""}
+              onChange={(e) => handleChange("antetitulo", e.target.value)}
+              placeholder="Texto pequeño encima del título"
+            />
+          )}
           <InputField
-            id="contact-antetitulo"
+            id="contact-titulo"
             type="text"
-            label="Antetítulo"
-            value={form.antetitulo ?? ""}
-            onChange={(e) => handleChange("antetitulo", e.target.value)}
-            placeholder="Texto pequeño encima del título"
+            label="Título"
+            value={form.titulo}
+            onChange={(e) => handleChange("titulo", e.target.value)}
+            placeholder="Estudio de Arquitectura"
           />
-        )}
+        </div>
 
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-black">Mostrar logo</p>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-sm text-gray-500 mt-0.5">
               Muestra el logo de la web encima del título en este componente
             </p>
           </div>
@@ -199,15 +202,6 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
           </PillButton>
         </div>
 
-        <InputField
-          id="contact-titulo"
-          type="text"
-          label="Título"
-          value={form.titulo}
-          onChange={(e) => handleChange("titulo", e.target.value)}
-          placeholder="Estudio de Arquitectura"
-        />
-
         <RichTextInput
           label="Descripción"
           value={form.descripcion}
@@ -217,60 +211,65 @@ export const ContactEditor: React.FC<ContactEditorProps> = ({ component }) => {
       </section>
 
       {/* ── Direcciones ───────────────────────────────────────────────────── */}
-      <section className={myWebPanelClassName}>
+      <section className={myWebGroupClassName}>
         <h4 className="text-base font-medium">Direcciones del estudio</h4>
-        <InputField
-          id="contact-titulo-direccion1"
-          type="text"
-          label={form.type === 1 ? "Título dirección 1 (opcional)" : "Título dirección (opcional)"}
-          value={form.titulo_direccion1 ?? ""}
-          onChange={(e) => handleChange("titulo_direccion1", e.target.value)}
-          placeholder="Oficina principal"
-        />
-        <RichTextInput
-          label={form.type === 1 ? "Dirección 1" : "Dirección"}
-          value={form.direccion1}
-          onChange={(html) => handleChange("direccion1", html)}
-          placeholder="Calle Ejemplo, 12&#10;28001 Madrid&#10;España"
-        />
-
-        {form.type === 1 && (
-          <>
+        <div className={myWebFieldGridClassName}>
+          <div className={myWebGroupClassName}>
             <InputField
-              id="contact-titulo-direccion2"
+              id="contact-titulo-direccion1"
               type="text"
-              label="Título dirección 2 (opcional)"
-              value={form.titulo_direccion2 ?? ""}
-              onChange={(e) => handleChange("titulo_direccion2", e.target.value)}
-              placeholder="Oficina Barcelona"
+              label={form.type === 1 ? "Título dirección 1 (opcional)" : "Título dirección (opcional)"}
+              value={form.titulo_direccion1 ?? ""}
+              onChange={(e) => handleChange("titulo_direccion1", e.target.value)}
+              placeholder="Oficina principal"
             />
             <RichTextInput
-              label="Dirección 2"
-              value={form.direccion2 ?? ""}
-              onChange={(html) => handleChange("direccion2", html)}
-              placeholder="Calle Ejemplo, 34&#10;08001 Barcelona&#10;España"
+              label={form.type === 1 ? "Dirección 1" : "Dirección"}
+              value={form.direccion1}
+              onChange={(html) => handleChange("direccion1", html)}
+              placeholder="Calle Ejemplo, 12&#10;28001 Madrid&#10;España"
             />
-          </>
-        )}
+          </div>
+          {form.type === 1 && (
+            <div className={myWebGroupClassName}>
+              <InputField
+                id="contact-titulo-direccion2"
+                type="text"
+                label="Título dirección 2 (opcional)"
+                value={form.titulo_direccion2 ?? ""}
+                onChange={(e) => handleChange("titulo_direccion2", e.target.value)}
+                placeholder="Oficina Barcelona"
+              />
+              <RichTextInput
+                label="Dirección 2"
+                value={form.direccion2 ?? ""}
+                onChange={(html) => handleChange("direccion2", html)}
+                placeholder="Calle Ejemplo, 34&#10;08001 Barcelona&#10;España"
+              />
+            </div>
+          )}
+        </div>
       </section>
 
       {form.type === 2 && (
-        <section className={myWebPanelClassName}>
+        <section className={myWebGroupClassName}>
           <h4 className="text-base font-medium">Formulario de contacto</h4>
-          <InputField
-            id="contact-form-email"
-            type="email"
-            label="Email de destino del formulario"
-            value={form.form_email ?? ""}
-            onChange={(e) => handleChange("form_email", e.target.value)}
-            placeholder="contacto@estudio.com"
-          />
-          <ColorPicker
-            label="Color de fondo del formulario"
-            value={form.form_bg_color ?? "#FFFFFF"}
-            onChange={(color) => handleChange("form_bg_color", color)}
-          />
-          <p className="text-xs text-gray-400">
+          <div className={myWebFieldGridClassName}>
+            <InputField
+              id="contact-form-email"
+              type="email"
+              label="Email de destino del formulario"
+              value={form.form_email ?? ""}
+              onChange={(e) => handleChange("form_email", e.target.value)}
+              placeholder="contacto@estudio.com"
+            />
+            <ColorPicker
+              label="Color de fondo del formulario"
+              value={form.form_bg_color ?? "#FFFFFF"}
+              onChange={(color) => handleChange("form_bg_color", color)}
+            />
+          </div>
+          <p className="text-sm text-gray-500">
             El formulario de contacto se renderiza automáticamente en el sitio web.
           </p>
         </section>
