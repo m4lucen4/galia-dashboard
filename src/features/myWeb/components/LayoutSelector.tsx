@@ -1,5 +1,6 @@
 import React from "react";
-import { ProjectListLayout } from "../../../types";
+import { ProjectListLayout } from "@/types";
+import { myWebOptionClassName, myWebSelectedOptionClassName } from "@/features/myWeb/components/myWebStyles";
 
 interface LayoutOption {
   value: ProjectListLayout;
@@ -82,7 +83,7 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
   disabled = false,
 }) => {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid min-w-0 gap-3 sm:grid-cols-2">
       {LAYOUT_OPTIONS.map((option) => {
         const selected = value === option.value;
         return (
@@ -91,25 +92,22 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
             type="button"
             onClick={() => !disabled && onChange(option.value)}
             disabled={disabled}
-            className={`flex flex-col gap-2 rounded-md border-2 p-3 text-left transition-colors disabled:opacity-50 ${
-              selected
-                ? "border-black bg-gray-50 text-black"
-                : "border-gray-200 bg-white text-gray-500 hover:border-gray-400"
-            }`}
+            aria-pressed={selected}
+            className={`${myWebOptionClassName} flex min-h-11 flex-col gap-2 ${selected ? myWebSelectedOptionClassName : ""}`}
           >
-            <div className="h-16 w-full text-gray-600">
+            <div className="h-20 w-full text-[#010000]/70">
               {option.preview}
             </div>
             <div>
               <p className="text-sm font-medium leading-tight">
                 {option.label}
               </p>
-              <p className="mt-0.5 text-xs text-gray-400 leading-tight">
+              <p className="mt-1 text-sm leading-relaxed text-[#010000]/65">
                 {option.description}
               </p>
             </div>
             {selected && (
-              <span className="self-end text-xs font-medium text-black">
+              <span className="mt-auto self-end text-xs font-medium text-[#010000]">
                 ✓ Seleccionado
               </span>
             )}

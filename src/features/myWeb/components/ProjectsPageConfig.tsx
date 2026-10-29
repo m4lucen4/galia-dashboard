@@ -1,17 +1,18 @@
 import React, { useEffect, useMemo } from "react";
-import { SitePageDataProps, ProjectListConfig, ProjectListLayout, SiteComponentDataProps } from "../../../types";
-import { LayoutSelector } from "./LayoutSelector";
-import { DetailTypeSelector } from "./DetailTypeSelector";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { SitePageDataProps, ProjectListConfig, ProjectListLayout, SiteComponentDataProps } from "@/types";
+import { LayoutSelector } from "@/features/myWeb/components/LayoutSelector";
+import { DetailTypeSelector } from "@/features/myWeb/components/DetailTypeSelector";
+import { ProjectOrderList } from "@/features/myWeb/components/projects/ProjectOrderList";
+import { myWebMutedClassName, myWebPanelClassName } from "@/features/myWeb/components/myWebStyles";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   upsertProjectListComponent,
   saveProjectListOrder,
   saveProjectListHidden,
   saveProjectListDetailType,
   saveProjectListShowDescriptions,
-} from "../../../redux/actions/SiteComponentActions";
-import { fetchProjects, fetchProjectsByUserId } from "../../../redux/actions/ProjectActions";
-import { InformationCircleIcon, ChevronUpIcon, ChevronDownIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+} from "@/redux/actions/SiteComponentActions";
+import { fetchProjects, fetchProjectsByUserId } from "@/redux/actions/ProjectActions";
 
 interface ProjectsPageConfigProps {
   page: SitePageDataProps;
@@ -97,111 +98,39 @@ export const ProjectsPageConfig: React.FC<ProjectsPageConfigProps> = ({
   const isLoadingProjects = projectsFetchRequest.inProgress || projectFetchByUserIdRequest.inProgress;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-start gap-2 p-3 bg-gray-50 border border-gray-200 rounded-md">
-        <InformationCircleIcon className="h-4 w-4 text-gray-500 mt-0.5 shrink-0" />
-        <p className="text-sm text-gray-600">
-          Esta página muestra automáticamente todos tus proyectos.
-        </p>
-      </div>
-
-      <div>
-        <p className="text-sm font-medium text-gray-900 mb-2">Layout</p>
-        <LayoutSelector
-          value={currentLayout}
-          onChange={handleLayoutChange}
+    <div className="min-w-0 space-y-5 text-[#010000]">
+      <p className={myWebMutedClassName}>Esta página muestra automáticamente todos tus proyectos. Personaliza su presentación y visibilidad.</p>
+      <section className={myWebPanelClassName} aria-labelledby={`project-layout-${page.id}`}>
+        <h3 id={`project-layout-${page.id}`} className="text-lg font-medium">Presentación de las tarjetas</h3>
+        <LayoutSelector value={currentLayout} onChange={handleLayoutChange} disabled={saveRequest.inProgress} />
+        <div className="space-y-1">
+          <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={showDescriptions}
+              onChange={(event) => handleShowDescriptionsChange(event.target.checked)}
+              disabled={saveRequest.inProgress}
+              className="size-5 shrink-0 accent-[#010000] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]"
+            />
+            Mostrar descripciones en las tarjetas
+          </label>
+          <p className={myWebMutedClassName}>Se aplica a las tarjetas de ambos diseños de proyectos, no al detalle del proyecto.</p>
+        </div>
+      </section>
+      <section className={myWebPanelClassName} aria-labelledby={`project-detail-${page.id}`}>
+        <h3 id={`project-detail-${page.id}`} className="text-lg font-medium">Diseño del detalle de proyecto</h3>
+        <DetailTypeSelector value={currentDetailType} onChange={handleDetailTypeChange} disabled={saveRequest.inProgress} />
+      </section>
+      <section className={myWebPanelClassName} aria-label="Proyectos de tu web">
+        <ProjectOrderList
+          projects={sortedProjects}
+          hiddenProjects={hiddenProjects}
+          loading={isLoadingProjects}
           disabled={saveRequest.inProgress}
+          onToggleHidden={handleToggleHidden}
+          onMove={handleMove}
         />
-      </div>
-
-      <div>
-        <p className="text-sm font-medium text-gray-900 mb-2">Diseño del detalle de proyecto</p>
-        <DetailTypeSelector
-          value={currentDetailType}
-          onChange={handleDetailTypeChange}
-          disabled={saveRequest.inProgress}
-        />
-      </div>
-
-      <div className="space-y-1">
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-900">
-          <input
-            type="checkbox"
-            checked={showDescriptions}
-            onChange={(event) => handleShowDescriptionsChange(event.target.checked)}
-            disabled={saveRequest.inProgress}
-          />
-          Mostrar descripciones en las tarjetas
-        </label>
-        <p className="text-sm text-gray-600">
-          Se aplica a las tarjetas de ambos layouts de proyectos, no al detalle del proyecto.
-        </p>
-      </div>
-
-      <div>
-        <p className="text-sm font-medium text-gray-900 mb-2">Orden de proyectos</p>
-        {isLoadingProjects ? (
-          <div className="flex items-center gap-2 py-4">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400" />
-            <span className="text-sm text-gray-500">Cargando proyectos...</span>
-          </div>
-        ) : sortedProjects.length === 0 ? (
-          <p className="text-sm text-gray-400 py-2">No hay proyectos disponibles.</p>
-        ) : (
-          <div className="space-y-1 max-h-[420px] overflow-y-auto pr-1">
-            {sortedProjects.map((project, index) => {
-              const projectId = String(project.id);
-              const isHidden = hiddenProjects.includes(projectId);
-              return (
-                <div
-                  key={project.id}
-                  className={`flex items-center gap-2 p-2 border rounded-md ${isHidden ? "bg-gray-50 border-gray-100" : "bg-white border-gray-200"}`}
-                >
-                  <span className="text-xs text-gray-400 font-mono w-16 shrink-0 truncate">
-                    {projectId.slice(0, 8)}
-                  </span>
-                  <span className={`text-sm flex-1 truncate ${isHidden ? "text-gray-400 line-through" : "text-gray-800"}`}>
-                    {project.title}
-                  </span>
-                  <div className="flex gap-1 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleHidden(projectId)}
-                      disabled={saveRequest.inProgress}
-                      className="p-0.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                      aria-label={isHidden ? "Mostrar proyecto" : "Ocultar proyecto"}
-                      title={isHidden ? "Mostrar proyecto" : "Ocultar proyecto"}
-                    >
-                      {isHidden
-                        ? <EyeSlashIcon className="h-4 w-4 text-gray-400" />
-                        : <EyeIcon className="h-4 w-4 text-gray-600" />
-                      }
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleMove(index, "up")}
-                      disabled={index === 0 || saveRequest.inProgress}
-                      className="p-0.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                      aria-label="Subir"
-                    >
-                      <ChevronUpIcon className="h-4 w-4 text-gray-600" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleMove(index, "down")}
-                      disabled={index === sortedProjects.length - 1 || saveRequest.inProgress}
-                      className="p-0.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                      aria-label="Bajar"
-                    >
-                      <ChevronDownIcon className="h-4 w-4 text-gray-600" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      </section>
     </div>
   );
 };
