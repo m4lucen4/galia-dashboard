@@ -234,44 +234,46 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
       : "";
 
   return (
-    <div className="space-y-4 mt-4">
+    <div className="mt-5 min-w-0 space-y-6 rounded-[28px] border border-[#010000]/15 bg-white p-4 font-[Hanken_Grotesk] text-[#010000] sm:p-6">
       {/* Instant Publish Checkbox */}
-      <div className="flex items-center">
+      <div className="flex items-center gap-3 rounded-full border border-[#010000]/15 bg-[#d8e4d6] px-4 py-3">
         <input
           id="publishNow"
           name="publishNow"
           type="checkbox"
           checked={publishNow}
           onChange={handlePublishNowChange}
-          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+          className="h-4 w-4 shrink-0 cursor-pointer rounded border-[#010000]/30 accent-[#010000] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#010000]"
         />
-        <label htmlFor="publishNow" className="ml-2 text-sm text-gray-900">
+        <label htmlFor="publishNow" className="cursor-pointer text-sm font-medium">
           {t("previewProjects.publishNow")}
         </label>
       </div>
 
       {publishNow && (
-        <p className="text-xs text-blue-600 italic -mt-2">
+        <p className="-mt-3 px-2 text-xs leading-relaxed text-[#010000]/65">
           {t("previewProjects.instantPublicationMessage")}
         </p>
       )}
 
-      <InputField
-        id="publishDate"
-        label={t("previewProjects.publishedAt")}
-        type="dateTime"
-        value={publishDate}
-        onChange={handleDateChange}
-        min={currentDate}
-        error={dateError}
-        helperText={getHelperText()}
-        disabled={publishNow}
-      />
-      <div>
-        <p className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="[&_input]:min-w-0 [&_input]:rounded-2xl [&_input]:py-3 [&_input]:font-[Geist_Mono] [&_input]:text-sm [&_input]:outline-[#010000]/20 [&_input:disabled]:cursor-not-allowed [&_input:disabled]:opacity-50 [&_label]:mb-2 [&_label]:block [&_label]:font-medium [&_select]:min-w-0 [&_select]:rounded-2xl [&_select]:py-3 [&_select]:font-[Geist_Mono] [&_select]:text-sm [&_select]:outline-[#010000]/20 [&_select:disabled]:cursor-not-allowed [&_select:disabled]:opacity-50">
+        <InputField
+          id="publishDate"
+          label={t("previewProjects.publishedAt")}
+          type="dateTime"
+          value={publishDate}
+          onChange={handleDateChange}
+          min={currentDate}
+          error={dateError}
+          helperText={getHelperText()}
+          disabled={publishNow}
+        />
+      </div>
+      <div className="min-w-0 border-t border-[#010000]/10 pt-5">
+        <p className="mb-3 block text-sm font-medium">
           {t("previewProjects.selectSocialNetworks")}
         </p>
-        <div className="space-y-2">
+        <div className="space-y-3">
           <CheckSocialNetwork
             id="instagram"
             network="instagram"

@@ -22,7 +22,7 @@ export const EventChip: React.FC<EventChipProps> = ({
       type="button"
       onClick={onClick}
       title={`${time ?? ""} ${project.title}`.trim()}
-      className={`w-full flex items-center gap-1 truncate rounded px-1.5 py-0.5 text-left text-xs transition-opacity hover:opacity-80 ${className}`}
+      className={`flex w-full items-center gap-1 truncate rounded-full border border-current/15 px-2 py-1.5 text-left font-['Hanken_Grotesk',system-ui,sans-serif] text-xs transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000] ${className}`}
     >
       {project.checkSocialNetworks?.instagram && (
         <InstagramIcon className="h-3 w-3 shrink-0" />
@@ -30,7 +30,11 @@ export const EventChip: React.FC<EventChipProps> = ({
       {project.checkSocialNetworks?.linkedln && (
         <LinkedInIcon className="h-3 w-3 shrink-0" />
       )}
-      {time && <span className="shrink-0 font-medium">{time}</span>}
+      {time && (
+        <span className="shrink-0 font-['Geist_Mono',monospace] text-[10px] font-medium">
+          {time}
+        </span>
+      )}
       <span className="truncate">
         {truncateText(project.title, maxTitleLength)}
       </span>

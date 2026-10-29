@@ -21,18 +21,23 @@ export const MonthView: React.FC<MonthViewProps> = ({
   onSelectProject,
 }) => {
   return (
-    <div className="overflow-hidden rounded-lg border border-black">
-      <div className="grid grid-cols-7 bg-gray-50">
+    <div
+      role="region"
+      aria-label="Calendario mensual"
+      tabIndex={0}
+      className="overflow-x-auto rounded-[28px] border border-[#010000]/40 bg-[#d8e4d6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]"
+    >
+      <div className="grid min-w-[840px] grid-cols-7 border-b border-[#010000]/20">
         {WEEKDAY_LABELS_ES.map((label) => (
           <div
             key={label}
-            className="py-2 text-center text-xs font-medium text-gray-500"
+            className="py-4 text-center text-xs font-medium uppercase tracking-[0.12em] text-[#010000]/60"
           >
             {label}
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-7 gap-px bg-gray-200">
+      <div className="grid min-w-[840px] grid-cols-7 gap-px bg-[#010000]/15">
         {weeks.flat().map((cell) => {
           const dayProjects = grouped.get(cell.dayKey) ?? [];
           const visibleProjects = dayProjects.slice(0, MAX_VISIBLE_CHIPS);
@@ -41,24 +46,24 @@ export const MonthView: React.FC<MonthViewProps> = ({
           return (
             <div
               key={cell.dayKey}
-              className={`min-h-27.5 p-1.5 ${
-                cell.isCurrentMonth ? "bg-white" : "bg-gray-50/50"
+              className={`min-h-36 p-2 ${
+                cell.isCurrentMonth ? "bg-[#e8eee5]" : "bg-[#d8e4d6]"
               }`}
             >
-              <div className="mb-1 flex justify-end">
+              <div className="mb-2 flex justify-end">
                 <span
-                  className={`flex h-6 w-6 items-center justify-center rounded-full text-sm font-medium ${
+                  className={`flex h-8 w-8 items-center justify-center rounded-full font-['Geist_Mono',monospace] text-xs ${
                     cell.isToday
-                      ? "bg-black text-white"
+                      ? "bg-[#010000] text-[#d8e4d6]"
                       : cell.isCurrentMonth
-                        ? "text-gray-800"
-                        : "text-gray-400"
+                        ? "text-[#010000]"
+                        : "text-[#010000]/40"
                   }`}
                 >
                   {cell.date.getDate()}
                 </span>
               </div>
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 {visibleProjects.map((project) => (
                   <EventChip
                     key={project.id}
