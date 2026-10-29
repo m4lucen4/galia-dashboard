@@ -1,5 +1,6 @@
 import type { ChangeEvent } from "react";
 import { InputField } from "@/components/shared/ui/InputField";
+import { myWebFieldGridClassName } from "@/features/myWeb/components/myWebStyles";
 import { ImageUploader } from "@/features/myWeb/components/ImageUploader";
 import {
   SettingsSection,
@@ -32,7 +33,7 @@ export function SiteIdentitySection({
       title="Identidad del estudio"
       description="Define cómo se presenta tu estudio y la dirección de tu web."
     >
-      <div className="grid min-w-0 gap-4 md:grid-cols-2">
+      <div className={myWebFieldGridClassName}>
         <InputField
           label="Nombre del estudio"
           id="studio_name"
@@ -54,7 +55,7 @@ export function SiteIdentitySection({
           placeholder="mi-estudio"
         />
       </div>
-      <div className="grid min-w-0 gap-5 sm:grid-cols-2">
+      <div className={myWebFieldGridClassName}>
         <ImageUploader
           label="Logo"
           currentUrl={logoUrl}

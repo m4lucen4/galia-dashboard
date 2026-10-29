@@ -1,4 +1,5 @@
 import type { ChangeEvent } from "react";
+import { myWebFieldGridClassName } from "@/features/myWeb/components/myWebStyles";
 import { InputField } from "@/components/shared/ui/InputField";
 import {
   SettingsSection,
@@ -17,7 +18,7 @@ export function SiteDiscoverySection({ draft, urlErrors, onInputChange }: SiteDi
       title="Redes sociales y buscadores"
       description="Ayuda a tus visitantes a encontrar tu estudio. Las direcciones de redes sociales deben empezar por https://."
     >
-      <div className="grid min-w-0 gap-4 md:grid-cols-2">
+      <div className={`${myWebFieldGridClassName} max-w-2xl`}>
         <InputField
           label="Instagram"
           id="instagram_url"
@@ -46,14 +47,16 @@ export function SiteDiscoverySection({ draft, urlErrors, onInputChange }: SiteDi
           error={urlErrors.linkedin_url}
         />
       </div>
-      <InputField
-        label="Descripción SEO (opcional)"
-        id="meta_description"
-        type="textarea"
-        value={draft.meta_description}
-        onChange={onInputChange}
-        placeholder="Descripción de tu estudio para motores de búsqueda..."
-      />
+      <div className="max-w-2xl">
+        <InputField
+          label="Descripción SEO (opcional)"
+          id="meta_description"
+          type="textarea"
+          value={draft.meta_description}
+          onChange={onInputChange}
+          placeholder="Descripción de tu estudio para motores de búsqueda..."
+        />
+      </div>
     </SettingsSection>
   );
 }

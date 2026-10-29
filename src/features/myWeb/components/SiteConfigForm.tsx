@@ -15,6 +15,7 @@ import { SiteNavigationSection } from "@/features/myWeb/components/settings/Site
 import { SiteLanguageSection } from "@/features/myWeb/components/settings/SiteLanguageSection";
 import { SiteDiscoverySection } from "@/features/myWeb/components/settings/SiteDiscoverySection";
 import {
+  myWebEditorClassName,
   myWebHeadingClassName,
   myWebLegacyControlsClassName,
   myWebMutedClassName,
@@ -205,8 +206,8 @@ export const SiteConfigForm = forwardRef<
   };
 
   return (
-    <div className={`${myWebLegacyControlsClassName} space-y-5 text-[#010000]`}>
-      <div className="space-y-1">
+    <div className={`${myWebEditorClassName} ${myWebLegacyControlsClassName} text-[#010000]`}>
+      <div className="max-w-3xl space-y-1">
         <h2 className={myWebHeadingClassName}>Configuración general</h2>
         <p className={myWebMutedClassName}>Prepara la identidad, la apariencia y los idiomas de tu web. Guarda los ajustes cuando termines.</p>
       </div>
@@ -231,7 +232,7 @@ export const SiteConfigForm = forwardRef<
         onDefaultChange={(language) => setForm((prev) => ({ ...prev, default_language: language }))}
       />
       <SiteDiscoverySection draft={form} urlErrors={urlErrors} onInputChange={handleChange} />
-      <div className="flex min-w-0 flex-wrap items-center gap-4 rounded-[28px] border border-[#010000]/20 p-5">
+      <div className="flex min-w-0 max-w-3xl flex-wrap items-center gap-4 border-t border-[#010000]/15 pt-5">
         <PillButton disabled={!canSave} onClick={handleSave}>
           {saveRequest.inProgress ? "Guardando…" : "Guardar configuración"}
         </PillButton>

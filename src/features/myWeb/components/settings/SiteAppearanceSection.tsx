@@ -1,3 +1,4 @@
+import { myWebFieldGridClassName } from "@/features/myWeb/components/myWebStyles";
 import { ColorPicker } from "@/features/myWeb/components/ColorPicker";
 import { FontSelector } from "@/features/myWeb/components/FontSelector";
 import {
@@ -11,7 +12,7 @@ export function SiteAppearanceSection({ draft, onChange }: SiteSettingsSectionPr
       title="Colores y tipografía"
       description="Personaliza la identidad visual de tu web, sin cambiar el diseño del panel."
     >
-      <div className="grid min-w-0 gap-5 sm:grid-cols-2">
+      <div className={`${myWebFieldGridClassName} max-w-2xl`}>
         <ColorPicker
           label="Color primario"
           value={draft.primary_color}

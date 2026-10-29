@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { SiteLanguageSettings } from "@/helpers/siteLanguages";
-import { myWebHeadingClassName, myWebMutedClassName, myWebPanelClassName } from "@/features/myWeb/components/myWebStyles";
+import { myWebHeadingClassName, myWebMutedClassName } from "@/features/myWeb/components/myWebStyles";
 
 export interface SiteSettingsDraft extends SiteLanguageSettings {
   studio_name: string;
@@ -33,7 +33,7 @@ export function SettingsSection({ title, description, children }: {
   children: ReactNode;
 }) {
   return (
-    <section className={myWebPanelClassName} aria-label={title}>
+    <section className="min-w-0 max-w-3xl space-y-4 border-t border-[#010000]/15 pt-5" aria-label={title}>
       <div className="space-y-1">
         <h3 className={myWebHeadingClassName}>{title}</h3>
         <p className={myWebMutedClassName}>{description}</p>

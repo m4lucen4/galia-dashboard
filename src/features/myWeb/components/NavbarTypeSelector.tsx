@@ -64,9 +64,9 @@ export const NavbarTypeSelector: React.FC<NavbarTypeSelectorProps> = ({
   onChange,
 }) => {
   return (
-    <fieldset className="min-w-0 space-y-2">
+    <fieldset className="min-w-0 max-w-xl space-y-2">
       <legend className={myWebLabelClassName}>Tipo de navegación</legend>
-      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 gap-2 @min-[36rem]:grid-cols-2">
         {NAVBAR_OPTIONS.map((option) => {
           const selected = value === option.value;
           return (
@@ -80,9 +80,9 @@ export const NavbarTypeSelector: React.FC<NavbarTypeSelectorProps> = ({
               <div className="h-8 w-full text-gray-600">
                 {option.preview}
               </div>
-              <p className="text-xs font-medium leading-tight">{option.label}</p>
+              <p className="text-sm font-medium leading-snug">{option.label}</p>
               {selected && (
-                <span className="text-xs font-medium text-black">✓ Seleccionado</span>
+                <span className="text-sm font-medium text-black">✓ Seleccionado</span>
               )}
             </button>
           );

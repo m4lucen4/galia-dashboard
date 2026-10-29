@@ -14,7 +14,7 @@ function NavigationToggle({ label, description, checked, onChange }: {
   const id = useId();
   return (
     <label
-      className="flex min-h-11 cursor-pointer items-center justify-between gap-5 rounded-2xl border border-[#010000]/20 p-4"
+      className="flex min-h-11 max-w-2xl cursor-pointer items-center justify-between gap-4 border-b border-[#010000]/10 py-3"
       htmlFor={id}
     >
       <span className="min-w-0 space-y-1">
