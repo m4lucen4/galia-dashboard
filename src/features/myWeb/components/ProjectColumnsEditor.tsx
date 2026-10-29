@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { SiteComponentDataProps, ProjectColumnsConfig } from "../../../types";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { updateSiteComponent } from "../../../redux/actions/SiteComponentActions";
-import { Button } from "../../../components/shared/ui/Button";
+import { SiteComponentDataProps, ProjectColumnsConfig } from "@/types";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { updateSiteComponent } from "@/redux/actions/SiteComponentActions";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import { myWebEditorClassName, myWebGroupClassName, myWebFieldGridClassName, myWebControlClassName, myWebOptionClassName, myWebSelectedOptionClassName } from "@/features/myWeb/components/myWebStyles";
 
 interface ProjectColumnsEditorProps {
   component: SiteComponentDataProps;
@@ -82,24 +83,21 @@ export const ProjectColumnsEditor: React.FC<ProjectColumnsEditorProps> = ({ comp
   };
 
   const selectClass = (active: boolean) =>
-    `rounded-md border-2 py-2 text-sm font-medium transition-colors focus:outline-none ${
-      active
-        ? "border-gray-900 bg-gray-50 text-gray-900"
-        : "border-gray-200 bg-white text-gray-500 hover:border-gray-400"
-    }`;
+    `min-h-11 text-sm font-medium ${myWebOptionClassName} ${active ? myWebSelectedOptionClassName : ""}`;
 
   return (
-    <div className="space-y-6">
+    <div className={`${myWebEditorClassName} text-[#010000]`}>
       {/* Número de columnas */}
       <div>
         <p className="text-sm font-medium text-gray-900 mb-2">Número de columnas</p>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {([1, 2] as const).map((n) => (
             <button
               key={n}
               type="button"
+              aria-pressed={form.columns === n}
               onClick={() => handleColumnsChange(n)}
-              className={`flex-1 ${selectClass(form.columns === n)}`}
+              className={selectClass(form.columns === n)}
             >
               {n === 1 ? "1 columna" : "2 columnas"}
             </button>
@@ -108,68 +106,72 @@ export const ProjectColumnsEditor: React.FC<ProjectColumnsEditorProps> = ({ comp
       </div>
 
       {/* Selección de proyectos */}
-      <div className="space-y-4">
+      <div className={myWebFieldGridClassName}>
         {([1, 2] as const).map((col) => {
           if (col === 2 && form.columns === 1) return null;
           const field = col === 1 ? "project_1" : "project_2";
           return (
-            <div key={col}>
-              <label className="block text-sm font-medium text-gray-900 mb-1">
-                {form.columns === 2 ? `Proyecto — columna ${col}` : "Proyecto"}
+            <section key={col} className={myWebGroupClassName}>
+              <label className="block min-w-0 space-y-2">
+                <span className="block text-sm font-medium">
+                  {form.columns === 2 ? `Proyecto — columna ${col}` : "Proyecto"}
+                </span>
+                <select
+                  value={form[field] ?? ""}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, [field]: e.target.value || undefined }))
+                  }
+                  className={myWebControlClassName}
+                >
+                  <option value="">— Selecciona un proyecto —</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.title}
+                    </option>
+                  ))}
+                </select>
               </label>
-              <select
-                value={form[field] ?? ""}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, [field]: e.target.value || undefined }))
-                }
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
-              >
-                <option value="">— Selecciona un proyecto —</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.title}
-                  </option>
-                ))}
-              </select>
-            </div>
+
+              {/* Each project's alignment belongs next to its selector. */}
+              {(["vertical_align_1", "vertical_align_2"] as const).map((field, i) => {
+                if (i + 1 !== col || (i === 1 && form.columns === 1)) return null;
+                const label = form.columns === 2 ? `Alineación vertical — columna ${i + 1}` : "Alineación vertical";
+                return (
+                  <div key={field}>
+                    <p className="text-sm font-medium text-gray-900 mb-2">{label}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {VERTICAL_OPTIONS.map(({ value, label: optLabel }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          aria-pressed={form[field] === value}
+                          onClick={() => setForm((prev) => ({ ...prev, [field]: value }))}
+                          className={selectClass(form[field] === value)}
+                        >
+                          {optLabel}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </section>
           );
         })}
       </div>
-
-      {/* Alineación vertical */}
-      {(["vertical_align_1", "vertical_align_2"] as const).map((field, i) => {
-        if (i === 1 && form.columns === 1) return null;
-        const label = form.columns === 2 ? `Alineación vertical — columna ${i + 1}` : "Alineación vertical";
-        return (
-          <div key={field}>
-            <p className="text-sm font-medium text-gray-900 mb-2">{label}</p>
-            <div className="flex gap-2">
-              {VERTICAL_OPTIONS.map(({ value, label: optLabel }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, [field]: value }))}
-                  className={`flex-1 ${selectClass(form[field] === value)}`}
-                >
-                  {optLabel}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-      })}
 
       {/* Ancho — solo 1 columna */}
       {form.columns === 1 && (
         <div>
           <p className="text-sm font-medium text-gray-900 mb-2">Ancho del proyecto</p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {WIDTH_1COL_OPTIONS.map(({ value, label }) => (
               <button
                 key={value}
                 type="button"
+                aria-pressed={(form.width_1col ?? "full") === value}
                 onClick={() => setForm((prev) => ({ ...prev, width_1col: value }))}
-                className={`flex-1 ${selectClass((form.width_1col ?? "full") === value)}`}
+                className={selectClass((form.width_1col ?? "full") === value)}
               >
                 {label}
               </button>
@@ -182,11 +184,12 @@ export const ProjectColumnsEditor: React.FC<ProjectColumnsEditorProps> = ({ comp
       {form.columns === 2 && (
         <div>
           <p className="text-sm font-medium text-gray-900 mb-2">Alineación horizontal</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-wrap gap-2">
             {HORIZONTAL_OPTIONS.map(({ value, label }) => (
               <button
                 key={value}
                 type="button"
+                aria-pressed={form.horizontal_align === value}
                 onClick={() => setForm((prev) => ({ ...prev, horizontal_align: value }))}
                 className={selectClass(form.horizontal_align === value)}
               >
@@ -198,13 +201,11 @@ export const ProjectColumnsEditor: React.FC<ProjectColumnsEditorProps> = ({ comp
       )}
 
       {/* Guardar */}
-      <div className="flex items-center gap-3">
-        <Button
-          title={saving ? "Guardando..." : "Guardar cambios"}
-          onClick={handleSave}
-          disabled={saving}
-        />
-        {saved && <span className="text-sm text-green-600">Cambios guardados</span>}
+      <div className="flex flex-wrap items-center gap-3">
+        <PillButton onClick={handleSave} disabled={saving}>
+          {saving ? "Guardando..." : "Guardar cambios"}
+        </PillButton>
+        {saved && <span role="status" className="text-sm">Cambios guardados</span>}
       </div>
     </div>
   );

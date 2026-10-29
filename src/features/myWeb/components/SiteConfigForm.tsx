@@ -5,23 +5,26 @@ import React, {
   useImperativeHandle,
   forwardRef,
 } from "react";
-import { SiteDataProps } from "../../../types";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { updateSite, uploadSiteImage } from "../../../redux/actions/SiteActions";
-import { InputField } from "../../../components/shared/ui/InputField";
-import { ImageUploader } from "./ImageUploader";
-import { ColorPicker } from "./ColorPicker";
-import { FontSelector } from "./FontSelector";
-import { NavbarTypeSelector } from "./NavbarTypeSelector";
-import { Switch } from "../../../components/shared/ui/Switch";
+import { SiteDataProps } from "@/types";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { updateSite, uploadSiteImage } from "@/redux/actions/SiteActions";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import { SiteIdentitySection } from "@/features/myWeb/components/settings/SiteIdentitySection";
+import { SiteAppearanceSection } from "@/features/myWeb/components/settings/SiteAppearanceSection";
+import { SiteNavigationSection } from "@/features/myWeb/components/settings/SiteNavigationSection";
+import { SiteLanguageSection } from "@/features/myWeb/components/settings/SiteLanguageSection";
+import { SiteDiscoverySection } from "@/features/myWeb/components/settings/SiteDiscoverySection";
 import {
-  SITE_LANGUAGES,
+  myWebEditorClassName,
+  myWebHeadingClassName,
+  myWebLegacyControlsClassName,
+  myWebMutedClassName,
+} from "@/features/myWeb/components/myWebStyles";
+import {
   resolveSiteLanguages,
   toggleSiteLanguage,
   validateSiteLanguages,
 } from "@/helpers/siteLanguages";
-
-const LANGUAGE_LABELS = { es: "Español (ES)", en: "Inglés (EN)", ca: "Catalán (CA)" };
 
 export interface SiteConfigFormHandle {
   save: () => void;
@@ -203,311 +206,44 @@ export const SiteConfigForm = forwardRef<
   };
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-lg font-semibold text-black">Configuración general</h2>
-
-      {/* Nombre + slug */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <InputField
-          label="Nombre del estudio"
-          id="studio_name"
-          type="text"
-          value={form.studio_name}
-          onChange={handleChange}
-          required
-          placeholder="Mi Estudio"
-        />
-        <InputField
-          label="Slug"
-          id="slug"
-          type="text"
-          value={form.slug}
-          onChange={handleChange}
-          required
-          error={slugError}
-          helperText="Se usa en la URL de tu web"
-          placeholder="mi-estudio"
-        />
+    <div className={`${myWebEditorClassName} ${myWebLegacyControlsClassName} text-[#010000]`}>
+      <div className="max-w-3xl space-y-1">
+        <h2 className={myWebHeadingClassName}>Configuración general</h2>
+        <p className={myWebMutedClassName}>Prepara la identidad, la apariencia y los idiomas de tu web. Guarda los ajustes cuando termines.</p>
       </div>
-
-      {/* Logo + Favicon */}
-      <div className="grid grid-cols-2 gap-4">
-        <ImageUploader
-          label="Logo"
-          currentUrl={site.logo_url}
-          onUpload={(file) => handleImageUpload("logo_url", "logo.webp", file)}
-          onRemove={() => dispatch(updateSite({ siteId: site.id, updates: { logo_url: "" } }))}
-          loading={uploadRequest.inProgress}
-          variant="logo"
-        />
-        <ImageUploader
-          label="Favicon (opcional)"
-          currentUrl={site.favicon_url}
-          onUpload={(file) =>
-            handleImageUpload("favicon_url", "favicon.webp", file)
-          }
-          onRemove={() => dispatch(updateSite({ siteId: site.id, updates: { favicon_url: null } }))}
-          loading={uploadRequest.inProgress}
-          variant="logo"
-        />
-      </div>
-
-      {/* Colores */}
-      <div className="grid grid-cols-2 gap-4">
-        <ColorPicker
-          label="Color primario"
-          value={form.primary_color}
-          onChange={(color) =>
-            setForm((prev) => ({ ...prev, primary_color: color }))
-          }
-        />
-        <ColorPicker
-          label="Color secundario"
-          value={form.secondary_color}
-          onChange={(color) =>
-            setForm((prev) => ({ ...prev, secondary_color: color }))
-          }
-        />
-        <ColorPicker
-          label="Color de fondo"
-          value={form.background_color}
-          onChange={(color) =>
-            setForm((prev) => ({ ...prev, background_color: color }))
-          }
-        />
-        <ColorPicker
-          label="Color terciario"
-          value={form.tertiary_color}
-          onChange={(color) =>
-            setForm((prev) => ({ ...prev, tertiary_color: color }))
-          }
-        />
-      </div>
-
-      {/* Fuentes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FontSelector
-          label="Fuente de títulos"
-          value={form.title_font}
-          onChange={(title_font) => setForm((prev) => ({ ...prev, title_font }))}
-        />
-        <FontSelector
-          label="Fuente de cuerpo"
-          value={form.font}
-          onChange={(font) => setForm((prev) => ({ ...prev, font }))}
-        />
-      </div>
-
-      {/* Ocultar navbar */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-black">Ocultar navbar</p>
-          <p className="text-xs text-gray-500 mt-0.5">
-            La web no muestra ningún navbar, ni siquiera al hacer scroll
-          </p>
-        </div>
-        <Switch
-          checked={form.navbar_hidden}
-          onChange={() =>
-            setForm((prev) => ({ ...prev, navbar_hidden: !prev.navbar_hidden }))
-          }
-        />
-      </div>
-
-      {!form.navbar_hidden && (
-        <>
-          {/* Tipo de navegación */}
-          <NavbarTypeSelector
-            value={form.navbar_type}
-            onChange={(navbar_type) =>
-              setForm((prev) => ({ ...prev, navbar_type }))
-            }
-          />
-
-          {/* Navbar transparente */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-black">Navbar transparente</p>
-              <p className="text-xs text-gray-500 mt-0.5">
-                En escritorio, el navbar arranca transparente y muestra fondo al hacer scroll. En móvil siempre tiene fondo.
-              </p>
-            </div>
-            <Switch
-              checked={form.navbar_transparent}
-              onChange={() =>
-                setForm((prev) => ({ ...prev, navbar_transparent: !prev.navbar_transparent }))
-              }
-            />
-          </div>
-        </>
-      )}
-
-      {/* Ocultar footer */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-black">Ocultar footer</p>
-          <p className="text-xs text-gray-500 mt-0.5">
-            La web no muestra ningún footer
-          </p>
-        </div>
-        <Switch
-          checked={form.footer_hidden}
-          onChange={() =>
-            setForm((prev) => ({ ...prev, footer_hidden: !prev.footer_hidden }))
-          }
-        />
-      </div>
-
-      {/* Ancho completo */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-black">Web a ancho completo</p>
-          <p className="text-xs text-gray-500 mt-0.5">
-            La web ocupa todo el ancho de la pantalla en lugar de un ancho fijo
-          </p>
-        </div>
-        <Switch
-          checked={form.full_width}
-          onChange={() =>
-            setForm((prev) => ({ ...prev, full_width: !prev.full_width }))
-          }
-        />
-      </div>
-
-      {/* Idioma */}
-      <div className="space-y-4">
-        <fieldset>
-          <legend className="text-sm font-medium text-black mb-2">Idiomas de la web</legend>
-          <div className="flex flex-wrap gap-3">
-            {SITE_LANGUAGES.map((lang) => (
-              <label key={lang} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={form.enabled_languages.includes(lang)}
-                  disabled={form.enabled_languages.length === 1 && form.enabled_languages.includes(lang)}
-                  onChange={() => setForm((prev) => ({ ...prev, ...toggleSiteLanguage(prev, lang) }))}
-                />
-                {LANGUAGE_LABELS[lang]}
-              </label>
-            ))}
-          </div>
-          <p className="text-xs text-gray-500 mt-2">
-            Selecciona al menos un idioma. Solo se traducen los textos fijos de la interfaz, no tu contenido.
-            El selector público aparece al elegir varios idiomas.
-          </p>
-        </fieldset>
-
-        <div>
-          <p className="text-xs text-gray-500 mb-2">Idioma por defecto de la web</p>
-          <div className="flex gap-3">
-            {form.enabled_languages.map((lang) => (
-              <label
-                key={lang}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md border cursor-pointer text-sm transition-colors ${
-                  form.default_language === lang
-                    ? "border-black bg-black text-white"
-                    : "border-gray-300 text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="default_language"
-                  value={lang}
-                  checked={form.default_language === lang}
-                  onChange={() => setForm((prev) => ({ ...prev, default_language: lang }))}
-                  className="sr-only"
-                />
-                {LANGUAGE_LABELS[lang]}
-              </label>
-            ))}
-          </div>
-        </div>
-
-      </div>
-
-      {/* Redes sociales */}
-      <div>
-        <p className="text-sm font-medium text-black mb-3">Redes sociales</p>
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400 shrink-0">
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-              </svg>
-            </span>
-            <div className="flex-1">
-              <InputField
-                label="Instagram"
-                id="instagram_url"
-                type="text"
-                value={form.instagram_url}
-                onChange={handleChange}
-                placeholder="https://instagram.com/tu-perfil"
-                error={urlErrors.instagram_url}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400 shrink-0">
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
-            </span>
-            <div className="flex-1">
-              <InputField
-                label="Facebook"
-                id="facebook_url"
-                type="text"
-                value={form.facebook_url}
-                onChange={handleChange}
-                placeholder="https://facebook.com/tu-perfil"
-                error={urlErrors.facebook_url}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400 shrink-0">
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-              </svg>
-            </span>
-            <div className="flex-1">
-              <InputField
-                label="LinkedIn"
-                id="linkedin_url"
-                type="text"
-                value={form.linkedin_url}
-                onChange={handleChange}
-                placeholder="https://linkedin.com/in/tu-perfil"
-                error={urlErrors.linkedin_url}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* SEO */}
-      <InputField
-        label="Descripción SEO (opcional)"
-        id="meta_description"
-        type="textarea"
-        value={form.meta_description}
-        onChange={handleChange}
-        placeholder="Descripción de tu estudio para motores de búsqueda..."
+      <SiteIdentitySection
+        draft={form}
+        slugError={slugError}
+        logoUrl={site.logo_url}
+        faviconUrl={site.favicon_url}
+        uploading={uploadRequest.inProgress}
+        onInputChange={handleChange}
+        onUpload={handleImageUpload}
+        onRemove={(field) => dispatch(updateSite({
+          siteId: site.id,
+          updates: field === "logo_url" ? { logo_url: "" } : { favicon_url: null },
+        }))}
       />
-
-      {/* Feedback */}
-      {saveRequest.inProgress && (
-        <span className="text-sm text-gray-500">Guardando...</span>
-      )}
-      {saved && (
-        <span className="text-sm text-green-600">Guardado correctamente</span>
-      )}
-      {saveRequest.messages && !saveRequest.ok && (
-        <span className="text-sm text-red-600">{saveRequest.messages}</span>
-      )}
+      <SiteAppearanceSection draft={form} onChange={(updates) => setForm((prev) => ({ ...prev, ...updates }))} />
+      <SiteNavigationSection draft={form} onChange={(updates) => setForm((prev) => ({ ...prev, ...updates }))} />
+      <SiteLanguageSection
+        draft={form}
+        onToggle={(language) => setForm((prev) => ({ ...prev, ...toggleSiteLanguage(prev, language) }))}
+        onDefaultChange={(language) => setForm((prev) => ({ ...prev, default_language: language }))}
+      />
+      <SiteDiscoverySection draft={form} urlErrors={urlErrors} onInputChange={handleChange} />
+      <div className="flex w-full min-w-0 flex-wrap items-center gap-4 border-t border-[#010000]/15 pt-5">
+        <PillButton disabled={!canSave} onClick={handleSave}>
+          {saveRequest.inProgress ? "Guardando…" : "Guardar configuración"}
+        </PillButton>
+        <div role="status" aria-live="polite" className="text-sm">
+          {saveRequest.inProgress && <p>Guardando...</p>}
+          {saved && <p>Guardado correctamente</p>}
+        </div>
+        {saveRequest.messages && !saveRequest.ok && (
+          <p role="alert" className="min-w-0 wrap-break-word text-sm text-red-700">{saveRequest.messages}</p>
+        )}
+      </div>
     </div>
   );
 });

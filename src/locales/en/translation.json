@@ -1,5 +1,7 @@
 {
   "shared": {
+    "clearSearch": "Clear search",
+    "search": "Search",
     "confirm": "Confirm",
     "cancel": "Cancel",
     "working": "Working on your project",
@@ -18,6 +20,7 @@
     "cancel": "Cancel",
     "profile": "Profile",
     "settings": "Settings",
+    "socialWeb": "Social media and website",
     "logout": "Logout",
     "confirmLogout": "Are you sure you want to log out?",
     "home": "Home",
@@ -26,7 +29,7 @@
     "publishes": "Publications",
     "map": "Map",
     "administration": "Administration",
-    "gpts": "My GPTs",
+    "gpts": "My skills",
     "wiki": "Wiki",
     "multimedia": "Multimedia",
     "archive": "Archive",
@@ -42,6 +45,8 @@
     "descriptionLoginError": "There was an error logging in. Please check your credentials and try again.",
     "titleRecoveryPassword": "Recover Password",
     "descriptionRecoveryPassword": "Enter your email address and we will send you a link to reset your password.",
+    "recoveryEmailRequired": "Enter your email address.",
+    "recoveryEmailInvalid": "Enter a valid email address.",
     "goBackWeb": "Go back to the website",
     "titleInactiveUser": "Inactive user",
     "descriptionInactiveUser": "Your account is not active. Please contact an administrator.",
@@ -97,6 +102,16 @@
     "generalError": "An error occurred. Please try again."
   },
   "users": {
+    "searchLabel": "Search users by name, email or company",
+    "searchPlaceholder": "Name, email or company",
+    "noSearchResults": "No users match your search.",
+    "closeForm": "Close form",
+    "sections": {
+      "personal": "Personal details and access",
+      "location": "Address",
+      "professional": "Professional details"
+    },
+    "empty": "No registered users",
     "title": "Users",
     "description": "Manage platform users.",
     "createUser": "Create User",
@@ -130,6 +145,8 @@
     "hasWeb": "Has website"
   },
   "settings": {
+    "connectInstagram": "Connect Instagram",
+    "connectLinkedIn": "Connect LinkedIn",
     "title": "Settings",
     "description": "Configure your social networks and preferences.",
     "socialNetworks": "Social Networks",
@@ -161,6 +178,8 @@
     "instagramDescription": "To publish on Instagram, you must connect your Facebook account and have a business page.",
     "noInstagramConnection": "No Instagram connection",
     "myWeb": "My Website",
+    "myWebInactiveInfo": "My Web information",
+    "myWebInactiveDescription": "The My Web builder is not active. Upgrade your subscription to enable it.",
     "goToMyWeb": "Go to my website",
     "subscription": "Subscription",
     "subscriptionDescription": "Manage your plan and billing.",
@@ -371,6 +390,12 @@
     }
   },
   "profile": {
+    "sections": {
+      "personal": "Personal details",
+      "location": "Address",
+      "professional": "Professional details",
+      "preferences": "Preferences"
+    },
     "title": "Profile",
     "description": "Manage your profile and preferences",
     "changePassword": "Change password",
@@ -400,21 +425,23 @@
     "tags": "Tags"
   },
   "admin": {
-    "title": "My GPTs",
-    "description": "Manage your custom GPTs.",
-    "prompts": "Gpt´s",
-    "noPrompts": "No gpts available.",
+    "title": "My skills",
+    "description": "Manage your custom skills.",
+    "prompts": "Skills",
+    "noPrompts": "No skills available",
     "actions": "Actions",
-    "addPrompt": "Add Gpt",
-    "editPrompt": "Edit Gpt",
-    "createPrompt": "Create Gpt",
-    "promptTitle": "Gpt Title",
-    "promptDescription": "Gpt Description",
-    "confirmDeletePrompt": "Are you sure you want to delete this gpt?",
-    "isPrivate": "Private prompt",
+    "addPrompt": "Add skill",
+    "editPrompt": "Edit skill",
+    "createPrompt": "Create skill",
+    "promptTitle": "Skill title",
+    "promptDescription": "Skill description",
+    "confirmDeletePrompt": "Are you sure you want to delete this skill?",
+    "isPrivate": "Private skill",
     "visibility": "Visibility",
     "private": "Private",
-    "public": "Public"
+    "public": "Public",
+    "deletePrompt": "Delete skill",
+    "closeForm": "Close form"
   },
   "administration": {
     "title": "Administration",

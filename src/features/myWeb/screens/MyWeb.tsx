@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { RootState } from "../../../redux/store";
-import { fetchSite, createSite } from "../../../redux/actions/SiteActions";
-import { initDefaultPages } from "../../../redux/actions/SitePageActions";
-import { SiteConfigForm, SiteConfigFormHandle } from "../components/SiteConfigForm";
-import { PageEditor } from "../components/PageEditor";
-import { PublishButton } from "../components/PublishButton";
-import { MyWebTabBar } from "../components/MyWebTabBar";
-import { InputField } from "../../../components/shared/ui/InputField";
-import { Button } from "../../../components/shared/ui/Button";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { RootState } from "@/redux/store";
+import { fetchSite, createSite } from "@/redux/actions/SiteActions";
+import { initDefaultPages } from "@/redux/actions/SitePageActions";
+import { SiteConfigForm, SiteConfigFormHandle } from "@/features/myWeb/components/SiteConfigForm";
+import { PageEditor } from "@/features/myWeb/components/PageEditor";
+import { PublishButton } from "@/features/myWeb/components/PublishButton";
+import { MyWebTabBar } from "@/features/myWeb/components/MyWebTabBar";
+import { SiteCreationForm } from "@/features/myWeb/components/SiteCreationForm";
+import { myWebMutedClassName } from "@/features/myWeb/components/myWebStyles";
 
 export const MyWeb: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -56,8 +56,9 @@ export const MyWeb: React.FC = () => {
   // Loading state
   if (fetchRequest.inProgress) {
     return (
-      <div className="flex justify-center items-center min-h-100">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black" />
+      <div role="status" className="flex min-h-100 items-center justify-center gap-3 text-[#010000]">
+        <div aria-hidden="true" className="size-8 animate-spin rounded-full border-b-2 border-[#010000]" />
+        <span>Cargando tu web...</span>
       </div>
     );
   }
@@ -65,48 +66,25 @@ export const MyWeb: React.FC = () => {
   // No site yet — show creation form
   if (!site) {
     return (
-      <div className="max-w-xl mx-auto py-12 px-4">
-        <h1 className="text-2xl font-bold text-black mb-2">Mi Web</h1>
-        <p className="text-gray-600 mb-8">
-          Configura tu web profesional. Empieza por darle un nombre a tu
-          estudio.
-        </p>
-
-        <div className="space-y-4">
-          <InputField
-            label="Nombre del estudio"
-            id="studio_name_create"
-            type="text"
-            value={studioName}
-            onChange={(e) => {
-              setStudioName(e.target.value);
-              setSlug(generateSlug(e.target.value));
-            }}
-            required
-            placeholder="Mi Estudio de Arquitectura"
-          />
-
-          <InputField
-            label="Slug (URL de tu web)"
-            id="slug_create"
-            type="text"
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            required
-            helperText="Solo letras minúsculas, números y guiones"
-            placeholder="mi-estudio"
-          />
-
-          <Button
-            title="Crear mi web"
-            onClick={handleCreateSite}
-            disabled={saveRequest.inProgress || !studioName || !slug}
-          />
-
-          {saveRequest.messages && !saveRequest.ok && (
-            <p className="text-sm text-red-600">{saveRequest.messages}</p>
-          )}
-        </div>
+      <div className="w-full min-w-0 space-y-6 py-4 text-[#010000] sm:py-6">
+        <header className="space-y-2">
+          <h1 className="text-3xl font-medium tracking-[-0.04em] sm:text-4xl">Mi Web</h1>
+          <p className={myWebMutedClassName}>
+            Configura tu web profesional. Empieza por darle un nombre a tu estudio.
+          </p>
+        </header>
+        <SiteCreationForm
+          studioName={studioName}
+          slug={slug}
+          inProgress={saveRequest.inProgress}
+          errorMessage={!saveRequest.ok ? saveRequest.messages : undefined}
+          onStudioNameChange={(value) => {
+            setStudioName(value);
+            setSlug(generateSlug(value));
+          }}
+          onSlugChange={setSlug}
+          onCreate={handleCreateSite}
+        />
       </div>
     );
   }
@@ -114,13 +92,18 @@ export const MyWeb: React.FC = () => {
   const activePage = pages.find((p) => p.id === activeTabId);
 
   return (
-    <div className="w-full flex flex-col min-h-0">
-      <div className="px-4 pt-4 pb-3">
-        <PublishButton
-          site={site}
-          onSave={() => configFormRef.current?.save()}
-        />
-      </div>
+    <div className="flex min-h-0 w-full min-w-0 flex-col gap-6 text-[#010000]">
+      <header className="space-y-2">
+        <h1 className="text-3xl font-medium tracking-[-0.04em] sm:text-4xl">Mi Web</h1>
+        <p className={myWebMutedClassName}>
+          Personaliza tu estudio, organiza las páginas y prepara tu web para compartirla.
+        </p>
+      </header>
+      <PublishButton
+        site={site}
+        onSave={() => configFormRef.current?.save()}
+        showSave={activeTabId === "config"}
+      />
 
       <MyWebTabBar
         pages={pages}
@@ -130,7 +113,7 @@ export const MyWeb: React.FC = () => {
         onPageCreated={setActiveTabId}
       />
 
-      <div className="w-full px-6 py-6">
+      <div className="w-full min-w-0 pb-6">
         {activeTabId === "config" && (
           <SiteConfigForm ref={configFormRef} site={site} />
         )}

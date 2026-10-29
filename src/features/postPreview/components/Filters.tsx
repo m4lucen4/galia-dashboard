@@ -31,61 +31,54 @@ export const Filters: React.FC<FiltersProps> = ({
       key: "all",
       label: t("previewProjects.filters.all", "Todos"),
       count: getProjectCount("all"),
-      className: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+      className: "hover:bg-white/60",
     },
     {
       key: "preview",
       label: t("previewProjects.filters.preview", "Vista previa"),
       count: getProjectCount("preview"),
-      className: "bg-slate-100 text-slate-800 hover:bg-slate-200",
+      className: "hover:bg-white/60",
     },
     {
       key: "scheduled",
       label: t("previewProjects.filters.scheduled", "Programados"),
       count: getProjectCount("scheduled"),
-      className: "bg-blue-100 text-blue-800 hover:bg-blue-200",
+      className: "hover:bg-white/60",
     },
     {
       key: "published",
       label: t("previewProjects.filters.published", "Publicados"),
       count: getProjectCount("published"),
-      className: "bg-green-100 text-green-800 hover:bg-green-200",
+      className: "hover:bg-white/60",
     },
   ];
 
   return (
-    <div className="mb-6">
+    <div className="min-w-0 font-['Hanken_Grotesk',system-ui,sans-serif] text-[#010000]">
       <div className="flex flex-wrap gap-2">
         {filters.map((filter) => (
           <button
             key={filter.key}
             onClick={() => onFilterChange(filter.key)}
+            aria-pressed={selectedFilter === filter.key}
             className={`
-              inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
-              transition-all duration-200 ease-in-out
+              inline-flex min-h-11 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium
+              transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]
               ${
                 selectedFilter === filter.key
-                  ? `${filter.className} ring-2 ring-offset-2 ${
-                      filter.key === "all"
-                        ? "ring-gray-300"
-                        : filter.key === "preview"
-                          ? "ring-slate-300"
-                          : filter.key === "scheduled"
-                            ? "ring-blue-300"
-                            : "ring-green-300"
-                    } shadow-sm`
-                  : `${filter.className} opacity-70 hover:opacity-100`
+                  ? "border-[#010000] bg-[#010000] text-[#d8e4d6]"
+                  : `border-[#010000]/20 bg-transparent text-[#010000]/70 ${filter.className}`
               }
             `}
           >
             <span>{filter.label}</span>
             <span
               className={`
-                inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full
+                inline-flex min-h-6 min-w-6 items-center justify-center rounded-full px-1 font-['Geist_Mono',monospace] text-[11px] tabular-nums
                 ${
                   selectedFilter === filter.key
-                    ? "bg-white/80 text-gray-700"
-                    : "bg-white/60 text-gray-600"
+                    ? "bg-[#d8e4d6]/15 text-[#d8e4d6]"
+                    : "bg-[#010000]/5 text-[#010000]/60"
                 }
               `}
             >

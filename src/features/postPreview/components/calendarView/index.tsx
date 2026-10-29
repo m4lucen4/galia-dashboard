@@ -55,51 +55,53 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const handleToday = () => setReferenceDate(new Date());
 
   return (
-    <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+    <div className="min-w-0 space-y-5 font-['Hanken_Grotesk',system-ui,sans-serif] text-[#010000] [&_button]:focus-visible:outline-2 [&_button]:focus-visible:outline-offset-2 [&_button]:focus-visible:outline-[#010000]">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <button
             onClick={handlePrev}
-            className="rounded-md p-1.5 text-gray-600 hover:bg-gray-100"
+            className="rounded-full border border-[#010000]/25 p-2.5 transition-colors hover:bg-[#010000] hover:text-[#d8e4d6]"
             title="Anterior"
           >
             <ChevronLeftIcon className="h-5 w-5" />
           </button>
           <button
             onClick={handleNext}
-            className="rounded-md p-1.5 text-gray-600 hover:bg-gray-100"
+            className="rounded-full border border-[#010000]/25 p-2.5 transition-colors hover:bg-[#010000] hover:text-[#d8e4d6]"
             title="Siguiente"
           >
             <ChevronRightIcon className="h-5 w-5" />
           </button>
           <button
             onClick={handleToday}
-            className="rounded-md bg-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-300"
+            className="rounded-full border border-[#010000] px-4 py-2 text-sm font-medium transition-colors hover:bg-[#010000] hover:text-[#d8e4d6]"
           >
             {t("previewProjects.calendar.today", "Hoy")}
           </button>
-          <span className="ml-2 text-base font-semibold text-gray-900 capitalize">
+          <span className="w-full pt-2 text-xl font-medium capitalize tracking-tight sm:ml-3 sm:w-auto sm:pt-0 sm:text-2xl">
             {label}
           </span>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-1 rounded-full border border-[#010000]/25 p-1">
           <button
             onClick={() => setCalendarMode("month")}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            aria-pressed={calendarMode === "month"}
+            className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${
               calendarMode === "month"
-                ? "bg-black text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                ? "bg-[#010000] text-[#d8e4d6]"
+                : "hover:bg-[#010000]/5"
             }`}
           >
             {t("previewProjects.calendar.month", "Mes")}
           </button>
           <button
             onClick={() => setCalendarMode("week")}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            aria-pressed={calendarMode === "week"}
+            className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${
               calendarMode === "week"
-                ? "bg-black text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                ? "bg-[#010000] text-[#d8e4d6]"
+                : "hover:bg-[#010000]/5"
             }`}
           >
             {t("previewProjects.calendar.week", "Semana")}
@@ -122,7 +124,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           />
         )
       ) : (
-        <div className="py-8 text-center text-gray-500">
+        <div className="rounded-[28px] border border-[#010000]/30 bg-[#d8e4d6] px-6 py-16 text-center text-sm text-[#010000]/60">
           {t(
             "previewProjects.calendar.noScheduledPosts",
             "No hay publicaciones programadas ni publicadas para mostrar en el calendario.",

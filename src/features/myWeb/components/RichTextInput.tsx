@@ -5,8 +5,10 @@ import StarterKit from "@tiptap/starter-kit";
 import { TextStyle } from "@tiptap/extension-text-style";
 import TextAlign from "@tiptap/extension-text-align";
 import Link from "@tiptap/extension-link";
-
-type LinkType = "url" | "email" | "tel";
+import { RichTextToolbar } from "@/features/myWeb/components/richText/RichTextToolbar";
+import { LinkPopover } from "@/features/myWeb/components/richText/LinkPopover";
+import type { LinkType } from "@/features/myWeb/components/richText/LinkPopover";
+import { myWebLabelClassName, myWebMutedClassName } from "@/features/myWeb/components/myWebStyles";
 
 const parseLinkHref = (href: string | undefined): { type: LinkType; value: string } => {
   if (!href) return { type: "url", value: "" };
@@ -117,8 +119,12 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
     },
     editorProps: {
       attributes: {
+        role: "textbox",
+        "aria-multiline": "true",
+        "aria-label": label || "Contenido de texto",
+        "aria-invalid": error ? "true" : "false",
         class:
-          "rich-text-editor min-h-[5rem] px-3 py-2 text-sm text-gray-900 focus:outline-none",
+          "rich-text-editor min-h-20 max-h-64 overflow-y-auto px-4 py-3 text-sm text-[#010000] focus-visible:outline-2 focus-visible:outline-offset-[-2px]",
       },
     },
   });
@@ -139,11 +145,6 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
     }),
   });
 
-  const isBold = editorState?.bold ?? false;
-  const isItalic = editorState?.italic ?? false;
-  const isAlignCenter = editorState?.alignCenter ?? false;
-  const isAlignRight = editorState?.alignRight ?? false;
-  const isAlignLeft = !isAlignCenter && !isAlignRight;
   const isEmpty = editorState?.empty ?? isEffectivelyEmpty(value);
 
   const handleFontSize = (key: "t1" | "t2" | "t3") => {
@@ -163,6 +164,11 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
     const rect = linkButtonRef.current?.getBoundingClientRect();
     if (rect) setLinkPopoverPos({ top: rect.bottom + 4, left: rect.left });
     setLinkPopoverOpen(true);
+  };
+
+  const dismissLinkPopover = () => {
+    setLinkPopoverOpen(false);
+    linkButtonRef.current?.focus();
   };
 
   const applyLink = () => {
@@ -201,226 +207,46 @@ export const RichTextInput: React.FC<RichTextInputProps> = ({
   }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div>
-      {label && (
-        <label className="block text-sm font-medium text-gray-900 mb-1">
-          {label}
-        </label>
-      )}
-      <div
-        className={`rounded-md border overflow-hidden focus-within:ring-1 ${
-          error
-            ? "border-red-300 focus-within:ring-red-400 focus-within:border-red-400"
-            : "border-gray-300 focus-within:ring-gray-500 focus-within:border-gray-500"
-        }`}
-      >
-        {/* Toolbar */}
-        <div className="flex items-center gap-1 px-2 py-1.5 bg-gray-50 border-b border-gray-200">
-          <button
-            type="button"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              editor?.chain().focus().toggleBold().run();
-            }}
-            className={`px-2 py-0.5 text-xs rounded transition-colors ${
-              isBold
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-            }`}
-          >
-            <strong>N</strong>
-          </button>
-          <button
-            type="button"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              editor?.chain().focus().toggleItalic().run();
-            }}
-            className={`px-2 py-0.5 text-xs rounded transition-colors ${
-              isItalic
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-            }`}
-          >
-            <em>C</em>
-          </button>
-          <span className="w-px h-4 bg-gray-200 mx-0.5" />
-          {(["t1", "t2", "t3"] as const).map((key) => (
-            <button
-              key={key}
-              type="button"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleFontSize(key);
-              }}
-              className={`px-2 py-0.5 text-xs rounded transition-colors ${
-                editorState?.[key]
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-              }`}
-            >
-              {key.toUpperCase()}
-            </button>
-          ))}
-          <span className="w-px h-4 bg-gray-200 mx-0.5" />
-          <button
-            type="button"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              editor?.chain().focus().setTextAlign("left").run();
-            }}
-            className={`px-2 py-0.5 text-xs rounded transition-colors ${
-              isAlignLeft
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-            }`}
-            title="Alinear a la izquierda"
-          >
-            ←
-          </button>
-          <button
-            type="button"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              editor?.chain().focus().setTextAlign("center").run();
-            }}
-            className={`px-2 py-0.5 text-xs rounded transition-colors ${
-              isAlignCenter
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-            }`}
-            title="Centrar"
-          >
-            ↔
-          </button>
-          <button
-            type="button"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              editor?.chain().focus().setTextAlign("right").run();
-            }}
-            className={`px-2 py-0.5 text-xs rounded transition-colors ${
-              isAlignRight
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-            }`}
-            title="Alinear a la derecha"
-          >
-            →
-          </button>
-          <span className="w-px h-4 bg-gray-200 mx-0.5" />
-          <button
-            ref={linkButtonRef}
-            type="button"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              openLinkPopover();
-            }}
-            className={`px-2 py-0.5 text-xs rounded transition-colors ${
-              editorState?.link
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-            }`}
-            title="Añadir enlace"
-          >
-            🔗
-          </button>
-          {linkPopoverOpen &&
-            createPortal(
-              <div
-                ref={linkPopoverRef}
-                style={{ top: linkPopoverPos.top, left: linkPopoverPos.left }}
-                className="fixed z-50 w-64 rounded-md border border-gray-200 bg-white p-2 shadow-lg"
-              >
-                <div className="flex rounded-md border border-gray-300 overflow-hidden mb-2">
-                  {(
-                    [
-                      { value: "url", label: "Enlace" },
-                      { value: "email", label: "Email" },
-                      { value: "tel", label: "Teléfono" },
-                    ] as const
-                  ).map(({ value, label }, idx) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        setLinkType(value);
-                      }}
-                      className={`flex-1 px-2 py-1 text-xs font-medium transition-colors ${idx > 0 ? "border-l border-gray-300" : ""} ${
-                        linkType === value
-                          ? "bg-gray-900 text-white"
-                          : "bg-white text-gray-600 hover:bg-gray-50"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="text"
-                  value={linkValue}
-                  onChange={(e) => setLinkValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      applyLink();
-                    }
-                  }}
-                  placeholder={
-                    linkType === "email"
-                      ? "nombre@ejemplo.com"
-                      : linkType === "tel"
-                        ? "+34 600 000 000"
-                        : "https://ejemplo.com o /proyectos"
-                  }
-                  className="w-full rounded border border-gray-300 px-2 py-1 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-500 mb-2"
-                />
-                <div className="flex items-center justify-between gap-2">
-                  {editorState?.link ? (
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        removeLink();
-                      }}
-                      className="text-xs text-red-500 hover:underline"
-                    >
-                      Quitar enlace
-                    </button>
-                  ) : (
-                    <span />
-                  )}
-                  <button
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      applyLink();
-                    }}
-                    disabled={!linkValue.trim()}
-                    className="px-3 py-1 text-xs font-medium rounded bg-gray-900 text-white disabled:opacity-40"
-                  >
-                    Aplicar
-                  </button>
-                </div>
-              </div>,
-              document.body,
-            )}
-        </div>
-        {/* Editor area */}
+    <div className="min-w-0 space-y-2">
+      {label && <p className={myWebLabelClassName}>{label}</p>}
+      <div className={`overflow-hidden rounded-2xl border ${error ? "border-red-500" : "border-[#010000]/40"}`}>
+        <RichTextToolbar
+          ready={!!editor}
+          bold={editorState?.bold ?? false}
+          italic={editorState?.italic ?? false}
+          fontSizes={{ t1: editorState?.t1 ?? false, t2: editorState?.t2 ?? false, t3: editorState?.t3 ?? false }}
+          alignment={editorState?.alignCenter ? "center" : editorState?.alignRight ? "right" : "left"}
+          link={editorState?.link ?? false}
+          linkOpen={linkPopoverOpen}
+          linkButtonRef={linkButtonRef}
+          onBold={() => editor?.chain().focus().toggleBold().run()}
+          onItalic={() => editor?.chain().focus().toggleItalic().run()}
+          onFontSize={handleFontSize}
+          onAlign={(alignment) => editor?.chain().focus().setTextAlign(alignment).run()}
+          onLink={openLinkPopover}
+        />
+        {linkPopoverOpen && createPortal(
+          <LinkPopover
+            popoverRef={linkPopoverRef}
+            position={linkPopoverPos}
+            type={linkType}
+            value={linkValue}
+            hasLink={editorState?.link ?? false}
+            onTypeChange={setLinkType}
+            onValueChange={setLinkValue}
+            onApply={applyLink}
+            onRemove={removeLink}
+            onDismiss={dismissLinkPopover}
+          />,
+          document.body,
+        )}
         <div className="relative">
           <EditorContent editor={editor} />
-          {isEmpty && placeholder && (
-            <p className="absolute top-2 left-3 text-sm text-gray-400 pointer-events-none select-none">
-              {placeholder}
-            </p>
-          )}
+          {isEmpty && placeholder && <p className="pointer-events-none absolute left-4 top-3 select-none text-sm text-[#010000]/50">{placeholder}</p>}
         </div>
       </div>
-      {error ? (
-        <p className="mt-1 text-xs text-red-500">{error}</p>
-      ) : (
-        <p className="mt-1 text-xs text-gray-400">
+      {error ? <p className="text-xs text-red-600">{error}</p> : (
+        <p className={myWebMutedClassName}>
           <strong>N</strong> = negrita · <em>C</em> = cursiva · T1/T2/T3 = tamaño · 🔗 = enlace · Intro = nueva línea
         </p>
       )}

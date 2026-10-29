@@ -23,10 +23,10 @@ export const InstagramSelectPage: React.FC<InstagramSelectPageProps> = ({
   const { t } = useTranslation();
 
   return (
-    <div className="ml-6 mt-2">
+    <div className="min-w-0 px-2 pb-2 sm:px-4">
       <label
         htmlFor="instagram-page"
-        className="block text-xs text-gray-600 mb-1"
+        className="mb-2 block text-xs font-medium text-[#010000]/65"
       >
         {t("previewProjects.selectInstagramPage")}
       </label>
@@ -34,7 +34,7 @@ export const InstagramSelectPage: React.FC<InstagramSelectPageProps> = ({
       {businessPages && businessPages.length > 0 ? (
         <select
           id="instagram-page"
-          className="mt-1 block w-full pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
+          className="block w-full min-w-0 rounded-full border border-[#010000]/20 bg-[#e8eee5] py-3 pl-4 pr-10 text-sm text-[#010000] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]"
           value={selectedPageId}
           onChange={onChange}
         >
@@ -48,7 +48,7 @@ export const InstagramSelectPage: React.FC<InstagramSelectPageProps> = ({
           ))}
         </select>
       ) : (
-        <div className="text-xs text-gray-500">
+        <div className="rounded-2xl border border-dashed border-[#010000]/20 px-4 py-3 text-xs leading-relaxed text-[#010000]/60">
           {t("previewProjects.noInstagramPages")}
         </div>
       )}

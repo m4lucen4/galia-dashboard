@@ -14,16 +14,16 @@ export const Avatar = ({
   const { t } = useTranslation();
 
   return (
-    <div className="py-6 flex items-center gap-4">
+    <div className="flex min-w-0 flex-wrap items-center gap-5 py-2">
       <img
         src={displayAvatar}
         alt="Avatar"
-        className="h-40 w-40 rounded-full object-cover border"
+        className="size-28 shrink-0 rounded-full border border-[#010000]/20 object-cover sm:size-36"
       />
       <div>
         {isEditing && (
-          <dd className="mt-2">
-            <label className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-gray-900 text-white hover:bg-black cursor-pointer">
+          <div>
+            <label className="mb-0! inline-flex! min-h-11 cursor-pointer items-center justify-center rounded-full border-[1.5px] border-[#010000] px-5 py-3 text-center text-sm font-medium hover:bg-[#010000] hover:text-[#d8e4d6] focus-within:outline-2 focus-within:outline-solid focus-within:outline-[#010000] focus-within:outline-offset-4">
               <input
                 id="avatarFile"
                 name="avatarFile"
@@ -34,7 +34,7 @@ export const Avatar = ({
               />
               {t("profile.changeAvatar")}
             </label>
-          </dd>
+          </div>
         )}
       </div>
     </div>

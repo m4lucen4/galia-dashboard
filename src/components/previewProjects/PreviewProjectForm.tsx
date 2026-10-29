@@ -15,6 +15,10 @@ import { supabase } from "../../helpers/supabase";
 import { LoadingSpinner } from "../shared/ui/LoadingSpinner";
 import { MediaGallerySelector } from "../../features/projects/components/MediaGallerySelector";
 import {
+  projectControlClassName,
+  projectPanelClassName,
+} from "@/features/projects/components/projectFormStyles";
+import {
   PhotoIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -28,6 +32,10 @@ type PreviewProjectFormProps = {
 };
 
 const MAX_IMAGES = 10;
+const actionClassName =
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#010000]/30 px-5 py-2 text-sm font-medium transition-colors hover:bg-[#010000]/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000] disabled:cursor-not-allowed disabled:opacity-40";
+const sharedButtonClassName =
+  "[&_button]:min-h-12 [&_button]:rounded-full [&_button]:border-[#010000] [&_button]:bg-[#010000] [&_button]:text-[#d8e4d6] [&_button]:hover:bg-[#010000]/85 [&_button]:disabled:opacity-40 [&_button]:focus-visible:outline-2 [&_button]:focus-visible:outline-offset-2 [&_button]:focus-visible:outline-[#010000]";
 
 export const PreviewProjectForm = ({
   project,
@@ -261,42 +269,45 @@ export const PreviewProjectForm = ({
 
   if (updateMainVersionRequest.inProgress) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
+      <div className={`${projectPanelClassName} flex flex-col items-center justify-center bg-[#d8e4d6] py-12 font-[Hanken_Grotesk] text-[#010000]`}>
         <LoadingSpinner size="large" color="primary" />
-        <p className="mt-4 text-gray-500">Actualizando versión principal...</p>
+        <p className="mt-4 text-sm text-[#010000]/60">Actualizando versión principal...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <InputField
-        id="description"
-        label="Descripción"
-        type="textarea"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder="Escribe una descripción..."
-        disabled={
-          readOnly ||
-          (project.versions &&
-            project.versions.length > 0 &&
-            !isCurrentVersionMain())
-        }
-      />
+    <div className="min-w-0 space-y-5 bg-[#d8e4d6] font-[Hanken_Grotesk] text-[#010000]">
+      <div className={`${projectPanelClassName} [&_label]:text-base [&_label]:font-medium`}>
+        <InputField
+          className={`${projectControlClassName} mt-3 resize-y`}
+          id="description"
+          label="Descripción"
+          type="textarea"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Escribe una descripción..."
+          disabled={
+            readOnly ||
+            (project.versions &&
+              project.versions.length > 0 &&
+              !isCurrentVersionMain())
+          }
+        />
+      </div>
 
       {/* Version Navigation */}
       {project.versions && project.versions.length > 0 && (
-        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
+        <div className={projectPanelClassName}>
           {/* Navigation arrows and version counter */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <button
               onClick={handlePreviousVersion}
               disabled={currentVersionIndex === 0}
-              className={`p-2 rounded-md transition-colors ${
+              className={`${actionClassName} shrink-0 px-3 ${
                 currentVersionIndex === 0
-                  ? "text-gray-300 cursor-not-allowed"
-                  : "text-gray-700 hover:bg-gray-200"
+                  ? "text-[#010000]/25 cursor-not-allowed"
+                  : "text-[#010000]"
               }`}
               aria-label="Versión anterior"
             >
@@ -316,11 +327,11 @@ export const PreviewProjectForm = ({
             </button>
 
             <div className="flex flex-col items-center gap-1">
-              <span className="text-sm font-medium text-gray-700">
+              <span className="font-['Geist_Mono'] text-sm tabular-nums">
                 {currentVersionIndex + 1}/{project.versions.length}
               </span>
               {isCurrentVersionMain() && (
-                <span className="text-xs text-blue-600 font-medium">
+                <span className="rounded-full border border-[#010000]/25 px-3 py-1 text-xs font-medium">
                   Versión actual
                 </span>
               )}
@@ -329,10 +340,10 @@ export const PreviewProjectForm = ({
             <button
               onClick={handleNextVersion}
               disabled={currentVersionIndex === project.versions.length - 1}
-              className={`p-2 rounded-md transition-colors ${
+              className={`${actionClassName} shrink-0 px-3 ${
                 currentVersionIndex === project.versions.length - 1
-                  ? "text-gray-300 cursor-not-allowed"
-                  : "text-gray-700 hover:bg-gray-200"
+                  ? "text-[#010000]/25 cursor-not-allowed"
+                  : "text-[#010000]"
               }`}
               aria-label="Versión siguiente"
             >
@@ -369,15 +380,15 @@ export const PreviewProjectForm = ({
                       }
                     }}
                     placeholder="Indicaciones para la nueva versión (opcional)..."
-                    className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    className={`${projectControlClassName} resize-none text-sm`}
                     rows={4}
                   />
                   <div className="flex justify-end mt-1">
                     <span
-                      className={`text-xs ${
+                      className={`font-['Geist_Mono'] text-xs tabular-nums ${
                         iterationInstructions.length >= MAX_INSTRUCTIONS_LENGTH
                           ? "text-red-600 font-medium"
-                          : "text-gray-500"
+                          : "text-[#010000]/60"
                       }`}
                     >
                       {iterationInstructions.length}/{MAX_INSTRUCTIONS_LENGTH}
@@ -389,7 +400,7 @@ export const PreviewProjectForm = ({
                   <button
                     onClick={handleIteratePublication}
                     disabled={loading}
-                    className="text-xs text-blue-600 font-medium hover:text-blue-800 underline disabled:opacity-50 cursor-pointer"
+                    className={actionClassName}
                   >
                     Iterar esta publicación
                   </button>
@@ -403,7 +414,7 @@ export const PreviewProjectForm = ({
               <button
                 onClick={handleSetAsMainVersion}
                 disabled={loading || updateMainVersionRequest.inProgress}
-                className="text-xs text-green-600 font-medium hover:text-green-800 underline disabled:opacity-50 cursor-pointer flex items-center gap-1"
+                className={actionClassName}
               >
                 {updateMainVersionRequest.inProgress ? (
                   <>
@@ -421,7 +432,7 @@ export const PreviewProjectForm = ({
 
       {/* Instructions and button when versions don't exist */}
       {!readOnly && (!project.versions || project.versions.length === 0) && (
-        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
+        <div className={`${projectPanelClassName} ${sharedButtonClassName}`}>
           {/* Instructions field */}
           <div className="w-full">
             <textarea
@@ -433,15 +444,15 @@ export const PreviewProjectForm = ({
                 }
               }}
               placeholder="Indicaciones para la nueva versión (opcional)..."
-              className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className={`${projectControlClassName} resize-none text-sm`}
               rows={4}
             />
             <div className="flex justify-end mt-1">
               <span
-                className={`text-xs ${
+                className={`font-['Geist_Mono'] text-xs tabular-nums ${
                   iterationInstructions.length >= MAX_INSTRUCTIONS_LENGTH
                     ? "text-red-600 font-medium"
-                    : "text-gray-500"
+                    : "text-[#010000]/60"
                 }`}
               >
                 {iterationInstructions.length}/{MAX_INSTRUCTIONS_LENGTH}
@@ -458,32 +469,32 @@ export const PreviewProjectForm = ({
         </div>
       )}
 
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <h4 className="text-sm font-medium text-gray-700">
+      <div className={projectPanelClassName}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h4 className="text-lg font-medium tracking-[-0.03em]">
             Imágenes de la publicación
           </h4>
           {!readOnly && images.length < MAX_IMAGES && (
             <button
               onClick={() => setShowGallerySelector(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
+              className={actionClassName}
             >
               <PhotoIcon className="h-4 w-4" />
               <span>Multimedia</span>
             </button>
           )}
         </div>
-        <p className="text-xs text-gray-500 mb-3">
+        <p className="text-sm leading-relaxed text-[#010000]/60">
           Selecciona las imágenes que quieres incluir en la publicación. Las
           imágenes no seleccionadas no aparecerán en las publicaciones. Arrastra
           y suelta para reordenar la secuencia de publicación.
         </p>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-3 gap-3">
           {images.map((image, index) => (
             <div
               key={`${image.url}-${index}`}
-              className={`relative group border rounded-md overflow-hidden transition-all duration-200 ${
+              className={`relative group border border-[#010000]/25 bg-[#010000]/5 rounded-2xl overflow-hidden transition-all duration-200 ${
                 readOnly ? "" : "cursor-move"
               } ${
                 draggedIndex === index
@@ -498,14 +509,14 @@ export const PreviewProjectForm = ({
               onDrop={readOnly ? undefined : (e) => handleDrop(e, index)}
             >
               {/* Indicador de orden */}
-              <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center z-10">
+              <div className="absolute top-2 left-2 bg-[#d8e4d6] text-[#010000] font-['Geist_Mono'] text-xs rounded-full w-7 h-7 flex items-center justify-center z-10">
                 {index + 1}
               </div>
 
               {!readOnly && (
                 <>
                   {/* Icono de drag */}
-                  <div className="absolute top-2 right-2 bg-gray-800 bg-opacity-75 text-white p-1 rounded z-10">
+                  <div className="absolute top-2 right-2 bg-[#010000]/75 text-[#d8e4d6] p-1.5 rounded-full z-10">
                     <svg
                       className="w-4 h-4"
                       fill="currentColor"
@@ -520,7 +531,7 @@ export const PreviewProjectForm = ({
                   {/* Botón eliminar */}
                   <button
                     onClick={() => handleRemoveImage(image.url)}
-                    className="absolute top-2 right-10 p-1 bg-red-500 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+                    className="absolute top-2 right-11 p-1.5 bg-[#d8e4d6] rounded-full text-[#010000] transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000] z-10"
                     title="Eliminar imagen"
                   >
                     <XMarkIcon className="w-3.5 h-3.5" />
@@ -538,21 +549,21 @@ export const PreviewProjectForm = ({
                     "https://via.placeholder.com/150?text=Error";
                 }}
               />
-              <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 py-2 px-2">
+              <div className="absolute bottom-0 left-0 right-0 bg-[#010000]/80 py-3 px-3">
                 <label
                   className={`flex items-center justify-between text-white ${
                     readOnly ? "" : "cursor-pointer"
                   }`}
                 >
                   <span className="text-xs">
-                    {image.status === "pending" ? "Selected" : "Not Selected"}
+                    {image.status === "pending" ? "Seleccionada" : "No seleccionada"}
                   </span>
                   <input
                     type="checkbox"
                     checked={image.status === "pending"}
                     disabled={readOnly}
                     onChange={() => handleToggleImageSelection(image.url)}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    className="h-4 w-4 rounded accent-[#d8e4d6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                   />
                 </label>
               </div>
@@ -562,7 +573,7 @@ export const PreviewProjectForm = ({
       </div>
 
       {!readOnly && (
-        <div className="mt-6">
+        <div className={sharedButtonClassName}>
           <Button
             fullWidth
             title={loading ? "Guardando..." : "Guardar publicación"}
@@ -573,6 +584,7 @@ export const PreviewProjectForm = ({
       )}
 
       <MediaGallerySelector
+        variant="dashboard"
         isOpen={showGallerySelector}
         onClose={() => setShowGallerySelector(false)}
         onSelect={handleGallerySelect}

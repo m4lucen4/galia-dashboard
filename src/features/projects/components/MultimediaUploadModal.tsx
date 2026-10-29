@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from "react";
+import { PillButton } from "@/components/shared/ui/PillButton";
 import {
   Dialog,
   DialogBackdrop,
@@ -70,7 +71,7 @@ function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+  return `${Number.parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
 async function readAllFiles(
@@ -181,7 +182,7 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
 
       const entry = items[0].webkitGetAsEntry();
 
-      if (!entry || !entry.isDirectory) {
+      if (!entry?.isDirectory) {
         setDragError("Debes arrastrar una carpeta, no archivos sueltos.");
         return;
       }
@@ -326,28 +327,28 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
   );
 
   return (
-    <Dialog open={isOpen} onClose={handleClose} className="relative z-60">
+    <Dialog open={isOpen} onClose={handleClose} className="relative z-55 font-['Hanken_Grotesk'] text-[#010000]">
       <DialogBackdrop
         transition
-        className="fixed inset-0 bg-gray-500/75 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+        className="fixed inset-0 bg-[#010000]/45 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
       />
-      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+      <div className="fixed inset-0 z-10 w-screen overflow-y-auto font-['Hanken_Grotesk'] text-[#010000] [&_button]:focus-visible:outline-2 [&_button]:focus-visible:outline-offset-2 [&_button]:focus-visible:outline-[#010000]">
         <div className="flex min-h-full items-center justify-center p-4">
           <DialogPanel
             transition
-            className="relative transform rounded-lg bg-white text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 w-full sm:max-w-2xl"
+            className="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-3xl transform flex-col overflow-hidden rounded-[28px] border-[1.5px] border-[#010000] bg-[#d8e4d6] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
           >
             {/* Header */}
-            <div className="px-6 pt-5 pb-4 border-b border-gray-100">
+            <div className="shrink-0 border-b border-[#010000]/20 px-5 py-5 sm:px-7">
               <div className="flex items-center gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gray-800">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#010000]">
                   <FolderArrowDownIcon className="size-5 text-white" />
                 </div>
                 <div>
-                  <DialogTitle className="text-base font-semibold text-gray-900">
+                  <DialogTitle className="text-xl font-semibold tracking-tight">
                     Crear desde multimedia
                   </DialogTitle>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="mt-1 text-sm leading-relaxed text-[#010000]/65">
                     Arrastra una carpeta con tus fotografías para crear un
                     proyecto. Se mantendrá la estructura de carpetas dentro del
                     proyecto. Solo se aceptan archivos dentro de una carpeta, no
@@ -358,7 +359,7 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
             </div>
 
             {/* Body */}
-            <div className="px-6 py-6 space-y-4">
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 py-5 sm:px-7">
               {/* Drop zone */}
               {modalState === "idle" && (
                 <>
@@ -380,29 +381,29 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
                     onDragOver={isAdminMode && !selectedPhotographer ? undefined : handleDragOver}
                     onDragLeave={isAdminMode && !selectedPhotographer ? undefined : handleDragLeave}
                     onDrop={isAdminMode && !selectedPhotographer ? undefined : handleDrop}
-                    className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg py-14 px-6 transition-colors ${
+                    className={`flex flex-col items-center justify-center rounded-[28px] border-[1.5px] border-dashed px-5 py-10 text-center transition-colors sm:py-14 ${
                       isAdminMode && !selectedPhotographer
-                        ? "border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"
+                        ? "cursor-not-allowed border-[#010000]/25 bg-white/15 opacity-50"
                         : isDraggingOver
-                          ? "border-black bg-gray-50"
-                          : "border-gray-300 bg-white"
+                          ? "border-[#010000] bg-[#010000]/10"
+                          : "border-[#010000]/50 bg-white/25"
                     }`}
                   >
                     <FolderArrowDownIcon
                       className={`h-12 w-12 mb-3 transition-colors ${
-                        isDraggingOver ? "text-black" : "text-gray-300"
+                        isDraggingOver ? "text-[#010000]" : "text-[#010000]/45"
                       }`}
                     />
-                    <p className="text-sm font-medium text-gray-700">
+                    <p className="text-base font-semibold text-[#010000]">
                       Arrastra aquí tu carpeta
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="mt-2 text-sm text-[#010000]/65">
                       Solo se admite una carpeta. No se aceptan archivos
                       sueltos.
                     </p>
                   </div>
                   {dragError && (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-100 rounded-md">
+                    <div className="flex items-center gap-2 rounded-2xl border border-red-800/25 bg-red-50 px-4 py-3">
                       <ExclamationTriangleIcon className="h-4 w-4 text-red-500 shrink-0" />
                       <p className="text-xs text-red-600">{dragError}</p>
                     </div>
@@ -412,11 +413,11 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
 
               {/* Normalization notice — shown once uploading starts */}
               {normalizedName && (
-                <div className="flex items-start gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-md">
-                  <ExclamationTriangleIcon className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-blue-700">
+                <div className="flex items-start gap-2 rounded-2xl border border-[#010000]/25 bg-white/30 px-4 py-3">
+                  <ExclamationTriangleIcon className="mt-0.5 h-4 w-4 shrink-0 text-[#010000]/65" />
+                  <p className="min-w-0 break-words text-sm text-[#010000]/80">
                     El nombre de la carpeta ha sido normalizado:{" "}
-                    <span className="font-mono line-through text-blue-400">
+                    <span className="font-mono text-[#010000]/50 line-through">
                       {normalizedName.original}
                     </span>{" "}
                     →{" "}
@@ -433,7 +434,7 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
                 isDone) && (
                 <div className="space-y-4">
                   {modalState === "uploading" && (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-100 rounded-md">
+                    <div className="flex items-center gap-2 rounded-2xl border border-amber-800/25 bg-amber-50 px-4 py-3">
                       <ExclamationTriangleIcon className="h-4 w-4 text-amber-500 shrink-0" />
                       <p className="text-xs text-amber-700 font-medium">
                         Subida en curso. No cierres este modal hasta que
@@ -442,11 +443,11 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
                     </div>
                   )}
 
-                  <div className="max-h-48 overflow-y-auto pr-1 space-y-2">
+                  <div className="max-h-48 space-y-3 overflow-y-auto rounded-2xl border border-[#010000]/20 bg-white/25 p-4">
                     {uploads.map((upload) => (
                       <div key={upload.id} className="text-xs">
                         <div className="flex items-center justify-between mb-0.5">
-                          <span className="text-gray-600 truncate max-w-sm font-mono">
+                          <span className="min-w-0 max-w-sm truncate font-mono text-[#010000]/75">
                             {upload.relativePath}
                           </span>
                           <span
@@ -467,9 +468,9 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
                         </div>
                         {(upload.status === "uploading" ||
                           upload.status === "pending") && (
-                          <div className="w-full bg-gray-200 rounded-full h-1">
+                          <div className="h-1 w-full rounded-full bg-[#010000]/15">
                             <div
-                              className="bg-black h-1 rounded-full transition-all duration-200"
+                              className="h-1 rounded-full bg-[#010000] transition-all duration-200"
                               style={{ width: `${upload.progress}%` }}
                             />
                           </div>
@@ -480,7 +481,7 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
 
                   {/* Processing spinner */}
                   {modalState === "processing" && processorState === "processing" && (
-                    <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div className="flex items-center gap-3 rounded-[28px] border border-[#010000]/25 bg-white/25 px-5 py-4">
                       <svg
                         className="animate-spin h-5 w-5 text-gray-600 shrink-0"
                         xmlns="http://www.w3.org/2000/svg"
@@ -502,10 +503,10 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
                         />
                       </svg>
                       <div>
-                        <p className="text-sm font-medium text-gray-700">
+                        <p className="text-base font-semibold text-[#010000]">
                           Procesando imágenes...
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="mt-1 text-sm text-[#010000]/65">
                           Generando versiones de alta, baja y miniaturas. No
                           cierres este modal.
                         </p>
@@ -517,11 +518,11 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
                   {isDone && summary && (
                     <div className="space-y-3">
                       {/* Upload summary */}
-                      <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                      <div className="rounded-[28px] border border-[#010000]/30 bg-white/25 p-5">
+                        <p className="mb-3 font-mono text-xs uppercase tracking-wider text-[#010000]/65">
                           Subida
                         </p>
-                        <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm [&_dd]:min-w-0 [&_dd]:break-words [&_dd]:font-mono">
                           <dt className="text-gray-500">Carpeta</dt>
                           <dd className="font-mono text-gray-800 font-medium">
                             {summary.folderName}
@@ -549,10 +550,10 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
                       {/* Processing result */}
                       {processorState !== "idle" && (
                         <div
-                          className={`border rounded-lg p-4 ${
+                          className={`rounded-[28px] border p-5 ${
                             processorState === "done"
-                              ? "border-green-200 bg-green-50"
-                              : "border-red-200 bg-red-50"
+                              ? "border-[#010000]/30 bg-white/30"
+                              : "border-red-800/25 bg-red-50"
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -591,7 +592,7 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
 
                       {/* Upload errors without processing (errorCount > 0) */}
                       {summary.errorCount > 0 && processorState === "idle" && (
-                        <div className="border border-red-200 bg-red-50 rounded-lg p-4">
+                        <div className="rounded-[28px] border border-red-800/25 bg-red-50 p-5">
                           <div className="flex items-center gap-2">
                             <XCircleIcon className="h-5 w-5 text-red-500 shrink-0" />
                             <p className="text-sm font-semibold text-red-700">
@@ -611,19 +612,19 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="bg-gray-50 px-6 py-3 flex justify-end gap-2 rounded-b-lg">
-              <button
+            <div className="flex shrink-0 flex-wrap justify-end gap-3 border-t border-[#010000]/20 px-5 py-4 sm:px-7">
+              <PillButton
+                variant="outline"
                 type="button"
                 onClick={handleClose}
                 disabled={isLocked}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {modalState === "uploading"
                   ? "Subiendo..."
                   : modalState === "processing" && processorState === "processing"
                     ? "Procesando..."
                     : "Cerrar"}
-              </button>
+              </PillButton>
               {isDone && processorState === "done" && analysis && onCreateProject && (
                 <button
                   type="button"
@@ -650,7 +651,7 @@ export const MultimediaUploadModal: React.FC<MultimediaUploadModalProps> = ({
                     );
                     handleClose();
                   }}
-                  className="px-4 py-2 text-sm font-medium text-white bg-black border border-transparent rounded-md shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="min-h-11 rounded-full border-[1.5px] border-[#010000] bg-[#010000] px-5 py-2 text-sm font-medium text-[#d8e4d6] hover:bg-[#010000]/80 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {uploadingToStorage ? "Preparando fotos..." : "Crear proyecto"}
                 </button>

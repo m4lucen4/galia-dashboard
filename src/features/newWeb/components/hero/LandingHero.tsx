@@ -3,7 +3,7 @@ import { HeroTitle } from "@/features/newWeb/components/hero/HeroTitle";
 import { ButtonLink } from "@/features/newWeb/components/ui/Button";
 import { Container } from "@/features/newWeb/components/ui/Container";
 
-const heroVideoUrl = "https://www.dropbox.com/scl/fi/clbqbzqj7kw4qkakgsn5f/mocklab.app-comercial-30s-01.mp4?rlkey=khey2naf2ae3pjx2n0jp0rp40&raw=1";
+const heroVideoUrl = "https://www.dropbox.com/scl/fi/okwimge8jfusguhox4xrz/mocklab.app-comercial-30s-02-final_rev1.mp4?rlkey=75h1sdy649p22m5qmm3ciomti&st=akx378lv&raw=1";
 
 export const LandingHero = () => (
   <section aria-label="Publica tus proyectos con mocklab">

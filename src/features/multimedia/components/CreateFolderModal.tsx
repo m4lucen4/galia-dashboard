@@ -7,6 +7,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 interface CreateFolderModalProps {
+  variant?: "default" | "dashboard";
   isOpen: boolean;
   onClose: () => void;
   onCreateFolder: (folderName: string) => void;
@@ -21,6 +22,7 @@ export const CreateFolderModal = ({
   onClose,
   onCreateFolder,
   loading,
+  variant = "default",
 }: CreateFolderModalProps) => {
   const { t } = useTranslation();
   const [folderName, setFolderName] = useState("");
@@ -72,7 +74,7 @@ export const CreateFolderModal = ({
       iconClassName="size-6 text-white"
       disabledConfirmButton={!isValid || loading}
     >
-      <div className="mt-4">
+      <div className={variant === "dashboard" ? "mt-4 min-w-0 font-['Hanken_Grotesk',system-ui,sans-serif] [&_label]:text-[#010000] [&_input]:rounded-full [&_input]:border-[#010000]/40 [&_input]:bg-transparent [&_input]:px-4 [&_input]:py-3 [&_input]:text-[#010000] [&_input]:focus:ring-[#010000] [&_.text-gray-500]:text-[#010000]/70 [&_.text-gray-400]:font-['Geist_Mono',monospace] [&_.text-gray-400]:text-[#010000]/65" : "mt-4"}>
         <label
           htmlFor="folderName"
           className="block text-sm font-medium text-gray-700 mb-2"

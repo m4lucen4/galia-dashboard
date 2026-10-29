@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { PhotoIcon, ArrowPathIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { myWebIconButtonClassName, myWebLabelClassName, myWebOptionClassName } from "@/features/myWeb/components/myWebStyles";
 
 interface ImageUploaderProps {
   label: string;
@@ -21,115 +22,58 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   variant = "default",
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const isLogo = variant === "logo";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      onUpload(file);
-    }
-    if (inputRef.current) {
-      inputRef.current.value = "";
-    }
+    if (file && !loading) onUpload(file);
+    if (inputRef.current) inputRef.current.value = "";
   };
 
-  if (variant === "logo") {
-    return (
-      <div>
-        <label className="text-sm text-black">{label}</label>
-        <div className="mt-1 relative">
-          <div
-            className="relative flex items-center justify-center border border-gray-300 rounded-md cursor-pointer hover:border-gray-400 transition-colors bg-gray-50 overflow-hidden"
-            style={{ height: "80px" }}
-            onClick={() => inputRef.current?.click()}
-          >
-            {currentUrl ? (
-              <img
-                src={currentUrl}
-                alt={label}
-                className="max-h-full max-w-full object-contain p-2"
-              />
-            ) : (
-              <div className="flex flex-col items-center gap-1 text-gray-400">
-                <PhotoIcon className="h-7 w-7" />
-                <span className="text-xs">Subir imagen</span>
-              </div>
-            )}
-            {loading && (
-              <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
-                <ArrowPathIcon className="h-5 w-5 text-gray-400 animate-spin" />
-              </div>
-            )}
-            {currentUrl && !loading && (
-              <div className="absolute bottom-1 right-1">
-                <span className="text-xs text-gray-500 bg-white/80 px-1.5 py-0.5 rounded">
-                  Cambiar
-                </span>
-              </div>
-            )}
-          </div>
-          {currentUrl && !loading && onRemove && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onRemove(); }}
-              className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-0.5 text-gray-500 hover:text-red-500 hover:border-red-300 transition-colors"
-            >
-              <XMarkIcon className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
-        <input
-          ref={inputRef}
-          type="file"
-          accept={accept}
-          onChange={handleChange}
-          className="hidden"
-        />
-      </div>
-    );
-  }
-
   return (
-    <div>
-      <label className="text-sm text-black">{label}</label>
-      <div className="mt-1 relative">
-        <div
-          className="flex items-center gap-4 p-3 border border-gray-300 rounded-md cursor-pointer hover:border-gray-400 transition-colors"
+    <div className="min-w-0" aria-busy={loading}>
+      <p className={myWebLabelClassName}>{label}</p>
+      <div className="relative mt-2">
+        <button
+          type="button"
+          aria-label={`${currentUrl ? "Cambiar" : "Subir"} ${label}`}
+          disabled={loading}
           onClick={() => inputRef.current?.click()}
+          className={`${myWebOptionClassName} relative flex w-full items-center gap-4 overflow-hidden ${isLogo ? "h-24 justify-center" : "p-4"}`}
         >
           {currentUrl ? (
             <img
               src={currentUrl}
               alt={label}
-              className="h-16 w-16 object-cover rounded-md flex-shrink-0"
+              className={isLogo ? "max-h-full max-w-full object-contain" : "size-16 shrink-0 rounded-2xl object-cover"}
             />
           ) : (
-            <div className="h-16 w-16 flex items-center justify-center bg-gray-100 rounded-md flex-shrink-0">
-              <PhotoIcon className="h-8 w-8 text-gray-400" />
-            </div>
+            <PhotoIcon aria-hidden="true" className="size-8 shrink-0 text-[#010000]/50" />
           )}
-          <div className="flex-1">
-            <p className="text-sm text-gray-600">
-              {currentUrl ? "Clic para reemplazar" : "Clic para subir imagen"}
-            </p>
-          </div>
-          {loading && (
-            <ArrowPathIcon className="h-5 w-5 text-gray-400 animate-spin" />
+          {(!isLogo || !currentUrl) && (
+            <span className="min-w-0 text-sm text-[#010000]/65">
+              {loading ? "Subiendo imagen…" : currentUrl ? "Cambiar imagen" : "Subir imagen"}
+            </span>
           )}
-        </div>
+          {loading && <ArrowPathIcon aria-hidden="true" className="size-5 shrink-0 animate-spin" />}
+        </button>
         {currentUrl && !loading && onRemove && (
           <button
             type="button"
+            aria-label={`Quitar ${label}`}
             onClick={(e) => { e.stopPropagation(); onRemove(); }}
-            className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-0.5 text-gray-500 hover:text-red-500 hover:border-red-300 transition-colors"
+            className={`${myWebIconButtonClassName} absolute -right-2 -top-2 bg-[#d8e4d6]`}
           >
-            <XMarkIcon className="h-3.5 w-3.5" />
+            <XMarkIcon aria-hidden="true" className="size-5" />
           </button>
         )}
       </div>
       <input
         ref={inputRef}
         type="file"
+        aria-label={`Archivo para ${label}`}
         accept={accept}
+        disabled={loading}
         onChange={handleChange}
         className="hidden"
       />

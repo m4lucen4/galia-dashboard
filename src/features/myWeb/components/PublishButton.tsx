@@ -1,8 +1,11 @@
 import React from "react";
-import { SiteDataProps } from "../../../types";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { publishSite } from "../../../redux/actions/SiteActions";
-import { Button } from "../../../components/shared/ui/Button";
+import { SiteDataProps } from "@/types";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { publishSite } from "@/redux/actions/SiteActions";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import {
+  myWebMutedClassName,
+} from "@/features/myWeb/components/myWebStyles";
 import {
   GlobeAltIcon,
   ArrowTopRightOnSquareIcon,
@@ -11,9 +14,14 @@ import {
 interface PublishButtonProps {
   site: SiteDataProps;
   onSave: () => void;
+  showSave?: boolean;
 }
 
-export const PublishButton: React.FC<PublishButtonProps> = ({ site, onSave }) => {
+export const PublishButton: React.FC<PublishButtonProps> = ({
+  site,
+  onSave,
+  showSave = true,
+}) => {
   const dispatch = useAppDispatch();
   const { publishRequest, saveRequest } = useAppSelector((state) => state.site);
 
@@ -24,52 +32,52 @@ export const PublishButton: React.FC<PublishButtonProps> = ({ site, onSave }) =>
   const previewUrl = `https://sites.mocklab.app/${site.slug}`;
 
   return (
-    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-md bg-white">
-      <div className="flex items-center gap-3">
-        <GlobeAltIcon className="h-5 w-5 text-gray-500" />
-        <div>
-          <p className="text-sm font-medium text-gray-900">
-            Estado de publicación
-          </p>
-          <p className="text-xs text-gray-500">
-            {site.published ? (
-              <span className="inline-flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-green-500" />
-                Publicada
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-gray-400" />
-                No publicada
-              </span>
-            )}
-          </p>
+    <section aria-label="Publicación de tu web" className="@container min-w-0 space-y-3 rounded-[28px] border border-[#010000]/20 p-4 sm:p-5">
+      <div className="flex min-w-0 flex-col gap-3 @min-[52rem]:flex-row @min-[52rem]:items-center @min-[52rem]:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <GlobeAltIcon aria-hidden="true" className="mt-1 size-6 shrink-0" />
+          <div className="min-w-0 space-y-1">
+            <h2 className="text-sm font-medium">Estado de publicación</h2>
+            <p className="flex items-center gap-2 text-sm">
+              <span aria-hidden="true" className={`size-2 rounded-full ${site.published ? "bg-green-700" : "bg-[#010000]/40"}`} />
+              {site.published ? "Publicada" : "No publicada"}
+            </p>
+            <p className={`${myWebMutedClassName} break-all`}>{previewUrl}</p>
+          </div>
+        </div>
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          {showSave && (
+            <PillButton
+              onClick={onSave}
+              disabled={saveRequest.inProgress}
+              variant="outline"
+            >
+              {saveRequest.inProgress ? "Guardando..." : "Guardar configuración"}
+            </PillButton>
+          )}
+          <a
+            href={previewUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border-[1.5px] border-[#010000] px-5 py-3 text-sm font-medium hover:bg-[#010000] hover:text-[#d8e4d6] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-[#010000] focus-visible:outline-offset-4"
+          >
+            <ArrowTopRightOnSquareIcon aria-hidden="true" className="size-4" />
+            Vista previa
+          </a>
+          <PillButton
+            onClick={handleTogglePublish}
+            disabled={publishRequest.inProgress}
+            variant={site.published ? "outline" : "solid"}
+          >
+            {site.published ? "Despublicar" : "Publicar web"}
+          </PillButton>
         </div>
       </div>
-
-      <div className="flex items-center gap-2">
-        <Button
-          title={saveRequest.inProgress ? "Guardando..." : "Guardar"}
-          onClick={onSave}
-          disabled={saveRequest.inProgress}
-          secondary
-        />
-        <a
-          href={previewUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 px-3 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-        >
-          <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-          Vista previa
-        </a>
-        <Button
-          title={site.published ? "Despublicar" : "Publicar web"}
-          onClick={handleTogglePublish}
-          disabled={publishRequest.inProgress}
-          secondary={site.published}
-        />
-      </div>
-    </div>
+      <p className={myWebMutedClassName}>
+        {showSave
+          ? "Guarda la configuración con este botón. El contenido de cada página se guarda desde su editor."
+          : "Guarda los cambios de contenido desde cada editor. La configuración se guarda en su pestaña."}
+      </p>
+    </section>
   );
 };

@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { useEffect } from "react";
-import { RootState, AppDispatch } from "../redux/store";
+import { useEffect, useState } from "react";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { LoadingSpinner } from "@/components/shared/ui/LoadingSpinner";
 import { checkAuthState } from "../redux/actions/AuthActions";
 
 interface NonAuthenticatedRouteProps {
@@ -11,12 +11,22 @@ interface NonAuthenticatedRouteProps {
 export const NonAuthenticatedRoute = ({
   children,
 }: NonAuthenticatedRouteProps) => {
-  const { authenticated } = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch<AppDispatch>();
+  const { authenticated } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    dispatch(checkAuthState());
+    const checkAuth = async () => {
+      await dispatch(checkAuthState());
+      setIsChecking(false);
+    };
+
+    void checkAuth();
   }, [dispatch]);
+
+  if (isChecking) {
+    return <LoadingSpinner fullPage />;
+  }
 
   if (authenticated) {
     return <Navigate to="/home" replace />;

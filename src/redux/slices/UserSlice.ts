@@ -144,7 +144,9 @@ const userSlice = createSlice({
         };
       })
       .addCase(updateUser.fulfilled, (state, action) => {
-        state.users = action.payload.user;
+        state.users = state.users.map((user) =>
+          user.uid === action.payload.user.uid ? action.payload.user : user,
+        );
         state.userUpdateRequest = {
           inProgress: false,
           messages: "",

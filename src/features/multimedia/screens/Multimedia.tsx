@@ -27,6 +27,7 @@ import { useTranslation } from "react-i18next";
 import { SocialMediaPreset } from "../../../helpers/imageOptimizer";
 import { Alert } from "../../../components/shared/ui/Alert";
 import { TrashIcon } from "@heroicons/react/24/outline";
+import { PillButton } from "@/components/shared/ui/PillButton";
 
 const moveFailureStatuses = new Set<MoveMediaFailure["status"]>([
   "referenced",
@@ -181,15 +182,15 @@ export const Multimedia = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="mb-6">
-        <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+    <div className="w-full min-w-0 space-y-8 font-['Hanken_Grotesk',system-ui,sans-serif] text-[#010000]">
+      <header className="space-y-3 border-b border-[#010000]/15 pb-8">
+        <h1 className="text-4xl leading-[1.05] font-medium tracking-[-0.04em] sm:text-5xl">
           {t("multimedia.title")}
-        </h3>
-        <p className="text-sm text-gray-500">{t("multimedia.description")}</p>
-      </div>
+        </h1>
+        <p className="text-base leading-relaxed text-[#010000]/65">{t("multimedia.description")}</p>
+      </header>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="min-w-0 rounded-[28px] border border-[#010000]/20">
         <Toolbar
           selectedCount={selectedItems.length}
           onCreateFolder={() => setShowCreateFolder(true)}
@@ -201,40 +202,32 @@ export const Multimedia = () => {
           canMove={selectedFiles.length > 0}
         />
 
-        <div className="p-4 border-b">
-          <Breadcrumbs currentPath={currentPath} onNavigate={handleNavigate} />
+        <div className="border-b border-[#010000]/15 p-4 sm:px-6">
+          <Breadcrumbs variant="dashboard" currentPath={currentPath} onNavigate={handleNavigate} />
         </div>
 
         {showUploader && (
-          <div className="p-4 border-b bg-gray-50">
+          <div className="border-b border-[#010000]/15 p-4 sm:p-6">
             {/* Preset Selector */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[#010000] mb-3">
                 Optimizar para:
               </label>
-              <div className="flex gap-2">
-                <button
+              <div className="flex flex-wrap gap-3">
+                <PillButton
                   onClick={() => setOptimizationPreset("social")}
-                  className={`px-6 py-2 text-sm font-medium rounded-md transition-colors ${
-                    optimizationPreset === "social"
-                      ? "bg-blue-600 text-white"
-                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-                  }`}
+                  variant={optimizationPreset === "social" ? "solid" : "outline"}
                 >
                   📱 Redes Sociales
-                </button>
-                <button
+                </PillButton>
+                <PillButton
                   onClick={() => setOptimizationPreset("web")}
-                  className={`px-6 py-2 text-sm font-medium rounded-md transition-colors ${
-                    optimizationPreset === "web"
-                      ? "bg-blue-600 text-white"
-                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-                  }`}
+                  variant={optimizationPreset === "web" ? "solid" : "outline"}
                 >
                   🌐 Web
-                </button>
+                </PillButton>
               </div>
-              <p className="mt-2 text-xs text-gray-500">
+              <p className="mt-3 text-xs leading-relaxed text-[#010000]/70">
                 {optimizationPreset === "social" &&
                   "Optimizado a 2080px, máx 4.5MB - Perfecto para Instagram, LinkedIn, Facebook"}
                 {optimizationPreset === "web" &&
@@ -243,6 +236,7 @@ export const Multimedia = () => {
             </div>
 
             <FileUploader
+              variant="dashboard"
               onFilesSelected={handleUploadFiles}
               disabled={uploadLoading}
               preset={optimizationPreset}
@@ -253,13 +247,13 @@ export const Multimedia = () => {
               </div>
             )}
             <div className="mt-4 flex justify-end">
-              <button
+              <PillButton
                 onClick={() => setShowUploader(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                variant="outline"
                 disabled={uploadLoading}
               >
                 {t("multimedia.close")}
-              </button>
+              </PillButton>
             </div>
           </div>
         )}
@@ -268,7 +262,7 @@ export const Multimedia = () => {
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#010000] mx-auto mb-4"></div>
                 <p className="text-gray-600">Loading...</p>
               </div>
             </div>
@@ -287,6 +281,7 @@ export const Multimedia = () => {
       </div>
 
       <CreateFolderModal
+        variant="dashboard"
         isOpen={showCreateFolder}
         onClose={() => setShowCreateFolder(false)}
         onCreateFolder={handleCreateFolder}
@@ -305,6 +300,7 @@ export const Multimedia = () => {
       )}
 
       <ImagePreviewModal
+        variant="dashboard"
         isOpen={!!previewFile}
         onClose={() => setPreviewFile(null)}
         file={previewFile}

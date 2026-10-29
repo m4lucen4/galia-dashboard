@@ -2,6 +2,26 @@
 
 The `myWeb` feature lets architecture studios create and publish a public portfolio website hosted at `https://sites.mocklab.app/{slug}`.
 
+## Dashboard editing workflow
+
+`/my-web` uses the shared dashboard sidebar and its mint/ink presentation. Public-site brand colors and stored content are independent of the dashboard theme.
+
+- **Configuration:** identity/media, appearance, navigation, languages and discovery are controlled sections under `components/settings/`. `SiteConfigForm` remains the single draft/save owner. **Guardar configuración** appears in the publication toolbar only while this tab is active; it does not save page content.
+- **Pages:** `MyWebTabBar` owns creation, renaming, ordering and deletion. `pages/CreatePageForm` and `pages/PageTabMenu` render controlled UI; page links to Inicio remain distinct from content pages.
+- **Blocks and projects:** `blocks/BlockCard`, `blocks/AddBlockMenu` and `projects/ProjectOrderList` render controlled actions. Their parent components retain persistence, ordering and deletion protections.
+- **Content:** typed editors retain their own save strategy (see the table below). `previews/` contains layout selectors and SVG previews, not persistence logic.
+- **Input mechanics:** `richText/RichTextToolbar` and `richText/LinkPopover` separate formatting/link presentation from the Tiptap lifecycle in `RichTextInput`. Native upload and formatting buttons support keyboard activation. The uploader opens a file picker; it does not implement drag-and-drop.
+
+Keep `components/myWebStyles.ts` feature-local. Reuse shared `PillButton` without changing shared defaults; never introduce a universal save-all operation when composing these sections.
+
+### Configuration layout and density
+
+- Use `previews/LayoutChoice` for distribution choices: a contained **96 × 56 px** thumbnail beside the full wrapping label, not a proportional SVG canvas filling the card. The choice row has an 80 px minimum height and preserves selected/disabled semantics.
+- The workspace, editor containers and section boundaries fill the available dashboard width, like the other sections. Do not cap these outer wrappers with `max-w-*`; compact thumbnails and individual field measures stay independent. `myWebEditorClassName` keeps editors fluid; `myWebGroupClassName` supplies light inner groups without repeating the outer 28 px panel. `myWebFieldGridClassName` and `myWebChoiceGridClassName` respond to container width rather than viewport width.
+- Keep related fields together: image plus URL, media/logo versus copy/action, left/right content, and statistic number plus legend. Stack on narrow containers; retain all fields and the existing conditional visibility.
+- Keep action targets at least 44 px and body labels legible. Do not reduce density by hiding settings, collapsing slides by default, shrinking text, or changing editor mounting/save ownership.
+- Rich-text contents have an 80 px minimum and a 256 px scrolling ceiling; this is dashboard presentation only, not a change to stored HTML or public typography. Already-bounded upload/icon/navigation previews and ordering lists do not need blanket resizing.
+
 ---
 
 ## Access
@@ -113,9 +133,10 @@ Only exists on the `"proyectos"` page. Config is a **single object**:
 
 ### `body` — Image gallery + text
 ```ts
-{ description: string; image_1?: string; image_2?: string; image_3?: string; type: 1 | 2 | 3 | 4 }
+{ description: string; image_1?: string; image_2?: string; image_3?: string;
+  link_1?: string; link_2?: string; link_3?: string; type: 1 | 2 | 3 | 4 | 5 }
 ```
-Number of images per type: 1→2 imgs, 2→1 img, 3→3 imgs, 4→3 imgs (no text on type 4).
+Number of images per type: 1→2 imgs, 2→1 img, 3→3 imgs, 4→3 imgs, 5→3 equal-width imgs. Types 4 and 5 do not show description text.
 
 ### `content` — Rich info section
 ```ts
@@ -168,9 +189,9 @@ All request state follows `IRequest = { inProgress: boolean; messages: string; o
 - `updateSiteComponent({ componentId, updates })` — partial update on `config`, `visible`, `position`
 - `deleteSiteComponent(componentId)`
 - `reorderSiteComponents(components)` — sequential individual updates
-- `uploadSlideImage(...)` — saves to `{userId}/headers/slide-{index+1}.webp`
-- `uploadBodyImage(...)` — saves to `{userId}/body/image-{n}.webp`
-- `uploadContentImage(...)` — saves to `{userId}/content/image.webp`
+- `uploadSlideImage(...)` — saves to `{userId}/headers/{componentId}/slide-{index+1}.webp`
+- `uploadBodyImage(...)` — saves to `{userId}/body/{componentId}/image-{n}.webp`
+- `uploadContentImage(...)` — saves to `{userId}/content/{componentId}/image.webp`
 - `upsertCTAComponent({ pageId, config })` — create or update (idempotent)
 - `upsertProjectListComponent({ pageId, layout })` — create or update (idempotent)
 - `saveProjectListOrder({ pageId, project_order })` — persists display order (array of project IDs)
@@ -224,8 +245,8 @@ MyWeb (screen)
 
 | Component | Save mechanism |
 |---|---|
-| `SiteConfigForm` | Imperative `save()` via `forwardRef` + `useImperativeHandle`. `PublishButton` holds the ref and calls it. |
-| `HeaderEditor` | **Blur-to-persist** — local slide state, dispatches on `onBlur`. Avoids saving on every keystroke. Uses a `useRef` to avoid stale closures. |
+| `SiteConfigForm` | Imperative `save()` via `forwardRef` + `useImperativeHandle`. The screen owns the ref; `PublishButton` calls the supplied save callback only from the configuration tab. Its optional `showSave` defaults to `true` for existing callers. |
+| `HeaderEditor` | **Blur-to-persist + explicit save** — text fields still save on blur; **"Guardar cabecera"** also saves the latest slide draft. Background image removal saves immediately. Local progress, success and retryable errors are shown without borrowing another block's request status. The save button is disabled during saves/uploads; success is shown only while the current draft matches the saved snapshot. Uses a synchronous `useRef` for same-event updates and saves. |
 | `BodyEditor` / `ContentEditor` | Explicit **"Guardar cambios"** button — user must save manually. |
 
 ### Clearing images (logo / favicon)
@@ -300,9 +321,9 @@ For rollback, first withdraw dashboard link creation and coordinate renderer beh
 ```
 {userId}/logo.webp
 {userId}/favicon.webp
-{userId}/headers/slide-{slideIndex+1}.webp
-{userId}/body/image-{imageIndex}.webp     // imageIndex is 1 | 2 | 3
-{userId}/content/image.webp
+{userId}/headers/{componentId}/slide-{slideIndex+1}.webp
+{userId}/body/{componentId}/image-{imageIndex}.webp     // imageIndex is 1 | 2 | 3
+{userId}/content/{componentId}/image.webp
 ```
 
 ---
@@ -334,7 +355,7 @@ The public site lives at `../mocklab-sites` (separate project, Astro 6 + Tailwin
 | `src/features/myWeb/components/PageEditor.tsx` | Routes link-only pages to destination settings; normal pages to their content editor |
 | `src/features/myWeb/components/ComponentList.tsx` | Component CRUD + reorder per page |
 | `src/features/myWeb/components/ComponentEditor.tsx` | Switch dispatcher to type-specific editor |
-| `src/features/myWeb/components/HeaderEditor.tsx` | Multi-slide editor (blur-to-persist) |
+| `src/features/myWeb/components/HeaderEditor.tsx` | Multi-slide editor (blur-to-persist, explicit save and local save feedback) |
 | `src/features/myWeb/components/SlideEditor.tsx` | Individual slide form |
 | `src/features/myWeb/components/CTAEditor.tsx` | CTA layout + content form |
 | `src/features/myWeb/components/BodyEditor.tsx` | Image gallery layout selector + upload |

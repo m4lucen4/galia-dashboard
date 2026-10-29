@@ -17,9 +17,9 @@ export const ProjectInfo: React.FC<ProjectInfoProps> = ({ project }) => {
   const stateInfo = getProjectStateInfo(project);
 
   return (
-    <div className="mb-3">
-      <div className="flex justify-between items-start">
-        <div className="flex flex-col">
+    <div className="mt-4 mb-3 min-w-0">
+      <div className="flex flex-wrap justify-between items-start gap-3">
+        <div className="min-w-0 flex flex-col gap-1 font-['Geist_Mono',monospace] [&>span]:text-xs [&>span]:leading-relaxed [&>span]:text-[#010000]/65">
           <span className="text-sm text-gray-500">
             {t("previewProjects.createdAt")}{" "}
             {project.created_at
@@ -34,7 +34,7 @@ export const ProjectInfo: React.FC<ProjectInfoProps> = ({ project }) => {
           )}
         </div>
         <span
-          className={`px-2.5 py-0.5 text-xs rounded-full ${stateInfo.className}`}
+          className={`shrink-0 border border-current/15 px-3 py-1 text-xs font-medium rounded-full ${stateInfo.className}`}
         >
           {stateInfo.displayState}
         </span>

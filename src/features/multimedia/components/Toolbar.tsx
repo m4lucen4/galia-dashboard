@@ -5,6 +5,7 @@ import {
   FolderArrowDownIcon,
 } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
+import { PillButton } from "@/components/shared/ui/PillButton";
 
 interface ToolbarProps {
   selectedCount: number;
@@ -29,52 +30,41 @@ export const Toolbar = ({
 }: ToolbarProps) => {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center justify-between gap-4 p-4 bg-white border-b">
-      <div className="flex items-center gap-2">
-        <button
-          onClick={onCreateFolder}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-        >
-          <FolderPlusIcon className="h-5 w-5" />
+    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#010000]/15 p-4 sm:p-6">
+      <div className="flex flex-wrap items-center gap-3">
+        <PillButton onClick={onCreateFolder} variant="outline">
+          <FolderPlusIcon className="h-5 w-5 shrink-0" />
           <span>{t("multimedia.newFolder")}</span>
-        </button>
-
-        <button
-          onClick={onUpload}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-        >
-          <ArrowUpTrayIcon className="h-5 w-5" />
+        </PillButton>
+        <PillButton onClick={onUpload}>
+          <ArrowUpTrayIcon className="h-5 w-5 shrink-0" />
           <span>{t("multimedia.upload")}</span>
-        </button>
+        </PillButton>
       </div>
-
       {selectedCount > 0 && (
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-600">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="font-['Geist_Mono',monospace] text-xs text-[#010000]/70">
             {selectedCount} {t("multimedia.selected")}
           </span>
-          <button
+          <PillButton
             onClick={onDelete}
             disabled={deleteLoading}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors"
+            variant="outline"
+            className="border-red-800 text-red-800 hover:bg-red-800 hover:text-white"
           >
-            <TrashIcon className="h-5 w-5" />
+            <TrashIcon className="h-5 w-5 shrink-0" />
             <span>
               {deleteLoading
                 ? t("multimedia.deleting")
                 : t("multimedia.delete")}
             </span>
-          </button>
-          <button
-            onClick={onMove}
-            disabled={!canMove || moveLoading}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
-          >
-            <FolderArrowDownIcon className="h-5 w-5" />
+          </PillButton>
+          <PillButton onClick={onMove} disabled={!canMove || moveLoading}>
+            <FolderArrowDownIcon className="h-5 w-5 shrink-0" />
             <span>
               {moveLoading ? t("multimedia.moving") : t("multimedia.move")}
             </span>
-          </button>
+          </PillButton>
         </div>
       )}
     </div>

@@ -1,5 +1,9 @@
 import { PreviewProjectDataProps } from "../../../../types";
-import { CalendarDayCell, WEEKDAY_LABELS_ES, formatDayLabelEs } from "./calendarHelpers";
+import {
+  CalendarDayCell,
+  WEEKDAY_LABELS_ES,
+  formatDayLabelEs,
+} from "./calendarHelpers";
 import { EventChip } from "./EventChip";
 import { DayOverflowPopover } from "./DayOverflowPopover";
 
@@ -17,22 +21,29 @@ export const WeekView: React.FC<WeekViewProps> = ({
   onSelectProject,
 }) => {
   return (
-    <div className="overflow-hidden rounded-lg border border-black">
-      <div className="grid grid-cols-7 gap-px bg-gray-200">
+    <div
+      role="region"
+      aria-label="Calendario semanal"
+      tabIndex={0}
+      className="overflow-x-auto rounded-[28px] border border-[#010000]/40 bg-[#d8e4d6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]"
+    >
+      <div className="grid min-w-[840px] grid-cols-7 gap-px bg-[#010000]/15">
         {days.map((cell, index) => (
           <div
             key={cell.dayKey}
-            className={`flex min-h-100 flex-col p-1.5 ${
-              cell.isCurrentMonth ? "bg-white" : "bg-gray-50/50"
+            className={`flex min-h-100 flex-col p-2 ${
+              cell.isCurrentMonth ? "bg-[#e8eee5]" : "bg-[#d8e4d6]"
             }`}
           >
-            <div className="mb-2 flex flex-col items-center">
-              <span className="text-xs font-medium text-gray-500">
+            <div className="mb-4 flex flex-col items-center gap-2 border-b border-[#010000]/15 pb-4 pt-2">
+              <span className="text-xs font-medium uppercase tracking-[0.12em] text-[#010000]/60">
                 {WEEKDAY_LABELS_ES[index]}
               </span>
               <span
-                className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-full text-sm font-medium ${
-                  cell.isToday ? "bg-black text-white" : "text-gray-800"
+                className={`flex h-9 w-9 items-center justify-center rounded-full font-['Geist_Mono',monospace] text-sm ${
+                  cell.isToday
+                    ? "bg-[#010000] text-[#d8e4d6]"
+                    : "text-[#010000]"
                 }`}
               >
                 {cell.date.getDate()}

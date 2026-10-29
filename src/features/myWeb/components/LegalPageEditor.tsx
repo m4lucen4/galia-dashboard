@@ -1,7 +1,15 @@
 import React, { useState } from "react";
-import { SitePageDataProps } from "../../../types";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { updateSitePage } from "../../../redux/actions/SitePageActions";
+import { SitePageDataProps } from "@/types";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { updateSitePage } from "@/redux/actions/SitePageActions";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import {
+  myWebControlClassName,
+  myWebHeadingClassName,
+  myWebLabelClassName,
+  myWebMutedClassName,
+  myWebPanelClassName,
+} from "@/features/myWeb/components/myWebStyles";
 
 interface LegalPageEditorProps {
   page: SitePageDataProps;
@@ -23,36 +31,39 @@ export const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ page }) => {
   };
 
   return (
-    <div className="space-y-3">
-      <p className="text-xs text-gray-500">
+    <section className={`${myWebPanelClassName} w-full`} aria-labelledby={`legal-heading-${page.id}`}>
+      <h3 id={`legal-heading-${page.id}`} className={myWebHeadingClassName}>{page.title}</h3>
+      <p id={`legal-help-${page.id}`} className={myWebMutedClassName}>
         Escribe el contenido legal. Se respetarán los saltos de línea y tabulaciones.
         Para añadir un enlace usa el formato{" "}
-        <code className="bg-gray-100 px-1 rounded">[texto](https://url.com)</code>.
+        <code className="rounded bg-[#010000]/5 px-1">[texto](https://url.com)</code>.
       </p>
 
+      <label className={myWebLabelClassName} htmlFor={`legal-content-${page.id}`}>Contenido legal</label>
       <textarea
+        id={`legal-content-${page.id}`}
+        aria-describedby={`legal-help-${page.id}`}
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        rows={18}
-        className="w-full rounded-md bg-white px-3 py-2 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-gray-800 resize-y font-mono leading-relaxed"
+        rows={10}
+        className={`${myWebControlClassName} resize-y leading-relaxed`}
         placeholder="Introduce aquí el texto del aviso legal y política de privacidad..."
       />
 
-      <div className="flex items-center gap-3">
-        <button
+      <div className="flex flex-wrap items-center gap-3">
+        <PillButton
           onClick={handleSave}
           disabled={saveRequest.inProgress}
-          className="px-4 py-1.5 bg-gray-900 text-white text-sm rounded-md hover:bg-gray-700 disabled:opacity-50"
         >
           {saveRequest.inProgress ? "Guardando..." : "Guardar cambios"}
-        </button>
+        </PillButton>
         {saveRequest.ok && !saveRequest.inProgress && (
-          <span className="text-xs text-green-600">Guardado correctamente</span>
+          <span role="status" className="text-sm text-green-800">Guardado correctamente</span>
         )}
         {saveRequest.messages && !saveRequest.inProgress && (
-          <span className="text-xs text-red-600">{saveRequest.messages}</span>
+          <span role="alert" className="text-sm text-red-700">{saveRequest.messages}</span>
         )}
       </div>
-    </div>
+    </section>
   );
 };

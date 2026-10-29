@@ -1,8 +1,10 @@
-import { InputField } from "../../../components/shared/ui/InputField";
-import { InputAutoComplete } from "../../../components/shared/ui/InputAutoComplete";
-import { SelectField } from "../../../components/shared/ui/SelectField";
-import countriesData from "../../../assets/regions/countries.json";
-import provincesData from "../../../assets/regions/provinces.json";
+import { InputField } from "@/components/shared/ui/InputField";
+import { TextField } from "@/components/shared/ui/TextField";
+import { ProfileSection } from "./ProfileSection";
+import { InputAutoComplete } from "@/components/shared/ui/InputAutoComplete";
+import { SelectField } from "@/components/shared/ui/SelectField";
+import countriesData from "@/assets/regions/countries.json";
+import provincesData from "@/assets/regions/provinces.json";
 
 const SPAIN_ID = 68;
 const countriesOptions = countriesData.result.records.map((c) => ({
@@ -14,10 +16,10 @@ const provincesOptions = provincesData.result.records.map((p) => ({
   name: p.name,
 }));
 import { useTranslation } from "react-i18next";
-import { UpdateUserProps } from "../../../redux/actions/UserActions";
-import { UserDataProps } from "../../../types/index";
+import { UpdateUserProps } from "@/redux/actions/UserActions";
+import { UserDataProps } from "@/types/index";
 
-import avatarDefault from "../../../assets/profile-default.png";
+import avatarDefault from "@/assets/profile-default.png";
 import { Avatar } from "./Avatar";
 
 interface ProfileFormProps {
@@ -49,212 +51,206 @@ export const ProfileForm = ({
 }: ProfileFormProps) => {
   const { t } = useTranslation();
 
-  const getInputClassName = (isEditing: boolean) => {
-    return `block w-full py-1.5 text-base text-gray-900 ${
-      isEditing
-        ? "bg-transparent outline-none px-0 border-b-2 border-gray-800 focus:border-black"
-        : "bg-transparent border-none outline-none px-0 border-b border-transparent hover:border-gray-200"
-    } sm:text-sm/6`;
-  };
+  const inputClassName = "block min-h-12 w-full min-w-0 rounded-2xl border-[1.5px] border-[#010000]/40 bg-transparent px-4 py-3 text-base text-[#010000] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-[#010000] focus-visible:outline-offset-2 disabled:cursor-default disabled:border-[#010000]/15 disabled:opacity-100";
 
   const displayAvatar = avatarPreview || formData.avatar_url || avatarDefault;
 
   return (
-    <div className="mt-6 border-t border-gray-100">
-      <div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Avatar
-          displayAvatar={displayAvatar}
-          isEditing={isEditing}
-          onAvatarChange={onAvatarChange}
-        />
-        <InputField
-          id="description"
-          label={t("profile.descriptionProfile")}
-          type="textarea"
-          disabled={!isEditing}
-          value={formData.description ?? ""}
-          onChange={onChange}
-          className={getInputClassName(isEditing)}
-        />
-      </div>
-      <div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <InputField
-          id="first_name"
-          label={t("profile.firstName")}
-          type="text"
-          disabled={!isEditing}
-          value={formData.first_name ?? ""}
-          onChange={onChange}
-          required
-          className={getInputClassName(isEditing)}
-        />
-        <InputField
-          id="last_name"
-          label={t("profile.lastName")}
-          type="text"
-          disabled={!isEditing}
-          value={formData.last_name ?? ""}
-          onChange={onChange}
-          required
-          className={getInputClassName(isEditing)}
-        />
-      </div>
-      <div className="py-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <dt className="text-sm/6 font-medium text-gray-900">Email</dt>
-            <dd className="mt-1 text-sm/6 text-gray-700">{userData.email}</dd>
-          </div>
+    <div className="space-y-6">
+      <ProfileSection title={t("profile.sections.personal")}>
+        <div className="grid min-w-0 grid-cols-1 items-center gap-6 lg:grid-cols-2">
+          <Avatar
+            displayAvatar={displayAvatar}
+            isEditing={isEditing}
+            onAvatarChange={onAvatarChange}
+          />
           <InputField
-            id="phone"
-            label={t("profile.phone")}
+            id="description"
+            label={t("profile.descriptionProfile")}
+            type="textarea"
+            disabled={!isEditing}
+            value={formData.description ?? ""}
+            onChange={onChange}
+            className={inputClassName}
+          />
+        </div>
+        <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
+          <TextField
+            id="first_name"
+            label={t("profile.firstName")}
             type="text"
             disabled={!isEditing}
-            value={formData.phone ?? ""}
+            value={formData.first_name ?? ""}
             onChange={onChange}
             required
-            className={getInputClassName(isEditing)}
+            className={inputClassName}
           />
-        </div>
-      </div>
-      {/* Separador */}
-      <div className="my-6 border-t border-gray-300"></div>
-
-      {/* Bloque: Información Adicional */}
-      <div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="md:col-span-2">
-          <InputField
-            id="address"
-            label={t("profile.address")}
+          <TextField
+            id="last_name"
+            label={t("profile.lastName")}
             type="text"
             disabled={!isEditing}
-            value={formData.address ?? ""}
+            value={formData.last_name ?? ""}
             onChange={onChange}
-            className={getInputClassName(isEditing)}
+            required
+            className={inputClassName}
           />
         </div>
-        <InputField
-          id="city"
-          label={t("profile.city")}
-          type="text"
-          disabled={!isEditing}
-          value={formData.city ?? ""}
-          onChange={onChange}
-          className={getInputClassName(isEditing)}
-        />
-        <InputField
-          id="postal_code"
-          label={t("profile.postalCode")}
-          type="text"
-          disabled={!isEditing}
-          value={formData.postal_code ?? ""}
-          onChange={onChange}
-          className={getInputClassName(isEditing)}
-        />
-        <InputAutoComplete
-          id="country"
-          label={t("profile.country")}
-          value={formData.country ?? null}
-          onChange={onCountryChange}
-          options={countriesOptions}
-          disabled={!isEditing}
-          className={getInputClassName(isEditing)}
-        />
-        {formData.country != null && (
-          formData.country === SPAIN_ID ? (
-            <InputAutoComplete
-              id="province_id"
-              label={t("profile.province")}
-              value={formData.province_id ?? null}
-              onChange={onProvinceIdChange}
-              options={provincesOptions}
-              disabled={!isEditing}
-              className={getInputClassName(isEditing)}
-            />
-          ) : (
-            <InputField
-              id="province"
-              label={t("profile.province")}
+        <div className="mt-5">
+          <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-2">
+            <dl className="min-w-0">
+              <dt className="mb-2 text-sm font-medium">{t("profile.email")}</dt>
+              <dd className="min-h-12 wrap-break-word rounded-2xl border border-[#010000]/15 px-4 py-3 text-base">{userData.email}</dd>
+            </dl>
+            <TextField
+              id="phone"
+              label={t("profile.phone")}
               type="text"
               disabled={!isEditing}
-              value={formData.province ?? ""}
+              value={formData.phone ?? ""}
               onChange={onChange}
-              className={getInputClassName(isEditing)}
+              required
+              className={inputClassName}
             />
-          )
-        )}
+          </div>
+        </div>
+      </ProfileSection>
+
+      <div className="grid min-w-0 items-start gap-6 xl:grid-cols-2">
+        <ProfileSection title={t("profile.sections.location")}>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <TextField
+                id="address"
+                label={t("profile.address")}
+                type="text"
+                disabled={!isEditing}
+                value={formData.address ?? ""}
+                onChange={onChange}
+                className={inputClassName}
+              />
+            </div>
+            <TextField
+              id="city"
+              label={t("profile.city")}
+              type="text"
+              disabled={!isEditing}
+              value={formData.city ?? ""}
+              onChange={onChange}
+              className={inputClassName}
+            />
+            <TextField
+              id="postal_code"
+              label={t("profile.postalCode")}
+              type="text"
+              disabled={!isEditing}
+              value={formData.postal_code ?? ""}
+              onChange={onChange}
+              className={inputClassName}
+            />
+            <InputAutoComplete
+              id="country"
+              label={t("profile.country")}
+              value={formData.country ?? null}
+              onChange={onCountryChange}
+              options={countriesOptions}
+              disabled={!isEditing}
+              className={inputClassName}
+            />
+            {formData.country != null && (
+              formData.country === SPAIN_ID ? (
+                <InputAutoComplete
+                  id="province_id"
+                  label={t("profile.province")}
+                  value={formData.province_id ?? null}
+                  onChange={onProvinceIdChange}
+                  options={provincesOptions}
+                  disabled={!isEditing}
+                  className={inputClassName}
+                />
+              ) : (
+                <TextField
+                  id="province"
+                  label={t("profile.province")}
+                  type="text"
+                  disabled={!isEditing}
+                  value={formData.province ?? ""}
+                  onChange={onChange}
+                  className={inputClassName}
+                />
+              )
+            )}
+          </div>
+        </ProfileSection>
+
+        <ProfileSection title={t("profile.sections.professional")}>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <TextField
+              id="company"
+              label={t("profile.company")}
+              type="text"
+              disabled={!isEditing}
+              value={formData.company ?? ""}
+              onChange={onChange}
+              className={inputClassName}
+            />
+            <TextField
+              id="job_position"
+              label={t("profile.jobPosition")}
+              type="text"
+              disabled={!isEditing}
+              value={formData.job_position ?? ""}
+              onChange={onChange}
+              className={inputClassName}
+            />
+            <TextField
+              id="vat"
+              label={t("profile.vat")}
+              type="text"
+              disabled={!isEditing}
+              value={formData.vat ?? ""}
+              onChange={onChange}
+              className={inputClassName}
+            />
+            <TextField
+              id="web"
+              label={t("profile.web")}
+              type="url"
+              disabled={!isEditing}
+              value={formData.web ?? ""}
+              onChange={onChange}
+              className={inputClassName}
+            />
+            <TextField
+              id="tags"
+              label={t("profile.tags")}
+              type="text"
+              disabled={!isEditing}
+              value={formData.tags ?? ""}
+              onChange={onChange}
+              className={inputClassName}
+            />
+          </div>
+        </ProfileSection>
       </div>
 
-      {/* Separador */}
-      <div className="my-6 border-t border-gray-300"></div>
-
-      {/* Bloque: Información Empresarial */}
-      <div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <InputField
-          id="company"
-          label={t("profile.company")}
-          type="text"
-          disabled={!isEditing}
-          value={formData.company ?? ""}
-          onChange={onChange}
-          className={getInputClassName(isEditing)}
-        />
-        <InputField
-          id="job_position"
-          label={t("profile.jobPosition")}
-          type="text"
-          disabled={!isEditing}
-          value={formData.job_position ?? ""}
-          onChange={onChange}
-          className={getInputClassName(isEditing)}
-        />
-        <InputField
-          id="vat"
-          label={t("profile.vat")}
-          type="text"
-          disabled={!isEditing}
-          value={formData.vat ?? ""}
-          onChange={onChange}
-          className={getInputClassName(isEditing)}
-        />
-        <InputField
-          id="web"
-          label={t("profile.web")}
-          type="url"
-          disabled={!isEditing}
-          value={formData.web ?? ""}
-          onChange={onChange}
-          className={getInputClassName(isEditing)}
-        />
-        <InputField
-          id="tags"
-          label={t("profile.tags")}
-          type="text"
-          disabled={!isEditing}
-          value={formData.tags ?? ""}
-          onChange={onChange}
-          className={getInputClassName(isEditing)}
-        />
-      </div>
-
-      {/* Separador */}
-      <div className="my-6 border-t border-gray-300"></div>
-
-      <div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <SelectField
-          id="language"
-          className={getInputClassName(isEditing)}
-          disabled={!isEditing}
-          label={t("profile.language")}
-          value={formData.language ?? ""}
-          onChange={onLanguageChange}
-          options={[
-            { value: "es", label: "Español" },
-            { value: "en", label: "English" },
-            { value: "cat", label: "Català" },
-          ]}
-        />
-      </div>
+      <ProfileSection title={t("profile.sections.preferences")}>
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <SelectField
+            id="language"
+            className={inputClassName}
+            disabled={!isEditing}
+            label={t("profile.language")}
+            value={formData.language ?? ""}
+            onChange={onLanguageChange}
+            options={[
+              { value: "es", label: "Español" },
+              { value: "en", label: "English" },
+              { value: "cat", label: "Català" },
+            ]}
+          />
+        </div>
+      </ProfileSection>
     </div>
   );
 };

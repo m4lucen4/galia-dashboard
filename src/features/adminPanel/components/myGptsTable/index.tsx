@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   createColumnHelper,
   flexRender,
@@ -11,7 +11,8 @@ import {
 import { PromptsProps } from "../../../../types";
 import { LoadingSpinner } from "../../../../components/shared/ui/LoadingSpinner";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { Button } from "../../../../components/shared/ui/Button";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import { PlusIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import { DeleteIcon, PencilIcon } from "../../../../components/icons";
 import {
@@ -22,6 +23,7 @@ import {
   fetchPromptsByUser,
 } from "../../../../redux/actions/AdminActions";
 import { Drawer } from "../../../../components/shared/ui/Drawer";
+import { Alert } from "@/components/shared/ui/Alert";
 import { InputField } from "../../../../components/shared/ui/InputField";
 import { RootState } from "../../../../redux/store";
 
@@ -41,11 +43,14 @@ export const MyGptsTable = () => {
     fetchPromptsRequest,
     addPromptRequest,
     updatePromptRequest,
+    deletePromptRequest,
   } = useAppSelector((state) => state.admin);
 
   const user = useAppSelector((state: RootState) => state.auth.user);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [pendingDeletePrompt, setPendingDeletePrompt] = useState<PromptsProps | null>(null);
+  const deleteConfirmationConsumed = useRef(true);
   const [editingPrompt, setEditingPrompt] = useState<PromptsProps | null>(null);
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -115,20 +120,34 @@ export const MyGptsTable = () => {
     setDrawerOpen(true);
   };
 
-  const handleDeletePrompt = async (prompt: PromptsProps) => {
-    if (window.confirm(t("admin.confirmDeletePrompt"))) {
-      try {
-        await dispatch(deletePrompt(prompt.id)).unwrap();
-        if (user?.role === "admin") {
-          dispatch(fetchPrompts());
-        } else if (user?.uid) {
-          dispatch(
-            fetchPromptsByUser({ userUid: user.uid, includePublic: false }),
-          );
-        }
-      } catch (error) {
-        console.error("Error al eliminar prompt:", error);
+  const handleDeletePrompt = (prompt: PromptsProps) => {
+    if (deletePromptRequest.inProgress) return;
+    deleteConfirmationConsumed.current = false;
+    setPendingDeletePrompt(prompt);
+  };
+
+  const handleCancelDelete = () => {
+    deleteConfirmationConsumed.current = true;
+    setPendingDeletePrompt(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!pendingDeletePrompt || deleteConfirmationConsumed.current || deletePromptRequest.inProgress) return;
+    deleteConfirmationConsumed.current = true;
+
+    try {
+      await dispatch(deletePrompt(pendingDeletePrompt.id)).unwrap();
+      if (user?.role === "admin") {
+        dispatch(fetchPrompts());
+      } else if (user?.uid) {
+        dispatch(
+          fetchPromptsByUser({ userUid: user.uid, includePublic: false }),
+        );
       }
+    } catch (error) {
+      console.error("Error al eliminar prompt:", error);
+    } finally {
+      setPendingDeletePrompt(null);
     }
   };
 
@@ -169,8 +188,8 @@ export const MyGptsTable = () => {
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
               isPrivate
-                ? "bg-red-100 text-red-800"
-                : "bg-green-100 text-green-800"
+                ? "border border-[#010000]/25 text-[#010000]/65"
+                : "bg-[#010000]/10 text-[#010000]"
             }`}
           >
             {isPrivate ? t("admin.private") : t("admin.public")}
@@ -186,16 +205,20 @@ export const MyGptsTable = () => {
         const prompt = props.row.original;
         return (
           <div className="flex space-x-2">
-            <Button
-              icon={<PencilIcon />}
-              secondary
+            <PillButton
+              variant="outline"
+              aria-label={t("admin.editPrompt")}
               onClick={() => handleEditPrompt(prompt)}
-            />
-            <Button
-              icon={<DeleteIcon />}
-              secondary
+            >
+              <PencilIcon />
+            </PillButton>
+            <PillButton
+              variant="outline"
+              aria-label={t("admin.deletePrompt")}
               onClick={() => handleDeletePrompt(prompt)}
-            />
+            >
+              <DeleteIcon />
+            </PillButton>
           </div>
         );
       },
@@ -233,29 +256,49 @@ export const MyGptsTable = () => {
   }
 
   return (
-    <div className="bg-white my-6 overflow-hidden rounded-lg shadow">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-medium text-gray-900">
-            {t("admin.prompts")}
-          </h3>
-          <Button title={t("admin.addPrompt")} onClick={handleAddNew} />
+    <div className="min-w-0 space-y-10">
+      {pendingDeletePrompt && (
+        <Alert
+          title={t("admin.deletePrompt")}
+          description={t("admin.confirmDeletePrompt")}
+          onAccept={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+          disabledConfirmButton={deletePromptRequest.inProgress}
+        >
+          <p className="break-words text-sm font-medium">{pendingDeletePrompt.title}</p>
+        </Alert>
+      )}
+      <header className="flex flex-wrap items-end justify-between gap-5 border-b border-[#010000]/15 pb-8">
+        <div className="min-w-0 space-y-3">
+          <h1 className="text-4xl leading-[1.05] font-medium tracking-[-0.04em] sm:text-5xl">
+            {t("admin.title")}
+          </h1>
+          <p className="text-base leading-relaxed text-[#010000]/65">
+            {t("admin.description")}
+          </p>
         </div>
-      </div>
+        <PillButton onClick={handleAddNew} className="shrink-0">
+          <PlusIcon className="size-4 shrink-0" aria-hidden="true" />
+          {t("admin.addPrompt")}
+        </PillButton>
+      </header>
 
-      <div className="overflow-x-auto">
+      <div className="min-w-0 overflow-x-auto rounded-[28px] border border-[#010000]/20">
         <Drawer
+          variant="dashboard"
+          closeLabel={t("admin.closeForm")}
           title={
             editingPrompt ? t("admin.editPrompt") : t("admin.createPrompt")
           }
           isOpen={drawerOpen}
           onClose={handleCloseDrawer}
         >
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="min-w-0 space-y-6 [&_label]:font-medium [&_label]:text-[#010000] [&_label_span]:text-[#010000]">
             <div className="col-span-2">
               <div className="mb-2">
                 <InputField
                   id="title"
+                  className="min-h-12 w-full rounded-full border-[1.5px] border-[#010000]/40 bg-transparent px-4 py-3 text-base focus-visible:outline-2 focus-visible:outline-[#010000] focus-visible:outline-offset-2"
                   label={t("admin.promptTitle")}
                   type="text"
                   value={formData.title}
@@ -266,6 +309,7 @@ export const MyGptsTable = () => {
               <div className="mb-2">
                 <InputField
                   id="description"
+                  className="w-full rounded-[24px] border-[1.5px] border-[#010000]/40 bg-transparent px-4 py-3 text-base focus-visible:outline-2 focus-visible:outline-[#010000] focus-visible:outline-offset-2"
                   label={t("admin.promptDescription")}
                   type="textarea"
                   value={formData.description}
@@ -281,9 +325,9 @@ export const MyGptsTable = () => {
                       type="checkbox"
                       checked={formData.isPrivate}
                       onChange={handleChange}
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                      className="size-4 rounded border-[#010000]/40 accent-[#010000] focus-visible:outline-2 focus-visible:outline-[#010000] focus-visible:outline-offset-2"
                     />
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium">
                       {t("admin.isPrivate")}
                     </span>
                   </label>
@@ -292,35 +336,32 @@ export const MyGptsTable = () => {
             </div>
 
             <div className="mt-6">
-              <Button
-                fullWidth
-                title={
-                  editingPrompt
-                    ? t("admin.editPrompt")
-                    : t("admin.createPrompt")
-                }
+              <PillButton
+                className="w-full"
                 disabled={
                   addPromptRequest.inProgress || updatePromptRequest.inProgress
                 }
                 type="submit"
-              />
+              >
+                {editingPrompt ? t("admin.editPrompt") : t("admin.createPrompt")}
+              </PillButton>
             </div>
           </form>
         </Drawer>
 
         {!prompts.length ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="px-6 py-12 text-center text-[#010000]/65">
             {t("admin.noPrompts")}
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200 table-fixed">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-[#010000]/15 table-fixed">
+            <thead className="bg-[#010000]/5">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer bg-gray-100"
+                      className="px-6 py-5 text-left text-sm font-medium cursor-pointer"
                       onClick={header.column.getToggleSortingHandler()}
                       style={{ width: `${header.column.getSize()}px` }}
                     >
@@ -339,13 +380,13 @@ export const MyGptsTable = () => {
                 </tr>
               ))}
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-[#010000]/10">
               {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
+                <tr key={row.id} className="hover:bg-[#010000]/5">
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className="px-6 py-4"
+                      className="px-6 py-5 text-sm"
                       style={{ width: `${cell.column.getSize()}px` }}
                     >
                       {flexRender(

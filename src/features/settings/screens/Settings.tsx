@@ -1,4 +1,5 @@
-import { Card } from "../../../components/shared/ui/Card";
+import { SettingsSection } from "../components/SettingsSection";
+import { MyWebInactiveInfo } from "../components/MyWebInactiveInfo";
 import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
@@ -114,46 +115,47 @@ export const Settings = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h3 className="text-base/7 font-semibold text-gray-900">
-        {t("settings.title")}
-      </h3>
-      <div className="flex justify-between items-center mb-4">
-        <p className="mt-1 max-w-2xl text-sm/6 text-gray-500">
+    <div className="min-w-0 space-y-10">
+      <header className="space-y-3 border-b border-[#010000]/15 pb-8">
+        <h1 className="text-4xl leading-[1.05] font-medium tracking-[-0.04em] sm:text-5xl">
+          {t("settings.title")}
+        </h1>
+        <p className="text-base leading-relaxed text-[#010000]/65">
           {t("settings.description")}
         </p>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+      <div className={`grid min-w-0 grid-cols-1 items-start gap-6 ${authUser?.role === "student" || authUser?.role === "customer" ? "2xl:grid-cols-2" : ""}`}>
         {(authUser?.role === "student" || authUser?.role === "customer") && (
-          <Card
+          <SettingsSection
             title={t("settings.subscription")}
             subtitle={t("settings.subscriptionDescription")}
           >
             <SubscriptionInfo />
-          </Card>
+          </SettingsSection>
         )}
-        <Card
-          title={authUser?.has_web ? t("settings.socialNetworksAndWeb") : t("settings.socialNetworks")}
+        <SettingsSection
+          title={t("settings.socialNetworksAndWeb")}
           subtitle={t("settings.socialNetworksDescription")}
         >
-          <div className="flex flex-row justify-around mb-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {/* Mi Web */}
-            {authUser?.has_web && (
-              <div className="flex flex-col items-center">
-                <button
-                  onClick={() => navigate("/my-web")}
-                  className="p-4 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors"
-                  title={t("settings.myWeb")}
-                >
-                  <WebIcon size={32} className="text-blue-600" />
-                </button>
-                <p className="mt-3 text-sm font-medium text-gray-900">
-                  {t("settings.myWeb")}
-                </p>
-                <p className="text-xs text-blue-500">{t("settings.goToMyWeb")}</p>
+            <div className="flex min-w-0 flex-col items-center rounded-3xl border border-[#010000]/15 p-5 text-center">
+              <button
+                type="button"
+                disabled={authUser?.has_web !== true}
+                onClick={() => navigate("/my-web")}
+                className="rounded-full border border-[#010000]/20 bg-[#fbea71] p-4 transition-colors enabled:hover:bg-[#d8e4d6] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#010000] disabled:cursor-not-allowed disabled:bg-[#010000]/5 disabled:opacity-40"
+                title={t("settings.myWeb")}
+              >
+                <WebIcon size={32} className="text-[#010000]" />
+              </button>
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <p className="text-base font-medium">{t("settings.myWeb")}</p>
+                {authUser?.has_web !== true && <MyWebInactiveInfo />}
               </div>
-            )}
+              <p className="mt-1 text-xs text-[#010000]/65">{t("settings.goToMyWeb")}</p>
+            </div>
 
             {/* Instagram */}
             <InstagramConnect
@@ -193,7 +195,7 @@ export const Settings = () => {
               onToggleSection={handleTogglePagesSection}
             />
           )}
-        </Card>
+        </SettingsSection>
       </div>
       {showAlertDisconneted && (
         <Alert

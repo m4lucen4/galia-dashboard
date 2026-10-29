@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
-import { AppDispatch } from "../../../redux/store";
+import { BrandMark } from "@/components/shared/ui/BrandMark";
+import { useAppDispatch } from "@/redux/hooks";
 import { useTranslation } from "react-i18next";
 import { login } from "../../../redux/actions/AuthActions";
 import { LoginProps } from "../../../types";
-import { InputField } from "../../../components/shared/ui/InputField";
-import { Button } from "../../../components/shared/ui/Button";
+import { TextField } from "@/components/shared/ui/TextField";
+import { PillButton } from "@/components/shared/ui/PillButton";
 import { isFormValid, validateLoginForm } from "../../../helpers";
-import { Card } from "../../../components/shared/ui/Card";
+import { AuthPanel, AuthHeading, AuthActionLink } from "@/components/shared/auth/AuthLayout";
 
 interface LoginFormProps {
   loginRequest: {
@@ -28,7 +28,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   });
   const [errors, setErrors] = useState<Partial<LoginProps>>({});
 
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -56,66 +56,28 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
   return (
     <>
-      <Card title={t("login.title")} subtitle={t("login.subtitle")}>
+      <div className="mb-8 flex h-20 items-center justify-center">
+        <Link to="/" className="scale-150 rounded-full" aria-label="Mocklab: inicio"><BrandMark /></Link>
+      </div>
+      <AuthPanel>
+        <AuthHeading title={t("login.title")} subtitle={t("login.subtitle")} />
         <form className="space-y-6" onSubmit={handleSubmit}>
-          <InputField
-            label={t("login.email")}
-            id="email"
-            onChange={handleChange}
-            required
-            type="email"
-            value={formData.email}
-          />
-          <InputField
-            label={t("login.password")}
-            id="password"
-            onChange={handleChange}
-            required
-            type="password"
-            value={formData.password}
-          />
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0">
-            <Button
-              title={t("login.button")}
-              disabled={loginRequest.inProgress}
-              type="submit"
-            />
-            <span
-              className="text-sm cursor-pointer text-center"
-              onClick={onForgotPassword}
-            >
-              {t("login.recoveryPassword")}
-            </span>
-          </div>
+          <TextField label={t("login.email")} id="email" onChange={handleChange} required type="email" autoComplete="email" value={formData.email} />
+          <TextField label={t("login.password")} id="password" onChange={handleChange} required type="password" autoComplete="current-password" value={formData.password} />
+          <PillButton disabled={loginRequest.inProgress} type="submit" className="w-full">{t("login.button")}</PillButton>
+          <button type="button" className="mx-auto block rounded-full text-sm underline underline-offset-4" onClick={onForgotPassword}>
+            {t("login.recoveryPassword")}
+          </button>
         </form>
-      </Card>
-      <div className="mt-6">
-        <div className="relative flex items-center gap-3 my-2">
-          <div className="flex-1 h-px bg-gray-200" />
-          <span className="text-xs text-gray-400 uppercase tracking-widest">
-            o
-          </span>
-          <div className="flex-1 h-px bg-gray-200" />
-        </div>
-        <div className="bg-white border border-black rounded-lg shadow-sm px-6 py-5 text-center">
-          <p className="text-sm text-gray-500 mb-3">
-            {t("login.noAccount")}
-          </p>
-          <Link
-            to="/register"
-            className="inline-block w-full py-2 px-4 border border-black rounded-md text-sm font-medium text-gray-900 hover:bg-black hover:text-white transition-colors duration-200"
-          >
-            {t("login.createAccount")}
-          </Link>
-        </div>
-        <div className="mt-4 text-center">
-          <Link
-            to="/"
-            className="text-sm text-gray-400 hover:text-gray-800 cursor-pointer"
-          >
+        <div className="mt-6 text-center">
+          <Link to="/" className="inline-flex min-h-11 items-center rounded-full text-sm text-[#010000]/70 underline underline-offset-4 hover:text-[#010000]">
             {t("login.goBackWeb")}
           </Link>
         </div>
+      </AuthPanel>
+      <div className="mt-6 space-y-4 rounded-[28px] border border-[#010000]/20 p-6 text-center sm:p-8">
+        <p className="text-sm text-[#010000]/70">{t("login.noAccount")}</p>
+        <AuthActionLink to="/register">{t("login.createAccount")}</AuthActionLink>
       </div>
     </>
   );

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { PillButton } from "@/components/shared/ui/PillButton";
 import {
   Dialog,
   DialogBackdrop,
@@ -241,30 +242,30 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
   const isLocked = isUploading || isProcessing;
 
   return (
-    <Dialog open={isOpen} onClose={handleClose} className="relative z-60">
+    <Dialog open={isOpen} onClose={handleClose} className="relative z-55 font-['Hanken_Grotesk'] text-[#010000]">
       <DialogBackdrop
         transition
-        className="fixed inset-0 bg-gray-500/75 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+        className="fixed inset-0 bg-[#010000]/45 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
       />
 
-      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+      <div className="fixed inset-0 z-10 w-screen overflow-y-auto font-['Hanken_Grotesk'] text-[#010000] [&_button]:focus-visible:outline-2 [&_button]:focus-visible:outline-offset-2 [&_button]:focus-visible:outline-[#010000]">
         <div className="flex min-h-full items-center justify-center p-4">
           <DialogPanel
             transition
-            className="relative transform rounded-lg bg-white text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 w-full sm:max-w-2xl"
+            className="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-3xl transform flex-col overflow-hidden rounded-[28px] border-[1.5px] border-[#010000] bg-[#d8e4d6] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
           >
             {/* Header */}
-            <div className="px-6 pt-5 pb-4 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gray-800">
+            <div className="shrink-0 border-b border-[#010000]/20 px-5 py-5 sm:px-7">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#010000]">
                     <FolderOpenIcon className="size-5 text-white" />
                   </div>
-                  <div>
-                    <DialogTitle className="text-base font-semibold text-gray-900">
+                  <div className="min-w-0">
+                    <DialogTitle className="text-xl font-semibold tracking-tight">
                       Archivos en NAS
                     </DialogTitle>
-                    <p className="text-xs text-gray-400 font-mono mt-0.5">
+                    <p className="mt-1 break-all font-mono text-xs text-[#010000]/65">
                       {folderPath}
                     </p>
                   </div>
@@ -273,7 +274,7 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
                   <button
                     type="button"
                     onClick={() => dispatch(nasFetchFiles(folderPath))}
-                    className="p-1.5 text-gray-400 hover:text-gray-600 rounded"
+                    className="flex size-11 items-center justify-center rounded-full border border-[#010000]/40 hover:bg-[#010000]/10"
                     title="Recargar"
                   >
                     <ArrowPathIcon
@@ -284,7 +285,7 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isProcessing}
-                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex min-h-11 items-center rounded-full border-[1.5px] border-[#010000] bg-[#010000] px-4 py-2 text-sm font-medium text-[#d8e4d6] hover:bg-[#010000]/80 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ArrowUpTrayIcon className="h-4 w-4 mr-1.5" />
                     Subir archivos
@@ -302,7 +303,7 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
 
             {/* Warning durante subida */}
             {isUploading && (
-              <div className="flex items-center gap-2 px-6 py-3 bg-amber-50 border-b border-amber-100">
+              <div className="flex shrink-0 items-center gap-2 border-b border-amber-800/20 bg-amber-50 px-5 py-3 sm:px-7">
                 <ExclamationTriangleIcon className="h-4 w-4 text-amber-500 shrink-0" />
                 <p className="text-xs text-amber-700 font-medium">
                   Subida en curso. No cierres este modal hasta que finalice.
@@ -312,18 +313,18 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
 
             {/* Warning durante procesado */}
             {isProcessing && (
-              <div className="flex items-center gap-2 px-6 py-3 bg-blue-50 border-b border-blue-100">
-                <ArrowPathIcon className="h-4 w-4 text-blue-500 shrink-0 animate-spin" />
-                <p className="text-xs text-blue-700 font-medium">
+              <div className="flex shrink-0 items-center gap-2 border-b border-[#010000]/20 bg-white/25 px-5 py-3 sm:px-7">
+                <ArrowPathIcon className="h-4 w-4 shrink-0 animate-spin text-[#010000]/65" />
+                <p className="text-xs font-medium text-[#010000]/75">
                   Procesando fotos... No cierres este modal hasta que finalice.
                 </p>
               </div>
             )}
 
             {/* Body */}
-            <div className="px-6 py-4 space-y-4">
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 py-5 sm:px-7">
               {error && (
-                <p className="text-xs text-red-600 bg-red-50 px-3 py-2 rounded">
+                <p className="rounded-2xl border border-red-800/25 bg-red-50 px-4 py-3 text-sm text-red-800">
                   {error}
                 </p>
               )}
@@ -331,20 +332,20 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
               {/* Upload progress */}
               {uploads.length > 0 && (
                 <div>
-                  <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                  <div className="max-h-40 space-y-3 overflow-y-auto rounded-2xl border border-[#010000]/20 bg-white/25 p-4">
                     {uploads.map((upload) => (
                       <div key={upload.id} className="text-xs">
                         <div className="flex items-center justify-between mb-0.5">
-                          <span className="text-gray-600 truncate max-w-xs">
+                          <span className="min-w-0 max-w-xs truncate text-[#010000]/75">
                             {upload.name}
                           </span>
                           <span
                             className={
                               upload.status === "success"
-                                ? "text-green-600 font-medium"
+                                ? "shrink-0 font-mono font-medium text-green-800"
                                 : upload.status === "error"
-                                  ? "text-red-600"
-                                  : "text-gray-500"
+                                  ? "shrink-0 text-red-800"
+                                  : "shrink-0 font-mono text-[#010000]/65"
                             }
                           >
                             {upload.status === "success"
@@ -356,9 +357,9 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
                         </div>
                         {(upload.status === "uploading" ||
                           upload.status === "pending") && (
-                          <div className="w-full bg-gray-200 rounded-full h-1">
+                          <div className="h-1 w-full rounded-full bg-[#010000]/15">
                             <div
-                              className="bg-black h-1 rounded-full transition-all duration-200"
+                              className="h-1 rounded-full bg-[#010000] transition-all duration-200"
                               style={{ width: `${upload.progress}%` }}
                             />
                           </div>
@@ -370,7 +371,7 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
                     <button
                       type="button"
                       onClick={clearFinishedUploads}
-                      className="text-xs text-gray-400 hover:text-gray-600 underline mt-2"
+                      className="mt-2 min-h-11 rounded-full px-3 text-xs underline underline-offset-4 hover:bg-[#010000]/10"
                     >
                       Limpiar completados
                     </button>
@@ -380,19 +381,19 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
 
               {/* Botón analizar fotos nuevas */}
               {projectId && hasSuccessfulUploads && !isUploading && !isProcessing && (
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex flex-wrap items-center justify-between gap-4 rounded-[28px] border border-[#010000]/35 bg-white/25 p-5">
                   <div>
                     <p className="text-sm font-medium text-gray-800">
                       Fotos listas para procesar
                     </p>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="mt-1 text-sm text-[#010000]/65">
                       Se generarán las versiones baja, baja_ma y min y se analizarán automáticamente.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={handleAnalyze}
-                    className="ml-4 inline-flex items-center gap-1.5 px-3 py-2 bg-black text-white text-xs font-medium rounded-md hover:bg-gray-800 shrink-0"
+                    className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-[#010000] px-5 py-2 text-sm font-medium text-[#d8e4d6] hover:bg-[#010000]/80"
                   >
                     <SparklesIcon className="h-3.5 w-3.5" />
                     Analizar
@@ -402,7 +403,7 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
 
               {/* Resultado del procesado */}
               {processorState === "done" && (
-                <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center gap-2 rounded-2xl border border-[#010000]/25 bg-white/30 p-4">
                   <span className="text-green-600 text-sm">✓</span>
                   <p className="text-xs text-green-700 font-medium">
                     {processorMessage}
@@ -410,7 +411,7 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
                 </div>
               )}
               {processorState === "error" && (
-                <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                <div className="rounded-2xl border border-red-800/25 bg-red-50 p-4">
                   <p className="text-xs text-red-700 font-medium">
                     {processorMessage || "Error al procesar las fotos."}
                   </p>
@@ -419,19 +420,19 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
 
               {/* File list */}
               {loading && fileList.length === 0 ? (
-                <p className="text-xs text-gray-400 py-6 text-center">
+                <p className="rounded-[28px] border border-dashed border-[#010000]/35 px-4 py-10 text-center text-sm text-[#010000]/65">
                   Cargando...
                 </p>
               ) : fileList.length === 0 ? (
-                <p className="text-xs text-gray-400 py-6 text-center">
+                <p className="rounded-[28px] border border-dashed border-[#010000]/35 px-4 py-10 text-center text-sm text-[#010000]/65">
                   No hay archivos en esta carpeta
                 </p>
               ) : (
                 <div>
-                  <p className="text-xs text-gray-500 mb-2">
+                  <p className="mb-3 font-mono text-xs text-[#010000]/65">
                     {fileList.length} archivo{fileList.length !== 1 ? "s" : ""}
                   </p>
-                  <ul className="grid grid-cols-3 gap-2 max-h-72 overflow-y-auto pr-1">
+                  <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {fileList.map((file) => (
                       <li key={file.name} className="relative group">
                         {isImage(file.name) ? (
@@ -440,29 +441,29 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
                               src={thumbnailUrl(file.path)}
                               alt={file.name}
                               loading="lazy"
-                              className="h-24 w-full object-cover rounded-md bg-gray-100"
+                              className="h-32 w-full rounded-2xl border border-[#010000]/20 bg-white/30 object-cover"
                             />
                             <button
                               type="button"
                               onClick={() => handleDelete(file.name)}
                               disabled={deletingFile === file.name}
-                              className="absolute top-1 right-1 p-1 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 disabled:opacity-50 transition-opacity"
+                              className="absolute right-1 top-1 flex size-9 items-center justify-center rounded-full border border-[#010000]/20 bg-[#d8e4d6] text-[#010000] transition-colors hover:bg-red-50 hover:text-red-800 disabled:opacity-50"
                               title="Eliminar"
                             >
                               <TrashIcon className="h-3.5 w-3.5" />
                             </button>
-                            <p className="text-xs text-gray-500 truncate mt-0.5 px-0.5">
+                            <p className="mt-2 truncate px-1 font-mono text-xs text-[#010000]/70">
                               {file.name}
                             </p>
                           </>
                         ) : (
-                          <div className="flex items-center justify-between py-2 col-span-3">
-                            <div className="flex items-center gap-2 min-w-0">
+                          <div className="flex h-full flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#010000]/25 bg-white/25 p-3">
+                            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                               <DocumentIcon className="h-4 w-4 text-gray-400 shrink-0" />
                               <span className="text-sm text-gray-700 truncate">
                                 {file.name}
                               </span>
-                              <span className="text-xs text-gray-400 shrink-0">
+                              <span className="shrink-0 font-mono text-xs text-[#010000]/65">
                                 {formatBytes(file.size)}
                               </span>
                             </div>
@@ -470,7 +471,7 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
                               type="button"
                               onClick={() => handleDelete(file.name)}
                               disabled={deletingFile === file.name}
-                              className="ml-2 p-1 text-gray-400 hover:text-red-500 rounded shrink-0 disabled:opacity-50"
+                              className="flex size-9 shrink-0 items-center justify-center rounded-full hover:bg-red-50 hover:text-red-800 disabled:opacity-50"
                               title="Eliminar"
                             >
                               <TrashIcon className="h-4 w-4" />
@@ -485,19 +486,19 @@ export const NasFilesModal: React.FC<NasFilesModalProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="bg-gray-50 px-6 py-3 flex justify-end rounded-b-lg">
-              <button
+            <div className="flex shrink-0 justify-end border-t border-[#010000]/20 px-5 py-4 sm:px-7">
+              <PillButton
+                variant="outline"
                 type="button"
                 onClick={handleClose}
                 disabled={isLocked}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isUploading
                   ? "Esperando subida..."
                   : isProcessing
                     ? "Procesando..."
                     : "Cerrar"}
-              </button>
+              </PillButton>
             </div>
           </DialogPanel>
         </div>

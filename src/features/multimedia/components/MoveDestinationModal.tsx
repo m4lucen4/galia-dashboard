@@ -104,8 +104,9 @@ export const MoveDestinationModal = ({
       iconClassName="size-6 text-white"
       disabledConfirmButton={!canConfirm}
     >
-      <div className="space-y-3">
+      <div className="min-w-0 space-y-4 font-['Hanken_Grotesk',system-ui,sans-serif] text-[#010000]">
         <Breadcrumbs
+          variant="dashboard"
           currentPath={destinationPath}
           onNavigate={handleNavigate}
         />
@@ -123,7 +124,7 @@ export const MoveDestinationModal = ({
         )}
 
         {!loadingFolders && !folderError && folders.length > 0 && (
-          <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border border-gray-200 p-2">
+          <div className="max-h-48 space-y-1 overflow-y-auto rounded-[28px] border border-[#010000]/20 p-2">
             {folders.map((folderName) => {
               const folderPath = buildFolderPath(destinationPath, folderName);
 
@@ -133,10 +134,10 @@ export const MoveDestinationModal = ({
                   type="button"
                   onClick={() => handleNavigate(folderPath)}
                   disabled={moving}
-                  className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex w-full min-w-0 items-center gap-3 rounded-full px-4 py-3 text-left text-sm text-[#010000] hover:bg-[#010000]/5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#010000] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <FolderIcon className="h-5 w-5 text-blue-600" />
-                  {folderName}
+                  <FolderIcon className="h-5 w-5 shrink-0 text-[#010000]" />
+                  <span className="min-w-0 break-all">{folderName}</span>
                 </button>
               );
             })}

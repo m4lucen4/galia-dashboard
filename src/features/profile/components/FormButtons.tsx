@@ -1,7 +1,8 @@
-import { Button } from "../../../components/shared/ui/Button";
+import { PillButton } from "@/components/shared/ui/PillButton";
 import { useTranslation } from "react-i18next";
 
 interface FormButtonsProps {
+  formId?: string;
   isEditing: boolean;
   isLoading: boolean;
   onEdit: () => void;
@@ -9,6 +10,7 @@ interface FormButtonsProps {
 }
 
 export const FormButtons = ({
+  formId,
   isEditing,
   isLoading,
   onEdit,
@@ -18,17 +20,12 @@ export const FormButtons = ({
 
   if (isEditing) {
     return (
-      <div className="flex space-x-3">
-        <Button title={t("profile.save")} type="submit" disabled={isLoading} />
-        <Button
-          title={t("profile.cancel")}
-          secondary
-          onClick={onCancel}
-          disabled={isLoading}
-        />
+      <div className="flex flex-wrap items-center gap-3">
+        <PillButton type="submit" form={formId} disabled={isLoading}>{t("profile.save")}</PillButton>
+        <PillButton variant="outline" onClick={onCancel} disabled={isLoading}>{t("profile.cancel")}</PillButton>
       </div>
     );
   }
 
-  return <Button title={t("profile.editProfile")} onClick={onEdit} />;
+  return <PillButton onClick={onEdit}>{t("profile.editProfile")}</PillButton>;
 };

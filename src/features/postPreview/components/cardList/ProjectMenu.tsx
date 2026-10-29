@@ -26,16 +26,16 @@ export const ProjectMenu: React.FC<ProjectMenuProps> = ({
   const hasValidSubscription = useHasValidSubscription();
 
   return (
-    <div className="relative">
+    <div className="relative shrink-0">
       <button
-        className="p-1 rounded-full hover:bg-gray-100"
+        className="p-2 rounded-full border border-[#010000]/20 text-[#010000] hover:bg-[#d8e4d6] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000]"
         onClick={() => onToggleMenu(project.id)}
       >
-        <EllipsisVerticalIcon className="h-5 w-5 text-gray-500" />
+        <EllipsisVerticalIcon className="h-5 w-5 text-[#010000]" />
       </button>
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 w-40 bg-white shadow-lg rounded-md border border-gray-100 z-10">
-          <ul className="py-1">
+        <div className="absolute right-0 top-full mt-2 w-48 max-w-[calc(100vw-3rem)] bg-[#f5f7f3] shadow-lg rounded-2xl border border-[#010000]/25 z-20">
+          <ul className="p-1.5 [&_button]:rounded-xl [&_button]:text-[#010000] [&_button:hover]:bg-[#d8e4d6] [&_li:last-child_button]:text-red-800">
             {!isDateInPast(project.publishDate) && (
               <li>
                 <button

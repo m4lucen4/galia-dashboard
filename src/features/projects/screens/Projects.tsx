@@ -3,7 +3,8 @@ import { useAppSelector, useAppDispatch } from "../../../redux/hooks";
 import { RootState } from "../../../redux/store";
 import { Drawer } from "../../../components/shared/ui/Drawer";
 import { Alert } from "../../../components/shared/ui/Alert";
-import { Button } from "../../../components/shared/ui/Button";
+import { PillButton } from "@/components/shared/ui/PillButton";
+import { ChartBarIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { DropdownButton } from "../../../components/shared/ui/DropdownButton";
 import { errorMessages } from "../../../helpers";
 import {
@@ -243,7 +244,7 @@ export const Projects = () => {
 
   if (processingProjectId) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex min-h-[60vh] items-center justify-center font-['Hanken_Grotesk',system-ui,sans-serif] text-[#010000]">
         <WorkingInProgress
           customMessages={[
             t("projects.stage1"),
@@ -258,42 +259,49 @@ export const Projects = () => {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h3 className="text-base/7 font-semibold text-gray-900">
-        {t("projects.title")}
-      </h3>
-      <div className="flex justify-between items-center mb-4">
-        <p className="mt-1 max-w-7xl text-sm/6 text-gray-500">
-          {t("projects.description")}
-        </p>
-      </div>
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-2">
+    <div className="min-w-0 space-y-10 font-['Hanken_Grotesk',system-ui,sans-serif] text-[#010000]">
+      <header className="flex flex-wrap items-end justify-between gap-5 border-b border-[#010000]/15 pb-8">
+        <div className="min-w-0 space-y-3">
+          <h1 className="text-4xl leading-[1.05] font-medium tracking-[-0.04em] sm:text-5xl">
+            {t("projects.title")}
+          </h1>
+          <p className="text-base leading-relaxed text-[#010000]/65">
+            {t("projects.description")}
+          </p>
+        </div>
+        <div className="flex w-full flex-wrap items-center gap-3 xl:w-auto">
           {(user?.role === "admin" ||
             (user?.role === "photographer" && user.odoo_id)) ? (
-            <DropdownButton
-              title={t("projects.create")}
-              options={[
-                {
-                  label: t("projects.createFromScratch"),
-                  onClick: handleOpenDrawer,
-                },
-                {
-                  label: t("projects.createFromMultimedia"),
-                  onClick: () => setShowMultimediaModal(true),
-                },
-              ]}
-            />
+            <div className="[&>div>button]:min-h-11 [&>div>button]:gap-2 [&>div>button]:rounded-full [&>div>button]:bg-[#010000] [&>div>button]:px-5 [&>div>button]:py-3 [&>div>button]:text-[#d8e4d6] [&>div>button]:focus-visible:outline-2 [&>div>button]:focus-visible:outline-offset-4 [&>div>button]:focus-visible:outline-[#010000] [&>div>button]:focus:ring-0 [&>div>div]:w-60 [&>div>div]:rounded-2xl [&>div>div]:border-[#010000]/20 [&>div>div]:bg-[#d8e4d6] [&_li>button]:min-h-11 [&_li>button]:text-[#010000] [&_li>button]:hover:bg-[#010000]/5 [&_li>button]:focus-visible:outline-2 [&_li>button]:focus-visible:-outline-offset-2 [&_li>button]:focus-visible:outline-[#010000]">
+              <DropdownButton
+                title={t("projects.create")}
+                options={[
+                  {
+                    label: t("projects.createFromScratch"),
+                    onClick: handleOpenDrawer,
+                  },
+                  {
+                    label: t("projects.createFromMultimedia"),
+                    onClick: () => setShowMultimediaModal(true),
+                  },
+                ]}
+              />
+            </div>
           ) : (
-            <Button title={t("projects.create")} onClick={handleOpenDrawer} />
+            <PillButton onClick={handleOpenDrawer}>
+              <PlusIcon className="size-4 shrink-0" aria-hidden="true" />
+              {t("projects.create")}
+            </PillButton>
           )}
-          <Button
-            title={t("projects.viewAnalytics")}
+          <PillButton
+            variant="outline"
             onClick={() => navigate("/projects-analytics")}
-            secondary
-          />
+          >
+            <ChartBarIcon className="size-4 shrink-0" aria-hidden="true" />
+            {t("projects.viewAnalytics")}
+          </PillButton>
         </div>
-      </div>
+      </header>
       <ProjectsFilters
         isAdmin={user.role === "admin"}
         titleFilter={titleFilter}
@@ -307,6 +315,8 @@ export const Projects = () => {
         onClearFilters={clearFilters}
       />
       <Drawer
+        variant="dashboard"
+        closeLabel={t("users.closeForm")}
         title={
           isEditMode ? t("projects.editProject") : t("projects.createProject")
         }

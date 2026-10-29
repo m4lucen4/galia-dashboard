@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -11,7 +11,7 @@ import { UserDataProps } from "../../../types";
 import { LoadingSpinner } from "../../../components/shared/ui/LoadingSpinner";
 import { useAppDispatch } from "../../../redux/hooks";
 import { fetchUserByUid } from "../../../redux/actions/UserActions";
-import { Button } from "../../../components/shared/ui/Button";
+import { PillButton } from "@/components/shared/ui/PillButton";
 import { useTranslation } from "react-i18next";
 import { Table } from "../../../components/shared/ui/Table";
 import { OdooIcon } from "../../../components/icons/OdooIcon";
@@ -19,17 +19,24 @@ import { WebIcon } from "../../../components/icons/WebIcon";
 
 type UsersTableProps = {
   users: UserDataProps[];
+  searchQuery?: string;
+  pageResetKey?: number;
+  emptyMessage?: string;
   isLoading: boolean;
   onEditUser: () => void;
 };
 
 export const UsersTable = ({
   users,
+  searchQuery = "",
+  pageResetKey = 0,
+  emptyMessage,
   isLoading,
   onEditUser,
 }: UsersTableProps) => {
   const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([]);
+  const previousResetInputs = useRef({ searchQuery, sorting, pageResetKey });
   const dispatch = useAppDispatch();
 
   const handleEditClick = async (user: UserDataProps) => {
@@ -58,7 +65,7 @@ export const UsersTable = ({
       cell: (info) => {
         const company = info.getValue();
         if (!company) return "-";
-        return company.length > 15 ? `${company.substring(0, 15)}...` : company;
+        return company;
       },
     }),
     columnHelper.accessor("role", {
@@ -85,10 +92,9 @@ export const UsersTable = ({
       header: t("users.actions"),
       cell: (props) => (
         <div className="flex space-x-2">
-          <Button
-            title={t("users.edit")}
-            onClick={() => handleEditClick(props.row.original)}
-          />
+          <PillButton variant="outline" onClick={() => handleEditClick(props.row.original)}>
+            {t("users.edit")}
+          </PillButton>
         </div>
       ),
     }),
@@ -101,6 +107,7 @@ export const UsersTable = ({
       sorting,
     },
     onSortingChange: setSorting,
+    autoResetPageIndex: false,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -112,13 +119,33 @@ export const UsersTable = ({
     },
   });
 
+  useEffect(() => {
+    const previous = previousResetInputs.current;
+    previousResetInputs.current = { searchQuery, sorting, pageResetKey };
+
+    if (
+      previous.searchQuery !== searchQuery ||
+      previous.sorting !== sorting ||
+      previous.pageResetKey !== pageResetKey
+    ) {
+      table.resetPageIndex();
+      return;
+    }
+
+    const lastPageIndex = Math.max(0, table.getPageCount() - 1);
+    if (table.getState().pagination.pageIndex > lastPageIndex) {
+      table.setPageIndex(lastPageIndex);
+    }
+  }, [searchQuery, sorting, pageResetKey, users, table]);
+
   return (
     <Table
       table={table}
+      variant="dashboard"
       isLoading={isLoading}
-      emptyMessage="No registered users"
+      emptyMessage={emptyMessage ?? t("users.empty")}
       LoadingComponent={LoadingSpinner}
-      getRowClassName={(user) => (user.active ? "" : "bg-red-100")}
+      getRowClassName={(user) => (user.active ? "" : "bg-[#ff522a]/10")}
     />
   );
 };

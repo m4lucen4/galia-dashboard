@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import * as LucideIcons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { myWebControlClassName, myWebIconButtonClassName, myWebLabelClassName } from "@/features/myWeb/components/myWebStyles";
+import { PillButton } from "@/components/shared/ui/PillButton";
 
 const ALL_ICONS = Object.entries(LucideIcons).filter(
   ([name, value]) =>
@@ -45,13 +47,15 @@ export const IconPicker: React.FC<IconPickerProps> = ({ value, onChange }) => {
     : null;
 
   return (
-    <div ref={containerRef} className="relative">
-      <label className="text-sm text-black">Icono del botón</label>
+    <div ref={containerRef} className="relative min-w-0">
+      <p className={myWebLabelClassName}>Icono del botón</p>
       <div className="mt-1 flex items-center gap-2">
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-gray-300 bg-white text-sm text-gray-700 hover:border-gray-400 transition-colors"
+          aria-label={`Elegir icono: ${value || "sin icono"}`}
+          aria-expanded={open}
+          className={`${myWebControlClassName} flex w-auto items-center gap-2`}
         >
           {SelectedIcon ? (
             <>
@@ -63,18 +67,12 @@ export const IconPicker: React.FC<IconPickerProps> = ({ value, onChange }) => {
           )}
         </button>
         {value && (
-          <button
-            type="button"
-            onClick={() => onChange("")}
-            className="text-xs text-gray-400 hover:text-red-500 transition-colors"
-          >
-            Quitar
-          </button>
+          <PillButton variant="outline" aria-label="Quitar icono" onClick={() => onChange("")}>Quitar</PillButton>
         )}
       </div>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-72 rounded-md border border-gray-200 bg-white shadow-lg">
+        <div className="absolute z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-[28px] border border-[#010000]/30 bg-[#d8e4d6] shadow-lg">
           <div className="p-2 border-b border-gray-100">
             <input
               type="text"
@@ -82,25 +80,24 @@ export const IconPicker: React.FC<IconPickerProps> = ({ value, onChange }) => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar icono..."
-              className="w-full rounded-md px-2 py-1.5 text-sm border border-gray-300 focus:outline-none focus:border-gray-600"
+              aria-label="Buscar icono"
+              className={myWebControlClassName}
             />
           </div>
-          <div className="grid grid-cols-8 gap-1 p-2 max-h-52 overflow-y-auto">
+          <div className="grid max-h-64 grid-cols-[repeat(auto-fit,minmax(44px,1fr))] gap-1 overflow-y-auto p-2">
             {filtered.map(([name, Icon]) => (
               <button
                 key={name}
                 type="button"
                 title={name}
+                aria-label={name}
+                aria-pressed={value === name}
                 onClick={() => {
                   onChange(name);
                   setOpen(false);
                   setSearch("");
                 }}
-                className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
-                  value === name
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`${myWebIconButtonClassName} ${value === name ? "bg-[#010000] text-[#d8e4d6] hover:bg-[#010000]" : ""}`}
               >
                 <Icon className="h-4 w-4" />
               </button>

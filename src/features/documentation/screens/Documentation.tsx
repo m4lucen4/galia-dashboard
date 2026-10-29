@@ -1,34 +1,34 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { Bars3Icon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import Navbar from "@/components/shared/ui/Navbar";
-import { Drawer } from "@/components/shared/ui/Drawer";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchWikiNavigation, fetchWikiSection, searchWiki } from "@/redux/actions/WikiActions";
 import { clearWikiSearch } from "@/redux/slices/WikiSlice";
-import { WikiContent } from "../components/WikiContent";
-import type { WikiArticle, WikiSectionNavigation } from "../types/wiki";
-
-const scrollToAnchor = (id: string) => {
-  document.getElementById(id)?.scrollIntoView({
-    behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-    block: "start",
-  });
-};
+import { WikiContent } from "@/features/documentation/components/WikiContent";
+import { DocumentationLayout, DocumentationLoadingContent } from "../components/DocumentationLayout";
+import { Container } from "@/features/newWeb/components/ui/Container";
+import { Button } from "@/features/newWeb/components/ui/Button";
+import { FormField } from "@/features/newWeb/components/ui/FormField";
+import "@/features/newWeb/articles.css";
 
 export const Documentation = () => {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
   const location = useLocation();
   const { sectionId } = useParams();
-  const { navigation, section, results, navigationRequest, sectionRequest, searchRequest } = useAppSelector(
-    (state) => state.wiki,
-  );
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [activeArticle, setActiveArticle] = useState("");
+  const { navigation, section, sectionId: requestedSectionId, results, query, navigationRequest, sectionRequest, searchRequest } = useAppSelector((state) => state.wiki);
   const [term, setTerm] = useState("");
+  const [activeArticle, setActiveArticle] = useState("");
+  const contentRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
+  const mobileIndexRef = useRef<HTMLDetailsElement>(null);
   const selectedSection = sectionId ?? navigation[0]?.id;
+  const visibleSection = section?.id === selectedSection ? section : null;
+  const navigationLoading = navigationRequest.inProgress || (!navigationRequest.ok && !navigationRequest.messages);
+  const sectionLoading = Boolean(selectedSection) && (
+    requestedSectionId !== selectedSection || sectionRequest.inProgress || (!sectionRequest.ok && !sectionRequest.messages)
+  );
+  const contentLoading = navigationLoading || sectionLoading;
+  const searchTerm = term.trim();
+  const searchPending = searchRequest.inProgress || query !== searchTerm;
 
   useEffect(() => {
     void dispatch(fetchWikiNavigation());
@@ -40,85 +40,70 @@ export const Documentation = () => {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const next = term.trim();
-      if (next) void dispatch(searchWiki(next));
+      if (searchTerm) void dispatch(searchWiki(searchTerm));
       else dispatch(clearWikiSearch());
     }, 250);
-
     return () => window.clearTimeout(timer);
-  }, [dispatch, term]);
+  }, [dispatch, searchTerm]);
 
   useEffect(() => {
-    const hash = location.hash.slice(1);
-    if (!hash || !section || section.id !== selectedSection) return;
-
-    const timer = window.setTimeout(() => scrollToAnchor(hash), 180);
-    return () => window.clearTimeout(timer);
-  }, [location.hash, section, selectedSection]);
-
-  useEffect(() => {
-    if (!section) return;
-
-    const articles = Array.from(document.querySelectorAll<HTMLElement>("[data-wiki-article]"));
-    const updateActiveArticle = () => {
-      const eligible = articles.filter((article) => article.getBoundingClientRect().top <= 150);
-      const topmost = eligible[eligible.length - 1] ?? articles[0];
-
-      if (topmost) setActiveArticle(topmost.id);
-    };
-    const observer = new IntersectionObserver(updateActiveArticle, {
-      rootMargin: "-96px 0px -65% 0px",
-      threshold: 0,
+    if (contentLoading || !location.hash || !visibleSection) return;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(location.hash.slice(1))?.scrollIntoView({
+        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "start",
+      });
     });
+    return () => window.cancelAnimationFrame(frame);
+  }, [contentLoading, location.hash, visibleSection]);
 
+  useEffect(() => {
+    const articles = Array.from(contentRef.current?.querySelectorAll<HTMLElement>("[data-wiki-article]") ?? []);
+    if (articles.length === 0) return;
+    const updateActiveArticle = () => {
+      const passed = articles.filter((article) => article.getBoundingClientRect().top <= 150);
+      setActiveArticle((passed[passed.length - 1] ?? articles[0]).id);
+    };
+    const observer = new IntersectionObserver(updateActiveArticle, { rootMargin: "-112px 0px -65% 0px", threshold: 0 });
     articles.forEach((article) => observer.observe(article));
     updateActiveArticle();
-
     return () => observer.disconnect();
-  }, [section]);
+  }, [contentLoading, visibleSection]);
 
   useEffect(() => {
-    const item = sidebarRef.current?.querySelector<HTMLElement>(`[data-article-link="${activeArticle}"]`);
-    item?.scrollIntoView({ block: "nearest" });
+    sidebarRef.current?.querySelector<HTMLElement>(`[data-article-link="${activeArticle}"]`)?.scrollIntoView({ block: "nearest" });
   }, [activeArticle]);
 
-  const goToSection = (item: WikiSectionNavigation) => {
-    setDrawerOpen(false);
-    navigate(`/wiki/${item.id}/${item.slug}`);
-    window.scrollTo({ top: 0, behavior: "auto" });
-  };
-
-  const goToArticle = (article: WikiArticle) => {
-    setDrawerOpen(false);
-    navigate(article.canonicalLink);
+  const closeIndex = () => {
+    if (mobileIndexRef.current) mobileIndexRef.current.open = false;
   };
 
   const sidebar = (
-    <nav aria-label="Documentación" className="space-y-2">
+    <nav aria-label="Índice de documentación" className="space-y-6">
       {navigation.map((item) => (
         <div key={item.id}>
-          <button
-            type="button"
-            onClick={() => goToSection(item)}
+          <Link
+            to={`/wiki/${item.id}/${item.slug}`}
+            onClick={() => { closeIndex(); window.scrollTo({ top: 0, behavior: "auto" }); }}
             aria-current={item.id === selectedSection ? "page" : undefined}
-            className={`w-full rounded-lg px-3 py-2 text-left font-semibold ${item.id === selectedSection ? "bg-gray-900 text-white" : "text-gray-800 hover:bg-gray-100"}`}
+            className={`block rounded-[999px] border-[1.5px] border-[#010000] px-4 py-2.5 font-medium no-underline ${item.id === selectedSection ? "bg-[#010000] text-[#d8e4d6]" : "hover:bg-[#010000] hover:text-[#d8e4d6]"}`}
           >
             {item.title}
-          </button>
+          </Link>
           {item.id === selectedSection && item.subsections.map((subsection) => (
-            <div key={subsection.id} className="ml-3 mt-2">
-              <p className="px-3 text-xs font-bold uppercase tracking-wide text-gray-500">{subsection.title}</p>
+            <div key={subsection.id} className="mt-5 border-l-[1.5px] border-[#010000] pl-4">
+              <p className="mb-2 font-['Geist_Mono',monospace] text-xs uppercase tracking-wide">{subsection.title}</p>
               {subsection.articles.map((article) => (
-                <button
-                  type="button"
+                <Link
                   key={article.id}
+                  to={article.canonicalLink}
+                  onClick={closeIndex}
                   data-article-link={`article-${article.id}`}
-                  onClick={() => goToArticle(article as WikiArticle)}
                   aria-current={activeArticle === `article-${article.id}` ? "location" : undefined}
-                  className={`mt-1 w-full rounded px-3 py-2 text-left text-sm ${activeArticle === `article-${article.id}` ? "bg-gray-100 font-semibold text-gray-900" : "text-gray-600 hover:bg-gray-50"}`}
+                  className={`mt-1 block rounded-2xl px-3 py-2 text-sm no-underline hover:bg-[#010000] hover:text-[#d8e4d6] ${activeArticle === `article-${article.id}` ? "bg-[#010000] text-[#d8e4d6]" : ""}`}
                 >
                   {article.title}
-                </button>
+                </Link>
               ))}
             </div>
           ))}
@@ -127,64 +112,83 @@ export const Documentation = () => {
     </nav>
   );
 
+  const index = navigationLoading
+    ? <p role="status">Cargando índice…</p>
+    : navigationRequest.messages
+      ? <div role="alert"><p>{navigationRequest.messages}</p><Button variant="outline" className="mt-3" onClick={() => void dispatch(fetchWikiNavigation())}>Reintentar</Button></div>
+      : sidebar;
+
   return (
-    <>
-      <Navbar />
-      <a href="#wiki-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:p-3">
-        Saltar al contenido
-      </a>
-      <main className="min-h-screen bg-white">
-        <header className="border-b border-gray-200 bg-gray-50">
-          <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-            <p className="text-sm font-semibold uppercase tracking-widest text-gray-500">Mocklab</p>
-            <h1 className="mt-2 text-4xl font-bold text-gray-900">Documentación</h1>
-            <p className="mt-3 max-w-2xl text-gray-600">Guías para sacar el máximo partido a tu estudio.</p>
-          </div>
-        </header>
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-12">
-          <aside ref={sidebarRef} className="sticky top-4 hidden max-h-[calc(100vh-2rem)] overflow-y-auto pr-3 lg:block">
-            {navigationRequest.inProgress ? <p className="text-sm text-gray-500">Cargando índice…</p> : sidebar}
+    <DocumentationLayout>
+        <Container className="grid items-start gap-8 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-12">
+          <aside ref={sidebarRef} className="sticky top-28 hidden max-h-[calc(100svh-8rem)] overflow-y-auto pr-3 lg:block">
+            {index}
           </aside>
-          <button type="button" onClick={() => setDrawerOpen(true)} aria-expanded={drawerOpen} className="mb-5 inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium lg:hidden">
-            <Bars3Icon className="size-5" /> Abrir índice
-          </button>
-          <Drawer title="Documentación" isOpen={drawerOpen} onClose={() => setDrawerOpen(false)}>{sidebar}</Drawer>
-          <section id="wiki-content" className="min-w-0">
-            <div className="relative mb-8">
-              <label htmlFor="wiki-search" className="sr-only">Buscar en la documentación</label>
-              <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-3 size-5 text-gray-400" />
-              <input id="wiki-search" value={term} onChange={(event) => setTerm(event.target.value)} placeholder="Buscar en la documentación" className="w-full rounded-xl border border-gray-300 py-3 pr-10 pl-10 shadow-sm focus:border-gray-900 focus:ring-gray-900" />
-              {term && <button type="button" onClick={() => setTerm("")} className="absolute right-3 top-3" aria-label="Limpiar búsqueda"><XMarkIcon className="size-5" /></button>}
-              {term && <div className="absolute z-20 mt-2 w-full rounded-xl border bg-white p-2 shadow-lg">
-                {searchRequest.inProgress && <p className="p-3 text-sm text-gray-500">Buscando…</p>}
-                {!searchRequest.inProgress && searchRequest.messages && <p className="p-3 text-sm text-red-700">{searchRequest.messages}</p>}
-                {!searchRequest.inProgress && !searchRequest.messages && results.length === 0 && <p className="p-3 text-sm text-gray-500">No hay resultados publicados.</p>}
-                {results.map((result) => <button type="button" key={result.article_id} onClick={() => { setTerm(""); navigate(`/wiki/${result.section_id}/${result.section_slug}#article-${result.article_id}`); }} className="block w-full rounded-lg p-3 text-left hover:bg-gray-50"><strong className="block text-gray-900">{result.title}</strong><span className="line-clamp-2 text-sm text-gray-600">{result.summary}</span></button>)}
-              </div>}
+          <details ref={mobileIndexRef} className="rounded-3xl border-[1.5px] border-[#010000] p-5 lg:hidden">
+            <summary className="cursor-pointer font-medium">Índice de documentación</summary>
+            <div className="mt-5">{index}</div>
+          </details>
+          <div ref={contentRef} aria-busy={contentLoading} className="min-w-0">
+            <div className="relative mb-10">
+              <FormField
+                label="Buscar en la documentación"
+                type="search"
+                value={term}
+                onChange={(event) => setTerm(event.target.value)}
+                placeholder="¿Cómo podemos ayudarte?"
+              />
+              {searchTerm && (
+                <div aria-label="Resultados de búsqueda" className="absolute z-20 mt-3 w-full rounded-3xl border-[1.5px] border-[#010000] bg-[#d8e4d6] p-3">
+                  {searchPending && <p role="status" className="p-3">Buscando…</p>}
+                  {!searchPending && searchRequest.messages && <p role="alert" className="p-3">{searchRequest.messages}</p>}
+                  {!searchPending && !searchRequest.messages && results.length === 0 && <p className="p-3">No hay resultados publicados.</p>}
+                  {!searchPending && results.map((result) => (
+                    <Link
+                      key={result.article_id}
+                      to={`/wiki/${result.section_id}/${result.section_slug}#article-${result.article_id}`}
+                      onClick={() => { setTerm(""); dispatch(clearWikiSearch()); }}
+                      className="block rounded-2xl p-3 no-underline hover:bg-[#010000] hover:text-[#d8e4d6]"
+                    >
+                      <strong className="block font-medium">{result.title}</strong>
+                      <span className="line-clamp-2 text-sm">{result.summary}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
-            {sectionRequest.inProgress && <p className="py-16 text-center text-gray-500">Cargando documentación…</p>}
-            {!sectionRequest.inProgress && sectionRequest.messages && <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-red-800"><p>{sectionRequest.messages}</p><button type="button" onClick={() => selectedSection && dispatch(fetchWikiSection(selectedSection))} className="mt-3 underline">Reintentar</button></div>}
-            {!sectionRequest.inProgress && !sectionRequest.messages && !section && <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center"><h2 className="text-xl font-bold">Esta sección no está disponible</h2><Link to="/wiki" className="mt-3 inline-block underline">Volver a la documentación</Link></div>}
-            {!navigationRequest.inProgress && navigation.length === 0 && !navigationRequest.messages && <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center"><h2 className="text-xl font-bold">Todavía no hay documentación publicada</h2><p className="mt-2 text-gray-600">Vuelve pronto para consultar las próximas guías.</p></div>}
-            {section && (
-              <div>
-                {section.subsections.map((subsection) => (
-                  <section key={subsection.id} id={`subsection-${subsection.id}`} className="mb-14 scroll-mt-24">
-                    <h2 className="mb-6 text-2xl font-bold text-gray-900">{subsection.title}</h2>
-                    {subsection.articles.map((article) => (
-                      <article key={article.id} id={`article-${article.id}`} data-wiki-article className="mb-12 scroll-mt-24 border-b border-gray-200 pb-10">
-                        <h3 className="text-3xl font-bold text-gray-900">{article.title}</h3>
-                        {article.summary && <p className="mt-3 text-lg text-gray-600">{article.summary}</p>}
-                        <div className="mt-6"><WikiContent nodes={article.content.content} /></div>
-                      </article>
-                    ))}
-                  </section>
-                ))}
+            {contentLoading && <DocumentationLoadingContent />}
+            {!contentLoading && sectionRequest.messages && (
+              <div role="alert" className="rounded-3xl border-[1.5px] border-[#010000] p-6">
+                <p>{sectionRequest.messages}</p>
+                <Button variant="outline" className="mt-4" onClick={() => selectedSection && void dispatch(fetchWikiSection(selectedSection))}>Reintentar</Button>
               </div>
             )}
-          </section>
-        </div>
-      </main>
-    </>
+            {!contentLoading && !sectionRequest.messages && !visibleSection && sectionId && (
+              <div className="rounded-3xl border-[1.5px] border-[#010000] p-8">
+                <h2 className="text-2xl font-medium">Esta sección no está disponible</h2>
+                <Link to="/wiki" className="mt-4 inline-block underline underline-offset-4">Volver a la documentación</Link>
+              </div>
+            )}
+            {!contentLoading && !navigationRequest.messages && navigation.length === 0 && !sectionId && (
+              <div className="rounded-3xl border-[1.5px] border-[#010000] p-8">
+                <h2 className="text-2xl font-medium">Todavía no hay documentación publicada</h2>
+                <p className="mt-3">Vuelve pronto para consultar las próximas guías.</p>
+              </div>
+            )}
+            {!contentLoading && visibleSection?.subsections.map((subsection) => (
+              <section key={subsection.id} id={`subsection-${subsection.id}`} className="mb-14 scroll-mt-28">
+                <h2 className="mb-8 font-['Geist_Mono',monospace] text-sm uppercase tracking-wide">{subsection.title}</h2>
+                {subsection.articles.map((article) => (
+                  <article key={article.id} id={`article-${article.id}`} data-wiki-article className="mb-12 scroll-mt-28 border-b-[1.5px] border-[#010000] pb-10">
+                    <h3 className="text-[clamp(2rem,3.5vw,3.5rem)] leading-[1.05] font-medium tracking-[-0.035em]">{article.title}</h3>
+                    {article.summary && <p className="mt-5 text-lg leading-relaxed">{article.summary}</p>}
+                    <div className="articles-content mt-6"><WikiContent nodes={article.content.content} /></div>
+                  </article>
+                ))}
+              </section>
+            ))}
+          </div>
+        </Container>
+    </DocumentationLayout>
   );
 };

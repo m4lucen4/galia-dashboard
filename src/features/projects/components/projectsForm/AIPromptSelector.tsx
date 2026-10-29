@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { SelectField } from "../../../../components/shared/ui/SelectField";
 import { Checkbox } from "../../../../components/shared/ui/Checkbox";
+import { projectCheckboxClassName, projectControlClassName } from "../projectFormStyles";
 
 interface PromptOption {
   title: string;
@@ -26,19 +27,20 @@ export const AIPromptSelector: React.FC<AIPromptSelectorProps> = ({
   const { t } = useTranslation();
 
   return (
-    <>
+    <div className="min-w-0 space-y-3">
       <Checkbox
         id="requiredAI"
         label={t("projects.requiredAI")}
         checked={requiredAI}
         onChange={onAIChange}
-        className="mb-2"
+        className={projectCheckboxClassName}
       />
 
       {requiredAI && (
-        <div className="flex items-center mb-2">
+        <div className="min-w-0">
           <SelectField
             id="prompt"
+            className={projectControlClassName}
             label={t("projects.selectPrompt")}
             value={prompt}
             onChange={onPromptChange}
@@ -52,6 +54,6 @@ export const AIPromptSelector: React.FC<AIPromptSelectorProps> = ({
           />
         </div>
       )}
-    </>
+    </div>
   );
 };

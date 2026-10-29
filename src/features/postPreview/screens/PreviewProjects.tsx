@@ -37,6 +37,7 @@ import { PreviewProjectForm } from "../../../components/previewProjects/PreviewP
 import { Filters } from "../components/Filters";
 import { WorkingInProgress } from "../../../components/shared/ui/WorkingInProgress";
 import { LoadingSpinner } from "../../../components/shared/ui/LoadingSpinner";
+import { DashboardPage } from "@/components/shared/ui/DashboardPage";
 
 export const PreviewProjects = () => {
   const dispatch = useAppDispatch();
@@ -316,36 +317,41 @@ export const PreviewProjects = () => {
 
   if (!projects.length) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        {t("previewProjects.noProjects")}
-      </div>
+      <DashboardPage className="font-['Hanken_Grotesk',system-ui,sans-serif] text-[#010000]">
+        <div className="rounded-[28px] border border-[#010000]/15 bg-white/50 px-6 py-16 text-center text-[#010000]/65">
+          {t("previewProjects.noProjects")}
+        </div>
+      </DashboardPage>
     );
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h3 className="text-base/7 font-semibold text-gray-900">
-        {t("previewProjects.title")}
-      </h3>
-      <div className="flex justify-between items-center mb-4">
-        <p className="mt-1 max-w-7xl text-sm/6 text-gray-500">
-          {t("previewProjects.description")}
-        </p>
-      </div>
+    <DashboardPage className="space-y-8 font-['Hanken_Grotesk',system-ui,sans-serif] text-[#010000]">
+      <header className="flex flex-wrap items-end justify-between gap-5 border-b border-[#010000]/15 pb-8">
+        <div className="min-w-0 space-y-3">
+          <h1 className="text-4xl leading-[1.05] font-medium tracking-[-0.04em] sm:text-5xl">
+            {t("previewProjects.title")}
+          </h1>
+          <p className="max-w-3xl text-base leading-relaxed text-[#010000]/65">
+            {t("previewProjects.description")}
+          </p>
+        </div>
+      </header>
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-5">
         <Filters
           projects={projects}
           selectedFilter={selectedFilter}
           onFilterChange={handleFilterChange}
         />
-        <div className="hidden md:flex gap-2 ml-4">
+        <div className="hidden shrink-0 items-center gap-1 rounded-full border border-[#010000]/20 bg-white/50 p-1 md:flex">
           <button
             onClick={() => setViewMode("grid")}
-            className={`p-2 rounded-md transition-colors ${
+            aria-pressed={viewMode === "grid"}
+            className={`rounded-full p-3 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000] ${
               viewMode === "grid"
-                ? "bg-black text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                ? "bg-[#010000] text-[#d8e4d6]"
+                : "text-[#010000]/65 hover:bg-[#d8e4d6] hover:text-[#010000]"
             }`}
             title="Vista de cuadrícula"
           >
@@ -353,10 +359,11 @@ export const PreviewProjects = () => {
           </button>
           <button
             onClick={() => setViewMode("list")}
-            className={`p-2 rounded-md transition-colors ${
+            aria-pressed={viewMode === "list"}
+            className={`rounded-full p-3 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000] ${
               viewMode === "list"
-                ? "bg-black text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                ? "bg-[#010000] text-[#d8e4d6]"
+                : "text-[#010000]/65 hover:bg-[#d8e4d6] hover:text-[#010000]"
             }`}
             title="Vista de lista"
           >
@@ -364,10 +371,11 @@ export const PreviewProjects = () => {
           </button>
           <button
             onClick={() => setViewMode("calendar")}
-            className={`p-2 rounded-md transition-colors ${
+            aria-pressed={viewMode === "calendar"}
+            className={`rounded-full p-3 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000] ${
               viewMode === "calendar"
-                ? "bg-black text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                ? "bg-[#010000] text-[#d8e4d6]"
+                : "text-[#010000]/65 hover:bg-[#d8e4d6] hover:text-[#010000]"
             }`}
             title="Vista de calendario"
           >
@@ -377,6 +385,8 @@ export const PreviewProjects = () => {
       </div>
 
       <Drawer
+        variant="dashboard"
+        closeLabel={t("users.closeForm")}
         title={getDrawerTitle()}
         isOpen={drawerOpen}
         onClose={handleCloseDrawer}
@@ -483,7 +493,7 @@ export const PreviewProjects = () => {
       )}
 
       {isIterating && (
-        <div className="fixed inset-0 z-50 bg-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#d8e4d6] p-5 font-['Hanken_Grotesk',system-ui,sans-serif] text-[#010000]">
           <WorkingInProgress
             customMessages={[
               "Iterando la nueva descripción...",
@@ -494,6 +504,6 @@ export const PreviewProjects = () => {
           />
         </div>
       )}
-    </div>
+    </DashboardPage>
   );
 };

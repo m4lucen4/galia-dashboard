@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
-import Navbar from "../components/shared/ui/Navbar";
+import { DashboardLayout } from "@/components/shared/navigation/DashboardLayout";
 
 export const HasWebRoute = () => {
   const { authenticated, user } = useSelector((state: RootState) => state.auth);
@@ -15,11 +15,8 @@ export const HasWebRoute = () => {
   }
 
   return (
-    <>
-      <Navbar />
-      <div className="container mx-auto mt-6 px-4">
-        <Outlet />
-      </div>
-    </>
+    <DashboardLayout>
+      <Outlet />
+    </DashboardLayout>
   );
 };

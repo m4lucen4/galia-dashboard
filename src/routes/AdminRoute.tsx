@@ -2,12 +2,15 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import Navbar from "../components/shared/ui/Navbar";
+import { DashboardPage } from "@/components/shared/ui/DashboardPage";
+import { DashboardLayout } from "@/components/shared/navigation/DashboardLayout";
 
 interface AdminRouteProps {
   children?: React.ReactNode;
+  layout?: "default" | "sidebar";
 }
 
-export const AdminRoute = ({ children }: AdminRouteProps) => {
+export const AdminRoute = ({ children, layout = "default" }: AdminRouteProps) => {
   const { authenticated, user } = useSelector((state: RootState) => state.auth);
 
   if (!authenticated) {
@@ -18,12 +21,16 @@ export const AdminRoute = ({ children }: AdminRouteProps) => {
     return <Navigate to="/home" replace />;
   }
 
+  if (layout === "sidebar") {
+    return <DashboardLayout>{children || <Outlet />}</DashboardLayout>;
+  }
+
   return (
     <>
       <Navbar />
-      <div className="container mx-auto mt-6 px-4">
+      <DashboardPage>
         {children || <Outlet />}
-      </div>
+      </DashboardPage>
     </>
   );
 };

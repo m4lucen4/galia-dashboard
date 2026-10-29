@@ -11,7 +11,6 @@ import { MyGpts } from "../features/adminPanel/screens/MyGpts";
 import { Documentation } from "../features/documentation/screens/Documentation";
 
 import { ProtectedRoute } from "./ProtectedRoute";
-import { PublicRoute } from "./PublicRoute";
 import { PasswordResetRoute } from "./PasswordResetRoute";
 import { AdminRoute } from "./AdminRoute";
 import { AdminWebRoute } from "./AdminWebRoute";
@@ -45,26 +44,26 @@ export const AppRoutes = () => (
       <Route path="/login" element={<LoginScreen />} />
       <Route path="/register" element={<RegisterScreen />} />
     </Route>
-    <Route element={<AdminRoute />}>
+    <Route element={<AdminRoute layout="sidebar" />}>
       <Route path="/users" element={<Users />} />
       <Route path="/administration" element={<Suspense fallback={<div className="p-8">Cargando administración…</div>}><Administration /></Suspense>} />
       <Route path="/wiki/admin" element={<Suspense fallback={<div className="p-8">Cargando editor…</div>}><WikiAdmin /></Suspense>} />
     </Route>
     <Route path="/articulos" element={<Suspense fallback={<ArticlesLoading />}><Articles /></Suspense>} />
     <Route path="/articulos/:sectionId/:sectionSlug?" element={<Suspense fallback={<ArticlesLoading />}><Articles /></Suspense>} />
-    <Route element={<PublicRoute />}>
-      <Route path="/wiki" element={<Documentation />} />
-      <Route path="/wiki/:sectionId/:sectionSlug?" element={<Documentation />} />
-    </Route>
-    <Route element={<ProtectedRoute />}>
+    <Route path="/wiki" element={<Documentation />} />
+    <Route path="/wiki/:sectionId/:sectionSlug?" element={<Documentation />} />
+    <Route element={<ProtectedRoute layout="sidebar" />}>
       <Route path="/home" element={<Home />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/settings" element={<Settings />} />
+      <Route path="/my-gpts" element={<MyGpts />} />
       <Route path="/projects" element={<Projects />} />
       <Route path="/projects-analytics" element={<ProjectsAnalytics />} />
       <Route path="/multimedia" element={<Multimedia />} />
       <Route path="/preview-projects" element={<PreviewProjects />} />
-      <Route path="/my-gpts" element={<MyGpts />} />
+    </Route>
+    <Route element={<ProtectedRoute />}>
       <Route path="/auth/linkedin/callback" element={<LinkedInCallback />} />
       <Route path="/auth/instagram/callback" element={<InstagramCallback />} />
     </Route>

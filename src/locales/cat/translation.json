@@ -1,5 +1,7 @@
 {
   "shared": {
+    "clearSearch": "Netejar la cerca",
+    "search": "Cercar",
     "confirm": "Confirmar",
     "cancel": "Cancel·lar",
     "working": "Treballant en el teu projecte",
@@ -18,6 +20,7 @@
     "cancel": "Cancel·lar",
     "profile": "Perfil",
     "settings": "Configuració",
+    "socialWeb": "Xarxes socials i web",
     "logout": "Sortir",
     "confirmLogout": "Estàs segur que vols sortir?",
     "home": "Inici",
@@ -27,7 +30,7 @@
     "map": "Mapa",
     "adminPanel": "Administració",
     "administration": "Administració",
-    "gpts": "Els meus GPTs",
+    "gpts": "Les meves skills",
     "wiki": "Wiki",
     "Multimedia": "Multimedia",
     "archive": "Arxiu",
@@ -43,6 +46,8 @@
     "descriptionLoginError": "Sembla que hi ha hagut un error en iniciar sessió. Si us plau, verifica les teves credencials i torna-ho a intentar.",
     "titleRecoveryPassword": "Recuperar contrasenya",
     "descriptionRecoveryPassword": "Introdueix el teu correu electrònic i t'enviarem un enllaç per restablir la teva contrasenya.",
+    "recoveryEmailRequired": "Introdueix el teu correu electrònic.",
+    "recoveryEmailInvalid": "Introdueix un correu electrònic vàlid.",
     "goBackWeb": "Tornar a la web",
     "titleInactiveUser": "Usuari inactiu",
     "descriptionInactiveUser": "El teu usuari no es troba actiu. Si us plau, contacta amb un administrador.",
@@ -98,6 +103,16 @@
     "generalError": "S'ha produït un error. Si us plau, torna-ho a intentar."
   },
   "users": {
+    "searchLabel": "Cercar usuaris per nom, correu electrònic o empresa",
+    "searchPlaceholder": "Nom, correu o empresa",
+    "noSearchResults": "No hi ha usuaris que coincideixin amb la cerca.",
+    "closeForm": "Tancar formulari",
+    "sections": {
+      "personal": "Dades personals i accés",
+      "location": "Adreça",
+      "professional": "Dades professionals"
+    },
+    "empty": "No hi ha usuaris registrats.",
     "title": "Usuaris",
     "description": "Gestiona els usuaris de la plataforma.",
     "createUser": "Crear Usuari",
@@ -131,6 +146,8 @@
     "hasWeb": "Té pàgina web"
   },
   "settings": {
+    "connectInstagram": "Connectar Instagram",
+    "connectLinkedIn": "Connectar LinkedIn",
     "title": "Configuració",
     "description": "Configura les teves xarxes socials i preferències.",
     "socialNetworks": "Xarxes Socials",
@@ -162,6 +179,8 @@
     "instagramDescription": "Per publicar a Instagram, has de connectar el teu compte de Facebook i tenir una pàgina d'empresa.",
     "noInstagramConnection": "No hi ha connexió amb Instagram",
     "myWeb": "La meva Web",
+    "myWebInactiveInfo": "Informació sobre Mi Web",
+    "myWebInactiveDescription": "El constructor de La meva Web no està actiu. Actualitza la teva subscripció per habilitar-lo.",
     "goToMyWeb": "Anar a la meva web",
     "subscription": "Subscripció",
     "subscriptionDescription": "Gestiona el teu pla i facturació.",
@@ -372,6 +391,12 @@
     }
   },
   "profile": {
+    "sections": {
+      "personal": "Dades personals",
+      "location": "Adreça",
+      "professional": "Dades professionals",
+      "preferences": "Preferències"
+    },
     "title": "Perfil",
     "description": "Gestiona el teu perfil i preferències",
     "changePassword": "Canviar contrasenya",
@@ -401,21 +426,23 @@
     "tags": "Etiquetes"
   },
   "admin": {
-    "title": "Els meus GPTs",
-    "description": "Gestiona els teus gpts personalitzats.",
-    "prompts": "Gpt´s",
-    "noPrompts": "No hi ha gpts disponibles",
+    "title": "Les meves skills",
+    "description": "Gestiona les teves skills personalitzades.",
+    "prompts": "Skills",
+    "noPrompts": "No hi ha skills disponibles",
     "actions": "Accions",
-    "addPrompt": "Afegir Gpt",
-    "editPrompt": "Editar Gpt",
-    "createPrompt": "Crear Gpt",
-    "promptTitle": "Títol del Gpt",
-    "promptDescription": "Descripció del Gpt",
-    "confirmDeletePrompt": "Estàs segur que vols eliminar aquest Gpt? Aquesta acció no es pot desfer.",
-    "isPrivate": "Prompt privat",
+    "addPrompt": "Afegir skill",
+    "editPrompt": "Editar skill",
+    "createPrompt": "Crear skill",
+    "promptTitle": "Títol de la skill",
+    "promptDescription": "Descripció de la skill",
+    "confirmDeletePrompt": "Estàs segur que vols eliminar aquesta skill? Aquesta acció no es pot desfer.",
+    "isPrivate": "Skill privada",
     "visibility": "Visibilitat",
-    "private": "Privat",
-    "public": "Públic"
+    "private": "Privada",
+    "public": "Pública",
+    "deletePrompt": "Eliminar skill",
+    "closeForm": "Tancar formulari"
   },
   "administration": {
     "title": "Administració",

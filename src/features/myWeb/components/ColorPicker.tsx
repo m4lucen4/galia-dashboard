@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useId } from "react";
+import { myWebControlClassName, myWebLabelClassName } from "@/features/myWeb/components/myWebStyles";
 
 interface ColorPickerProps {
   label: string;
@@ -11,21 +12,24 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   value,
   onChange,
 }) => {
+  const id = useId();
   return (
-    <div>
-      <label className="text-sm text-black">{label}</label>
-      <div className="mt-1 flex items-center gap-3">
+    <div className="min-w-0 max-w-sm space-y-2">
+      <label htmlFor={id} className={myWebLabelClassName}>{label}</label>
+      <div className="flex min-w-0 items-center gap-3">
         <input
           type="color"
+          aria-label={`${label}: selector de color`}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="h-10 w-10 rounded-md border border-gray-300 cursor-pointer"
+          className="size-12 shrink-0 cursor-pointer rounded-2xl border border-[#010000]/40 bg-transparent p-1 focus-visible:outline-2 focus-visible:outline-offset-2"
         />
         <input
+          id={id}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="block w-32 rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-gray-800 sm:text-sm/6"
+          className={myWebControlClassName}
           placeholder="#000000"
         />
       </div>
