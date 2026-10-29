@@ -1,26 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { SiteComponentDataProps, SiteComponentType, ProjectColumnsConfig } from "../../../types";
-import { ComponentEditor } from "./ComponentEditor";
-import { ComponentAnchorEditor } from "./ComponentAnchorEditor";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { fetchProjects, fetchProjectsByUserId } from "../../../redux/actions/ProjectActions";
+import { SiteComponentDataProps, SiteComponentType, ProjectColumnsConfig } from "@/types";
+import { ComponentEditor } from "@/features/myWeb/components/ComponentEditor";
+import { ComponentAnchorEditor } from "@/features/myWeb/components/ComponentAnchorEditor";
+import { AddBlockMenu } from "@/features/myWeb/components/blocks/AddBlockMenu";
+import { BlockCard } from "@/features/myWeb/components/blocks/BlockCard";
+import { myWebMutedClassName } from "@/features/myWeb/components/myWebStyles";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { fetchProjects, fetchProjectsByUserId } from "@/redux/actions/ProjectActions";
 import {
   addSiteComponent,
   deleteSiteComponent,
   updateSiteComponent,
   reorderSiteComponents,
-} from "../../../redux/actions/SiteComponentActions";
-import { Button } from "../../../components/shared/ui/Button";
-import { Alert } from "../../../components/shared/ui/Alert";
-import {
-  PlusIcon,
-  ChevronUpIcon,
-  ChevronDownIcon,
-  TrashIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  ChevronRightIcon,
-} from "@heroicons/react/24/outline";
+} from "@/redux/actions/SiteComponentActions";
+import { Alert } from "@/components/shared/ui/Alert";
 
 interface ComponentListProps {
   pageId: string;
@@ -28,10 +21,10 @@ interface ComponentListProps {
   components: SiteComponentDataProps[];
 }
 
-const COMPONENT_TYPES: { type: SiteComponentType; label: string; description?: string }[] = [
-  { type: "header", label: "Header" },
-  { type: "cta", label: "CTA" },
-  { type: "body", label: "Body", description: "Bloque de imágenes con texto descriptivo" },
+const BLOCK_OPTIONS: { type: SiteComponentType; label: string; description?: string }[] = [
+  { type: "header", label: "Cabecera" },
+  { type: "cta", label: "Llamada a la acción" },
+  { type: "body", label: "Imágenes y texto", description: "Bloque de imágenes con texto descriptivo" },
   { type: "content", label: "Contenido", description: "Título, columnas de texto y datos estadísticos" },
   { type: "contact", label: "Contacto", description: "Información de contacto y dirección" },
   { type: "project_columns", label: "Proyectos destacados", description: "1 o 2 columnas con imagen, título, categoría y año" },
@@ -113,7 +106,7 @@ export const ComponentList: React.FC<ComponentListProps> = ({
   };
 
   const getComponentLabel = (type: string) => {
-    const found = COMPONENT_TYPES.find((ct) => ct.type === type);
+    const found = BLOCK_OPTIONS.find((ct) => ct.type === type);
     return found ? found.label : type;
   };
 
@@ -130,111 +123,44 @@ export const ComponentList: React.FC<ComponentListProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-700">Componentes</h3>
-        <div className="relative">
-          <Button
-            title="Añadir componente"
-            icon={<PlusIcon className="h-4 w-4" />}
-            onClick={() => setShowAddMenu(!showAddMenu)}
-            secondary
-          />
-          {showAddMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-              {COMPONENT_TYPES.map((ct) => (
-                <button
-                  key={ct.type}
-                  onClick={() => handleAdd(ct.type)}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  {ct.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      <AddBlockMenu
+        id={`add-blocks-${pageId}`}
+        options={BLOCK_OPTIONS}
+        open={showAddMenu}
+        onToggle={() => setShowAddMenu(!showAddMenu)}
+        onAdd={handleAdd}
+      />
 
       {components.length === 0 && (
-        <p className="text-sm text-gray-500 text-center py-8">
+        <p className={`${myWebMutedClassName} rounded-[28px] border border-dashed border-[#010000]/20 px-5 py-8 text-center`}>
           No hay componentes. Añade uno para comenzar.
         </p>
       )}
 
       <div className="space-y-2">
         {components.map((component, index) => (
-          <div
+          <BlockCard
             key={component.id}
-            className="border border-gray-200 rounded-md bg-white"
+            id={component.id}
+            label={getComponentLabel(component.type)}
+            summary={getProjectColumnsSummary(component)}
+            visible={component.visible}
+            expanded={expandedId === component.id}
+            first={index === 0}
+            last={index >= components.length - 1}
+            onExpand={() => setExpandedId(expandedId === component.id ? null : component.id)}
+            onMoveUp={() => handleMoveUp(index)}
+            onMoveDown={() => handleMoveDown(index)}
+            onToggleVisible={() => handleToggleVisible(component)}
+            onDelete={() => setDeleteTarget(component.id)}
           >
-            <div className="flex items-center justify-between px-4 py-3">
-              <button
-                className="flex items-center gap-2 flex-1 text-left"
-                onClick={() =>
-                  setExpandedId(
-                    expandedId === component.id ? null : component.id,
-                  )
-                }
-              >
-                <ChevronRightIcon
-                  className={`h-4 w-4 text-gray-500 transition-transform ${
-                    expandedId === component.id ? "rotate-90" : ""
-                  }`}
-                />
-                <span className="text-sm font-medium text-gray-900">
-                  {getComponentLabel(component.type)}
-                </span>
-                {getProjectColumnsSummary(component) && (
-                  <span className="text-xs text-gray-400 truncate max-w-48">
-                    {getProjectColumnsSummary(component)}
-                  </span>
-                )}
-                {!component.visible && (
-                  <span className="text-xs text-gray-400 ml-1">(oculto)</span>
-                )}
-              </button>
-
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => handleMoveUp(index)}
-                  disabled={index === 0}
-                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                >
-                  <ChevronUpIcon className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => handleMoveDown(index)}
-                  disabled={index >= components.length - 1}
-                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                >
-                  <ChevronDownIcon className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => handleToggleVisible(component)}
-                  className="p-1 text-gray-400 hover:text-gray-600"
-                >
-                  {component.visible ? (
-                    <EyeIcon className="h-4 w-4" />
-                  ) : (
-                    <EyeSlashIcon className="h-4 w-4" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setDeleteTarget(component.id)}
-                  className="p-1 text-red-400 hover:text-red-600"
-                >
-                  <TrashIcon className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
             {expandedId === component.id && (
-              <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+              <>
                 {isHome && <ComponentAnchorEditor key={`${component.id}:${component.anchor_id ?? ""}`} component={component} />}
                 <ComponentEditor component={component} />
-              </div>
+              </>
             )}
-          </div>
+          </BlockCard>
         ))}
       </div>
 
