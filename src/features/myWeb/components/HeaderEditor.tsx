@@ -8,7 +8,7 @@ import {
 } from "@/redux/actions/SiteComponentActions";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { PillButton } from "@/components/shared/ui/PillButton";
-import { myWebHeadingClassName, myWebMutedClassName } from "@/features/myWeb/components/myWebStyles";
+import { myWebEditorClassName, myWebHeadingClassName, myWebMutedClassName } from "@/features/myWeb/components/myWebStyles";
 
 interface HeaderEditorProps {
   component: SiteComponentDataProps;
@@ -92,7 +92,7 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({ component }) => {
   };
 
   return (
-    <div className="@container min-w-0 space-y-5 text-[#010000]">
+    <div className={`${myWebEditorClassName} text-[#010000]`}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className={myWebHeadingClassName}>

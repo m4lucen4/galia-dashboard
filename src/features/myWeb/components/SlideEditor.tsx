@@ -5,7 +5,16 @@ import { TrashIcon } from "@heroicons/react/24/outline";
 import { RichTextInput } from "@/features/myWeb/components/RichTextInput";
 import { IconPicker } from "@/features/myWeb/components/IconPicker";
 import { PillButton } from "@/components/shared/ui/PillButton";
-import { myWebPanelClassName, myWebControlClassName, myWebOptionClassName, myWebSelectedOptionClassName, myWebIconButtonClassName } from "@/features/myWeb/components/myWebStyles";
+import { LayoutChoice } from "@/features/myWeb/components/previews/LayoutChoice";
+import {
+  myWebChoiceGridClassName,
+  myWebControlClassName,
+  myWebFieldGridClassName,
+  myWebGroupClassName,
+  myWebIconButtonClassName,
+  myWebOptionClassName,
+  myWebSelectedOptionClassName,
+} from "@/features/myWeb/components/myWebStyles";
 
 // ─── Visual type previews ──────────────────────────────────────────────────────
 
@@ -87,8 +96,8 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
   const inputClass = myWebControlClassName;
 
   return (
-    <section className={myWebPanelClassName}>
-      <div className="flex items-center justify-between mb-3">
+    <section className={`${myWebGroupClassName} border-t border-[#010000]/15 pt-5`}>
+      <div className="flex items-center justify-between gap-3">
         <h4 className="text-sm font-medium text-gray-700">
           Diapositiva {index + 1}
         </h4>
@@ -104,190 +113,188 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
         )}
       </div>
 
-      <div className="space-y-3">
-        {/* ── Selector de tipo ── primero para que el usuario elija antes de rellenar */}
-        <div className="grid grid-cols-2 gap-3">
+      <div className={myWebGroupClassName}>
+        <p className="text-sm font-medium">Distribución</p>
+        <div className={myWebChoiceGridClassName}>
           {SLIDE_TYPE_OPTIONS.map(({ value, label, Preview }) => (
-            <button
+            <LayoutChoice
               key={value}
-              type="button"
-              onClick={() => {
+              label={label}
+              preview={<Preview />}
+              selected={slide.type === value}
+              onSelect={() => {
                 handleChange("type", value);
                 setTimeout(onBlur, 0);
               }}
-              aria-pressed={slide.type === value}
-              className={`${myWebOptionClassName} ${slide.type === value ? myWebSelectedOptionClassName : ""}`}
-            >
-              <span aria-hidden="true"><Preview /></span>
-              <span
-                className={`mt-2 block text-xs font-medium ${
-                  slide.type === value ? "text-gray-900" : "text-gray-500"
-                }`}
-              >
-                {label}
-              </span>
-            </button>
+            />
           ))}
         </div>
+      </div>
 
-        {/* ── Selector de tipo de fondo ── */}
-        <div>
-          <p className="text-sm font-medium">Fondo</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                handleChange("background_type", "image");
-                setTimeout(onBlur, 0);
-              }}
-              aria-pressed={(slide.background_type ?? "image") === "image"}
-              className={`min-h-11 flex-1 ${myWebOptionClassName} ${(slide.background_type ?? "image") === "image" ? myWebSelectedOptionClassName : ""}`}
-            >
-              Imagen
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                handleChange("background_type", "vimeo");
-                setTimeout(onBlur, 0);
-              }}
-              aria-pressed={slide.background_type === "vimeo"}
-              className={`min-h-11 flex-1 ${myWebOptionClassName} ${slide.background_type === "vimeo" ? myWebSelectedOptionClassName : ""}`}
-            >
-              Vídeo Vimeo
-            </button>
+      <div className={myWebFieldGridClassName}>
+        <div className={myWebGroupClassName}>
+          <h5 className="text-sm font-medium">Imagen y logo</h5>
+          <div>
+            <p className="text-sm font-medium">Fondo</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  handleChange("background_type", "image");
+                  setTimeout(onBlur, 0);
+                }}
+                aria-pressed={(slide.background_type ?? "image") === "image"}
+                className={`min-h-11 flex-1 ${myWebOptionClassName} ${(slide.background_type ?? "image") === "image" ? myWebSelectedOptionClassName : ""}`}
+              >
+                Imagen
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleChange("background_type", "vimeo");
+                  setTimeout(onBlur, 0);
+                }}
+                aria-pressed={slide.background_type === "vimeo"}
+                className={`min-h-11 flex-1 ${myWebOptionClassName} ${slide.background_type === "vimeo" ? myWebSelectedOptionClassName : ""}`}
+              >
+                Vídeo Vimeo
+              </button>
+            </div>
           </div>
-        </div>
 
-        {(slide.background_type ?? "image") === "image" ? (
-          <ImageUploader
-            label="Imagen de fondo"
-            currentUrl={slide.image_url || undefined}
-            onUpload={(file) => onImageUpload(index, file)}
-            onRemove={() => onUpdate(index, { ...slide, image_url: "" })}
-            loading={uploadingSlide === index}
-          />
-        ) : (
-          <label className="block space-y-2 text-sm font-medium">
-            <span>URL de Vimeo</span>
-            <input
-              type="text"
-              value={slide.vimeo_url ?? ""}
-              onChange={(e) => handleChange("vimeo_url", e.target.value)}
-              onBlur={onBlur}
-              className={inputClass}
-              placeholder="https://vimeo.com/123456789"
+          {(slide.background_type ?? "image") === "image" ? (
+            <ImageUploader
+              label="Imagen de fondo"
+              currentUrl={slide.image_url || undefined}
+              onUpload={(file) => onImageUpload(index, file)}
+              onRemove={() => onUpdate(index, { ...slide, image_url: "" })}
+              loading={uploadingSlide === index}
             />
-          </label>
-        )}
-
-        <div>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-black">Mostrar logo</p>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Muestra el logo de la web encima del título en esta diapositiva
-              </p>
-            </div>
-            <PillButton
-              variant="outline"
-              role="switch"
-              aria-label={`Mostrar logo en la diapositiva ${index + 1}`}
-              aria-checked={slide.show_logo ?? false}
-              onClick={() => {
-                handleChange("show_logo", !(slide.show_logo ?? false));
-                setTimeout(onBlur, 0);
-              }}
-            >
-              {slide.show_logo ? "Sí" : "No"}
-            </PillButton>
-          </div>
-
-          {slide.show_logo && (
-            <div className="mt-3">
-              <label className="text-sm text-black">
-                Posición vertical del logo y el título
-              </label>
-              <div className="mt-2 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleChange("logo_title_align", "bottom");
-                    setTimeout(onBlur, 0);
-                  }}
-                  aria-pressed={(slide.logo_title_align ?? "bottom") === "bottom"}
-                  className={`min-h-11 flex-1 ${myWebOptionClassName} ${(slide.logo_title_align ?? "bottom") === "bottom" ? myWebSelectedOptionClassName : ""}`}
-                >
-                  Abajo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleChange("logo_title_align", "center");
-                    setTimeout(onBlur, 0);
-                  }}
-                  aria-pressed={slide.logo_title_align === "center"}
-                  className={`min-h-11 flex-1 ${myWebOptionClassName} ${slide.logo_title_align === "center" ? myWebSelectedOptionClassName : ""}`}
-                >
-                  Centrado
-                </button>
-              </div>
-            </div>
+          ) : (
+            <label className="block space-y-2 text-sm font-medium">
+              <span>URL de Vimeo</span>
+              <input
+                type="text"
+                value={slide.vimeo_url ?? ""}
+                onChange={(e) => handleChange("vimeo_url", e.target.value)}
+                onBlur={onBlur}
+                className={inputClass}
+                placeholder="https://vimeo.com/123456789"
+              />
+            </label>
           )}
+
+          <div>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-black">Mostrar logo</p>
+                <p className="mt-0.5 text-sm leading-relaxed text-[#010000]/65">
+                  Muestra el logo de la web encima del título en esta diapositiva
+                </p>
+              </div>
+              <PillButton
+                variant="outline"
+                role="switch"
+                aria-label={`Mostrar logo en la diapositiva ${index + 1}`}
+                aria-checked={slide.show_logo ?? false}
+                onClick={() => {
+                  handleChange("show_logo", !(slide.show_logo ?? false));
+                  setTimeout(onBlur, 0);
+                }}
+              >
+                {slide.show_logo ? "Sí" : "No"}
+              </PillButton>
+            </div>
+
+            {slide.show_logo && (
+              <div className="mt-3">
+                <label className="text-sm text-black">
+                  Posición vertical del logo y el título
+                </label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleChange("logo_title_align", "bottom");
+                      setTimeout(onBlur, 0);
+                    }}
+                    aria-pressed={(slide.logo_title_align ?? "bottom") === "bottom"}
+                    className={`min-h-11 flex-1 ${myWebOptionClassName} ${(slide.logo_title_align ?? "bottom") === "bottom" ? myWebSelectedOptionClassName : ""}`}
+                  >
+                    Abajo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleChange("logo_title_align", "center");
+                      setTimeout(onBlur, 0);
+                    }}
+                    aria-pressed={slide.logo_title_align === "center"}
+                    className={`min-h-11 flex-1 ${myWebOptionClassName} ${slide.logo_title_align === "center" ? myWebSelectedOptionClassName : ""}`}
+                  >
+                    Centrado
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        <label className="block space-y-2 text-sm font-medium">
-          <span>Título</span>
-          <input
-            type="text"
-            value={slide.title}
-            onChange={(e) => handleChange("title", e.target.value)}
+        <div className={`@container ${myWebGroupClassName}`}>
+          <h5 className="text-sm font-medium">Texto y acción</h5>
+          <label className="block space-y-2 text-sm font-medium">
+            <span>Título</span>
+            <input
+              type="text"
+              value={slide.title}
+              onChange={(e) => handleChange("title", e.target.value)}
+              onBlur={onBlur}
+              className={inputClass}
+              placeholder="Título de la diapositiva"
+            />
+          </label>
+
+          <RichTextInput
+            label="Descripción"
+            value={slide.description}
+            onChange={(html) => handleChange("description", html)}
             onBlur={onBlur}
-            className={inputClass}
-            placeholder="Título de la diapositiva"
+            placeholder="Descripción de la diapositiva"
           />
-        </label>
 
-        <RichTextInput
-          label="Descripción"
-          value={slide.description}
-          onChange={(html) => handleChange("description", html)}
-          onBlur={onBlur}
-          placeholder="Descripción de la diapositiva"
-        />
+          <div className={myWebFieldGridClassName}>
+            <label className="block space-y-2 text-sm font-medium">
+              <span>Texto del botón</span>
+              <input
+                type="text"
+                value={slide.text_button}
+                onChange={(e) => handleChange("text_button", e.target.value)}
+                onBlur={onBlur}
+                className={inputClass}
+                placeholder="Ver más"
+              />
+            </label>
+            <label className="block space-y-2 text-sm font-medium">
+              <span>URL del botón</span>
+              <input
+                type="text"
+                value={slide.url_button}
+                onChange={(e) => handleChange("url_button", e.target.value)}
+                onBlur={onBlur}
+                className={inputClass}
+                placeholder="#seccion"
+              />
+            </label>
+          </div>
 
-        <div className="grid grid-cols-1 gap-3 @min-[28rem]:grid-cols-2">
-          <label className="block space-y-2 text-sm font-medium">
-            <span>Texto del botón</span>
-            <input
-              type="text"
-              value={slide.text_button}
-              onChange={(e) => handleChange("text_button", e.target.value)}
-              onBlur={onBlur}
-              className={inputClass}
-              placeholder="Ver más"
-            />
-          </label>
-          <label className="block space-y-2 text-sm font-medium">
-            <span>URL del botón</span>
-            <input
-              type="text"
-              value={slide.url_button}
-              onChange={(e) => handleChange("url_button", e.target.value)}
-              onBlur={onBlur}
-              className={inputClass}
-              placeholder="#seccion"
-            />
-          </label>
+          <IconPicker
+            value={slide.icon_button}
+            onChange={(name) => {
+              handleChange("icon_button", name);
+              setTimeout(onBlur, 0);
+            }}
+          />
         </div>
-
-        <IconPicker
-          value={slide.icon_button}
-          onChange={(name) => {
-            handleChange("icon_button", name);
-            setTimeout(onBlur, 0);
-          }}
-        />
       </div>
     </section>
   );
