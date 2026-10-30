@@ -1,6 +1,6 @@
 # Edit project language versions
 
-Projects can store manually authored versions of their title, description and keywords in Spanish (ES), English (EN) and Catalan (CAT). This delivery only adds dashboard editing and storage: it does not change public websites, publication generation, search or project listings.
+Projects can store manually authored versions of their title, description and keywords in Spanish (ES), English (EN) and Catalan (CAT). This delivery only adds dashboard editing and storage: it does not change public websites, publication generation or search.
 
 ## Quick path
 
@@ -10,6 +10,10 @@ Projects can store manually authored versions of their title, description and ke
 4. To remove a version, select it and click **Eliminar versión**, then confirm. The original project is unchanged.
 
 Version saves are independent from **Guardar cambios** on the original project. Empty translation fields mean “use the original”; keywords replace the entire original keyword set, never merge with it. No consumer is switched to translated content in this delivery.
+
+## Project list
+
+The **Versiones** column shows the available ES/EN/CAT languages and explicitly labels the known original language as **Original**. Projects without readable language metadata show **—**; the dashboard never assumes Spanish for existing content. A single nested query loads language codes only alongside each admin/user project list, retaining projects without versions. Closing the editing drawer refreshes the list after independent version saves or deletion; no per-row requests or original-project writes are needed.
 
 ## Editing rules
 
@@ -40,7 +44,7 @@ Before applying, confirm the destination matches the inspected schema: identity 
 
 ### Existing security limitations
 
-The inspected legacy project policies grant very broad authenticated access; new child-table policies deliberately check owner/admin instead of relying on parent visibility. Existing `userData` update rules may permit role changes; the new feature inherits the application's existing admin-role trust model, not an independent privilege source. Audit and harden profile role grants separately before treating that role as a strong security boundary. This feature does not repair existing project/profile authorization.
+The inspected legacy project policies grant very broad authenticated access; new child-table policies deliberately check owner/admin instead of relying on parent visibility. Read-only hosted inspection confirmed an enabled `private.guard_user_data_role_and_uid` trigger protecting authenticated UID changes and non-admin role changes. The new feature uses the existing guarded database admin-role model. Row/column UPDATE grants alone do not establish that users can change their role. This feature does not repair existing project/profile authorization.
 
 ## Verification and activation checklist
 

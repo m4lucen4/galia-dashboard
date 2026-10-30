@@ -218,7 +218,10 @@
     "deleteConfirmation": "¿Estás seguro de que deseas eliminar esta publicación?"
   },
   "projects": {
+    "languageVersions": "Versiones",
+    "noLanguageVersions": "Sin información de versiones",
     "translations": {
+      "originalLabel": "Original",
       "restored": "Borrador recuperado tras volver al proyecto. Los cambios todavía no están guardados.",
       "heading": "Versiones por idioma",
       "help": "Guarda versiones del título, la descripción y las keywords sin cambiar el proyecto original.",

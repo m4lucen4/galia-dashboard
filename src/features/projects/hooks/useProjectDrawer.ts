@@ -70,6 +70,8 @@ export const useProjectDrawer = ({
     setPendingFotoTags(null);
     setMultimediaMinFolder(null);
     setMultimediaTargetUser(null);
+    // Independent language saves do not submit the original project form.
+    if (isEditMode) fetchProjectsData();
   };
 
   const handleCreateFromMultimedia = (

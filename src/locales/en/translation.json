@@ -215,7 +215,10 @@
     "deleteConfirmation": "Are you sure you want to delete this publication?"
   },
   "projects": {
+    "languageVersions": "Versions",
+    "noLanguageVersions": "No language version information",
     "translations": {
+      "originalLabel": "Original",
       "restored": "Draft restored after returning to the project. Changes have not been saved yet.",
       "heading": "Language versions",
       "help": "Save versions of the title, description and keywords without changing the original project.",

@@ -3,6 +3,10 @@ import { ProjectDataProps, SupabaseError, ProjectImageData } from "../../types";
 import { supabase } from "../../helpers/supabase";
 import type { RootState } from "../store";
 
+const PROJECT_LANGUAGE_SUMMARY = `translation_settings:project_translation_settings(
+  original_language, translations:project_translations(language)
+)`;
+
 export function getInitials(firstName: string, lastName: string): string {
   return `${firstName} ${lastName}`
     .normalize("NFD")
@@ -264,6 +268,7 @@ export const fetchProjects = createAsyncThunk(
         .select(
           `
           *,
+          ${PROJECT_LANGUAGE_SUMMARY},
           userData:userData(
             id,
             created_at,
@@ -384,7 +389,7 @@ export const fetchProjectsByUserId = createAsyncThunk(
     try {
       const { data: projects, error } = await supabase
         .from("projects")
-        .select("*")
+        .select(`*, ${PROJECT_LANGUAGE_SUMMARY}`)
         .or(`user.eq.${userId},assigned.eq.${userId}`)
         .order("created_at", { ascending: false });
 

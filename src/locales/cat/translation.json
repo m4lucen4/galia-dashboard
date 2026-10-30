@@ -216,7 +216,10 @@
     "deleteConfirmation": "Estàs segur que vols eliminar aquesta publicació?"
   },
   "projects": {
+    "languageVersions": "Versions",
+    "noLanguageVersions": "Sense informació de versions",
     "translations": {
+      "originalLabel": "Original",
       "restored": "Esborrany recuperat en tornar al projecte. Els canvis encara no s'han desat.",
       "heading": "Versions per idioma",
       "help": "Desa versions del títol, la descripció i les paraules clau sense canviar el projecte original.",

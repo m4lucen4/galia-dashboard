@@ -1,3 +1,5 @@
+import type { SiteLanguage } from "@/helpers/siteLanguages";
+
 export type LoginProps = {
   email: string;
   password: string;
@@ -82,6 +84,10 @@ export type ProjectDataProps = {
   showMap?: boolean;
   projectCollaborators?: ProjectCollaboratorsProps[];
   nas_folder?: string;
+  translation_settings?: {
+    original_language: SiteLanguage;
+    translations: { language: SiteLanguage }[];
+  } | null;
 };
 
 export type LinkedInPageInfo = {

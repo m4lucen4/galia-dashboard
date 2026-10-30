@@ -17,6 +17,7 @@ import { fetchProjectById } from "../../../../redux/actions/ProjectActions";
 import { useTranslation } from "react-i18next";
 import { Pagination } from "../../../../components/shared/ui/Pagination";
 import { ActionButtons } from "./ActionButtons";
+import { SITE_LANGUAGES } from "@/helpers/siteLanguages";
 
 type ProjectsTableProps = {
   projects: ProjectDataProps[];
@@ -175,6 +176,41 @@ export const ProjectsTable = ({
         );
       },
       size: 100,
+    }),
+    columnHelper.display({
+      id: "versions",
+      header: t("projects.languageVersions"),
+      cell: ({ row }) => {
+        const settings = row.original.translation_settings;
+        const languages = SITE_LANGUAGES.filter((language) =>
+          language === settings?.original_language ||
+          settings?.translations?.some((version) => version.language === language),
+        );
+
+        if (!languages.length) {
+          return <span title={t("projects.noLanguageVersions")}>—</span>;
+        }
+
+        return (
+          <div className="flex flex-wrap gap-2">
+            {languages.map((language) => {
+              const isOriginal = language === settings?.original_language;
+
+              return (
+                <span
+                  key={language}
+                  title={t(`projects.translations.${language}`)}
+                  className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-[#010000]/20 px-3 py-1 text-xs"
+                >
+                  <span className="font-mono">{language === "ca" ? "CAT" : language.toUpperCase()}</span>
+                  {isOriginal && <span>· {t("projects.translations.originalLabel")}</span>}
+                </span>
+              );
+            })}
+          </div>
+        );
+      },
+      size: 220,
     }),
     columnHelper.display({
       id: "actions",
