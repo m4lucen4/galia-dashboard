@@ -45,6 +45,7 @@ export const Projects = () => {
   const {
     project,
     projectAddRequest,
+    projectUpdateRequest,
     projects,
     projectsFetchRequest,
     assignProjectRequest,
@@ -74,7 +75,7 @@ export const Projects = () => {
     user,
     users,
     project,
-    loading: projectAddRequest.inProgress,
+    loading: projectAddRequest.inProgress || projectUpdateRequest.inProgress,
     fetchProjectsData,
   });
   const errorMessage = errorMessages({

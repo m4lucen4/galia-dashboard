@@ -27,6 +27,7 @@ import { ShowGoogleMaps } from "./projectsForm/ShowGoogleMaps";
 import { NasFilesModal } from "./NasFilesModal";
 import { PhotoIcon, FolderOpenIcon } from "@heroicons/react/24/outline";
 import { useProjectsForm } from "../hooks/useProjectsForm";
+import { ProjectTranslationsEditor, type RegisterTranslationGuard } from "./ProjectTranslationsEditor";
 
 interface ProjectsFormProps {
   initialData?: ProjectDataProps;
@@ -37,6 +38,7 @@ interface ProjectsFormProps {
   nasFolder?: string;
   projectId?: string;
   odooId?: string;
+  registerTranslationGuard: RegisterTranslationGuard;
 }
 
 export const ProjectsForm: React.FC<ProjectsFormProps> = ({
@@ -48,6 +50,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   nasFolder,
   projectId,
   odooId,
+  registerTranslationGuard,
 }) => {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
@@ -297,6 +300,9 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
           />
         </div>
       </fieldset>
+
+      <ProjectTranslationsEditor key={`${user.uid}-${projectId ?? "new"}`} projectId={projectId}
+        draftOwnerId={user.uid} registerGuard={registerTranslationGuard} disabled={loading} />
 
       <PillButton className="w-full" disabled={loading} type="submit">
         {isEditMode ? t("projects.saveChanges") : t("projects.createProject")}

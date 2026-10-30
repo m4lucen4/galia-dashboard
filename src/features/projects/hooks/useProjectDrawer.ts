@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useAppDispatch } from "../../../redux/hooks";
 import {
   addProject,
@@ -38,6 +38,10 @@ export const useProjectDrawer = ({
   fetchProjectsData,
 }: UseProjectDrawerProps) => {
   const dispatch = useAppDispatch();
+  const translationGuard = useRef<(() => boolean) | null>(null);
+  const registerTranslationGuard = useCallback((guard: (() => boolean) | null) => {
+    translationGuard.current = guard;
+  }, []);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [multimediaPreFill, setMultimediaPreFill] =
@@ -60,6 +64,7 @@ export const useProjectDrawer = ({
   };
 
   const handleCloseDrawer = () => {
+    if (translationGuard.current && !translationGuard.current()) return;
     setDrawerOpen(false);
     setMultimediaPreFill(null);
     setPendingFotoTags(null);
@@ -144,6 +149,7 @@ export const useProjectDrawer = ({
   };
 
   const handleProjectSubmit = (formData: CreateProjectProps) => {
+    if (translationGuard.current && !translationGuard.current()) return;
     if (isEditMode && project) {
       const updateData = {
         ...formData,
@@ -225,6 +231,7 @@ export const useProjectDrawer = ({
     handleCreateFromMultimedia,
     handleEditProject,
     formProps: {
+      registerTranslationGuard,
       initialData: isEditMode ? getFormData() : (multimediaPreFill ?? undefined),
       onSubmit: handleProjectSubmit,
       loading,
