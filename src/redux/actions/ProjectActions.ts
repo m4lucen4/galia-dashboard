@@ -634,20 +634,14 @@ export const assignProject = createAsyncThunk(
         }
       }
 
-      // Insert duplicate project (id omitted — Supabase auto-generates bigint)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id: _id, created_at: _ca, updated_at: _ua, userData: _ud, projectCollaborators: _pc, ...fields } = originalProject;
-
+      // The database copies project + language records atomically. Storage copies
+      // above retain the existing best-effort behavior.
       const { data: newProject, error: insertError } = await supabase
-        .from("projects")
-        .insert({
-          ...fields,
-          user: assignedUserId,
-          image_data: newImageData,
-          nas_folder: null,
-        })
-        .select()
-        .single();
+        .rpc("assign_project_with_translations", {
+          source_project_id: projectId,
+          target_user_id: assignedUserId,
+          copied_images: newImageData,
+        });
 
       if (insertError || !newProject) {
         return rejectWithValue({
