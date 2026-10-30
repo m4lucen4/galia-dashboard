@@ -231,7 +231,6 @@
       "ca": "Catalán",
       "originalLanguage": "Idioma del contenido original",
       "chooseOriginal": "Selecciona el idioma original",
-      "originalHelp": "No se presupone el idioma de los proyectos existentes. Guarda o descarta la versión antes de cambiarlo. Para elegir un idioma que ya tiene versión, elimina primero esa versión.",
       "saveOriginal": "Guardar idioma original",
       "originalSaved": "Idioma original guardado.",
       "originalError": "No se pudo guardar el idioma original. Si ya existe una versión en ese idioma, elimínala primero. Puedes volver a intentarlo.",

@@ -9,6 +9,8 @@ Projects can store manually authored versions of their title, description and ke
 3. Choose another language, complete at least one field, then click **Guardar versión**. Reopen the project to retrieve saved versions.
 4. To remove a version, select it and click **Eliminar versión**, then confirm. The original project is unchanged.
 
+On desktop, Projects uses a wider drawer (up to 96rem, capped to the viewport) with project content/language versions in one column and media/related settings in the other. Mobile and tablet retain the standard drawer width and a single stacked column. Other dashboard forms keep their existing width.
+
 Version saves are independent from **Guardar cambios** on the original project. Empty translation fields mean “use the original”; keywords replace the entire original keyword set, never merge with it. No consumer is switched to translated content in this delivery.
 
 ## Project list

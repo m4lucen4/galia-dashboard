@@ -23,12 +23,12 @@ const asDraft = (row?: ProjectTranslation): TranslationDraft => ({
   title: row?.title ?? "", description: row?.description ?? "", keywords: row?.keywords ?? "",
 });
 
-export function ProjectTranslationsEditor({ projectId, draftOwnerId, registerGuard, disabled = false }: {
+export function ProjectTranslationsEditor({ projectId, draftOwnerId, registerGuard, disabled = false }: Readonly<{
   projectId?: string;
   draftOwnerId: string;
   registerGuard: RegisterTranslationGuard;
   disabled?: boolean;
-}) {
+}>) {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const [original, setOriginal] = useState<SiteLanguage | null>(null);
@@ -164,19 +164,20 @@ export function ProjectTranslationsEditor({ projectId, draftOwnerId, registerGua
         {request.messages && <p role={request.ok ? "status" : "alert"} className="mb-4 text-sm">{text(request.messages)}</p>}
         {!loaded && request.messages && <PillButton type="button" onClick={() => setReload((value) => value + 1)}>{text("retry")}</PillButton>}
         {loaded && <div className="space-y-4">
-          <label className="block" htmlFor="project-original-language">
-            {text("originalLanguage")}
-            <select id="project-original-language" className={projectControlClassName} value={originalDraft}
-              disabled={busy || translationDirty} onChange={(event) => setOriginalDraft(event.target.value as SiteLanguage)}>
-              <option value="" disabled>{text("chooseOriginal")}</option>
-              {SITE_LANGUAGES.map((code) => <option key={code} value={code}
-                disabled={rows.some((row) => row.language === code)}>{localeLabel(code)}</option>)}
-            </select>
-          </label>
-          <p className="text-sm text-[#010000]/70">{text("originalHelp")}</p>
-          <PillButton type="button" disabled={busy || !originalDraft || originalDraft === original} onClick={saveOriginal}>
-            {text("saveOriginal")}
-          </PillButton>
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end">
+            <label className="block min-w-0 flex-1" htmlFor="project-original-language">
+              {text("originalLanguage")}
+              <select id="project-original-language" className={projectControlClassName} value={originalDraft}
+                disabled={busy || translationDirty} onChange={(event) => setOriginalDraft(event.target.value as SiteLanguage)}>
+                <option value="" disabled>{text("chooseOriginal")}</option>
+                {SITE_LANGUAGES.map((code) => <option key={code} value={code}
+                  disabled={rows.some((row) => row.language === code)}>{localeLabel(code)}</option>)}
+              </select>
+            </label>
+            <PillButton className="shrink-0" type="button" disabled={busy || !originalDraft || originalDraft === original} onClick={saveOriginal}>
+              {text("saveOriginal")}
+            </PillButton>
+          </div>
           {original && <fieldset disabled={busy || originalDraft !== original} className="space-y-4">
             <label className="block" htmlFor="project-translation-language">
               {text("language")}

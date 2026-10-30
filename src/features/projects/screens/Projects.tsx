@@ -317,6 +317,7 @@ export const Projects = () => {
       />
       <Drawer
         variant="dashboard"
+        size="wide"
         closeLabel={t("users.closeForm")}
         title={
           isEditMode ? t("projects.editProject") : t("projects.createProject")

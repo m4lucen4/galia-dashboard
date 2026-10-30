@@ -14,6 +14,7 @@ interface CardProps {
   onClose: () => void;
   closeOnOutsideClick?: boolean;
   variant?: "default" | "dashboard";
+  size?: "default" | "wide";
   closeLabel?: string;
 }
 
@@ -24,6 +25,7 @@ export const Drawer: React.FC<CardProps> = ({
   onClose,
   closeOnOutsideClick = true,
   variant = "default",
+  size = "default",
   closeLabel = "Close panel",
 }) => {
   const dashboard = variant === "dashboard";
@@ -45,7 +47,7 @@ export const Drawer: React.FC<CardProps> = ({
           <div className={dashboard ? "pointer-events-none fixed inset-y-0 right-0 flex max-w-full sm:pl-10" : "pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10"}>
             <DialogPanel
               transition
-              className={dashboard ? "pointer-events-auto relative h-full min-h-0 w-screen max-w-full overflow-hidden transform transition duration-300 ease-in-out data-closed:translate-x-full motion-reduce:transition-none sm:w-[min(48rem,calc(100vw-2rem))]" : "pointer-events-auto relative w-full transform transition duration-500 ease-in-out data-closed:translate-x-full sm:w-[50vw] sm:duration-700"}
+              className={dashboard ? "pointer-events-auto relative h-full min-h-0 w-screen max-w-full overflow-hidden transform transition duration-300 ease-in-out data-closed:translate-x-full motion-reduce:transition-none sm:w-[min(48rem,calc(100vw-2rem))]" + (size === "wide" ? " lg:w-[min(96rem,calc(100vw-2.5rem))]" : "") : "pointer-events-auto relative w-full transform transition duration-500 ease-in-out data-closed:translate-x-full sm:w-[50vw] sm:duration-700"}
             >
               <TransitionChild>
                 <div className={dashboard ? "absolute top-5 right-5 z-10 duration-300 data-closed:opacity-0 motion-reduce:transition-none" : "absolute top-0 left-0 -ml-8 flex pt-4 pr-2 duration-500 ease-in-out data-closed:opacity-0 sm:-ml-10 sm:pr-4"}>

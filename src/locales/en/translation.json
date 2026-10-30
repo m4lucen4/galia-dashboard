@@ -228,7 +228,6 @@
       "ca": "Catalan",
       "originalLanguage": "Original content language",
       "chooseOriginal": "Select the original language",
-      "originalHelp": "Existing projects have no assumed language. Save or discard the version before changing it. To select a language with an existing version, delete that version first.",
       "saveOriginal": "Save original language",
       "originalSaved": "Original language saved.",
       "originalError": "Could not save the original language. Delete any existing version in that language first, then try again.",

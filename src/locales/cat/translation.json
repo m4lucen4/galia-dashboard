@@ -229,7 +229,6 @@
       "ca": "Català",
       "originalLanguage": "Idioma del contingut original",
       "chooseOriginal": "Selecciona l'idioma original",
-      "originalHelp": "No es pressuposa l'idioma dels projectes existents. Desa o descarta la versió abans de canviar-lo. Per triar un idioma que ja té versió, elimina primer aquella versió.",
       "saveOriginal": "Desar idioma original",
       "originalSaved": "Idioma original desat.",
       "originalError": "No s'ha pogut desar l'idioma original. Si ja existeix una versió en aquell idioma, elimina-la primer i torna-ho a provar.",
