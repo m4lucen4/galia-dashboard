@@ -178,39 +178,55 @@ function readFailure(error: { code?: string }, status: number) {
 
 export async function restoreGenerationJobs(actor: string, signal: AbortSignal): Promise<GenerationJob[]> {
   if (!uuid.test(actor)) throw issue("unauthorized");
+  const verifyActor = async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || data.user?.id !== actor) throw issue("unauthorized");
+  };
+  await verifyActor();
   const latest = new Map<string, Record<string, unknown>>();
   // Scan paginated identities, not an arbitrary last-N history window. An explicitly
   // retried older job must win over a newer settled job for the same project.
   const pageSize = 200;
-  for (let offset = 0; ; offset += pageSize) {
-    const { data, error, status } = await supabase.from("publication_generation_jobs")
-      .select(jobColumns).eq("actor_id", actor)
+  for (let offset = 0; ;) {
+    // RLS, not the initiating actor, determines shared job visibility.
+    const { data, error, status, count } = await supabase.from("publication_generation_jobs")
+      .select(jobColumns, { count: "exact" })
       .order("created_at", { ascending: false }).order("id", { ascending: false })
       .range(offset, offset + pageSize - 1).abortSignal(signal);
     if (error) throw readFailure(error, status);
-    for (const row of data ?? []) {
+    if (!Array.isArray(data) || !Number.isSafeInteger(count) || count === null || count < 0
+      || (data.length === 0 && offset < count)) throw issue("read_failed");
+    for (const row of data) {
       const key = id(row.project_id, decimal);
       const previous = latest.get(key);
       if (!previous || (["queued", "running"].includes(row.status)
         && !["queued", "running"].includes(String(previous.status)))) latest.set(key, row);
     }
-    if (!data || data.length < pageSize) break;
+    offset += data.length;
+    // A server row cap smaller than pageSize must not truncate restoration.
+    if (offset >= count) break;
   }
   const jobs: GenerationJob[] = [];
   for (const row of latest.values()) {
     const { data, error, status } = await supabase.from("publication_generation_slots")
       .select(slotColumns).eq("job_id", id(row.id, uuid)).order("slot").abortSignal(signal);
     if (error) throw readFailure(error, status);
+    if (!Array.isArray(data)) throw issue("read_failed");
+    // Slots are created atomically with the job and are never deleted. An empty
+    // successful RLS read means access disappeared between reads: do not retain
+    // the earlier job details as a permanently "synchronizing" local snapshot.
+    if (data.length === 0) continue;
     jobs.push(parseGenerationJob({
       jobId: row.id, projectId: row.project_id, status: row.status, total: row.total,
       retryCount: row.retry_count, updatedAt: row.updated_at,
       requestedModel: row.requested_model, promptVersion: row.prompt_version,
-      slots: (data ?? []).map((slot) => ({
+      slots: data.map((slot) => ({
         slot: slot.slot, state: slot.state, attempts: slot.attempts,
         previewId: slot.preview_id, errorCode: slot.error_code,
         retryable: slot.retryable, actualModel: slot.actual_model,
       })),
     }));
   }
+  await verifyActor();
   return jobs;
 }

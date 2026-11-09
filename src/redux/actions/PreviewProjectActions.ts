@@ -8,6 +8,7 @@ import {
   UpdateProjectPublishingProps,
 } from "../../types";
 import { supabase } from "../../helpers/supabase";
+import type { RootState } from "../store";
 
 export type CreateProjectProps = Omit<
   PreviewProjectDataProps,
@@ -97,22 +98,43 @@ export const fetchPreviewProjectById = createAsyncThunk(
 
 export const fetchPreviewProjectsByUserId = createAsyncThunk(
   "projectsPreview/fetchProjectsByUserId",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { rejectWithValue, getState, signal }) => {
     try {
-      const { data: projects, error } = await supabase
-        .from("projectsPreview")
-        .select("*")
-        .eq("user", userId)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        return rejectWithValue({
-          message: `Error getting user's projects: ${error.message}`,
-          status: error.code,
-        });
+      const verifyActor = async () => {
+        const { data, error } = await supabase.auth.getUser();
+        if (error || data.user?.id !== userId || (getState() as RootState).auth.user?.uid !== userId) {
+          throw new Error("Unauthorized preview listing");
+        }
+      };
+      await verifyActor();
+      const projects: PreviewProjectDataProps[] = [];
+      const pageSize = 200;
+      for (let offset = 0; ;) {
+        // This read-only RPC filters on auth.uid() inside SQL, including fresh
+        // parent/assignment checks. Never fetch all previews and filter locally.
+        const { data, error, count } = await supabase
+          .rpc("preview_projects_for_current_user", {}, { count: "exact" })
+          .select("*,id::text,project_id::text")
+          .order("created_at", { ascending: false }).order("id", { ascending: false })
+          .range(offset, offset + pageSize - 1).abortSignal(signal);
+        if (error) throw new Error("Error retrieving user's projects");
+        if (!Array.isArray(data) || !Number.isSafeInteger(count) || count === null || count < 0
+          || (data.length === 0 && offset < count)) throw new Error("Incomplete preview listing");
+        for (const row of data) {
+          if (!row || typeof row.id !== "string" || !/^[1-9]\d*$/.test(row.id)
+            || (row.project_id !== null && (typeof row.project_id !== "string" || !/^-?\d+$/.test(row.project_id)))) {
+            throw new Error("Invalid preview identity");
+          }
+          projects.push(row as PreviewProjectDataProps);
+        }
+        offset += data.length;
+        // Follow the exact count even if PostgREST caps pages below our request.
+        if (offset >= count) break;
+        await verifyActor();
       }
+      await verifyActor();
 
-      if (!projects || projects.length === 0) {
+      if (projects.length === 0) {
         return {
           projects: [],
           message: `No projects found for user ${userId}`,
