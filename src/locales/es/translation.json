@@ -1,4 +1,48 @@
 {
+  "publicationGeneration": {
+    "title": "Generación de publicaciones",
+    "navigation": "Puedes seguir trabajando o salir del panel. Recuperaremos el estado cuando vuelvas.",
+    "restoring": "Consultando las generaciones guardadas…",
+    "readError": "No se ha podido consultar el estado. Esto no significa que la generación haya fallado.",
+    "refresh": "Volver a consultar",
+    "project": "Proyecto {{id}}",
+    "progress": "{{completed}} de {{total}} variantes terminadas",
+    "counts": "{{succeeded}} correctas · {{failed}} fallidas",
+    "variant": "Variante {{slot}}",
+    "sending": "Enviando solicitud…",
+    "replay": "Comprobar la misma solicitud",
+    "retryFailed": "Reintentar solo las fallidas",
+    "tryAgain": "Volver a solicitar",
+    "viewPreviews": "Ver publicaciones",
+    "noRetry": "No hay más reintentos disponibles para estas variantes. Las publicaciones correctas se conservan.",
+    "status": {
+      "queued": "En cola",
+      "running": "Generando publicaciones",
+      "succeeded": "Publicaciones generadas",
+      "partial": "Generación parcial: se conservan las publicaciones correctas",
+      "failed": "No se ha generado ninguna publicación",
+      "syncing": "Sincronizando el estado; aún no podemos confirmar el resultado",
+      "unconfirmed": "Resultado de la solicitud pendiente de confirmar"
+    },
+    "errors": {
+      "invalid_request": "La solicitud no es válida.",
+      "unauthorized": "Inicia sesión de nuevo para consultar el estado y continuar.",
+      "forbidden": "No tienes acceso a este proyecto.",
+      "conflict": "La solicitud no corresponde a esta generación. Vuelve a consultar el estado.",
+      "project_changed": "El proyecto se ha eliminado o ha cambiado de propietario.",
+      "retry_exhausted": "Se ha alcanzado el límite de reintentos.",
+      "invalid_project": "Revisa los datos del proyecto y el número de publicaciones (1–4).",
+      "provider_refusal": "El proveedor no ha podido generar este contenido.",
+      "invalid_response": "No se ha recibido un contenido válido.",
+      "not_ready": "El servicio de generación todavía no está listo o no está disponible. Inténtalo más tarde; no se usará el flujo anterior.",
+      "provider_unavailable": "El proveedor no está disponible.",
+      "lease_expired": "La generación ha agotado el tiempo disponible.",
+      "internal_error": "No se ha podido completar la operación.",
+      "uncertain": "No podemos confirmar si la solicitud se recibió. Comprueba la misma solicitud para evitar duplicados.",
+      "storage": "No podemos guardar o recuperar la identidad de la solicitud en este navegador. No iniciaremos una nueva generación sin esa protección. Habilita el almacenamiento y vuelve a cargar la página.",
+      "read_failed": "No se ha podido actualizar el estado. La información mostrada puede estar desactualizada."
+    }
+  },
   "shared": {
     "clearSearch": "Limpiar búsqueda",
     "search": "Buscar",

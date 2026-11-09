@@ -8,7 +8,6 @@ import { ChartBarIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { DropdownButton } from "../../../components/shared/ui/DropdownButton";
 import { errorMessages } from "../../../helpers";
 import {
-  updateProjectPreview,
   updateProjectDraft,
   deleteProject,
   assignProject,
@@ -19,8 +18,8 @@ import {
 } from "../../../redux/slices/ProjectSlice";
 import { ProjectsTable } from "../components/projectsTable";
 import { useProjectsData } from "../../../hooks/useProjectsData";
-import { useProjectPreviewRealtime } from "../../../hooks/useProjectPreviewRealtime";
-import { WorkingInProgress } from "../../../components/shared/ui/WorkingInProgress";
+import { usePublicationGeneration } from "@/hooks/usePublicationGeneration";
+import { PublicationGenerationStatus } from "../components/PublicationGenerationStatus";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ProjectsForm } from "../components/ProjectsForm";
@@ -34,11 +33,6 @@ import { ProjectsFilters } from "../components/ProjectsFilters";
 
 export const Projects = () => {
   const { t } = useTranslation();
-  const [processingProjectId, setProcessingProjectId] = useState<string | null>(
-    null,
-  );
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
-  const [showTimeoutError, setShowTimeoutError] = useState(false);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const user = useAppSelector((state: RootState) => state.auth.user);
@@ -83,9 +77,7 @@ export const Projects = () => {
     assignError: assignProjectRequest.messages,
   });
 
-  // Subscribe to realtime updates for project preview creation
-  const { isCompleted, recordCount } =
-    useProjectPreviewRealtime(processingProjectId);
+  const generation = usePublicationGeneration(fetchProjectsData);
 
   const {
     titleFilter,
@@ -107,33 +99,6 @@ export const Projects = () => {
       dispatch(fetchUsers());
     }
   }, [fetchProjectsData, dispatch, user?.role]);
-
-  // Handle workflow completion via realtime
-  useEffect(() => {
-    if (isCompleted && processingProjectId) {
-      // Use setTimeout to move state updates out of the synchronous effect
-      setTimeout(() => {
-        setProcessingProjectId(null);
-        setShowSuccessAlert(true);
-        fetchProjectsData();
-      }, 0);
-    }
-  }, [isCompleted, processingProjectId, recordCount, fetchProjectsData]);
-
-  // Fallback timeout: if workflow doesn't complete in 3 minutes, show error
-  useEffect(() => {
-    if (!processingProjectId) return;
-
-    const timeoutId = setTimeout(
-      () => {
-        setProcessingProjectId(null);
-        setShowTimeoutError(true);
-      },
-      3 * 60 * 1000,
-    ); // 3 minutes (180 seconds)
-
-    return () => clearTimeout(timeoutId);
-  }, [processingProjectId]);
 
   const handleDeleteProject = (projectId: string) => {
     const proj = projects.find((p) => String(p.id) === projectId);
@@ -207,24 +172,8 @@ export const Projects = () => {
 
   const handleConfirmLaunch = () => {
     if (selectedProjectId) {
-      const project = projects.find((p) => p.id === selectedProjectId);
-
-      dispatch(updateProjectPreview(selectedProjectId))
-        .unwrap()
-        .then(() => {
-          fetchProjectsData();
-          setShowLaunchModal(false);
-
-          if (project?.requiredAI) {
-            setProcessingProjectId(selectedProjectId);
-          } else {
-            setShowSuccessAlert(true);
-          }
-        })
-        .catch((error) => {
-          console.error("Error launching project:", error);
-          setShowLaunchModal(false);
-        });
+      void generation.start(String(selectedProjectId));
+      setShowLaunchModal(false);
     }
   };
 
@@ -241,22 +190,6 @@ export const Projects = () => {
 
   if (!user) {
     return;
-  }
-
-  if (processingProjectId) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center font-['Hanken_Grotesk',system-ui,sans-serif] text-[#010000]">
-        <WorkingInProgress
-          customMessages={[
-            t("projects.stage1"),
-            t("projects.stage2"),
-            t("projects.stage3"),
-            t("projects.stage4"),
-            t("projects.stage5"),
-          ]}
-        />
-      </div>
-    );
   }
 
   return (
@@ -303,6 +236,7 @@ export const Projects = () => {
           </PillButton>
         </div>
       </header>
+      <PublicationGenerationStatus generation={generation} projects={projects} />
       <ProjectsFilters
         isAdmin={user.role === "admin"}
         titleFilter={titleFilter}
@@ -388,23 +322,6 @@ export const Projects = () => {
             onUserSelect={setSelectedUser}
           />
         </Alert>
-      )}
-      {showSuccessAlert && (
-        <Alert
-          title="¡Éxito!"
-          description={`El proyecto se ha procesado correctamente y está listo para preview.`}
-          onAccept={() => {
-            setShowSuccessAlert(false);
-            navigate("/preview-projects");
-          }}
-        />
-      )}
-      {showTimeoutError && (
-        <Alert
-          title="Timeout"
-          description="El procesamiento está tardando más de lo esperado. Por favor, verifica el estado del proyecto más tarde o contacta soporte si el problema persiste."
-          onAccept={() => setShowTimeoutError(false)}
-        />
       )}
       {user.folder_nas && (
         <MultimediaUploadModal

@@ -2,6 +2,8 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ProjectDataProps, SupabaseError, ProjectImageData } from "../../types";
 import { supabase } from "../../helpers/supabase";
 import type { RootState } from "../store";
+import { invokeGeneration, safeGenerationIssue } from "@/features/projects/services/publicationGeneration";
+import type { GenerationRequest } from "@/features/projects/types/publicationGeneration";
 
 const PROJECT_LANGUAGE_SUMMARY = `translation_settings:project_translation_settings(
   original_language, translations:project_translations(language)
@@ -267,7 +269,7 @@ export const fetchProjects = createAsyncThunk(
         .from("projects")
         .select(
           `
-          *,
+          *, id::text,
           ${PROJECT_LANGUAGE_SUMMARY},
           userData:userData(
             id,
@@ -389,7 +391,7 @@ export const fetchProjectsByUserId = createAsyncThunk(
     try {
       const { data: projects, error } = await supabase
         .from("projects")
-        .select(`*, ${PROJECT_LANGUAGE_SUMMARY}`)
+        .select(`*, id::text, ${PROJECT_LANGUAGE_SUMMARY}`)
         .or(`user.eq.${userId},assigned.eq.${userId}`)
         .order("created_at", { ascending: false });
 
@@ -425,58 +427,18 @@ export const fetchProjectsByUserId = createAsyncThunk(
   },
 );
 
+// Acceptance is not completion: only the worker can materialize previews.
 export const updateProjectPreview = createAsyncThunk(
   "projects/updateProjectPreview",
-  async (projectId: string, { rejectWithValue }) => {
+  async ({ actor, request }: { actor: string; request: GenerationRequest }, { rejectWithValue, getState }) => {
     try {
-      const webhookUrl = `${
-        import.meta.env.VITE_SUPABASE_FUNCTION_N8N_CREATE_PUBLICATIONS
-      }?id=${projectId}`;
-
-      const webhookResponse = await fetch(webhookUrl, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-        },
-      });
-
-      if (!webhookResponse.ok) {
-        return rejectWithValue({
-          message: "Error calling webhook",
-          status: webhookResponse.status,
-        });
+      const { data, error } = await supabase.auth.getUser();
+      if (error || data.user?.id !== actor || (getState() as RootState).auth.user?.uid !== actor) {
+        return rejectWithValue({ code: "unauthorized" });
       }
-
-      const { data: updatedProject, error } = await supabase
-        .from("projects")
-        .update({
-          updated_at: new Date().toISOString(),
-          state: "preview",
-        })
-        .eq("id", projectId)
-        .select()
-        .single();
-
-      if (error) {
-        return rejectWithValue({
-          message: `Error updating project state: ${error.message}`,
-          status: error.code,
-        });
-      }
-
-      return {
-        project: updatedProject,
-        message: "Project state updated to preview",
-      };
+      return await invokeGeneration(request);
     } catch (error: unknown) {
-      const appError: SupabaseError = {
-        message:
-          error instanceof Error
-            ? error.message
-            : "Error updating project state",
-        status: 500,
-      };
-      return rejectWithValue(appError);
+      return rejectWithValue(safeGenerationIssue(error));
     }
   },
 );

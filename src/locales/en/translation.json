@@ -1,4 +1,48 @@
 {
+  "publicationGeneration": {
+    "title": "Publication generation",
+    "navigation": "You can keep working or leave the dashboard. We will restore the status when you return.",
+    "restoring": "Checking saved generation jobs…",
+    "readError": "We could not check the status. This does not mean generation failed.",
+    "refresh": "Check again",
+    "project": "Project {{id}}",
+    "progress": "{{completed}} of {{total}} variants finished",
+    "counts": "{{succeeded}} successful · {{failed}} failed",
+    "variant": "Variant {{slot}}",
+    "sending": "Sending request…",
+    "replay": "Check the same request",
+    "retryFailed": "Retry failed variants only",
+    "tryAgain": "Request again",
+    "viewPreviews": "View publications",
+    "noRetry": "No further retries are available for these variants. Successful publications are preserved.",
+    "status": {
+      "queued": "Queued",
+      "running": "Generating publications",
+      "succeeded": "Publications generated",
+      "partial": "Partially generated: successful publications are preserved",
+      "failed": "No publications were generated",
+      "syncing": "Synchronizing status; the result is not confirmed yet",
+      "unconfirmed": "Request outcome awaiting confirmation"
+    },
+    "errors": {
+      "invalid_request": "The request is not valid.",
+      "unauthorized": "Sign in again to check the status and continue.",
+      "forbidden": "You do not have access to this project.",
+      "conflict": "The request does not match this generation. Check the status again.",
+      "project_changed": "The project was deleted or its owner changed.",
+      "retry_exhausted": "The retry limit has been reached.",
+      "invalid_project": "Review the project details and publication count (1–4).",
+      "provider_refusal": "The provider could not generate this content.",
+      "invalid_response": "No valid content was received.",
+      "not_ready": "The generation service is not ready yet or is unavailable. Try later; the previous workflow will not be used.",
+      "provider_unavailable": "The provider is unavailable.",
+      "lease_expired": "Generation exceeded its allowed processing time.",
+      "internal_error": "The operation could not be completed.",
+      "uncertain": "We cannot confirm whether the request was received. Check the same request to avoid duplicates.",
+      "storage": "We cannot save or recover the request identity in this browser. We will not start new generation without that protection. Enable storage and reload the page.",
+      "read_failed": "The status could not be updated. The information shown may be out of date."
+    }
+  },
   "shared": {
     "clearSearch": "Clear search",
     "search": "Search",

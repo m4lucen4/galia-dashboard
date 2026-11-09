@@ -1,4 +1,48 @@
 {
+  "publicationGeneration": {
+    "title": "Generació de publicacions",
+    "navigation": "Pots continuar treballant o sortir del panell. Recuperarem l'estat quan tornis.",
+    "restoring": "Consultant les generacions desades…",
+    "readError": "No s'ha pogut consultar l'estat. Això no vol dir que la generació hagi fallat.",
+    "refresh": "Tornar a consultar",
+    "project": "Projecte {{id}}",
+    "progress": "{{completed}} de {{total}} variants acabades",
+    "counts": "{{succeeded}} correctes · {{failed}} fallides",
+    "variant": "Variant {{slot}}",
+    "sending": "Enviant la sol·licitud…",
+    "replay": "Comprovar la mateixa sol·licitud",
+    "retryFailed": "Reintentar només les fallides",
+    "tryAgain": "Tornar a sol·licitar",
+    "viewPreviews": "Veure publicacions",
+    "noRetry": "No hi ha més reintents disponibles per a aquestes variants. Les publicacions correctes es conserven.",
+    "status": {
+      "queued": "En cua",
+      "running": "Generant publicacions",
+      "succeeded": "Publicacions generades",
+      "partial": "Generació parcial: es conserven les publicacions correctes",
+      "failed": "No s'ha generat cap publicació",
+      "syncing": "Sincronitzant l'estat; encara no podem confirmar el resultat",
+      "unconfirmed": "Resultat de la sol·licitud pendent de confirmar"
+    },
+    "errors": {
+      "invalid_request": "La sol·licitud no és vàlida.",
+      "unauthorized": "Torna a iniciar sessió per consultar l'estat i continuar.",
+      "forbidden": "No tens accés a aquest projecte.",
+      "conflict": "La sol·licitud no correspon a aquesta generació. Torna a consultar l'estat.",
+      "project_changed": "El projecte s'ha eliminat o ha canviat de propietari.",
+      "retry_exhausted": "S'ha assolit el límit de reintents.",
+      "invalid_project": "Revisa les dades del projecte i el nombre de publicacions (1–4).",
+      "provider_refusal": "El proveïdor no ha pogut generar aquest contingut.",
+      "invalid_response": "No s'ha rebut un contingut vàlid.",
+      "not_ready": "El servei de generació encara no està preparat o no està disponible. Torna-ho a provar més tard; no es farà servir el flux anterior.",
+      "provider_unavailable": "El proveïdor no està disponible.",
+      "lease_expired": "La generació ha esgotat el temps disponible.",
+      "internal_error": "No s'ha pogut completar l'operació.",
+      "uncertain": "No podem confirmar si s'ha rebut la sol·licitud. Comprova la mateixa sol·licitud per evitar duplicats.",
+      "storage": "No podem desar o recuperar la identitat de la sol·licitud en aquest navegador. No iniciarem una nova generació sense aquesta protecció. Habilita l'emmagatzematge i torna a carregar la pàgina.",
+      "read_failed": "No s'ha pogut actualitzar l'estat. La informació mostrada pot estar desactualitzada."
+    }
+  },
   "shared": {
     "clearSearch": "Netejar la cerca",
     "search": "Cercar",
