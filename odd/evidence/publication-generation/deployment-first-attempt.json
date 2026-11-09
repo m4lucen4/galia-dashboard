@@ -1,0 +1,94 @@
+{
+  "target": "mygqfdbloqojffhsurgo",
+  "sourceCommit": "41a14613682dbf9c042967c2f3acc57097003d5c",
+  "migrations": [
+    {
+      "name": "publication_generation",
+      "result": {
+        "success": true
+      }
+    },
+    {
+      "name": "project_authority_guard",
+      "result": {
+        "success": true
+      }
+    },
+    {
+      "name": "generation_assigned_editor",
+      "result": {
+        "success": true
+      }
+    }
+  ],
+  "functions": [
+    {
+      "id": "c99f4f4d-f3c2-4150-9658-c5f3d339382b",
+      "slug": "generate-project",
+      "name": "generate-project",
+      "status": "ACTIVE",
+      "version": 1,
+      "created_at": 1794264874072,
+      "updated_at": 1794264874072,
+      "verify_jwt": false,
+      "import_map": false,
+      "entrypoint_path": "file:///tmp/user_fn_mygqfdbloqojffhsurgo_c99f4f4d-f3c2-4150-9658-c5f3d339382b_1/source/generate-project/index.ts",
+      "ezbr_sha256": "c399b41ba8b61c0d8811cd8c0d62841bca18865cc5f5255301121215f57261ef"
+    },
+    {
+      "id": "591689ed-d78a-464f-97ef-6f8466c44cbe",
+      "slug": "process-publication-generation",
+      "name": "process-publication-generation",
+      "status": "ACTIVE",
+      "version": 1,
+      "created_at": 1794264873925,
+      "updated_at": 1794264873925,
+      "verify_jwt": false,
+      "import_map": false,
+      "entrypoint_path": "file:///tmp/user_fn_mygqfdbloqojffhsurgo_591689ed-d78a-464f-97ef-6f8466c44cbe_1/source/process-publication-generation/index.ts",
+      "ezbr_sha256": "ff91d568f066518683d09e93632ac77f402a8d20a070ca0426a6be93cadf5987"
+    }
+  ],
+  "existingFunctionsUnchanged": true,
+  "unauthenticatedRequests": {
+    "generateProject": 401,
+    "worker": 401
+  },
+  "privateWorkerProbe": {
+    "activation_check": {
+      "jobs": 0,
+      "readiness": null,
+      "worker_http": {
+        "result": {
+          "code": "unauthorized",
+          "fenced": null,
+          "claimed": null,
+          "settled": null
+        },
+        "status": 401,
+        "timed_out": false,
+        "request_id": 305,
+        "transport_error": false
+      },
+      "guard_present": true,
+      "client_sequence_update": false,
+      "export_select_preserved": true,
+      "client_explicit_id_insert": false
+    }
+  },
+  "vaultFormatChecks": {
+    "has_outer_whitespace": false,
+    "looks_like_legacy_jwt": true,
+    "looks_like_new_secret_key": false,
+    "looks_like_publishable_key": false
+  },
+  "vaultClaimsChecks": {
+    "role_is_service_role": true,
+    "role_is_anon": false,
+    "belongs_to_target_project": true
+  },
+  "schedulerActivated": false,
+  "openAICalls": 0,
+  "jobsCreated": 0,
+  "next": "Human verifies Vault key matches current Edge runtime service-role key. Do not repeat unchanged credential or bypass exact authentication. No secret values retained."
+}

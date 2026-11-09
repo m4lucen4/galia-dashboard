@@ -1,0 +1,497 @@
+{
+  "target": "mygqfdbloqojffhsurgo",
+  "sourceCommit": "41a14613682dbf9c042967c2f3acc57097003d5c",
+  "purpose": "Pre-activation schema/ACL recovery evidence; no secret values or user records. Keep generation disabled for any authority rollback; no automatic rollback authorized.",
+  "metadata": {
+    "database": "postgres",
+    "projects": {
+      "acl": "{postgres=arwdDxt/postgres,anon=arwdDxt/postgres,authenticated=arwdDxt/postgres,service_role=arwdDxt/postgres}",
+      "rls": true,
+      "kind": "r",
+      "owner": "postgres",
+      "force_rls": false,
+      "partition": false
+    },
+    "sequence": {
+      "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "max": 9223372036854776000,
+      "min": 1,
+      "cycle": false,
+      "owner": "postgres",
+      "increment": 1
+    },
+    "extensions": [
+      {
+        "name": "pg_net",
+        "version": "0.14.0"
+      },
+      {
+        "name": "supabase_vault",
+        "version": "0.3.1"
+      }
+    ],
+    "vault_entries": [
+      {
+        "name": "publication_generation_service_role_key",
+        "count": 1
+      },
+      {
+        "name": "publication_generation_worker_url",
+        "count": 1
+      }
+    ],
+    "generation_jobs": null,
+    "generation_slots": null,
+    "project_policies": [
+      {
+        "cmd": "INSERT",
+        "name": "customer_can_add_new_projects",
+        "check": "(auth.role() = 'authenticated'::text)",
+        "roles": [
+          "public"
+        ],
+        "using": null
+      },
+      {
+        "cmd": "UPDATE",
+        "name": "customer_can_edit_project",
+        "check": "(auth.role() = 'authenticated'::text)",
+        "roles": [
+          "public"
+        ],
+        "using": "(auth.role() = 'authenticated'::text)"
+      },
+      {
+        "cmd": "SELECT",
+        "name": "customer_can_see_projects",
+        "check": null,
+        "roles": [
+          "public"
+        ],
+        "using": "(auth.role() = 'authenticated'::text)"
+      },
+      {
+        "cmd": "SELECT",
+        "name": "public_projects_export_select",
+        "check": null,
+        "roles": [
+          "public_projects_export_owner"
+        ],
+        "using": "true"
+      },
+      {
+        "cmd": "DELETE",
+        "name": "user can delete projects",
+        "check": null,
+        "roles": [
+          "public"
+        ],
+        "using": "(auth.role() = 'authenticated'::text)"
+      },
+      {
+        "cmd": "SELECT",
+        "name": "users can see projects with coordinates",
+        "check": null,
+        "roles": [
+          "public"
+        ],
+        "using": "((\"googleMaps\" IS NOT NULL) AND (\"googleMaps\" <> 'null'::text) AND (\"googleMaps\" <> '{}'::text))"
+      }
+    ],
+    "project_triggers": [
+      {
+        "name": "odoo_project_sync",
+        "enabled": "O",
+        "function": "odoo_project_webhook()"
+      }
+    ],
+    "authority_columns": [
+      {
+        "acl": null,
+        "name": "assigned",
+        "type": "uuid",
+        "identity": ""
+      },
+      {
+        "acl": "{public_projects_export_owner=r/postgres}",
+        "name": "id",
+        "type": "bigint",
+        "identity": "d"
+      },
+      {
+        "acl": "{public_projects_export_owner=r/postgres}",
+        "name": "user",
+        "type": "uuid",
+        "identity": ""
+      }
+    ],
+    "authority_helpers": [
+      {
+        "acl": "{postgres=X/postgres,authenticated=X/postgres}",
+        "name": "private.current_user_is_admin()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true
+      },
+      {
+        "acl": "{postgres=X/postgres}",
+        "name": "private.guard_user_data_role_and_uid()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true
+      }
+    ]
+  },
+  "authority": {
+    "admin_helper": "CREATE OR REPLACE FUNCTION private.current_user_is_admin()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n  SELECT EXISTS (\n    SELECT 1\n    FROM public.\"userData\"\n    WHERE uid = auth.uid()\n      AND role = 'admin'\n  );\n$function$\n",
+    "column_acl_backup": [
+      {
+        "acl": "{public_projects_export_owner=r/postgres}",
+        "name": "id"
+      },
+      {
+        "acl": null,
+        "name": "created_at"
+      },
+      {
+        "acl": null,
+        "name": "updated_at"
+      },
+      {
+        "acl": "{public_projects_export_owner=r/postgres}",
+        "name": "title"
+      },
+      {
+        "acl": null,
+        "name": "state"
+      },
+      {
+        "acl": "{public_projects_export_owner=r/postgres}",
+        "name": "description"
+      },
+      {
+        "acl": null,
+        "name": "keywords"
+      },
+      {
+        "acl": "{public_projects_export_owner=r/postgres}",
+        "name": "user"
+      },
+      {
+        "acl": "{public_projects_export_owner=r/postgres}",
+        "name": "image_data"
+      },
+      {
+        "acl": "{public_projects_export_owner=r/postgres}",
+        "name": "weblink"
+      },
+      {
+        "acl": null,
+        "name": "publications"
+      },
+      {
+        "acl": null,
+        "name": "promoter"
+      },
+      {
+        "acl": null,
+        "name": "collaborators"
+      },
+      {
+        "acl": null,
+        "name": "googleMaps"
+      },
+      {
+        "acl": null,
+        "name": "authors"
+      },
+      {
+        "acl": "{public_projects_export_owner=r/postgres}",
+        "name": "category"
+      },
+      {
+        "acl": "{public_projects_export_owner=r/postgres}",
+        "name": "year"
+      },
+      {
+        "acl": null,
+        "name": "requiredAI"
+      },
+      {
+        "acl": null,
+        "name": "showMap"
+      },
+      {
+        "acl": null,
+        "name": "prompt"
+      },
+      {
+        "acl": null,
+        "name": "photoCredit"
+      },
+      {
+        "acl": null,
+        "name": "photoCreditLink"
+      },
+      {
+        "acl": null,
+        "name": "assigned"
+      },
+      {
+        "acl": null,
+        "name": "projectCollaborators"
+      },
+      {
+        "acl": null,
+        "name": "nas_folder"
+      }
+    ],
+    "sequence_last_value": "517",
+    "sequence_called": true,
+    "live_max_id": "517",
+    "inheritance_count": 0,
+    "rewrite_count": 0,
+    "triggers": [
+      {
+        "name": "odoo_project_sync",
+        "type": 29,
+        "enabled": "O"
+      }
+    ],
+    "api_roles": [
+      {
+        "name": "authenticated",
+        "super": false,
+        "bypass": false,
+        "service_member": false,
+        "postgres_member": false
+      },
+      {
+        "name": "anon",
+        "super": false,
+        "bypass": false,
+        "service_member": false,
+        "postgres_member": false
+      }
+    ]
+  },
+  "existingFunctions": [
+    {
+      "slug": "n8n-trigger",
+      "version": 71,
+      "verify_jwt": false
+    },
+    {
+      "slug": "linkedin-exchange-code",
+      "version": 70,
+      "verify_jwt": false
+    },
+    {
+      "slug": "linkedin-verify-token",
+      "version": 69,
+      "verify_jwt": false
+    },
+    {
+      "slug": "n8n-linkedln-trigger",
+      "version": 69,
+      "verify_jwt": false
+    },
+    {
+      "slug": "linkedin-fetch-admin-pages",
+      "version": 81,
+      "verify_jwt": false
+    },
+    {
+      "slug": "instagram-exchange-code",
+      "version": 83,
+      "verify_jwt": true
+    },
+    {
+      "slug": "instagram-verify-token",
+      "version": 72,
+      "verify_jwt": true
+    },
+    {
+      "slug": "instagram-fetch-admin-pages",
+      "version": 57,
+      "verify_jwt": true
+    },
+    {
+      "slug": "n8n-create-publications",
+      "version": 55,
+      "verify_jwt": false
+    },
+    {
+      "slug": "instant-publication",
+      "version": 53,
+      "verify_jwt": false
+    },
+    {
+      "slug": "iterate-publication",
+      "version": 44,
+      "verify_jwt": true
+    },
+    {
+      "slug": "create-folder-synology",
+      "version": 42,
+      "verify_jwt": true
+    },
+    {
+      "slug": "serve-photo",
+      "version": 35,
+      "verify_jwt": false
+    },
+    {
+      "slug": "stripe-webhook",
+      "version": 40,
+      "verify_jwt": false
+    },
+    {
+      "slug": "contact",
+      "version": 19,
+      "verify_jwt": true
+    },
+    {
+      "slug": "project-analytics",
+      "version": 17,
+      "verify_jwt": true
+    },
+    {
+      "slug": "odoo-project-sync",
+      "version": 22,
+      "verify_jwt": true
+    },
+    {
+      "slug": "odoo-project-sync-partner-name",
+      "version": 8,
+      "verify_jwt": true
+    },
+    {
+      "slug": "odoo-contacts",
+      "version": 7,
+      "verify_jwt": true
+    },
+    {
+      "slug": "move-user-media",
+      "version": 7,
+      "verify_jwt": true
+    },
+    {
+      "slug": "public-projects",
+      "version": 6,
+      "verify_jwt": false
+    }
+  ],
+  "migrationInventory": {
+    "migrations": [
+      {
+        "version": "20260629170936",
+        "name": "add_language_fields_to_sites"
+      },
+      {
+        "version": "20260701205141",
+        "name": "storage_admin_policy_user_media"
+      },
+      {
+        "version": "20260724075615",
+        "name": "add_navbar_hidden_to_sites"
+      },
+      {
+        "version": "20260724092941",
+        "name": "add_footer_hidden_to_sites"
+      },
+      {
+        "version": "20260916210901",
+        "name": "guard_user_data_role_and_uid"
+      },
+      {
+        "version": "20260916214824",
+        "name": "create_managed_wiki_foundation"
+      },
+      {
+        "version": "20260916215037",
+        "name": "prevent_republishing_unchanged_wiki_drafts"
+      },
+      {
+        "version": "20260916215200",
+        "name": "qualify_wiki_reorder_constraints"
+      },
+      {
+        "version": "20260916215431",
+        "name": "expose_only_published_wiki_rows"
+      },
+      {
+        "version": "20260916221909",
+        "name": "restore_archived_wiki_articles"
+      },
+      {
+        "version": "20260917061652",
+        "name": "fix_wiki_media_storage_lifecycle"
+      },
+      {
+        "version": "20260917062013",
+        "name": "clear_ready_timestamp_when_reserving_wiki_media"
+      },
+      {
+        "version": "20260921150302",
+        "name": "add_odoo_collaborator_partner_mappings"
+      },
+      {
+        "version": "20260921181019",
+        "name": "prepare_odoo_direct_webhook"
+      },
+      {
+        "version": "20260921181906",
+        "name": "attach_odoo_project_webhook"
+      },
+      {
+        "version": "20260923153817",
+        "name": "route_odoo_project_webhook_to_partner_name"
+      },
+      {
+        "version": "20260923162248",
+        "name": "restore_odoo_project_webhook_receiver"
+      },
+      {
+        "version": "20260930102307",
+        "name": "fix_wiki_conflict_retry_loop"
+      },
+      {
+        "version": "20260930102955",
+        "name": "fix_wiki_publish_unpublish_conflict_retry_loop"
+      },
+      {
+        "version": "20261031171831",
+        "name": "add_social_batch_drafts"
+      },
+      {
+        "version": "20261031205709",
+        "name": "add_social_cloud_assets"
+      },
+      {
+        "version": "20261101090451",
+        "name": "retain_social_source_assets"
+      },
+      {
+        "version": "20261101165559",
+        "name": "remove_social_publishing_feature_tables"
+      },
+      {
+        "version": "20261101165850",
+        "name": "remove_social_publishing_feature_helpers"
+      },
+      {
+        "version": "20261108100239",
+        "name": "public_projects_read_pg15"
+      },
+      {
+        "version": "20261108215034",
+        "name": "public_projects_portfolio"
+      }
+    ]
+  }
+}
