@@ -1,0 +1,42 @@
+{
+  "spec": "S13",
+  "baseCommit": "a514491f9011ff6e1df09f77d8eab06faa4df759",
+  "rootCause": "Immutable001 heartbeat rejects every prompt version exceptv1; deployedworker6 private452 returned503not_ready before any claim.",
+  "scope": "Forward-only replacement of heartbeat function; known v1/v2 allowlist, all other body behavior identical; no start/claim/table/policy changes",
+  "explorer": {
+    "task": "mwanlm7o-n-ts3l",
+    "finding": "Only explicit SQL version allowlist is heartbeat; no version CHECK on jobs/readiness; effective003 start exact-matches fresh readiness; retry preserves version."
+  },
+  "environment": {
+    "container": "galia-prompt-heartbeat-01a1c184",
+    "network": "none",
+    "mounts": "none",
+    "image": "postgres:17-alpine cached sha256:3540c0362c809df084ffac0ae69fe794515f9de92692f02178bcdce0ef0302ac",
+    "setupJob": 11,
+    "setupExit": 0,
+    "syntheticOnly": true
+  },
+  "parent": {
+    "red": {
+      "v1Exit": 0,
+      "v2Exit": 3,
+      "stdout": "",
+      "stderr": "ERROR:  not_ready\nCONTEXT:  PL/pgSQL function public.publication_generation_heartbeat(text,text) line 5 at RAISE\n",
+      "readinessUnchanged": true
+    },
+    "green": {
+      "exit": 0,
+      "groups": 18,
+      "legacyDifferentials": 11,
+      "roleDenials": 2,
+      "acceptedVersions": 2,
+      "metadataAndDataPreserved": true,
+      "serviceOnly": true,
+      "missingPrerequisiteRejected": true,
+      "rejectedInputsLeaveReadinessUnchanged": true
+    },
+    "original001Sha256": "070eec3f3e8e99e5876a4b0915d1b4cbfe1aa5243369cd255e0ba47673424542"
+  },
+  "independent": "pending",
+  "production": "not applied; worker6/entry3 retained; no request452 replay"
+}

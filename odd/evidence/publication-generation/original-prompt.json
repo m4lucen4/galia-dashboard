@@ -24,8 +24,62 @@
     "build": "job-10 exit0; known chunk-size warning",
     "edgeTypeDiagnostics": 0
   },
-  "independent": "pending",
-  "deployment": "not deployed",
+  "independent": {
+    "task": "mwan9nju-m-kqsx",
+    "verdict": "S13 local PASS",
+    "groups": 47,
+    "baselineRed": 2,
+    "mockedFetches": 14,
+    "network": 0,
+    "syntaxExit": 0,
+    "runExit": 0,
+    "exception": "One incorrect SQL filename read ENOENT; corrected documented path, no dynamic probe failure."
+  },
+  "deployment": {
+    "worker": {
+      "id": "591689ed-d78a-464f-97ef-6f8466c44cbe",
+      "slug": "process-publication-generation",
+      "name": "process-publication-generation",
+      "status": "ACTIVE",
+      "version": 6,
+      "created_at": 1794264873925,
+      "updated_at": 1794312702610,
+      "verify_jwt": false,
+      "import_map": false,
+      "entrypoint_path": "file:///tmp/user_fn_mygqfdbloqojffhsurgo_591689ed-d78a-464f-97ef-6f8466c44cbe_6/source/process-publication-generation/index.ts",
+      "ezbr_sha256": "935e558ce61cc3ed8677e7c2e5461840e709510794856613c04c3f192221a0eb"
+    },
+    "readback": [
+      {
+        "name": "process-publication-generation/index.ts",
+        "exact": true
+      },
+      {
+        "name": "_shared/publication-generation.ts",
+        "exact": true
+      },
+      {
+        "name": "_shared/publication-generation-errors.ts",
+        "exact": true
+      },
+      {
+        "name": "_shared/publication-generation-store.ts",
+        "exact": true
+      },
+      {
+        "name": "_shared/publication-generation-prompt.ts",
+        "exact": true
+      }
+    ],
+    "entry": "still v3; not redeployed",
+    "probe": {
+      "id": 452,
+      "status": 503,
+      "code": "not_ready",
+      "activeJobs": 0
+    },
+    "blocker": "Original immutable001 heartbeat function rejects every prompt version exceptv1; local mock and staticSQL003 verification missed it. T17 forward correction required; no invocation replay or rollback."
+  },
   "liveProvider": "not invoked",
   "preserved": [
     "v1 requests for old jobs/retries",
@@ -34,5 +88,6 @@
     "queue/leases/auth",
     "immediate wake/cron",
     "n8n functions"
-  ]
+  ],
+  "sourceCommit": "a514491f9011ff6e1df09f77d8eab06faa4df759"
 }
