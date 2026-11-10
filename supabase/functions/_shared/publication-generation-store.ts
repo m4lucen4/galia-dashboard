@@ -145,11 +145,14 @@ export function normalizeSummary(summary: JobSummary) {
   };
 }
 
-// Compare fixed-size digests instead of short-circuiting on token characters.
-export async function serviceAuthorized(header: string | null, serviceKey: string): Promise<boolean> {
-  if (!header?.startsWith("Bearer ") || header.length > 8192) return false;
+// The worker trigger uses a separate 32-byte hex secret, never a database key.
+// Compare fixed-size digests instead of short-circuiting on secret characters.
+export async function workerAuthorized(header: string | null, workerSecret: string): Promise<boolean> {
+  const validSecret = /^[0-9a-f]{64}$/iu;
+  if (!header || header.length !== 64 || workerSecret.length !== 64 ||
+    !validSecret.test(header) || !validSecret.test(workerSecret)) return false;
   const encoder = new TextEncoder();
-  const [left, right] = await Promise.all([header.slice(7), serviceKey].map(async (value) =>
+  const [left, right] = await Promise.all([header, workerSecret].map(async (value) =>
     new Uint8Array(await crypto.subtle.digest("SHA-256", encoder.encode(value)))
   ));
   let difference = 0;

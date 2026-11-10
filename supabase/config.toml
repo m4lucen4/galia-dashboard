@@ -6,7 +6,7 @@ entrypoint = "./functions/odoo-project-sync/index.ts"
 verify_jwt = true
 entrypoint = "./functions/odoo-contacts/index.ts"
 
-# Handlers validate identity themselves: Auth /user for entry; exact service key for worker.
+# Handlers validate identity themselves: Auth /user for entry; dedicated worker secret for worker.
 [functions.generate-project]
 verify_jwt = false
 entrypoint = "./functions/generate-project/index.ts"

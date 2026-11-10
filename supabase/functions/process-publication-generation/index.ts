@@ -1,6 +1,6 @@
 import { GenerationError, jsonResponse, safeFailure, type FailureCode } from "../_shared/publication-generation-errors.ts";
 import { composeDescription, generateText, PROMPT_VERSION, validateSnapshot } from "../_shared/publication-generation.ts";
-import { createStore, type Environment, serviceAuthorized, workerConfig } from "../_shared/publication-generation-store.ts";
+import { createStore, type Environment, workerAuthorized, workerConfig } from "../_shared/publication-generation-store.ts";
 
 // At most two sequential claims: <=90s provider time, with separate 120s leases.
 // No waitUntil dependency; cron invokes this endpoint even with no browser open.
@@ -8,8 +8,8 @@ export function createHandler(env: Environment, fetcher: typeof fetch = fetch) {
   return async (request: Request): Promise<Response> => {
     if (request.method !== "POST") return jsonResponse(safeFailure(new GenerationError("invalid_request")).body, 405);
     try {
-      const serviceKey = env("SUPABASE_SERVICE_ROLE_KEY");
-      if (!serviceKey || !await serviceAuthorized(request.headers.get("Authorization"), serviceKey)) {
+      const workerSecret = env("PUBLICATION_GENERATION_WORKER_SECRET");
+      if (!workerSecret || !await workerAuthorized(request.headers.get("X-Publication-Worker-Secret"), workerSecret)) {
         throw new GenerationError("unauthorized");
       }
       const config = workerConfig(env);

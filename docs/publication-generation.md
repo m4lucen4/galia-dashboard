@@ -120,6 +120,7 @@ Server configuration:
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Both functions; provided by the Supabase runtime |
 | `SUPABASE_ANON_KEY` | Entry function uses it for Auth getUser |
 | `OPENAI_API_KEY` | Worker only; mandatory even when processing non-AI work so readiness represents a complete deployment |
+| `PUBLICATION_GENERATION_WORKER_SECRET` | Worker inbound authentication only: 32 cryptographically random bytes encoded as exactly 64 hexadecimal characters, identical to Vault `publication_generation_worker_secret` |
 | `OPENAI_GENERATION_MODEL` | Server only; default `gpt-4.1-mini`; configure the same value for entry and worker |
 
 Use a model supporting Responses API strict structured text outputs. The model's syntactic validation is not a capability probe; verify capability/configuration separately before live rollout. No paid capability probe was run. The request uses `/v1/responses`, `store:false`, `text.format:{type:'json_schema',strict:true,...}`, and `max_output_tokens:600`; no SDK, temperature or obsolete response-format parameters are added. Generation has a 45-second fetch timeout. Database RPCs have 10-second timeouts. Each invocation claims at most two slots sequentially (up to 90 seconds of provider waits plus at most 50 seconds of RPC waits); timeout/crash still recovers through leases.
@@ -151,17 +152,17 @@ Credits preserve names **exactly**, preserve source order and require no Markdow
 
 Unknown professions use `Colaborador` without altering the name. AI hashtags always start with the original workflow's `#arquitectura`, followed by deterministic tags from `keywords`: split comma/semicolon/newline phrases, normalize Unicode NFC, keep letters/digits/underscore, prefix `#`, deduplicate in source order including the base tag. No keywords means only `#arquitectura`; no inferred location, award, brand or material is added. Names/credits and hashtags are excluded from the paragraph count. This suffix is never appended to non-AI descriptions.
 
-Each job stores `requested_model` and `prompt_version = publication-es-v1`; each successful AI slot stores the **actual** model identifier returned by OpenAI. Non-AI slots have `actual_model = null`. Provider raw error bodies are neither read nor persisted/logged; only allowlisted failure codes and static Spanish messages escape the boundary. The worker ignores all request-body content and accepts only an exact service-role bearer secret comparison.
+Each job stores `requested_model` and `prompt_version = publication-es-v1`; each successful AI slot stores the **actual** model identifier returned by OpenAI. Non-AI slots have `actual_model = null`. Provider raw error bodies are neither read nor persisted/logged; only allowlisted failure codes and static Spanish messages escape the boundary. The worker ignores all request-body content and accepts only `X-Publication-Worker-Secret` matching `PUBLICATION_GENERATION_WORKER_SECRET` via fixed-size digest comparison. Both values must be exactly 64 hexadecimal characters; comparison is case-sensitive, without trimming or normalization. Missing/malformed configuration or absent/wrong credentials returns the unchanged401 before any database/provider call. There is no `Authorization`/service-role/JWT fallback, and no diagnostic logging. `SUPABASE_SERVICE_ROLE_KEY` remains internal to database RPC authentication; user-facing `generate-project` still authenticates user Bearer tokens through Auth `/user`.
 
 ## Explicit deployment and scheduler activation (operator only)
 
-**Controlled activation is partially applied under S6 authorization.** Exact migrations001–003 and both new Edge Functions were deployed after local verification and production preflight. Existing21 functions, including n8n, retain their versions/configuration. Unauthenticated requests return401 as expected; the first Vault-authenticated empty worker probe also returned401 unexpectedly, so readiness remains empty and cron has NOT been enabled. No jobs/previews or OpenAI calls were created. Vault format/role/project checks pass, but they do not establish equality with the worker runtime key. Human credential verification is required before another authenticated attempt. Evidence: `odd/evidence/publication-generation/deployment-first-attempt.json` and the adjacent preflight backup. Migration alone does not create/enable cron; initial baseline has `pg_net`, not `pg_cron`. Preserve all applied objects and existing workflows; no automatic rollback.
+**Controlled activation is partially applied under S6 authorization.** Exact migrations001–003 and both new Edge Functions were deployed after local verification and production preflight. Existing21 functions, including n8n, retain their versions/configuration. Unauthenticated requests return401 as expected; the first Vault-authenticated empty worker probe also returned401 unexpectedly, so readiness remains empty and cron has NOT been enabled. No jobs/previews or OpenAI calls were created. Vault format/role/project checks pass, but they do not establish equality with the worker runtime key. A temporary boolean-only diagnostic confirmed runtime-key presence and valid bearer format but unequal credentials, and was removed with exact source readback. Under S11, the dedicated worker-secret contract below is prepared locally; provisioning, independent verification and deployment are still gates. Do not repeat the legacy bearer invocation. Evidence: `odd/evidence/publication-generation/deployment-first-attempt.json` and the adjacent preflight backup. Migration alone does not create/enable cron; initial baseline has `pg_net`, not `pg_cron`. Preserve all applied objects and existing workflows; no automatic rollback.
 
 1. Review and apply generation001, `20261109000200_project_authority_guard.sql` and `20261109000300_generation_assigned_editor.sql` in order in an isolated DB first. Original generation001 remains immutable. Prove the race/security cases below and the T8/T9 contracts before production; T10 and production preflight remain gates.
-2. Deploy `generate-project` and `process-publication-generation` with this repository's `supabase/config.toml`. Both use `verify_jwt = false` because their handlers explicitly verify Auth identity or the exact service secret. Do not expose a handler lacking those checks.
+2. Deploy `generate-project` and `process-publication-generation` with this repository's `supabase/config.toml`. Both use `verify_jwt = false` because their handlers explicitly verify Auth identity or the dedicated worker secret. Do not expose a handler lacking those checks.
 3. Configure the Edge secrets above. In Supabase Vault, create two secrets through a trusted secret-management UI (never commit/paste their values in source, shell history or logs):
    - `publication_generation_worker_url`: `https://<project-ref>.supabase.co/functions/v1/process-publication-generation` for this project.
-   - `publication_generation_service_role_key`: the same project's runtime `SUPABASE_SERVICE_ROLE_KEY`, **not** an anon key or user token.
+   - `publication_generation_worker_secret`: exactly the value of `PUBLICATION_GENERATION_WORKER_SECRET`, **not** a Supabase API key. Generate locally with `openssl rand -hex 32` and copy privately into both secret managers; never paste the result in chat or a repository. Do not alter the reserved Supabase variables or global keys. The old `publication_generation_service_role_key` entry is no longer read by the new scheduler; leave it untouched unless separately authorized to remove it.
 4. After separate approval, enable cron and schedule this authenticated invocation. This SQL checks required Vault configuration before scheduling and skips HTTP entirely if configuration later disappears. The URL restriction intentionally uses the standard Supabase project hostname; adapt only after reviewing an intentional custom-domain deployment.
 
 ```sql
@@ -172,14 +173,14 @@ create extension if not exists pg_cron with schema pg_catalog;
 do $activation$
 declare
   worker_url text;
-  service_key text;
+  worker_secret text;
 begin
   select decrypted_secret into worker_url from vault.decrypted_secrets
     where name = 'publication_generation_worker_url';
-  select decrypted_secret into service_key from vault.decrypted_secrets
-    where name = 'publication_generation_service_role_key';
+  select decrypted_secret into worker_secret from vault.decrypted_secrets
+    where name = 'publication_generation_worker_secret';
   if worker_url is null or worker_url !~ '^https://[a-z0-9-]+\.supabase\.co/functions/v1/process-publication-generation$'
-    or service_key is null or btrim(service_key) = '' then
+    or worker_secret is null or length(worker_secret) <> 64 or worker_secret !~ '^[0-9A-Fa-f]{64}$' then
     raise exception 'Publication generation Vault configuration is missing or invalid';
   end if;
   perform cron.schedule(
@@ -191,20 +192,21 @@ begin
           (select decrypted_secret from vault.decrypted_secrets
             where name = 'publication_generation_worker_url') as url,
           (select decrypted_secret from vault.decrypted_secrets
-            where name = 'publication_generation_service_role_key') as service_key
+            where name = 'publication_generation_worker_secret') as worker_secret
       )
       select net.http_post(
         url := config.url,
         headers := jsonb_build_object(
           'Content-Type', 'application/json',
-          'Authorization', 'Bearer ' || config.service_key
+          'X-Publication-Worker-Secret', config.worker_secret
         ),
         body := '{}'::jsonb,
         timeout_milliseconds := 145000
       )
       from config
       where config.url ~ '^https://[a-z0-9-]+\.supabase\.co/functions/v1/process-publication-generation$'
-        and config.service_key is not null and btrim(config.service_key) <> '';
+        and config.worker_secret is not null and length(config.worker_secret) = 64
+        and config.worker_secret ~ '^[0-9A-Fa-f]{64}$';
     $scheduled$
   );
 end;
@@ -215,7 +217,7 @@ $activation$;
 6. Verify cron and worker HTTP status without printing request headers or Vault values. A successful cron SQL run means HTTP was queued, **not** that work completed. Use `cron.job_run_details` status, `net._http_response` status/error summaries, and operator-only readiness timestamps. Never expose these administrative tables to the browser. Confirm a non-AI job completes while its browser is closed. Paid model verification requires separate consent.
 7. Monitor heartbeat age, oldest active job, lease-expired failures, attempts, provider availability and throughput. Two slots per minute is the normal single-schedule capacity; overlapping ticks remain fenced. Restore cron/config to recover after outages. Stopping cron does not cancel accepted work or guarantee bounded wall-clock completion while the scheduler is offline.
 
-To pause after separate authorization, use `select cron.alter_job(job_id := jobid, active := false) from cron.job where jobname = 'publication-generation-worker';`. New work may still be accepted during the remaining three-minute heartbeat window; drain work before a planned pause. Keep tables/receipts and successful previews intact. Do not delete or reset them as rollback. Rotate the worker's runtime service key and corresponding Vault secret together. Future prompt versions must support/drain old snapshotted versions before replacement.
+To pause after separate authorization, use `select cron.alter_job(job_id := jobid, active := false) from cron.job where jobname = 'publication-generation-worker';`. New work may still be accepted during the remaining three-minute heartbeat window; drain work before a planned pause. Keep tables/receipts and successful previews intact. Do not delete or reset them as rollback. Rotate the dedicated `PUBLICATION_GENERATION_WORKER_SECRET` and corresponding Vault `publication_generation_worker_secret` together through trusted operator tooling; there is no old-secret overlap or fallback. Do not rotate the Supabase database service key for this purpose. Future prompt versions must support/drain old snapshotted versions before replacement.
 
 ## Verification record and remaining proof
 
