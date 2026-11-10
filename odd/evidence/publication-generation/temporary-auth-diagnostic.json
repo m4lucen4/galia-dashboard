@@ -1,0 +1,75 @@
+{
+  "authorization": "S10: temporary three-boolean logging, unchanged auth, remove after controlled invocation",
+  "baseline": "9064eb9496219f148a448eb4a5710df2f2ddbd3f",
+  "marker": "publication_generation_auth_diagnostic",
+  "fields": [
+    "runtime_key_present",
+    "bearer_format_accepted",
+    "comparison_matches"
+  ],
+  "localChecks": {
+    "red": "8 baseline behavior cases pass; expected diagnostic assertion fails before implementation",
+    "green": {
+      "behaviorCases": 8,
+      "logCases": 7,
+      "focusedLint": 0,
+      "diffCheck": 0
+    },
+    "independent": {
+      "task": "mwagdorb-h-rkdo",
+      "behaviorDifferentials": 8,
+      "exactLogCases": 7,
+      "exit": 0,
+      "sharedModulesUnchanged": true
+    },
+    "preservedHarnessErrors": [
+      "Parent heredoc composition error: zero tests; corrected command passed",
+      "ASSESS direct-only refusal from codemode; then direct ASSESS succeeded",
+      "Removal bundle hash expectation failed; no redeployment replay, exact4file readback matched original"
+    ]
+  },
+  "assessment": {
+    "reviewDue": false,
+    "reason": "under_budget",
+    "securityEscalation": 2,
+    "independentPassed": true
+  },
+  "diagnosticDeployment": {
+    "version": 2,
+    "status": "ACTIVE",
+    "bundleHash": "6edf31ef9af0ee5674b7af7374d3f62f8c5fb16608ca0e9da7d8ad89020782eb"
+  },
+  "probe": {
+    "diagnostic_check": {
+      "jobs": 0,
+      "response": {
+        "result": {
+          "code": "unauthorized",
+          "fenced": null,
+          "claimed": null,
+          "settled": null
+        },
+        "status": 401,
+        "created": "2026-11-10T08:57:03.219094+00:00",
+        "timed_out": false,
+        "request_id": 307,
+        "execution_id": "70c6c43e-5114-456c-b45a-ab54e367f5b8",
+        "transport_error": false,
+        "gateway_request_id": "01a1c4ac-d4e4-70da-a0f8-77d8794b8211"
+      },
+      "readiness": null
+    }
+  },
+  "removal": {
+    "version": 3,
+    "status": "ACTIVE",
+    "bundleHash": "c8738d73f6d3d9a4cbe1f78c109b8ea135ea5921272367af05fa8f378b113bef",
+    "exactDeployedFilesMatchOriginal": true,
+    "exactLocalFileMatchesOriginal": true,
+    "diagnosticMarkerAbsent": true,
+    "verifyJwt": false
+  },
+  "operatorLogPending": true,
+  "schedulerActivated": false,
+  "openAICalls": 0
+}
