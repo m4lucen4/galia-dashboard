@@ -32,8 +32,14 @@ export const N8N_PUBLICATION_TEMPLATE = [
 
 export function renderPublicationPrompt(description: string, keywords: string, slot: number): string {
   const values: Record<string, string> = { description, keywords, variante: String(slot) };
+  // S15 changes only v2's length guidance; retain the original template as provenance.
+  // Replace before interpolation so identical wording in source data stays untouched.
+  const template = N8N_PUBLICATION_TEMPLATE.replace(
+    "Usa un máximo de 75 palabras.",
+    "Usa aproximadamente 75 palabras como orientación, no como límite estricto.",
+  );
   // One pass: placeholder-looking source text and replacement metacharacters stay literal.
-  return N8N_PUBLICATION_TEMPLATE.replace(
+  return template.replace(
     /\{\{ \$json\["(description|keywords|variante)"\] \}\}/gu,
     (_match, key: string) => values[key],
   );
