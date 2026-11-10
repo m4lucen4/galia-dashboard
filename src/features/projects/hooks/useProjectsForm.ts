@@ -36,6 +36,18 @@ const ensureCollaboratorIds = (
   });
 };
 
+// Legacy read fields must not leak back through initial data or stale form state.
+const omitGenerationSettings = (
+  data: CreateProjectProps &
+    Partial<Pick<ProjectDataProps, "requiredAI" | "prompt" | "publications">>,
+): CreateProjectProps => {
+  const projectData = { ...data };
+  delete projectData.requiredAI;
+  delete projectData.prompt;
+  delete projectData.publications;
+  return projectData;
+};
+
 export const useProjectsForm = ({
   initialData,
   user,
@@ -46,19 +58,16 @@ export const useProjectsForm = ({
     title: "",
     state: "draft",
     description: "",
-    requiredAI: false,
-    prompt: "",
     keywords: "",
     weblink: "",
     image_data: [],
-    publications: 1,
     googleMaps: "",
     showMap: false,
     projectCollaborators: [],
   };
 
   const [formData, setFormData] = useState<CreateProjectProps>(() => ({
-    ...(initialData || defaultFormData),
+    ...omitGenerationSettings(initialData || defaultFormData),
     projectCollaborators: ensureCollaboratorIds(
       initialData?.projectCollaborators,
     ),
@@ -70,7 +79,7 @@ export const useProjectsForm = ({
   useLayoutEffect(() => {
     if (initialData) {
       setFormData({
-        ...initialData,
+        ...omitGenerationSettings(initialData),
         projectCollaborators: ensureCollaboratorIds(
           initialData.projectCollaborators,
         ),
@@ -189,7 +198,7 @@ export const useProjectsForm = ({
       : "";
 
     const updatedFormData = {
-      ...formData,
+      ...omitGenerationSettings(formData),
       weblink: normalizedWeblink,
       image_data: [...(formData.image_data || [])],
     };

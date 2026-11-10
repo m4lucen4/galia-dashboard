@@ -1,5 +1,19 @@
 {
   "publicationGeneration": {
+    "modal": {
+      "title": "Generate publications",
+      "description": "Choose settings for this generation. They are saved only when you generate.",
+      "count": "Number of publications (1–4)",
+      "ai": "Use AI to write publications",
+      "prompt": "Prompt (required with AI)",
+      "choosePrompt": "Select a prompt",
+      "preview": "Prompt text preview",
+      "loading": "Loading your prompts and public prompts…",
+      "error": "Prompts could not be loaded. Retry or generate without AI.",
+      "empty": "No prompts available. You can generate without AI.",
+      "blocked": "A request is pending, a generation is active, or status is unavailable. Close this dialog and check the generation panel before continuing.",
+      "generate": "Generate"
+    },
     "title": "Publication generation",
     "diagnostics": {
       "title": "Available details",
@@ -77,8 +91,8 @@
     "errors": {
       "invalid_request": "The request is not valid.",
       "unauthorized": "Sign in again to check the status and continue.",
-      "forbidden": "You do not have access to this project.",
-      "conflict": "The request does not match this generation. Check the status again.",
+      "forbidden": "You do not have access to the project or selected prompt.",
+      "conflict": "The request does not match, or a generation with other settings is active. The new settings were not applied. Check the status again.",
       "project_changed": "The project was deleted or its owner changed.",
       "retry_exhausted": "The retry limit has been reached.",
       "invalid_project": "Review the project details and publication count (1–4).",

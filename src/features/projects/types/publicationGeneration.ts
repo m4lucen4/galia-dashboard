@@ -1,10 +1,18 @@
 import type { GenerationAttempt } from "./publicationGenerationDiagnostics";
 
+export type GenerationConfiguration = {
+  publicationsCount: number;
+  requiresAI: boolean;
+  promptId: string | null;
+};
+
 export type GenerationRequest = {
   projectId: string;
   action: "start" | "retry_failed";
   requestId: string;
   jobId?: string;
+  // Missing only for pre-modal receipts or retries; never a new start.
+  configuration?: GenerationConfiguration;
 };
 
 export type SlotState = "queued" | "running" | "succeeded" | "failed";

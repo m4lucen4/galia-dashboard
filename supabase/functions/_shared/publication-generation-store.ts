@@ -122,6 +122,7 @@ export function createStore(env: Environment, fetcher: typeof fetch = fetch) {
         p_actor: actor, p_project: input.projectId, p_action: input.action,
         p_request: input.requestId, p_job: input.jobId ?? null,
         p_model: model, p_prompt_version: PROMPT_VERSION,
+        p_configuration: input.configuration ?? null,
       });
     },
     heartbeat(model: string) {

@@ -1,5 +1,19 @@
 {
   "publicationGeneration": {
+    "modal": {
+      "title": "Generar publicacions",
+      "description": "Tria els ajustos per a aquesta generació. Només es desen en generar.",
+      "count": "Nombre de publicacions (1–4)",
+      "ai": "Fer servir IA per redactar les publicacions",
+      "prompt": "Prompt (obligatori amb IA)",
+      "choosePrompt": "Selecciona un prompt",
+      "preview": "Vista prèvia del text del prompt",
+      "loading": "Carregant els teus prompts i els públics…",
+      "error": "No s'han pogut carregar els prompts. Torna-ho a provar o genera sense IA.",
+      "empty": "No hi ha prompts disponibles. Pots generar sense IA.",
+      "blocked": "Hi ha una sol·licitud pendent, una generació activa o l'estat no està disponible. Tanca aquest diàleg i consulta el panell de generació abans de continuar.",
+      "generate": "Generar"
+    },
     "title": "Generació de publicacions",
     "diagnostics": {
       "title": "Detalls disponibles",
@@ -77,8 +91,8 @@
     "errors": {
       "invalid_request": "La sol·licitud no és vàlida.",
       "unauthorized": "Torna a iniciar sessió per consultar l'estat i continuar.",
-      "forbidden": "No tens accés a aquest projecte.",
-      "conflict": "La sol·licitud no correspon a aquesta generació. Torna a consultar l'estat.",
+      "forbidden": "No tens accés al projecte o al prompt seleccionat.",
+      "conflict": "La sol·licitud no coincideix o ja hi ha una generació amb altres ajustos. No s'han aplicat els nous ajustos. Torna a consultar l'estat.",
       "project_changed": "El projecte s'ha eliminat o ha canviat de propietari.",
       "retry_exhausted": "S'ha assolit el límit de reintents.",
       "invalid_project": "Revisa les dades del projecte i el nombre de publicacions (1–4).",
