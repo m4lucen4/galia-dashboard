@@ -10,8 +10,10 @@ The canonical guide for **fresh creation only**, with or without AI: user steps,
 | Latest worker activation (S15/T24) | 36 independent checks; six deployed files matched the verified payload; 22 other functions unchanged. Public POST401/GET405 bodies passed. Scheduled readiness at **2026-11-10 15:42:01 UTC**, model `gpt-6-luna`, prompt `publication-es-v2`. No agent-triggered paid generation in this activation. |
 | Output length | Approximately 75 words is **advisory** in current v2 wording. Shared validation accepts more than 75 words for both versions; the raw 4,000-character bound and other validation remain. Frozen v1 requests and historical failures are preserved. |
 | Dashboard | Updated UI and attempt-details implementation is **local-only**, not a production frontend rollout. Backend activation does not prove browser behavior. |
-| Open verification | **T22 blocked** by a denied verification-harness preparation; no bypass/retry authorized here. Prior 83 PASS / 23 FAIL and typecheck PASS remain recorded. **T7 pending**: controlled real Auth/browser/provider acceptance and reliability proof. Human reports of successful non-AI, immediate wake and AI output do not close those checks. |
+| Open verification | **T22 blocked** by a denied verification-harness preparation; no bypass/retry authorized here. Prior 83 PASS / 23 FAIL and typecheck PASS remain recorded. **T7 accepted by the user**: the user subsequently confirmed that everything was checked and working. This records manual functional acceptance, not agent-observed exhaustive Auth/browser/provider proof, and does not close T22. |
 | Safety | Narrow authority guard is applied, but preexisting broad project/preview RLS exposure remains. No general tenant-isolation claim. |
+
+The user's later functional acceptance supersedes historical references below to T7 being pending. T22's independent verification remains unresolved; no review approval or merge readiness is implied.
 
 Latest deployment/recovery record: [`advisory-word-count-deployment.json`](../odd/evidence/publication-generation/advisory-word-count-deployment.json). Task state: [`publication-generation.md`](../odd/tasks/publication-generation.md). Older version numbers and failed checks in the evidence sections are **historical**, not current runtime instructions.
 
