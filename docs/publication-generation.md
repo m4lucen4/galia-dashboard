@@ -284,7 +284,7 @@ New jobs store `requested_model` and `prompt_version = publication-es-v2`; alrea
 
 ## Immediate wake and durable recovery
 
-Historical S12 activation: source `f2d551b` was deployed as `generate-project` v3 (now superseded) after 43 independent differential cases passed. All five deployed files matched; the other 22 functions, including the then-current worker v5 and n8n, were unchanged. Public POST401/GET405 bodies passed. Evidence: `odd/evidence/publication-generation/immediate-worker-wake.json`. The user subsequently reported immediate completion; independently measured latency/browser acceptance remains part of T7, not proven by deployment or mocks.
+Historical S12 activation: source `f2d551b` was deployed as `generate-project` v3 (now superseded) after 43 independent differential cases passed. All five deployed files matched; the other 22 functions, including the then-current worker v5 and n8n, were unchanged. Public POST401/GET405 bodies passed. Evidence: historical Git record `immediate-worker-wake.json` (see retrieval in the verification section). The user subsequently reported immediate completion; independently measured latency/browser acceptance remains part of T7, not proven by deployment or mocks.
 
 After Auth validation and a successful transactional `start`/`retry_failed`, the entry builds the unchanged job response. If the returned job is queued/running with pending slots, it registers one best-effort worker POST with `EdgeRuntime.waitUntil` without awaiting completion. Active-job replay may also wake it; a terminal response does not. The destination is the fixed worker path on the server's HTTPS `SUPABASE_URL`, never request input. Only the dedicated worker secret is sent: no user Bearer, database key, snapshot or project identifiers. Redirects are forbidden and the request is bounded to 145 seconds; response bodies are discarded, never logged.
 
@@ -403,6 +403,15 @@ Rotate `PUBLICATION_GENERATION_WORKER_SECRET` and Vault `publication_generation_
 
 ## Historical verification record and remaining proof
 
+Resolved test and superseded activation JSON records were removed from the working tree; their complete contents, including failed attempts, remain in Git. Retrieve a historical filename cited in this guide with:
+
+```bash
+git show f2fed06baae9b94da95faf979304f3fb61a2bf8d:odd/evidence/publication-generation/<filename>
+```
+
+The working tree retains only the current worker deployment/recovery record, unresolved UI verification evidence, and three unique database pre-change baselines. These baselines support comparison; they are not permission to reverse applied migrations. No replacement archive is maintained.
+
+
 These records consolidate the superseded UI/authority/assigned-editor guides. Counts and failed checks belong to their original checkpoints, **not fresh verification of this documentation edit**. Scratch paths below are historical locators, not required durable CI artifacts or instructions to reopen/retry a denied harness. No new test files were committed; source review/commit disposition remains parent-owned.
 
 ### Dashboard implementation evidence (T2)
@@ -471,7 +480,7 @@ Review units were (1) full authority/fencing migration and contract, then (2) sh
 ### Historical backend activation checkpoints
 
 - Production preflight verified actual helper/schema/sequence/role/trigger/ACL metadata before applying001–003. Initial legacy-Bearer worker401s are retained; a temporary three-boolean diagnostic confirmed inbound/runtime credential mismatch and was removed. Do not repeat the obsolete auth path or enable diagnostic logging by default.
-- S11/T6: after43 distinct independent checks, source9341bfb deployed worker v5;4 exact files and22 unchanged other functions. Private310 returned200, `{claimed:0,settled:0,fenced:0}`, zero jobs and `gpt-6-luna`/v1 readiness. Cron runs1–3 at10:04/05/06UTC on2026-11-10 and HTTP311–313 succeeded empty; evidence `odd/evidence/publication-generation/dedicated-worker-activation.json`. No paid call or new project/preview in that activation, not a claim that users have never generated since.
+- S11/T6: after43 distinct independent checks, source9341bfb deployed worker v5;4 exact files and22 unchanged other functions. Private310 returned200, `{claimed:0,settled:0,fenced:0}`, zero jobs and `gpt-6-luna`/v1 readiness. Cron runs1–3 at10:04/05/06UTC on2026-11-10 and HTTP311–313 succeeded empty; evidence historical Git record `dedicated-worker-activation.json` (see retrieval in the verification section). No paid call or new project/preview in that activation, not a claim that users have never generated since.
 - S12/S13: immediate wake, original prompt and forward v2 heartbeat checks are recorded in their sections; failed452HTTP503 remains historical. Neither mocks nor negative public checks establish live content quality.
 - S14/T20: diagnostic migration applied with preserved ACLs, worker v7 exact6-file readback,22 others unchanged, public401/405 and passive603/604HTTP200 with fresh v2 readiness. Independent28SQL/19worker groups/types and final-only1group/2mockfetches passed; retained failures remain evidence. T21 UI parser/SSR had2RED→2GREEN, lint/build passed, **no frontend production publishing**.
 - S14/T22: blocked preparation after prior83PASS/23FAIL/typesPASS; no new groups. A legitimate resolution of the tooling denial is required, not bypass or silent retry.
@@ -533,7 +542,7 @@ These were source-review slices, **not safe production reversal units**. Applied
 
 ## Original n8n editorial prompt
 
-Historical S13 activation: worker v6 and entry v4 then contained exact source `a514491`; forward heartbeat migration `2d2ab3f` preserved owner/OID/ACL/search path. Independent prompt checks passed47 groups; independent SQL checks passed36 groups/74 calls. After the retained503 failure was corrected, private probe470 returned200 with no claimed work and fresh v2 readiness. All deployed files matched; other21 functions, including n8n, were unchanged. Public rejection checks passed. See `odd/evidence/publication-generation/{original-prompt,prompt-v2-readiness}.json`. Worker v6 is superseded; real content/reliability acceptance remains T7.
+Historical S13 activation: worker v6 and entry v4 then contained exact source `a514491`; forward heartbeat migration `2d2ab3f` preserved owner/OID/ACL/search path. Independent prompt checks passed47 groups; independent SQL checks passed36 groups/74 calls. After the retained503 failure was corrected, private probe470 returned200 with no claimed work and fresh v2 readiness. All deployed files matched; other21 functions, including n8n, were unchanged. Public rejection checks passed. See historical Git records `original-prompt.json` and `prompt-v2-readiness.json` (see retrieval in the verification section). Worker v6 is superseded; real content/reliability acceptance remains T7.
 
 `N8N_PUBLICATION_TEMPLATE` in `_shared/publication-generation-prompt.ts` preserves the exact OpenAI message template from `src/n8n/creacion_publicaciones.json`, removing only n8n's leading `=` expression marker. S15 narrowly supersedes S13's exact rendered parity: current `publication-es-v2` rendering replaces only `Usa un máximo de 75 palabras.` with `Usa aproximadamente 75 palabras como orientación, no como límite estricto.` **before** interpolating project data. Description, keywords and variant are then interpolated in one pass, preserving all other wording/whitespace and literal placeholder-like text or length instructions inside project data. No extra editorial angle or rewritten tone is appended. The optional project prompt remains a separate user message; technical trust instructions remain separate from the editorial template.
 
