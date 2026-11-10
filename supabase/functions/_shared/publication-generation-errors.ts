@@ -1,3 +1,5 @@
+import { sanitizeDiagnostic, type ProviderDiagnostic } from "./publication-generation-diagnostics.ts";
+
 // Only these messages may cross the API boundary. Never return provider/DB text.
 export const failures = {
   invalid_request: [400, "La solicitud no es válida.", false],
@@ -20,9 +22,12 @@ export type FailureCode = keyof typeof failures;
 export class GenerationError extends Error {
   readonly code: FailureCode;
 
-  constructor(code: FailureCode) {
+  readonly diagnostic?: ProviderDiagnostic;
+
+  constructor(code: FailureCode, diagnostic?: ProviderDiagnostic) {
     super(code);
     this.code = code;
+    if (diagnostic) this.diagnostic = sanitizeDiagnostic(diagnostic);
   }
 }
 

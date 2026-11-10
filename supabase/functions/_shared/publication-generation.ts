@@ -1,5 +1,7 @@
 import { GenerationError } from "./publication-generation-errors.ts";
 
+import { responseDiagnostic, sanitizeDiagnostic, type DiagnosticReason, type ProviderDiagnostic } from "./publication-generation-diagnostics.ts";
+
 import { renderPublicationPrompt } from "./publication-generation-prompt.ts";
 
 export const LEGACY_PROMPT_VERSION = "publication-es-v1";
@@ -87,38 +89,66 @@ function wordCount(value: string): number {
   return value.trim().split(/\s+/u).filter(Boolean).length;
 }
 
-export function parseResponse(response: unknown): GeneratedText & { model: string } {
-  if (!record(response) || response.status !== "completed" ||
-    typeof response.model !== "string" || !response.model.trim() || response.model.length > 200 ||
-    !Array.isArray(response.output)
-  ) throw new GenerationError("invalid_response");
+function parseProviderResponse(response: unknown, normalizeLineBreaks: boolean) {
+  const diagnostic = responseDiagnostic(response);
+  const invalid = (reason: DiagnosticReason) =>
+    new GenerationError("invalid_response", { ...diagnostic, reason });
+  if (!record(response)) throw invalid("invalid_structure");
+  if (response.status !== "completed") {
+    throw invalid(response.status === "incomplete"
+      ? diagnostic.incompleteReason === "max_output_tokens" ? "output_token_limit"
+        : diagnostic.incompleteReason === "content_filter" ? "content_filter" : "incomplete_response"
+      : response.status === "failed" ? "provider_failed" : "invalid_structure");
+  }
+  if (typeof response.model !== "string" || !response.model.trim() || response.model.length > 200 ||
+    !Array.isArray(response.output)) throw invalid("invalid_structure");
   const texts: string[] = [];
   for (const item of response.output) {
-    if (!record(item)) throw new GenerationError("invalid_response");
+    if (!record(item)) throw invalid("invalid_structure");
     if (item.type !== "message") continue;
-    if (item.role !== "assistant" || !Array.isArray(item.content)) throw new GenerationError("invalid_response");
+    if (item.role !== "assistant" || !Array.isArray(item.content)) throw invalid("invalid_structure");
     for (const part of item.content) {
-      if (!record(part)) throw new GenerationError("invalid_response");
-      if (part.type === "refusal") throw new GenerationError("provider_refusal");
-      if (part.type !== "output_text" || typeof part.text !== "string") throw new GenerationError("invalid_response");
+      if (!record(part)) throw invalid("invalid_structure");
+      if (part.type === "refusal") {
+        throw new GenerationError("provider_refusal", { ...diagnostic, reason: "provider_refusal" });
+      }
+      if (part.type !== "output_text" || typeof part.text !== "string") throw invalid("invalid_structure");
       texts.push(part.text);
     }
   }
-  if (texts.length !== 1) throw new GenerationError("invalid_response");
+  if (texts.length !== 1) throw invalid(texts.length ? "multiple_outputs" : "missing_output");
   let value: unknown;
-  try { value = JSON.parse(texts[0]); } catch { throw new GenerationError("invalid_response"); }
+  try { value = JSON.parse(texts[0]); } catch { throw invalid("invalid_json"); }
   let paragraph: unknown;
+  let nested = false;
   if (record(value) && Object.keys(value).join(",") === "paragraph") {
-    paragraph = value.paragraph; // Persisted v1 jobs still use their original response shape.
+    paragraph = value.paragraph;
   } else if (record(value) && Object.keys(value).join(",") === "publicacion" &&
     record(value.publicacion) && Object.keys(value.publicacion).join(",") === "texto") {
     paragraph = value.publicacion.texto;
+    nested = true;
   }
-  if (typeof paragraph !== "string" || !paragraph.trim() ||
-    paragraph.length > 4000 || wordCount(paragraph) > 75 ||
-    /[\r\n]/u.test(paragraph) || /[<>#]/u.test(paragraph)
-  ) throw new GenerationError("invalid_response");
-  return { paragraph: paragraph.trim(), model: response.model };
+  if (typeof paragraph !== "string") throw invalid("invalid_structure");
+  diagnostic.characterCount = paragraph.length;
+  if (!paragraph.trim()) throw invalid("empty_text");
+  // Check the original length: normalization must not bypass the existing bound.
+  if (paragraph.length > 4000) throw invalid("text_too_long");
+  diagnostic.wordCount = wordCount(paragraph);
+  if (diagnostic.wordCount > 75) throw invalid("word_limit");
+  let normalized = paragraph;
+  if (/[\r\n]/u.test(paragraph)) {
+    if (!nested || !normalizeLineBreaks) throw invalid("line_breaks");
+    normalized = paragraph.replace(/[ \t]*[\r\n]+[ \t]*/gu, " ");
+    diagnostic.normalizedLineBreaks = true;
+  }
+  if (/[<>]/u.test(normalized)) throw invalid("markup_not_allowed");
+  if (/#/u.test(normalized)) throw invalid("hashtags_not_allowed");
+  return { paragraph: normalized.trim(), model: response.model, diagnostic };
+}
+
+export function parseResponse(response: unknown): GeneratedText & { model: string } {
+  const result = parseProviderResponse(response, true);
+  return { paragraph: result.paragraph, model: result.model };
 }
 
 // Names and ordering are source data: do not translate, trim, deduplicate or ask AI to rewrite them.
@@ -186,7 +216,7 @@ export function buildProviderRequest(
           required: ["publicacion"], additionalProperties: false,
         },
       } },
-      max_output_tokens: 600,
+      max_output_tokens: 4096,
     };
   }
   // Preserve the frozen prompt of previously accepted v1 jobs and partial retries.
@@ -228,7 +258,12 @@ export async function generateText(
   apiKey: string,
   fetcher: typeof fetch = fetch,
   promptVersion: string = PROMPT_VERSION,
-): Promise<GeneratedText & { model: string }> {
+): Promise<GeneratedText & { model: string; diagnostic: ProviderDiagnostic }> {
+  const started = performance.now();
+  const metadata = () => ({
+    maxOutputTokens: promptVersion === PROMPT_VERSION ? 4096 : 600,
+    durationMs: Math.max(0, Math.round(performance.now() - started)),
+  });
   let response: Response;
   try {
     response = await fetcher("https://api.openai.com/v1/responses", {
@@ -237,10 +272,33 @@ export async function generateText(
       body: JSON.stringify(buildProviderRequest(snapshot, slot, model, promptVersion)),
       signal: AbortSignal.timeout(45000),
     });
-  } catch { throw new GenerationError("provider_unavailable"); }
+  } catch (error) {
+    const reason = error instanceof GenerationError ? "internal_error"
+      : error instanceof Error && ["TimeoutError", "AbortError"].includes(error.name)
+        ? "provider_timeout" : "network_error";
+    throw new GenerationError("provider_unavailable", { ...metadata(), reason });
+  }
   // Do not read, log, persist, or return raw error bodies.
-  if (!response.ok) throw new GenerationError("provider_unavailable");
+  if (!response.ok) {
+    throw new GenerationError("provider_unavailable", {
+      ...metadata(), reason: "http_error", httpStatus: response.status,
+    });
+  }
   let data: unknown;
-  try { data = await response.json(); } catch { throw new GenerationError("invalid_response"); }
-  return parseResponse(data);
+  try { data = await response.json(); } catch {
+    throw new GenerationError("invalid_response", {
+      ...metadata(), reason: "invalid_json", httpStatus: response.status,
+    });
+  }
+  try {
+    const result = parseProviderResponse(data, promptVersion === PROMPT_VERSION);
+    return { ...result, diagnostic: sanitizeDiagnostic({
+      ...result.diagnostic, ...metadata(), httpStatus: response.status,
+    }) };
+  } catch (error) {
+    if (!(error instanceof GenerationError)) throw error;
+    throw new GenerationError(error.code, {
+      reason: "internal_error", ...error.diagnostic, ...metadata(), httpStatus: response.status,
+    });
+  }
 }
