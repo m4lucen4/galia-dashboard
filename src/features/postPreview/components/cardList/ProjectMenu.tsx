@@ -11,6 +11,7 @@ interface ProjectMenuProps {
   onToggleMenu: (projectId: string) => void;
   onEditPreview: (project: PreviewProjectDataProps) => void;
   onDeletePreview: (project: PreviewProjectDataProps) => void;
+  canDelete: boolean;
   onPublishAgain: (project: PreviewProjectDataProps) => void;
 }
 
@@ -20,6 +21,7 @@ export const ProjectMenu: React.FC<ProjectMenuProps> = ({
   onToggleMenu,
   onEditPreview,
   onDeletePreview,
+  canDelete,
   onPublishAgain,
 }) => {
   const { t } = useTranslation();
@@ -35,7 +37,7 @@ export const ProjectMenu: React.FC<ProjectMenuProps> = ({
       </button>
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-48 max-w-[calc(100vw-3rem)] bg-[#f5f7f3] shadow-lg rounded-2xl border border-[#010000]/25 z-20">
-          <ul className="p-1.5 [&_button]:rounded-xl [&_button]:text-[#010000] [&_button:hover]:bg-[#d8e4d6] [&_li:last-child_button]:text-red-800">
+          <ul className="p-1.5 [&_button]:rounded-xl [&_button]:text-[#010000] [&_button:hover]:bg-[#d8e4d6]">
             {!isDateInPast(project.publishDate) && (
               <li>
                 <button
@@ -60,14 +62,16 @@ export const ProjectMenu: React.FC<ProjectMenuProps> = ({
                 </button>
               </li>
             )}
-            <li>
-              <button
-                onClick={() => onDeletePreview(project)}
-                className="w-full text-left px-4 py-2 text-sm text-red-800 hover:bg-gray-100"
-              >
-                {t("previewProjects.deletePreviewProject")}
-              </button>
-            </li>
+            {canDelete && (
+              <li>
+                <button
+                  onClick={() => onDeletePreview(project)}
+                  className="w-full text-left px-4 py-2 text-sm !text-red-800 hover:bg-gray-100"
+                >
+                  {t("previewProjects.deletePreviewProject")}
+                </button>
+              </li>
+            )}
           </ul>
         </div>
       )}

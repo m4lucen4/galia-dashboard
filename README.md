@@ -25,7 +25,7 @@ Plataforma SaaS de gestión de proyectos y publicación en redes sociales orient
 
 - **Gestión de proyectos** — CRUD completo con imágenes, colaboradores, estado (borrador, revisión, publicado) y geolocalización
 - **Publicación en redes sociales** — Conexión OAuth con LinkedIn e Instagram para publicar directamente desde la plataforma
-- **Preview de publicaciones** — Vista previa del contenido antes de publicar, con flujos automatizados vía N8N
+- **Creación y preview de publicaciones** — Generación persistente con Supabase Edge Functions y OpenAI opcional, resultados parciales y reintentos sin perder variantes correctas; [guía operativa y de uso](docs/publication-generation.md)
 - **Constructor de webs** — Editor de sitio propio (páginas, componentes, header, grid de proyectos) por usuario
 - **Multimedia** — Explorador de archivos conectado a NAS (Synology) con compresión de imagen en cliente
 - **Suscripciones** — Planes Estudiante y Profesional, periodos mensual y anual, portal de cliente Stripe
@@ -197,7 +197,8 @@ npm run lint      # Ejecutar ESLint
 
 - **LinkedIn OAuth 2.0** — Publicación en perfiles y páginas de empresa
 - **Instagram / Meta Graph API** — Publicación en cuentas de negocio
-- **N8N** — Automatización de flujos de publicación (inmediata y programada)
+- **Supabase Edge Functions / OpenAI** — Nueva creación de publicaciones con cola persistente; backend activado, frontend actualizado todavía local (estado y límites en la [guía canónica](docs/publication-generation.md#current-status--2026-11-10))
+- **N8N** — Integraciones existentes conservadas hasta verificar la sustitución; sin retirada automática ni fallback silencioso desde la nueva creación. La programación y publicación social no cambian
 - **Synology NAS** — Almacenamiento de archivos multimedia vía proxy
 - **Google Maps** — Geolocalización de proyectos
 

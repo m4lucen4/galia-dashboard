@@ -1,0 +1,20 @@
+{
+  "target": "mygqfdbloqojffhsurgo",
+  "originalBodyVerifiedAgainst": "20261109000100_publication_generation.sql",
+  "heartbeat": {
+    "acl": "{postgres=X/postgres,service_role=X/postgres}",
+    "oid": "432294",
+    "body": "\nbegin\n  perform pg_advisory_xact_lock(740219, 1);\n  if p_model is null or p_model !~ '^[a-zA-Z0-9._:-]{1,120}$' or p_prompt_version <> 'publication-es-v1' or p_prompt_version is null then\n    raise exception 'not_ready';\n  end if;\n  insert into public.publication_generation_readiness(singleton, last_seen, model, prompt_version)\n    values (true, clock_timestamp(), p_model, p_prompt_version)\n    on conflict (singleton) do update set last_seen = excluded.last_seen,\n      model = excluded.model, prompt_version = excluded.prompt_version;\nend;\n",
+    "owner": "postgres",
+    "config": [
+      "search_path=\"\""
+    ],
+    "definition": "CREATE OR REPLACE FUNCTION public.publication_generation_heartbeat(p_model text, p_prompt_version text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nbegin\n  perform pg_advisory_xact_lock(740219, 1);\n  if p_model is null or p_model !~ '^[a-zA-Z0-9._:-]{1,120}$' or p_prompt_version <> 'publication-es-v1' or p_prompt_version is null then\n    raise exception 'not_ready';\n  end if;\n  insert into public.publication_generation_readiness(singleton, last_seen, model, prompt_version)\n    values (true, clock_timestamp(), p_model, p_prompt_version)\n    on conflict (singleton) do update set last_seen = excluded.last_seen,\n      model = excluded.model, prompt_version = excluded.prompt_version;\nend;\n$function$\n",
+    "anon_execute": false,
+    "public_execute": false,
+    "service_execute": true,
+    "security_definer": true,
+    "authenticated_execute": false
+  },
+  "recovery": "Migration is atomic. Any post-commit rollback requires separate authorization and coordinated worker/entry compatibility; do not blindly restore this v1-only definition while v2 callers remain active."
+}

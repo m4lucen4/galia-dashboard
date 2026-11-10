@@ -1,0 +1,57 @@
+{
+  "policies": [
+    {
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM publication_generation_jobs j\n  WHERE ((j.id = publication_generation_slots.job_id) AND publication_generation_can_read(j.project_id, j.owner_id))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "publication_generation_slots",
+      "permissive": "PERMISSIVE",
+      "policyname": "publication_generation_slots_read",
+      "schemaname": "public",
+      "with_check": null
+    }
+  ],
+  "tableAcl": [
+    "postgres=arwdDxt/postgres",
+    "authenticated=r/postgres"
+  ],
+  "tableRls": true,
+  "functions": [
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "oid": "432298",
+      "body": "\ndeclare\n  v_job public.publication_generation_jobs%rowtype;\n  v_slot public.publication_generation_slots%rowtype;\n  v_owner uuid;\n  v_project bigint;\n  v_preview bigint;\nbegin\n  perform pg_advisory_xact_lock(740219, 1);\n  select project_id into v_project from public.publication_generation_jobs where id = p_job;\n  if not found then return false; end if;\n  select p.\"user\" into v_owner from public.projects p where p.id = v_project for update;\n  select * into v_job from public.publication_generation_jobs where id = p_job for update;\n  select * into v_slot from public.publication_generation_slots where job_id = p_job and slot = p_slot for update;\n  if not found or v_slot.state <> 'running' or v_slot.lease_token is distinct from p_token\n    or v_slot.lease_until <= clock_timestamp() then return false; end if;\n  if v_owner is distinct from v_job.owner_id\n    or not private.publication_generation_authorized(v_job.actor_id, v_job.project_id, v_job.owner_id) then\n    update public.publication_generation_slots set state = 'failed', error_code = 'project_changed',\n      retryable = false, lease_token = null, lease_until = null, updated_at = clock_timestamp()\n      where job_id = p_job and state in ('queued', 'running');\n    perform public.publication_generation_refresh(p_job);\n    return false;\n  end if;\n  if p_error is not null then\n    if p_error not in ('provider_unavailable', 'provider_refusal', 'invalid_response', 'invalid_project', 'internal_error') then\n      raise exception 'invalid_request';\n    end if;\n    update public.publication_generation_slots set\n      state = case when p_error = 'provider_unavailable' and cycle_attempts < 3 then 'queued' else 'failed' end,\n      error_code = p_error, retryable = p_error <> 'invalid_project' and v_job.retry_count < 2,\n      lease_token = null, lease_until = null, available_at = clock_timestamp() + interval '30 seconds' * cycle_attempts,\n      updated_at = clock_timestamp() where job_id = p_job and slot = p_slot;\n  else\n    if p_description is null or btrim(p_description) = '' or length(p_description) > 150000\n      or ((v_job.snapshot->>'requiredAI')::boolean and (p_actual_model is null or btrim(p_actual_model) = ''))\n      or length(p_actual_model) > 200 then raise exception 'invalid_response'; end if;\n    insert into public.\"projectsPreview\"(project_id, \"user\", title, state, description_rich, weblink, image_data, versions)\n      values (v_job.project_id, v_job.owner_id, v_job.snapshot->>'title', 'preview', p_description,\n        v_job.snapshot->>'weblink', v_job.snapshot->'image_data',\n        jsonb_build_array(jsonb_build_object('id', gen_random_uuid(), 'description', p_description, 'main', true)))\n      returning id into v_preview;\n    update public.publication_generation_slots set state = 'succeeded', preview_id = v_preview,\n      actual_model = p_actual_model, error_code = null, retryable = false,\n      lease_token = null, lease_until = null, updated_at = clock_timestamp()\n      where job_id = p_job and slot = p_slot;\n    update public.projects set state = 'preview' where id = v_job.project_id;\n  end if;\n  perform public.publication_generation_refresh(p_job);\n  return true;\nend;\n",
+      "name": "publication_generation_finish",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.publication_generation_finish(p_job uuid, p_slot integer, p_token uuid, p_description text, p_actual_model text, p_error text)\n RETURNS boolean\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare\n  v_job public.publication_generation_jobs%rowtype;\n  v_slot public.publication_generation_slots%rowtype;\n  v_owner uuid;\n  v_project bigint;\n  v_preview bigint;\nbegin\n  perform pg_advisory_xact_lock(740219, 1);\n  select project_id into v_project from public.publication_generation_jobs where id = p_job;\n  if not found then return false; end if;\n  select p.\"user\" into v_owner from public.projects p where p.id = v_project for update;\n  select * into v_job from public.publication_generation_jobs where id = p_job for update;\n  select * into v_slot from public.publication_generation_slots where job_id = p_job and slot = p_slot for update;\n  if not found or v_slot.state <> 'running' or v_slot.lease_token is distinct from p_token\n    or v_slot.lease_until <= clock_timestamp() then return false; end if;\n  if v_owner is distinct from v_job.owner_id\n    or not private.publication_generation_authorized(v_job.actor_id, v_job.project_id, v_job.owner_id) then\n    update public.publication_generation_slots set state = 'failed', error_code = 'project_changed',\n      retryable = false, lease_token = null, lease_until = null, updated_at = clock_timestamp()\n      where job_id = p_job and state in ('queued', 'running');\n    perform public.publication_generation_refresh(p_job);\n    return false;\n  end if;\n  if p_error is not null then\n    if p_error not in ('provider_unavailable', 'provider_refusal', 'invalid_response', 'invalid_project', 'internal_error') then\n      raise exception 'invalid_request';\n    end if;\n    update public.publication_generation_slots set\n      state = case when p_error = 'provider_unavailable' and cycle_attempts < 3 then 'queued' else 'failed' end,\n      error_code = p_error, retryable = p_error <> 'invalid_project' and v_job.retry_count < 2,\n      lease_token = null, lease_until = null, available_at = clock_timestamp() + interval '30 seconds' * cycle_attempts,\n      updated_at = clock_timestamp() where job_id = p_job and slot = p_slot;\n  else\n    if p_description is null or btrim(p_description) = '' or length(p_description) > 150000\n      or ((v_job.snapshot->>'requiredAI')::boolean and (p_actual_model is null or btrim(p_actual_model) = ''))\n      or length(p_actual_model) > 200 then raise exception 'invalid_response'; end if;\n    insert into public.\"projectsPreview\"(project_id, \"user\", title, state, description_rich, weblink, image_data, versions)\n      values (v_job.project_id, v_job.owner_id, v_job.snapshot->>'title', 'preview', p_description,\n        v_job.snapshot->>'weblink', v_job.snapshot->'image_data',\n        jsonb_build_array(jsonb_build_object('id', gen_random_uuid(), 'description', p_description, 'main', true)))\n      returning id into v_preview;\n    update public.publication_generation_slots set state = 'succeeded', preview_id = v_preview,\n      actual_model = p_actual_model, error_code = null, retryable = false,\n      lease_token = null, lease_until = null, updated_at = clock_timestamp()\n      where job_id = p_job and slot = p_slot;\n    update public.projects set state = 'preview' where id = v_job.project_id;\n  end if;\n  perform public.publication_generation_refresh(p_job);\n  return true;\nend;\n$function$\n",
+      "volatility": "v"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres"
+      ],
+      "oid": "432293",
+      "body": "\n  select jsonb_build_object(\n    'jobId', j.id, 'projectId', j.project_id::text, 'status', j.status,\n    'total', j.total, 'retryCount', j.retry_count, 'updatedAt', j.updated_at,\n    'requestedModel', j.requested_model, 'promptVersion', j.prompt_version,\n    'succeeded', (select count(*) from public.publication_generation_slots s where s.job_id = j.id and s.state = 'succeeded'),\n    'failed', (select count(*) from public.publication_generation_slots s where s.job_id = j.id and s.state = 'failed'),\n    'pending', (select count(*) from public.publication_generation_slots s where s.job_id = j.id and s.state in ('queued', 'running')),\n    'canRetry', j.status in ('partial', 'failed') and j.retry_count < 2 and exists (\n      select 1 from public.publication_generation_slots s where s.job_id = j.id and s.state = 'failed' and s.retryable\n    ),\n    'slots', (select jsonb_agg(jsonb_build_object(\n      'slot', s.slot, 'state', s.state, 'attempts', s.attempts,\n      'previewId', s.preview_id::text, 'errorCode', s.error_code,\n      'retryable', s.retryable, 'actualModel', s.actual_model\n    ) order by s.slot) from public.publication_generation_slots s where s.job_id = j.id)\n  ) from public.publication_generation_jobs j where j.id = p_job;\n",
+      "name": "publication_generation_summary",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.publication_generation_summary(p_job uuid)\n RETURNS jsonb\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n  select jsonb_build_object(\n    'jobId', j.id, 'projectId', j.project_id::text, 'status', j.status,\n    'total', j.total, 'retryCount', j.retry_count, 'updatedAt', j.updated_at,\n    'requestedModel', j.requested_model, 'promptVersion', j.prompt_version,\n    'succeeded', (select count(*) from public.publication_generation_slots s where s.job_id = j.id and s.state = 'succeeded'),\n    'failed', (select count(*) from public.publication_generation_slots s where s.job_id = j.id and s.state = 'failed'),\n    'pending', (select count(*) from public.publication_generation_slots s where s.job_id = j.id and s.state in ('queued', 'running')),\n    'canRetry', j.status in ('partial', 'failed') and j.retry_count < 2 and exists (\n      select 1 from public.publication_generation_slots s where s.job_id = j.id and s.state = 'failed' and s.retryable\n    ),\n    'slots', (select jsonb_agg(jsonb_build_object(\n      'slot', s.slot, 'state', s.state, 'attempts', s.attempts,\n      'previewId', s.preview_id::text, 'errorCode', s.error_code,\n      'retryable', s.retryable, 'actualModel', s.actual_model\n    ) order by s.slot) from public.publication_generation_slots s where s.job_id = j.id)\n  ) from public.publication_generation_jobs j where j.id = p_job;\n$function$\n",
+      "volatility": "v"
+    }
+  ],
+  "activeJobs": 0,
+  "columnExists": false,
+  "wrapperExists": false
+}

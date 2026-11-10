@@ -1,0 +1,79 @@
+{
+  "scope": "S14/T21 local status details; no production frontend publication",
+  "base": "a19a18f7fb682fb75d9e9424d443a5f064320ae1",
+  "parent": {
+    "red": {
+      "exit": 1,
+      "passed": 0,
+      "failed": 2
+    },
+    "green": {
+      "exit": 0,
+      "passed": 2,
+      "failed": 0
+    },
+    "checks": [
+      "Public parser preserves [1,2] history after successful retry",
+      "Actual status component SSR renders available attempt details after success"
+    ],
+    "realNetwork": 0,
+    "focusedLint": 0,
+    "diffCheck": 0,
+    "build": {
+      "job": "job-16",
+      "exit": 0,
+      "warning": "Existing bundle >500kB"
+    }
+  },
+  "pending": [
+    "Independent shared-parser/restoration/UI compatibility",
+    "Real browser/provider acceptance"
+  ],
+  "independent": {
+    "status": "blocked",
+    "attempt1": {
+      "syntaxExit": 1,
+      "runtimeGroups": 0
+    },
+    "attempt2": {
+      "task": "mwatkxse-v-s48b",
+      "runtimeExit": 1,
+      "groups": 106,
+      "passed": 83,
+      "failed": 23,
+      "reactSsrRenders": 129,
+      "invokeMocks": 16,
+      "authMocks": 30,
+      "dbReads": 28,
+      "storageWrites": 0,
+      "networkCalls": 0,
+      "typecheckExit": 0,
+      "typeDiagnostics": 0,
+      "outputsInMemory": 25,
+      "sourceDiffExit": 0,
+      "failureCauses": {
+        "adjacentBoundaryAssertion": 18,
+        "inconsistentRetryFixtures": 3,
+        "inconsistentStorageFixture": 1,
+        "catalanHeuristic": 1
+      }
+    },
+    "artifactDirectory": "node_modules/.cache/generation-ui-verify-YLHEIk",
+    "remaining": [
+      "Valid retry and receipt storage execution",
+      "Targeted SSR assertions after corrected harness assumptions",
+      "Separate real-browser/provider acceptance"
+    ],
+    "pendingOnlyAttempt": {
+      "task": "mwatwcle-w-hhgv",
+      "status": "preparation_denied",
+      "precheckExit": 0,
+      "selectedGroups": 23,
+      "originalArtifactsIdentified": 35,
+      "newGroupsExecuted": 0,
+      "hashPreservationProof": false,
+      "denial": "Safety policy rejected sensitive-path literal in a reported exclusion guard; no environment-file access intended.",
+      "action": "Stopped; no alternate-tool or rewritten-command retry."
+    }
+  }
+}

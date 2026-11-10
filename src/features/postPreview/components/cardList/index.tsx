@@ -24,6 +24,7 @@ interface CardsListProps {
   handleToggleMenu: (projectId: string) => void;
   handleEditPreview: (project: PreviewProjectDataProps) => void;
   handleDeletePreview: (project: PreviewProjectDataProps) => void;
+  canDeletePreview: (project: PreviewProjectDataProps) => boolean;
   handleOpenPublishConfig: (project: PreviewProjectDataProps) => void;
   handleOpenInstagram: (project: PreviewProjectDataProps) => void;
   handleOpenLinkedln: (project: PreviewProjectDataProps) => void;
@@ -41,6 +42,7 @@ export const CardsList: React.FC<CardsListProps> = ({
   handleToggleMenu,
   handleEditPreview,
   handleDeletePreview,
+  canDeletePreview,
   handleOpenPublishConfig,
   handleOpenInstagram,
   handleOpenLinkedln,
@@ -150,6 +152,7 @@ export const CardsList: React.FC<CardsListProps> = ({
                       onToggleMenu={handleToggleMenu}
                       onEditPreview={handleEditPreview}
                       onDeletePreview={handleDeletePreview}
+                      canDelete={canDeletePreview(project)}
                       onPublishAgain={handlePublishAgain}
                     />
                   </div>
@@ -235,6 +238,7 @@ export const CardsList: React.FC<CardsListProps> = ({
                       onToggleMenu={handleToggleMenu}
                       onEditPreview={handleEditPreview}
                       onDeletePreview={handleDeletePreview}
+                      canDelete={canDeletePreview(project)}
                       onPublishAgain={handlePublishAgain}
                     />
                   </div>

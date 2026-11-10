@@ -124,14 +124,19 @@ export const PreviewProjects = () => {
     setOpenMenuId(null);
   };
 
+  // Listing an assigned parent's drafts does not grant new delete controls.
+  const canDeletePreview = (project: PreviewProjectDataProps) =>
+    Boolean(user && (user.role === "admin" || project.user === user.uid));
+
   const handleDeletePreview = (project: PreviewProjectDataProps) => {
+    if (!canDeletePreview(project)) return;
     openAlert("delete", project);
     setOpenMenuId(null);
   };
 
   const handleConfirmDelete = () => {
     const selectedProject = getSelectedProject();
-    if (selectedProject) {
+    if (selectedProject && canDeletePreview(selectedProject)) {
       dispatch(deletePreviewProject(selectedProject.id))
         .unwrap()
         .then(() => {
@@ -433,6 +438,7 @@ export const PreviewProjects = () => {
           handleToggleMenu={handleToggleMenu}
           handleEditPreview={handleEditPreview}
           handleDeletePreview={handleDeletePreview}
+          canDeletePreview={canDeletePreview}
           handleOpenPublishConfig={handleOpenPublishConfig}
           handleOpenInstagram={handleOpenInstagram}
           handleOpenLinkedln={handleOpenLinkedln}

@@ -5,7 +5,6 @@ import {
   fetchProjectById,
   updateProject,
   fetchProjectsByUserId,
-  updateProjectPreview,
   updateProjectDraft,
   deleteProject,
   assignProject,
@@ -230,38 +229,6 @@ const projectSlice = createSlice({
             : errorPayload?.message || "Error desconocido";
 
         state.projectFetchByUserIdRequest = {
-          inProgress: false,
-          messages: errorMessage,
-          ok: false,
-        };
-      });
-    builder
-      .addCase(updateProjectPreview.pending, (state) => {
-        state.updateProjectStateRequest = {
-          inProgress: true,
-          messages: "",
-          ok: false,
-        };
-      })
-      .addCase(updateProjectPreview.fulfilled, (state, action) => {
-        const updatedProject = action.payload.project;
-        state.projects = state.projects.map((project) =>
-          project.id === updatedProject.id ? updatedProject : project
-        );
-        state.updateProjectStateRequest = {
-          inProgress: false,
-          messages: "",
-          ok: true,
-        };
-      })
-      .addCase(updateProjectPreview.rejected, (state, action) => {
-        const errorPayload = action.payload as SupabaseError | string;
-        const errorMessage =
-          typeof errorPayload === "string"
-            ? errorPayload
-            : errorPayload?.message || "Error desconocido";
-
-        state.updateProjectStateRequest = {
           inProgress: false,
           messages: errorMessage,
           ok: false,
