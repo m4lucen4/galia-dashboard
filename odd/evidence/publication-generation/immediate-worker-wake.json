@@ -1,0 +1,28 @@
+{
+  "spec": "S12",
+  "baseCommit": "ae09644c01b389d01314e6f588ce1f0021f7ef5f",
+  "sourcePaths": [
+    "supabase/functions/generate-project/index.ts",
+    "supabase/functions/_shared/publication-generation-wake.ts"
+  ],
+  "parentVerification": {
+    "red": { "exitCode": 1, "reason": "Accepted pending job must register a background wake: expected 1, actual 0" },
+    "green": { "exitCode": 0, "checks": "Post-commit immediate wake, response before worker resolves, dedicated header, fixed destination, timeout and redirect policy" },
+    "differential": {
+      "syntaxCheckExit": 0,
+      "runExit": 0,
+      "groupsPassed": 23,
+      "interface": "Public entry handler with in-memory Auth/DB/worker fetch fixtures; previous committed handler compared to current",
+      "assertions": "Exact status/headers/body and Auth/DB calls unchanged; dedicated secret absent from response/Auth/DB/logs; expected wake counts and no scheduling on rejected requests",
+      "cases": ["queued start", "failed-slot retry", "running replay", "succeeded replay", "partial terminal", "failed terminal", "no pending slots", "missing runtime", "missing secret", "invalid secret", "HTTP target rejected", "URL credentials rejected", "transport failure", "timeout failure", "worker HTTP500", "registration failure", "Auth denied", "RPC denied", "invalid JSON", "OPTIONS", "GET", "caller target rejected", "invalid Bearer"]
+    },
+    "focusedLintExit": 0,
+    "diffCheckExit": 0,
+    "build": "job-9 exit0; existing large-chunk warning retained"
+  },
+  "independentVerification": "pending T14",
+  "deployment": "not deployed",
+  "liveLatency": "not measured; user reported original non-AI success in about one minute",
+  "unchanged": ["worker code and two-claim limit", "SQL leases and fences", "cron schedule", "durable receipts", "successful previews", "frontend source", "n8n"],
+  "limitations": "Immediate wake is best effort, not durable; queued work can wait for cron on failure. Background lifetime can end before its HTTP timeout. Cron pause is not an intake kill switch. No live user job or provider call performed by these probes."
+}
