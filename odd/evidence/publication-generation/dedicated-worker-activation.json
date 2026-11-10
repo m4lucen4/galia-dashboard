@@ -1,0 +1,146 @@
+{
+  "sourceCommit": "9341bfb88c64d04f984d9f301dd96070656d6e03",
+  "baseCommit": "ff76fdebad5607be042565296bc7b6c824ac51fe",
+  "target": "mygqfdbloqojffhsurgo",
+  "localVerification": {
+    "parentCases": 15,
+    "focusedLintExit": 0,
+    "buildExit": 0,
+    "independentDistinctPassGroups": 43,
+    "priorFailuresPreserved": true,
+    "reviewDue": false,
+    "reviewReason": "under_budget",
+    "securityEscalation": 2
+  },
+  "deployment": {
+    "id": "591689ed-d78a-464f-97ef-6f8466c44cbe",
+    "slug": "process-publication-generation",
+    "name": "process-publication-generation",
+    "status": "ACTIVE",
+    "version": 5,
+    "created_at": 1794264873925,
+    "updated_at": 1794304825113,
+    "verify_jwt": false,
+    "import_map": false,
+    "entrypoint_path": "file:///tmp/user_fn_mygqfdbloqojffhsurgo_591689ed-d78a-464f-97ef-6f8466c44cbe_5/source/process-publication-generation/index.ts",
+    "ezbr_sha256": "d1774804537ada4051f5d3ac2855d3492a7daa62569ebf5ad432c3be686f1931"
+  },
+  "exactReadback": {
+    "version": 5,
+    "bundle": "d1774804537ada4051f5d3ac2855d3492a7daa62569ebf5ad432c3be686f1931",
+    "exactFiles": true
+  },
+  "otherFunctions": {
+    "checked": 22,
+    "changed": []
+  },
+  "privateProbe": {
+    "worker_check": {
+      "jobs": 0,
+      "response": {
+        "id": 310,
+        "result": {
+          "code": null,
+          "fenced": 0,
+          "claimed": 0,
+          "settled": 0
+        },
+        "status": 200,
+        "created": "2026-11-10T10:00:42.663498+00:00",
+        "timed_out": false,
+        "request_id": "01a1c4e7-1cc4-79e1-8ebc-9f8a0712d0e0",
+        "execution_id": "8ffd7dda-2e08-4654-a75f-7e639f704b21",
+        "transport_error": false
+      },
+      "readiness": [
+        {
+          "model": "gpt-6-luna",
+          "last_seen": "2026-11-10T10:00:43.681724+00:00",
+          "singleton": true,
+          "prompt_version": "publication-es-v1"
+        }
+      ]
+    }
+  },
+  "scheduleMigration": {
+    "success": true
+  },
+  "scheduleSql": "-- Opt-in only. pg_net is already installed on the observed baseline.\ncreate extension if not exists pg_cron with schema pg_catalog;\n-- Supabase Vault must be available; enable it in the dashboard if absent.\n-- Do not embed secret values in this statement or cron.job.command.\ndo $activation$\ndeclare\n  worker_url text;\n  worker_secret text;\nbegin\n  select decrypted_secret into worker_url from vault.decrypted_secrets\n    where name = 'publication_generation_worker_url';\n  select decrypted_secret into worker_secret from vault.decrypted_secrets\n    where name = 'publication_generation_worker_secret';\n  if worker_url is null or worker_url !~ '^https://[a-z0-9-]+\\.supabase\\.co/functions/v1/process-publication-generation$'\n    or worker_secret is null or length(worker_secret) <> 64 or worker_secret !~ '^[0-9A-Fa-f]{64}$' then\n    raise exception 'Publication generation Vault configuration is missing or invalid';\n  end if;\n  perform cron.schedule(\n    'publication-generation-worker',\n    '* * * * *',\n    $scheduled$\n      with config as (\n        select\n          (select decrypted_secret from vault.decrypted_secrets\n            where name = 'publication_generation_worker_url') as url,\n          (select decrypted_secret from vault.decrypted_secrets\n            where name = 'publication_generation_worker_secret') as worker_secret\n      )\n      select net.http_post(\n        url := config.url,\n        headers := jsonb_build_object(\n          'Content-Type', 'application/json',\n          'X-Publication-Worker-Secret', config.worker_secret\n        ),\n        body := '{}'::jsonb,\n        timeout_milliseconds := 145000\n      )\n      from config\n      where config.url ~ '^https://[a-z0-9-]+\\.supabase\\.co/functions/v1/process-publication-generation$'\n        and config.worker_secret is not null and length(config.worker_secret) = 64\n        and config.worker_secret ~ '^[0-9A-Fa-f]{64}$';\n    $scheduled$\n  );\nend;\n$activation$;",
+  "schedulerVerification": {
+    "jobs": 0,
+    "runs": [
+      {
+        "runid": "3",
+        "status": "succeeded",
+        "end_time": "2026-11-10T10:06:00.025437+00:00",
+        "start_time": "2026-11-10T10:06:00.016331+00:00"
+      },
+      {
+        "runid": "2",
+        "status": "succeeded",
+        "end_time": "2026-11-10T10:05:00.064329+00:00",
+        "start_time": "2026-11-10T10:05:00.042956+00:00"
+      },
+      {
+        "runid": "1",
+        "status": "succeeded",
+        "end_time": "2026-11-10T10:04:00.103727+00:00",
+        "start_time": "2026-11-10T10:04:00.096373+00:00"
+      }
+    ],
+    "schedule": {
+      "name": "publication-generation-worker",
+      "active": true,
+      "job_id": "1",
+      "schedule": "* * * * *",
+      "dedicated_vault": true,
+      "no_legacy_vault": true,
+      "dedicated_header": true
+    },
+    "readiness": [
+      {
+        "model": "gpt-6-luna",
+        "last_seen": "2026-11-10T10:06:00.778451+00:00",
+        "singleton": true,
+        "prompt_version": "publication-es-v1"
+      }
+    ],
+    "recent_http": [
+      {
+        "id": "313",
+        "created": "2026-11-10T10:06:00.602077+00:00",
+        "timed_out": false,
+        "status_code": 200,
+        "transport_error": false,
+        "empty_worker_result": true
+      },
+      {
+        "id": "312",
+        "created": "2026-11-10T10:05:00.618623+00:00",
+        "timed_out": false,
+        "status_code": 200,
+        "transport_error": false,
+        "empty_worker_result": true
+      },
+      {
+        "id": "311",
+        "created": "2026-11-10T10:04:00.195096+00:00",
+        "timed_out": false,
+        "status_code": 200,
+        "transport_error": false,
+        "empty_worker_result": true
+      }
+    ]
+  },
+  "preview": {
+    "url": "http://127.0.0.1:5173/",
+    "httpStatus": 200,
+    "job": "job-8",
+    "productionFrontendPublished": false
+  },
+  "openAiCalls": 0,
+  "userGenerationVerified": false,
+  "browserWorkflowVerified": false,
+  "n8nRemoved": false,
+  "next": "Human chooses controlled project/session for actual user/browser generation. Local preview is not an isolated database. No production frontend rollout or n8n removal before acceptance."
+}
