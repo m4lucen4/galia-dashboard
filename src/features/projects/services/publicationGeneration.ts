@@ -1,6 +1,9 @@
 import { parseAttemptDiagnostics } from "./publicationGenerationDiagnostics";
 import { supabase } from "@/helpers/supabase";
-import type { GenerationConfiguration, GenerationIssue, GenerationJob, GenerationRequest, GenerationSlot, JobStatus } from "../types/publicationGeneration";
+import type {
+  GenerationConfiguration, GenerationHistoryPage, GenerationIssue, GenerationJob,
+  GenerationRequest, GenerationSlot, JobStatus, PersistedGenerationJob,
+} from "../types/publicationGeneration";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const decimal = /^[1-9]\d*$/;
@@ -44,6 +47,11 @@ function id(value: unknown, pattern: RegExp): string {
 function nullableText(value: unknown): string | null {
   return value === null ? null : text(value);
 }
+function timestamp(value: unknown): string {
+  const result = text(value);
+  if (!Number.isFinite(Date.parse(result))) throw issue("invalid_response", true);
+  return result;
+}
 
 export function parseGenerationJob(value: unknown): GenerationJob {
   const raw = object(value);
@@ -83,6 +91,7 @@ export function parseGenerationJob(value: unknown): GenerationJob {
   return {
     jobId: id(raw.jobId, uuid), projectId: id(raw.projectId, decimal), status, total,
     retryCount, updatedAt: text(raw.updatedAt), requestedModel: text(raw.requestedModel),
+    ...(raw.createdAt === undefined ? {} : { createdAt: timestamp(raw.createdAt) }),
     promptVersion: text(raw.promptVersion), succeeded, failed, pending, slots, consistent,
     canRetry: raw.canRetry !== false && consistent && ["partial", "failed"].includes(status) && retryCount < 2
       && slots.some((s) => s.state === "failed" && s.retryable),
@@ -198,13 +207,70 @@ function readFailure(error: { code?: string }, status: number) {
     : ["42P01", "PGRST205"].includes(error.code ?? "") ? "not_ready" : "read_failed");
 }
 
-export async function restoreGenerationJobs(actor: string, signal: AbortSignal): Promise<GenerationJob[]> {
+async function verifyGenerationActor(actor: string) {
   if (!uuid.test(actor)) throw issue("unauthorized");
-  const verifyActor = async () => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || data.user?.id !== actor) throw issue("unauthorized");
+  const { data, error } = await supabase.auth.getUser();
+  if (error || data.user?.id !== actor) throw issue("unauthorized");
+}
+
+async function readStoredGenerationJob(
+  row: Record<string, unknown>, signal: AbortSignal,
+): Promise<PersistedGenerationJob | null> {
+  const { data, error, status } = await supabase.from("publication_generation_slots")
+    .select(slotColumns).eq("job_id", id(row.id, uuid)).order("slot").abortSignal(signal);
+  if (error) throw readFailure(error, status);
+  if (!Array.isArray(data)) throw issue("read_failed");
+  // Slots are created atomically and never deleted. An empty RLS read means
+  // access disappeared: discard the earlier job instead of retaining its details.
+  if (data.length === 0) return null;
+  const createdAt = timestamp(row.created_at);
+  return {
+    ...parseGenerationJob({
+      jobId: row.id, projectId: row.project_id, status: row.status, total: row.total,
+      retryCount: row.retry_count, updatedAt: row.updated_at,
+      requestedModel: row.requested_model, promptVersion: row.prompt_version,
+      slots: data.map((slot) => ({
+        slot: slot.slot, state: slot.state, attempts: slot.attempts,
+        previewId: slot.preview_id, errorCode: slot.error_code,
+        retryable: slot.retryable, actualModel: slot.actual_model,
+        attemptDiagnostics: slot.attempt_diagnostics,
+      })),
+    }),
+    createdAt,
   };
-  await verifyActor();
+}
+
+export async function readGenerationHistory(
+  actor: string, page: number, signal: AbortSignal,
+): Promise<GenerationHistoryPage> {
+  const pageSize = 10;
+  const offset = (page - 1) * pageSize;
+  if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(offset + pageSize - 1)) {
+    throw issue("invalid_request");
+  }
+  await verifyGenerationActor(actor);
+  // Authenticated RLS controls visibility, not the initiating actor or a client role.
+  const { data, error, status, count } = await supabase.from("publication_generation_jobs")
+    .select(jobColumns, { count: "exact" })
+    .order("created_at", { ascending: false }).order("id", { ascending: false })
+    .range(offset, offset + pageSize - 1).abortSignal(signal);
+  if (error) throw readFailure(error, status);
+  if (!Array.isArray(data) || count === null || !Number.isSafeInteger(count) || count < 0
+    || data.length !== Math.min(pageSize, Math.max(0, count - offset))) {
+    // Do not silently skip history if the server caps a page below ten rows.
+    throw issue("read_failed");
+  }
+  const jobs: PersistedGenerationJob[] = [];
+  for (const row of data) {
+    const job = await readStoredGenerationJob(object(row), signal);
+    if (job) jobs.push(job);
+  }
+  await verifyGenerationActor(actor);
+  return { jobs, page, pageSize, totalCount: count };
+}
+
+export async function restoreGenerationJobs(actor: string, signal: AbortSignal): Promise<GenerationJob[]> {
+  await verifyGenerationActor(actor);
   const latest = new Map<string, Record<string, unknown>>();
   // Scan paginated identities, not an arbitrary last-N history window. An explicitly
   // retried older job must win over a newer settled job for the same project.
@@ -230,26 +296,9 @@ export async function restoreGenerationJobs(actor: string, signal: AbortSignal):
   }
   const jobs: GenerationJob[] = [];
   for (const row of latest.values()) {
-    const { data, error, status } = await supabase.from("publication_generation_slots")
-      .select(slotColumns).eq("job_id", id(row.id, uuid)).order("slot").abortSignal(signal);
-    if (error) throw readFailure(error, status);
-    if (!Array.isArray(data)) throw issue("read_failed");
-    // Slots are created atomically with the job and are never deleted. An empty
-    // successful RLS read means access disappeared between reads: do not retain
-    // the earlier job details as a permanently "synchronizing" local snapshot.
-    if (data.length === 0) continue;
-    jobs.push(parseGenerationJob({
-      jobId: row.id, projectId: row.project_id, status: row.status, total: row.total,
-      retryCount: row.retry_count, updatedAt: row.updated_at,
-      requestedModel: row.requested_model, promptVersion: row.prompt_version,
-      slots: data.map((slot) => ({
-        slot: slot.slot, state: slot.state, attempts: slot.attempts,
-        previewId: slot.preview_id, errorCode: slot.error_code,
-        retryable: slot.retryable, actualModel: slot.actual_model,
-        attemptDiagnostics: slot.attempt_diagnostics,
-      })),
-    }));
+    const job = await readStoredGenerationJob(row, signal);
+    if (job) jobs.push(job);
   }
-  await verifyActor();
+  await verifyGenerationActor(actor);
   return jobs;
 }
