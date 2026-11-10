@@ -28,5 +28,52 @@
   "pending": [
     "Independent shared-parser/restoration/UI compatibility",
     "Real browser/provider acceptance"
-  ]
+  ],
+  "independent": {
+    "status": "blocked",
+    "attempt1": {
+      "syntaxExit": 1,
+      "runtimeGroups": 0
+    },
+    "attempt2": {
+      "task": "mwatkxse-v-s48b",
+      "runtimeExit": 1,
+      "groups": 106,
+      "passed": 83,
+      "failed": 23,
+      "reactSsrRenders": 129,
+      "invokeMocks": 16,
+      "authMocks": 30,
+      "dbReads": 28,
+      "storageWrites": 0,
+      "networkCalls": 0,
+      "typecheckExit": 0,
+      "typeDiagnostics": 0,
+      "outputsInMemory": 25,
+      "sourceDiffExit": 0,
+      "failureCauses": {
+        "adjacentBoundaryAssertion": 18,
+        "inconsistentRetryFixtures": 3,
+        "inconsistentStorageFixture": 1,
+        "catalanHeuristic": 1
+      }
+    },
+    "artifactDirectory": "node_modules/.cache/generation-ui-verify-YLHEIk",
+    "remaining": [
+      "Valid retry and receipt storage execution",
+      "Targeted SSR assertions after corrected harness assumptions",
+      "Separate real-browser/provider acceptance"
+    ],
+    "pendingOnlyAttempt": {
+      "task": "mwatwcle-w-hhgv",
+      "status": "preparation_denied",
+      "precheckExit": 0,
+      "selectedGroups": 23,
+      "originalArtifactsIdentified": 35,
+      "newGroupsExecuted": 0,
+      "hashPreservationProof": false,
+      "denial": "Safety policy rejected sensitive-path literal in a reported exclusion guard; no environment-file access intended.",
+      "action": "Stopped; no alternate-tool or rewritten-command retry."
+    }
+  }
 }
