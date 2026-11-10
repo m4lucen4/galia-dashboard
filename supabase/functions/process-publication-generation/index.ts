@@ -1,3 +1,4 @@
+import { type ProviderDiagnostic } from "../_shared/publication-generation-diagnostics.ts";
 import { GenerationError, jsonResponse, safeFailure, type FailureCode } from "../_shared/publication-generation-errors.ts";
 import { composeDescription, generateText, supportedPromptVersion, validateSnapshot } from "../_shared/publication-generation.ts";
 import { createStore, type Environment, workerAuthorized, workerConfig } from "../_shared/publication-generation-store.ts";
@@ -22,18 +23,27 @@ export function createHandler(env: Environment, fetcher: typeof fetch = fetch) {
         const claim = await store.claim();
         if (!claim) break;
         claimed++;
-        let result: { description: string; model: string | null } | { error: FailureCode };
+        let result: ({ description: string; model: string | null } | { error: FailureCode }) & {
+          diagnostic: ProviderDiagnostic;
+        };
         try {
           validateSnapshot(claim.snapshot);
           if (!supportedPromptVersion(claim.promptVersion)) throw new GenerationError("internal_error");
           const generated = claim.snapshot.requiredAI
             ? await generateText(claim.snapshot, claim.slot, claim.model, config.apiKey, fetcher, claim.promptVersion)
             : undefined;
-          result = { description: composeDescription(claim.snapshot, generated), model: generated?.model ?? null };
+          result = {
+            description: composeDescription(claim.snapshot, generated), model: generated?.model ?? null,
+            diagnostic: generated?.diagnostic ?? { reason: "non_ai" },
+          };
         } catch (error) {
           const code = safeFailure(error).body.code;
-          result = { error: ["provider_unavailable", "provider_refusal", "invalid_response", "invalid_project"].includes(code)
-            ? code : "internal_error" };
+          result = {
+            error: ["provider_unavailable", "provider_refusal", "invalid_response", "invalid_project"].includes(code)
+              ? code : "internal_error",
+            diagnostic: error instanceof GenerationError && error.diagnostic
+              ? error.diagnostic : { reason: code === "invalid_project" ? "invalid_project" : "internal_error" },
+          };
         }
         // A failed/ambiguous finish is NOT followed by a compensating write. The
         // transaction either committed, or the lease will recover on a later tick.

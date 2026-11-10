@@ -1,4 +1,5 @@
 import { failures, GenerationError, type FailureCode } from "./publication-generation-errors.ts";
+import { sanitizeDiagnostic, type ProviderDiagnostic } from "./publication-generation-diagnostics.ts";
 import { DEFAULT_MODEL, PROMPT_VERSION, type Snapshot, type StartRequest } from "./publication-generation.ts";
 
 export type Environment = (name: string) => string | undefined;
@@ -11,6 +12,13 @@ export interface SlotSummary {
   errorCode: FailureCode | null;
   retryable: boolean;
   actualModel: string | null;
+  attemptDiagnostics?: Array<{
+    attempt: number;
+    recordedAt: string;
+    outcome: "succeeded" | "failed";
+    errorCode: FailureCode | null;
+    details: ProviderDiagnostic;
+  }>;
 }
 
 export interface JobSummary {
@@ -120,12 +128,18 @@ export function createStore(env: Environment, fetcher: typeof fetch = fetch) {
       return rpc<void>("heartbeat", { p_model: model, p_prompt_version: PROMPT_VERSION });
     },
     claim() { return rpc<Claim | null>("claim"); },
-    finish(claim: Claim, result: { description: string; model: string | null } | { error: FailureCode }) {
-      return rpc<boolean>("finish", {
+    finish(claim: Claim, result: ({ description: string; model: string | null } | { error: FailureCode }) & {
+      diagnostic?: ProviderDiagnostic;
+    }) {
+      const fallback: ProviderDiagnostic = { reason: "error" in result
+        ? result.error === "invalid_project" ? "invalid_project" : "internal_error"
+        : result.model === null ? "non_ai" : "completed" };
+      return rpc<boolean>("finish_with_diagnostics", {
         p_job: claim.jobId, p_slot: claim.slot, p_token: claim.leaseToken,
         p_description: "description" in result ? result.description : null,
         p_actual_model: "model" in result ? result.model : null,
         p_error: "error" in result ? result.error : null,
+        p_diagnostics: sanitizeDiagnostic(result.diagnostic ?? fallback),
       });
     },
   };
