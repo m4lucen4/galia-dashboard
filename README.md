@@ -184,6 +184,8 @@ npm run preview   # Previsualizar el build localmente
 npm run lint      # Ejecutar ESLint
 ```
 
+La configuración de Vite se mantiene únicamente en `vite.config.ts`. `pnpm build` comprueba sus tipos por separado con `tsc -p tsconfig.node.json`, sin generar `vite.config.js` ni `vite.config.d.ts`, y después ejecuta `tsc -b` y `vite build`.
+
 ## Flujo de autenticación
 
 1. El usuario se registra en `/register`, selecciona plan y periodo
