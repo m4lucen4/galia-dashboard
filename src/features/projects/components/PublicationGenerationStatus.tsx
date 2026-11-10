@@ -8,9 +8,10 @@ import type { usePublicationGeneration } from "@/hooks/usePublicationGeneration"
 type Props = {
   generation: ReturnType<typeof usePublicationGeneration>;
   projects: { id: string; title: string }[];
+  onConfigure: (projectId: string) => void;
 };
 
-export function PublicationGenerationStatus({ generation, projects }: Props) {
+export function PublicationGenerationStatus({ generation, projects, onConfigure }: Props) {
   const { t } = useTranslation();
   const { jobs, requests, issues, busy, readIssue, loading, start, refresh } = generation;
   const projectIds = [...new Set([
@@ -79,7 +80,7 @@ export function PublicationGenerationStatus({ generation, projects }: Props) {
                     {t("publicationGeneration.retryFailed")}
                   </PillButton>
                 ) : !job && failure?.code ? (
-                  <PillButton variant="outline" disabled={disabled} onClick={() => void start(projectId)}>
+                  <PillButton variant="outline" disabled={disabled} onClick={() => onConfigure(projectId)}>
                     {t("publicationGeneration.tryAgain")}
                   </PillButton>
                 ) : null}

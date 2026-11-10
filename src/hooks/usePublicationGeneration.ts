@@ -5,7 +5,7 @@ import {
   acknowledgeGenerationRequest, isActive, outstandingRequests, prepareGenerationRequest,
   restoreGenerationJobs, safeGenerationIssue,
 } from "@/features/projects/services/publicationGeneration";
-import type { GenerationIssue, GenerationJob, GenerationRequest } from "@/features/projects/types/publicationGeneration";
+import type { GenerationConfiguration, GenerationIssue, GenerationJob, GenerationRequest } from "@/features/projects/types/publicationGeneration";
 
 type View = {
   actor: string;
@@ -112,7 +112,9 @@ export function usePublicationGeneration(onResultsChanged: () => void) {
     };
   }, [actor, dispatch]);
 
-  const start = useCallback(async (projectId: string, retryJob?: GenerationJob) => {
+  const start = useCallback(async (
+    projectId: string, retryJob?: GenerationJob, configuration?: GenerationConfiguration,
+  ) => {
     const context = session.current;
     if (!context?.alive || context.actor !== actor || !actor || context.busy.has(projectId)) return;
     if (!context.authorized || dispatch((_, getState) => getState().auth.user?.uid) !== actor) return;
@@ -131,7 +133,7 @@ export function usePublicationGeneration(onResultsChanged: () => void) {
         const latest = context.jobs.find((job) => job.jobId === retryJob.jobId);
         if (!latest?.canRetry || !latest.consistent) return;
       }
-      request = prepareGenerationRequest(actor, projectId, retryJob);
+      request = prepareGenerationRequest(actor, projectId, retryJob, configuration);
       patch({ requests: outstandingRequests(actor), busy: [...context.busy] });
       if (current()) setView((previous) => ({ ...previous, issues: { ...previous.issues, [projectId]: { code: "" } } }));
       const job = await dispatch(updateProjectPreview({ actor, request })).unwrap();
@@ -145,6 +147,9 @@ export function usePublicationGeneration(onResultsChanged: () => void) {
       if (!current()) return;
       let failure = safeGenerationIssue(error);
       if (failure.code === "unauthorized") context.authorized = false;
+      // A competing active job may use different settings; restore it, never
+      // present those newly selected settings as accepted.
+      if (failure.code === "conflict") context.refresh();
       if (request && !failure.uncertain && failure.code !== "storage") {
         try {
           acknowledgeGenerationRequest(actor, request.requestId);

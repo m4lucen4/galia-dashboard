@@ -1,5 +1,19 @@
 {
   "publicationGeneration": {
+    "modal": {
+      "title": "Generar publicaciones",
+      "description": "Elige los ajustes para esta generación. Solo se guardan al generar.",
+      "count": "Número de publicaciones (1–4)",
+      "ai": "Usar IA para redactar las publicaciones",
+      "prompt": "Prompt (obligatorio con IA)",
+      "choosePrompt": "Selecciona un prompt",
+      "preview": "Vista previa del texto del prompt",
+      "loading": "Cargando tus prompts y los públicos…",
+      "error": "No se han podido cargar los prompts. Reintenta o genera sin IA.",
+      "empty": "No hay prompts disponibles. Puedes generar sin IA.",
+      "blocked": "Hay una solicitud pendiente, una generación activa o el estado no está disponible. Cierra este diálogo y consulta el panel de generación antes de continuar.",
+      "generate": "Generar"
+    },
     "title": "Generación de publicaciones",
     "diagnostics": {
       "title": "Detalles disponibles",
@@ -77,8 +91,8 @@
     "errors": {
       "invalid_request": "La solicitud no es válida.",
       "unauthorized": "Inicia sesión de nuevo para consultar el estado y continuar.",
-      "forbidden": "No tienes acceso a este proyecto.",
-      "conflict": "La solicitud no corresponde a esta generación. Vuelve a consultar el estado.",
+      "forbidden": "No tienes acceso al proyecto o al prompt seleccionado.",
+      "conflict": "La solicitud no coincide o ya hay una generación con otros ajustes. No se han aplicado los nuevos ajustes. Vuelve a consultar el estado.",
       "project_changed": "El proyecto se ha eliminado o ha cambiado de propietario.",
       "retry_exhausted": "Se ha alcanzado el límite de reintentos.",
       "invalid_project": "Revisa los datos del proyecto y el número de publicaciones (1–4).",

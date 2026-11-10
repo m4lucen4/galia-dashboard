@@ -6,7 +6,7 @@ The canonical guide for **fresh creation only**, with or without AI: user steps,
 
 | Surface | Verified state / remaining boundary |
 |---|---|
-| Backend | Activated: `process-publication-generation` **v8**, `generate-project` **v4**, all five forward migrations below applied, minute cron active. |
+| Backend | Activated: `process-publication-generation` **v8**, `generate-project` **v5**. Existing five migrations plus the config foundation and request-configuration migration are applied; the latter two were applied manually by the user. Worker and minute cron were not changed by the modal rollout. |
 | Latest worker activation (S15/T24) | 36 independent checks; six deployed files matched the verified payload; 22 other functions unchanged. Public POST401/GET405 bodies passed. Scheduled readiness at **2026-11-10 15:42:01 UTC**, model `gpt-6-luna`, prompt `publication-es-v2`. No agent-triggered paid generation in this activation. |
 | Output length | Approximately 75 words is **advisory** in current v2 wording. Shared validation accepts more than 75 words for both versions; the raw 4,000-character bound and other validation remain. Frozen v1 requests and historical failures are preserved. |
 | Dashboard | Updated UI and attempt-details implementation is **local-only**, not a production frontend rollout. Backend activation does not prove browser behavior. |
@@ -17,11 +17,45 @@ The user's later functional acceptance supersedes historical references below to
 
 Latest deployment/recovery record: [`advisory-word-count-deployment.json`](../odd/evidence/publication-generation/advisory-word-count-deployment.json). Task state: [`publication-generation.md`](../odd/tasks/publication-generation.md). Older version numbers and failed checks in the evidence sections are **historical**, not current runtime instructions.
 
+## Per-request modal integration — backend deployed, manual generation pending
+
+New starts use the modal's settings, **not** `projects.publications`, `projects.requiredAI` or `projects.prompt`. Those legacy columns/data remain untouched. The user manually applied `20261110000300_publication_generation_configs.sql` and `20261110000400_generation_request_configuration.sql`; read-only preflight confirmed both start-RPC bodies match the latter migration.
+
+The authorized rollout deployed `generate-project` **v5** with seven source files matching the independently verified payload. All 22 other functions remained unchanged. Public unauthenticated POST returned 401 and GET returned 405; no real generation or provider call was made. Independent checks passed **145** cases (97 retained plus 48 final); earlier preparation failures remain recorded. Native review was declined for this candidate, not approved. Baseline lint remains 35 errors/9 warnings, unchanged. The user accepted the modal appearance; frontend deployment and the first real generation remain outside this backend rollout.
+
+Evidence: [deployment result](../odd/evidence/publication-generation-modal/deployment-result.json), [public rejection checks](../odd/evidence/publication-generation-modal/deployment-public-checks.json), [preflight and recovery baseline](../odd/evidence/publication-generation-modal/deployment-preflight.json). Do not automatically restore the older entry: it cannot initiate configured requests.
+
+Rollout reference (database and entry steps completed; do not repeat):
+
+1. Confirm migrations001–005 below, including assigned-editor authority and v2 readiness, plus the already-applied config foundation. Do not reapply or edit them.
+2. Apply `20261110000400_generation_request_configuration.sql`. This atomically installs the configured RPC and replaces the seven-argument entry with a compatibility wrapper: legacy receipts/active jobs and retries still recover, but identity-only fresh starts fail closed. Expect a short old-client new-start interruption until frontend rollout.
+3. Deploy `generate-project` with the updated shared parser/store, then the dashboard. The worker contract is unchanged; preserve the existing worker, prompt versions, readiness and scheduler. Do not deploy an old start RPC as rollback.
+4. Verify current owner/admin/assigned flows, catalog visibility, same-ID replay, conflict recovery and keyboard/mobile behavior before production acceptance. Browser/Auth/PostgREST proof is still required; local synthetic SQL does not establish live RLS or visual behavior.
+
+Config rows are written only inside the existing service-only SECURITY DEFINER transaction. No browser/service direct config grants or new read policy are needed. Jobs have a nullable `config_id` (unique when present); project deletion cascades to configs and clears that link, retaining historical job snapshots/receipts. No historical backfill or prompt deactivation is included.
+
+| Request situation | Outcome |
+|---|---|
+| Open/cancel modal | Catalog read only; no receipt, config, job or slot writes |
+| New configured start | Validate count 1–4; AI requires an actor-owned/public prompt ID; snapshot canonical `prompts.description` exactly, then commit config/job/slots/receipt atomically |
+| Same UUID and settings | Replay current summary before catalog/readiness checks; no new writes |
+| Same UUID, changed settings | `conflict`, no mutation |
+| Different UUID, same settings and canonical prompt text, active job | Join existing job; only receipt added, no config/job/slot creation |
+| Different settings or configured start against a legacy active job | `conflict`; new settings are **not applied**, refresh existing status |
+| Old identity-only receipt | Recover its job; without receipt may recover active work, but never create a new job from legacy fields |
+| Retry failed variants | Same config/snapshot/model and successful siblings; no new config, no catalog reread |
+
+Keep the updated client available for receipt recovery: old bundles only understand identity-only local receipts and may report storage failure on configured receipts. Do not clear receipts or downgrade the start RPC to bypass an outage; use a forward-compatible repair.
+
+The catalog uses `fetchPromptsByUser` for every actor, including admins and assigned editors. Server selection independently enforces actor-owned or public eligibility, not project-owner prompt eligibility. A later prompt edit/revocation does not invalidate an accepted receipt or rewrite retries.
+
 ## Quick path for users
+
+Project creation and editing now configure project data only. Publication count, AI and prompt selection belong exclusively to the generation modal; the project form no longer fetches prompts or submits these settings. Legacy database columns and stored values are retained: create omits them, and edit leaves them unchanged. This form cleanup includes no deployment or data migration.
 
 In the updated dashboard (currently local-only):
 
-1. Open `/projects`, choose a project you own, administer or are explicitly assigned to, review its description/media and select 1–4 publications. Enable AI only when wanted; an optional project prompt adds compatible editorial preferences. The model is server-selected.
+1. Open `/projects`, choose a project you own, administer or are explicitly assigned to, and open “Generar publicaciones”. Each new modal defaults to **1 publication, AI off**. The count stays visible with or without AI. With AI, select a prompt by name and review its text. Opening/cancelling saves nothing; the model remains server-selected.
 2. Confirm creation. The dialog closes; keep editing, navigating or working elsewhere. “En cola” means waiting, not completed generation. Server work does not require the panel to stay open.
 3. Return to Projects to restore progress. Finished/total includes both successful and failed variants; open `/preview-projects` to review available results, even after partial failure. Check factual accuracy before publishing.
 4. For an ambiguous request, choose “Comprobar la misma solicitud”; do not create another request to recover a lost response. For settled failures, use the offered retry action: it retries only eligible failed variants of that job and preserves successes.
@@ -45,7 +79,8 @@ Use the existing authenticated Supabase client; do not add a function URL, model
 
 ```ts
 const { data, error } = await supabase.functions.invoke("generate-project", {
-  body: { projectId, action: "start", requestId },
+  body: { projectId, action: "start", requestId,
+    configuration: { publicationsCount: 1, requiresAI: false, promptId: null } },
 });
 ```
 
@@ -66,6 +101,11 @@ type GenerationRequest = {
   action: "start" | "retry_failed";
   requestId: string; // UUID, required for BOTH actions
   jobId?: string;   // UUID: required for retry_failed, forbidden for start
+  configuration?: { // Required for a NEW start; absent on retries/legacy receipts
+    publicationsCount: number; // integer 1–4
+    requiresAI: boolean;
+    promptId: string | null; // positive bigint string with AI; null without AI
+  };
 };
 
 type GenerationError = { code: string; message: string; retryable: boolean };
@@ -98,7 +138,7 @@ type JobSummary = {
 };
 ```
 
-Successful start/retry/replay returns HTTP **200** with `JobSummary` directly (no `job` wrapper). Failure returns `GenerationError` directly. Never accept `user`, `actor`, `model`, content or publication count from this request: the server snapshots the canonical project.
+Successful start/retry/replay returns HTTP **200** with `JobSummary` directly (no `job` wrapper). Failure returns `GenerationError` directly. Never accept `user`, `actor`, `model` or prompt text from this request. Only the validated content-free `configuration` settings accompany identities; canonical project content and selected prompt text come from the database. Configuration is forbidden on retries.
 
 | HTTP | Codes | Meaning |
 |---|---|---|
@@ -153,7 +193,7 @@ Map snake_case read columns to the summary's camelCase fields. Compute counts fr
 
 ### Local request identity and actor isolation
 
-`localStorage` stores only `{projectId, action, requestId, jobId?}` under an authenticated actor-specific key: no content, titles, model settings or tokens. UUIDs are written **and read back before** Auth verification/invocation. Storage failure blocks new requests rather than risking duplicates.
+`localStorage` stores only `{projectId, action, requestId, jobId?, configuration?}` under an authenticated actor-specific key. Configuration contains count, AI boolean and prompt ID only: **never prompt text**, content, titles, models or tokens. Existing identity-only receipts remain readable. UUIDs are written **and read back before** Auth verification/invocation. Storage failure blocks new requests rather than risking duplicates.
 
 A synchronous per-project mounted-screen lock prevents double clicks; an outstanding identity takes precedence over a new action. Transport loss, timeouts, malformed success and ambiguous server errors retain it. “Comprobar la misma solicitud” replays its exact UUID, including for retry. Confirmed responses acknowledge only that actor's identity; definitive safe rejection permits a later deliberate action with a new UUID. This is not a cross-tab mutex: durable server receipts and active-job locks remain authoritative.
 
@@ -234,7 +274,7 @@ Failed preflight leaves existing grants/data intact: inspect the mismatch, do no
 - `getUser` verifies the bearer token against Supabase Auth `/auth/v1/user` (native REST equivalent of `auth.getUser`, not local JWT decoding). The start RPC rechecks current owner/admin/assigned-UID rights before receipts, active-job reuse, retry or writes. Migration003 uses the same private authorization predicate in start, read, claim and finish; owner snapshot and initiating actor remain distinct.
 - Five security-definer mutation RPCs exist: `publication_generation_start`, `publication_generation_claim`, `publication_generation_finish`, `publication_generation_finish_with_diagnostics`, `publication_generation_heartbeat`. All use `search_path = ''`, qualified table references, explicit revocation from PUBLIC/anon/authenticated and explicit EXECUTE to `service_role`. Table DML is revoked even from service_role: mutations flow through RPCs. Internal summary/refresh helpers are not callable by service_role. Authenticated callers can execute the read-only RLS predicate and migration003's current-user preview-list RPC, never the arbitrary-actor private predicate or service mutation RPCs.
 - Every mutation uses advisory transaction lock `(740219, 1)`, then locks project → job → slots. Claims visit at most 20 active jobs and claim one slot per RPC. Global queue serialization deliberately favors a small auditable concurrency model over high throughput; no provider calls run inside a DB transaction.
-- A partial unique index enforces at most one active job per project. Different start request IDs during active work reuse that job and store their own receipts. `(actor_id, request_id)` is durable across terminal completion; replay returns the same job's **current** summary, never a fresh job. A reused request ID with another project/action/retry job is rejected. Do not prune receipts without a separately designed idempotency retention policy.
+- A partial unique index enforces at most one active job per project. Different start request IDs during active work reuse that job only for matching settings (or legacy identity-only recovery) and store their own receipts. Different settings return `conflict` without mutation. `(actor_id, request_id)` is durable across terminal completion; replay returns the same job's **current** summary, never a fresh job. A reused request ID with another project/action/retry job is rejected. Do not prune receipts without a separately designed idempotency retention policy.
 - Retry operates on the exact job/project under the current actor's owner/admin/assigned-UID rights. Active/succeeded jobs are no-ops with a receipt; a different active job blocks retry. Only failed, retryable slots are queued. Their successful siblings, previews and lifetime attempt counters are untouched. Snapshots/models never change on retry.
 - Each claim has a new UUID fence and a 120-second lease. Time comparisons use `clock_timestamp()` after lock acquisition, not stale transaction-start time. Finish requires matching job/slot/token, running state and an unexpired lease. Duplicate/late finish returns `false` without inserting anything. Preview insertion, slot completion and job/project states are one transaction. A lost finish response is not followed by a compensating failure write.
 - Expired leases are requeued up to three claims per cycle; the third expiry becomes `failed/lease_expired`. Provider unavailability gets the same three-claim bound with 30/60-second backoff. Invalid/refused content fails immediately without placeholder content. At most two explicit retry rounds are allowed: at most nine lifetime attempts per slot. Idle jobs rotate to the back of the bounded sweep to avoid starvation.
@@ -257,9 +297,9 @@ Use a model supporting Responses API strict structured text outputs. The model's
 
 The strict v2 schema is `{publicacion:{texto:string}}`; v1 retains `{paragraph:string}`. Neither permits extra properties or an additional heading. Runtime validation rejects non-completed, refused, missing, malformed, multiple-text or invalid-field responses. The current v2 prompt guides the single paragraph toward approximately 75 words, not a strict maximum (S15). Shared response validation accepts longer text for both v1 and v2 without a word-count ceiling; `diagnostic.wordCount` still counts whitespace-delimited words, excluding deterministic credits and hashtags. Harmless CR/LF breaks and adjacent horizontal whitespace in v2 `texto` become one space; v1 keeps its original newline rejection. The raw 4,000-character bound is checked before normalization. No generated HTML or hashtags are accepted. No failed result is converted into publication text.
 
-Canonical snapshot fields: `title`, `description`, `requiredAI`, `prompt`, `keywords`, `weblink`, `image_data`, `projectCollaborators`. Publications must be an integer 1–4 before insertion. Title/description must be nonblank; description ≤30,000 characters, prompt ≤10,000, title ≤1,000, keywords/link ≤4,000; at most 100 collaborator objects with string profession/name (≤100/1,000 characters). SQL validates these before writes. Worker validates the required snapshot shape again. Null optional text/arrays normalize to empty strings/arrays; null `requiredAI` normalizes to false.
+Canonical snapshot fields: `title`, `description`, `requiredAI`, `prompt`, `keywords`, `weblink`, `image_data`, `projectCollaborators`. Publications must be an integer 1–4 before insertion. Title/description must be nonblank; description ≤30,000 characters, prompt ≤10,000, title ≤1,000, keywords/link ≤4,000; at most 100 collaborator objects with string profession/name (≤100/1,000 characters). SQL validates these before writes. Worker validates the required snapshot shape again. Null optional project text/arrays normalize to empty strings/arrays. New jobs take `requiredAI` and `prompt` from validated per-request configuration and canonical prompt text, not legacy project fields. Non-AI snapshots have an empty prompt; old snapshots are unchanged.
 
-Project prompt is preserved as `project_prompt` in JSON **source data**, not promoted into the privileged instruction. The instruction allows compatible editorial preferences only and explicitly rejects instructions embedded in project data. Only frozen v1 requests use the four general, spatial, material/detail and experience angles with fallback paraphrasing. Current v2 uses the original n8n template's variant interpolation without appending those angles; see [Original n8n editorial prompt](#original-n8n-editorial-prompt). Prompt boundaries reduce injection risk but cannot mathematically guarantee factual accuracy or distinct prose; human preview review remains necessary.
+Selected catalog prompt text (or the frozen prompt on a legacy job) is preserved as `project_prompt` in JSON **source data**, not promoted into the privileged instruction. The instruction allows compatible editorial preferences only and explicitly rejects instructions embedded in project data. Only frozen v1 requests use the four general, spatial, material/detail and experience angles with fallback paraphrasing. Current v2 uses the original n8n template's variant interpolation without appending those angles; see [Original n8n editorial prompt](#original-n8n-editorial-prompt). Prompt boundaries reduce injection risk but cannot mathematically guarantee factual accuracy or distinct prose; human preview review remains necessary.
 
 Non-AI text is exactly the original description: no trimming, Unicode normalization, heading, credits or hashtags, even when collaborators and keywords are populated. Its whitespace and line endings are preserved; there is no AI word limit or provider call. AI text is the generated paragraph followed by deterministic credits (when present) and the hashtag suffix, separated by blank lines. Links and all media processing/reference fields are copied by the transaction, not generated or fetched by the model.
 

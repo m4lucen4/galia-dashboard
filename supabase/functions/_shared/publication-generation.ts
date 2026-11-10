@@ -47,6 +47,7 @@ export interface StartRequest {
   action: "start" | "retry_failed";
   requestId: string;
   jobId?: string;
+  configuration?: { publicationsCount: number; requiresAI: boolean; promptId: string | null };
 }
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -56,7 +57,7 @@ function record(value: unknown): value is Record<string, unknown> {
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function parseRequest(value: unknown): StartRequest {
   if (!record(value) || Object.keys(value).some((key) =>
-    !["projectId", "action", "requestId", "jobId"].includes(key)
+    !["projectId", "action", "requestId", "jobId", "configuration"].includes(key)
   )) throw new GenerationError("invalid_request");
   if (typeof value.projectId !== "string" || !/^[1-9]\d{0,18}$/.test(value.projectId) ||
     BigInt(value.projectId) > 9223372036854775807n ||
@@ -66,11 +67,23 @@ export function parseRequest(value: unknown): StartRequest {
     (value.action === "retry_failed" &&
       (typeof value.jobId !== "string" || !uuidPattern.test(value.jobId)))
   ) throw new GenerationError("invalid_request");
+  const configuration = value.configuration;
+  if (configuration !== undefined) {
+    if (value.action !== "start" || !record(configuration)
+      || Object.keys(configuration).some((key) => !["publicationsCount", "requiresAI", "promptId"].includes(key))
+      || typeof configuration.publicationsCount !== "number" || !Number.isInteger(configuration.publicationsCount)
+      || configuration.publicationsCount < 1 || configuration.publicationsCount > 4
+      || typeof configuration.requiresAI !== "boolean"
+      || (configuration.requiresAI ? typeof configuration.promptId !== "string"
+        || !/^[1-9]\d{0,18}$/.test(configuration.promptId) || BigInt(configuration.promptId) > 9223372036854775807n
+        : configuration.promptId !== null)) throw new GenerationError("invalid_request");
+  }
   return {
     projectId: value.projectId,
     action: value.action,
     requestId: value.requestId.toLowerCase(),
     ...(typeof value.jobId === "string" ? { jobId: value.jobId.toLowerCase() } : {}),
+    ...(configuration === undefined ? {} : { configuration: configuration as StartRequest["configuration"] }),
   };
 }
 

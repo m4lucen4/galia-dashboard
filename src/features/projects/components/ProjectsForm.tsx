@@ -15,14 +15,9 @@ import { SelectField } from "../../../components/shared/ui/SelectField";
 import { ImageDragList } from "../../../components/shared/ui/ImageDragList";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import {
-  fetchPrompts,
-  fetchPromptsByUser,
-} from "../../../redux/actions/AdminActions";
 import { nasFetchFiles } from "../../../redux/actions/NasActions";
 import { clearNasFiles } from "../../../redux/slices/NasSlice";
 import { MediaGallerySelector } from "./MediaGallerySelector";
-import { AIPromptSelector } from "./projectsForm/AIPromptSelector";
 import { ShowGoogleMaps } from "./projectsForm/ShowGoogleMaps";
 import { NasFilesModal } from "./NasFilesModal";
 import { PhotoIcon, FolderOpenIcon } from "@heroicons/react/24/outline";
@@ -56,7 +51,6 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   const { t } = useTranslation();
   const [showNasModal, setShowNasModal] = useState(false);
   const { files: nasFiles } = useAppSelector((state) => state.nas);
-  const { prompts } = useAppSelector((state) => state.admin);
 
   const {
     formData,
@@ -72,14 +66,6 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
   } = useProjectsForm({ initialData, user, onSubmit });
 
   const [showGallerySelector, setShowGallerySelector] = useState(false);
-
-  useEffect(() => {
-    if (user?.role === "admin") {
-      dispatch(fetchPrompts());
-    } else if (user?.uid) {
-      dispatch(fetchPromptsByUser({ userUid: user.uid }));
-    }
-  }, [dispatch, user?.role, user?.uid]);
 
   useEffect(() => {
     if (nasFolder) {
@@ -124,15 +110,6 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
                 required
               />
             </div>
-            <AIPromptSelector
-              requiredAI={!!formData.requiredAI}
-              prompt={formData.prompt || ""}
-              prompts={prompts}
-              onAIChange={(checked) =>
-                setFormData({ ...formData, requiredAI: checked })
-              }
-              onPromptChange={handleChange}
-            />
             <div className="grid min-w-0 grid-cols-1 gap-5">
               <div
                 className="min-w-0 [&>div>div]:min-h-12 [&>div>div]:rounded-2xl [&>div>div]:border-[#010000]/40 [&>div>div]:bg-transparent [&>div>div]:p-3 [&_input]:min-w-20 [&_button]:focus-visible:outline-2 [&_button]:focus-visible:outline-solid [&_button]:focus-visible:outline-[#010000] [&_button]:focus-visible:outline-offset-2"
@@ -157,31 +134,6 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
                   onChange={handleChange}
                 />
               </div>
-            </div>
-          </fieldset>
-
-          <fieldset className={projectPanelClassName}>
-            <legend className={projectLegendClassName}>
-              {t("projects.howManyPublications")}
-            </legend>
-            <div className="grid grid-cols-4 gap-2 sm:gap-3">
-              {[1, 2, 3, 4].map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() =>
-                    setFormData({ ...formData, publications: value })
-                  }
-                  aria-pressed={formData.publications === value}
-                  className={`min-h-12 rounded-full border border-[#010000]/40 py-3 font-mono transition-colors focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-[#010000] focus-visible:outline-offset-2 ${
-                    formData.publications === value
-                      ? "bg-[#010000] text-[#d8e4d6]"
-                      : "bg-transparent text-[#010000] hover:bg-[#010000]/5"
-                  }`}
-                >
-                  {value}
-                </button>
-              ))}
             </div>
           </fieldset>
 

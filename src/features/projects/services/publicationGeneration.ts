@@ -1,6 +1,6 @@
 import { parseAttemptDiagnostics } from "./publicationGenerationDiagnostics";
 import { supabase } from "@/helpers/supabase";
-import type { GenerationIssue, GenerationJob, GenerationRequest, GenerationSlot, JobStatus } from "../types/publicationGeneration";
+import type { GenerationConfiguration, GenerationIssue, GenerationJob, GenerationRequest, GenerationSlot, JobStatus } from "../types/publicationGeneration";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const decimal = /^[1-9]\d*$/;
@@ -89,18 +89,33 @@ export function parseGenerationJob(value: unknown): GenerationJob {
   };
 }
 
+function validateConfiguration(value: GenerationConfiguration) {
+  if (!value || typeof value !== "object" || Array.isArray(value)
+    || Object.keys(value).some((key) => !["publicationsCount", "requiresAI", "promptId"].includes(key))
+    || !Number.isInteger(value.publicationsCount) || value.publicationsCount < 1 || value.publicationsCount > 4
+    || typeof value.requiresAI !== "boolean"
+    || (value.requiresAI ? typeof value.promptId !== "string" || !/^[1-9]\d{0,18}$/.test(value.promptId)
+      || BigInt(value.promptId) > 9223372036854775807n : value.promptId !== null)) {
+    throw issue("invalid_request");
+  }
+}
+
 export function validateGenerationRequest(request: GenerationRequest) {
   if (!request || !decimal.test(request.projectId) || typeof request.projectId !== "string"
     || typeof request.requestId !== "string" || !uuid.test(request.requestId)
     || !["start", "retry_failed"].includes(request.action)
     || (request.action === "start" ? request.jobId !== undefined
       : typeof request.jobId !== "string" || !uuid.test(request.jobId))
-    || Object.keys(request).some((key) => !["projectId", "action", "requestId", "jobId"].includes(key))) {
+    || Object.keys(request).some((key) => !["projectId", "action", "requestId", "jobId", "configuration"].includes(key))) {
     throw issue("invalid_request");
+  }
+  if (request.configuration !== undefined) {
+    if (request.action !== "start") throw issue("invalid_request");
+    validateConfiguration(request.configuration);
   }
 }
 
-// Only identities, scoped to the verified auth actor. Never content, models or tokens.
+// Identities and non-content settings only, scoped to the verified auth actor.
 function storageKey(actor: string) {
   if (!uuid.test(actor)) throw issue("unauthorized");
   return `publication-generation:v1:${actor}`;
@@ -121,15 +136,18 @@ function storeRequests(actor: string, requests: GenerationRequest[]) {
     if (localStorage.getItem(key) !== value) throw issue("storage");
   } catch { throw issue("storage"); }
 }
-export function prepareGenerationRequest(actor: string, projectId: string, job?: GenerationJob) {
+export function prepareGenerationRequest(
+  actor: string, projectId: string, job?: GenerationJob, configuration?: GenerationConfiguration,
+) {
   const records = outstandingRequests(actor);
   const existing = records.find((r) => r.projectId === projectId);
   // An uncertain action always takes precedence over a new deliberate action.
   if (existing) return existing;
   if (job && (!job.canRetry || !job.consistent || job.projectId !== projectId)) throw issue("conflict");
+  if (!job && !configuration) throw issue("invalid_request");
   const request: GenerationRequest = {
     projectId, action: job ? "retry_failed" : "start", requestId: crypto.randomUUID(),
-    ...(job ? { jobId: job.jobId } : {}),
+    ...(job ? { jobId: job.jobId } : { configuration }),
   };
   validateGenerationRequest(request);
   storeRequests(actor, [...records, request]);

@@ -20,6 +20,9 @@ import { ProjectsTable } from "../components/projectsTable";
 import { useProjectsData } from "../../../hooks/useProjectsData";
 import { usePublicationGeneration } from "@/hooks/usePublicationGeneration";
 import { PublicationGenerationStatus } from "../components/PublicationGenerationStatus";
+import { PublicationGenerationModal } from "../components/PublicationGenerationModal";
+import { isActive } from "../services/publicationGeneration";
+import type { GenerationConfiguration } from "../types/publicationGeneration";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ProjectsForm } from "../components/ProjectsForm";
@@ -170,9 +173,9 @@ export const Projects = () => {
     }
   };
 
-  const handleConfirmLaunch = () => {
+  const handleConfirmLaunch = (configuration: GenerationConfiguration) => {
     if (selectedProjectId) {
-      void generation.start(String(selectedProjectId));
+      void generation.start(String(selectedProjectId), undefined, configuration);
       setShowLaunchModal(false);
     }
   };
@@ -236,7 +239,7 @@ export const Projects = () => {
           </PillButton>
         </div>
       </header>
-      <PublicationGenerationStatus generation={generation} projects={projects} />
+      <PublicationGenerationStatus generation={generation} projects={projects} onConfigure={handleLaunchProject} />
       <ProjectsFilters
         isAdmin={user.role === "admin"}
         titleFilter={titleFilter}
@@ -281,12 +284,17 @@ export const Projects = () => {
           onAccept={() => dispatch(clearProjectErrors())}
         />
       )}
-      {showLaunchModal && (
-        <Alert
-          title={t("projects.launchTitle")}
-          description={t("projects.launchDescription")}
-          onAccept={handleConfirmLaunch}
-          onCancel={() => setShowLaunchModal(false)}
+      {showLaunchModal && selectedProjectId && (
+        <PublicationGenerationModal
+          key={`${user.uid}:${selectedProjectId}`}
+          projectTitle={projects.find((entry) => String(entry.id) === selectedProjectId)?.title
+            ?? t("publicationGeneration.project", { id: selectedProjectId })}
+          blocked={generation.loading || generation.busy.includes(selectedProjectId)
+            || generation.requests.some((request) => request.projectId === selectedProjectId)
+            || generation.jobs.some((job) => job.projectId === selectedProjectId && isActive(job))
+            || Boolean(generation.issues.storage) || generation.readIssue?.code === "unauthorized"}
+          onGenerate={handleConfirmLaunch}
+          onClose={() => setShowLaunchModal(false)}
         />
       )}
       {showRecoveryModal && (

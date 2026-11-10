@@ -21,7 +21,7 @@ export function getInitials(firstName: string, lastName: string): string {
 
 export type CreateProjectProps = Omit<
   ProjectDataProps,
-  "id" | "created_at" | "updated_at"
+  "id" | "created_at" | "updated_at" | "requiredAI" | "prompt" | "publications"
 > & {
   images?: File[];
 };
@@ -37,12 +37,9 @@ export const addProject = createAsyncThunk(
           state: projectData.state,
           description: projectData.description,
           keywords: projectData.keywords,
-          requiredAI: projectData.requiredAI,
-          prompt: projectData.prompt,
           user: projectData.user,
           weblink: projectData.weblink,
           image_data: projectData.image_data || [],
-          publications: projectData.publications,
           googleMaps: projectData.googleMaps,
           category: projectData.category,
           year: projectData.year,
@@ -222,11 +219,8 @@ export const updateProject = createAsyncThunk(
           state: projectData.state,
           description: projectData.description,
           keywords: projectData.keywords,
-          requiredAI: projectData.requiredAI,
-          prompt: projectData.prompt,
           weblink: projectData.weblink,
           image_data: imageData,
-          publications: projectData.publications,
           googleMaps: projectData.googleMaps,
           category: projectData.category,
           year: projectData.year,
