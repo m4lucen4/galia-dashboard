@@ -1,0 +1,32 @@
+{
+  "scope": "S14/T21 local status details; no production frontend publication",
+  "base": "a19a18f7fb682fb75d9e9424d443a5f064320ae1",
+  "parent": {
+    "red": {
+      "exit": 1,
+      "passed": 0,
+      "failed": 2
+    },
+    "green": {
+      "exit": 0,
+      "passed": 2,
+      "failed": 0
+    },
+    "checks": [
+      "Public parser preserves [1,2] history after successful retry",
+      "Actual status component SSR renders available attempt details after success"
+    ],
+    "realNetwork": 0,
+    "focusedLint": 0,
+    "diffCheck": 0,
+    "build": {
+      "job": "job-16",
+      "exit": 0,
+      "warning": "Existing bundle >500kB"
+    }
+  },
+  "pending": [
+    "Independent shared-parser/restoration/UI compatibility",
+    "Real browser/provider acceptance"
+  ]
+}

@@ -1,3 +1,4 @@
+import { PublicationGenerationDetails } from "./PublicationGenerationDetails";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PillButton } from "@/components/shared/ui/PillButton";
@@ -67,6 +68,7 @@ export function PublicationGenerationStatus({ generation, projects }: Props) {
                   ))}
                 </ul>
               )}
+              {job && <PublicationGenerationDetails job={job} />}
               <div className="flex flex-wrap items-center gap-3">
                 {request ? (
                   <PillButton variant="outline" disabled={disabled} onClick={() => void start(projectId)}>

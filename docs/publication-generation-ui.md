@@ -1,6 +1,6 @@
 # Publication generation in Projects
 
-Creation now uses the authenticated `generate-project` function. **This is not an activated deployment.** Until the backend and scheduler are ready, the UI reports that the service is unavailable; it never silently falls back to n8n. The authoritative wire/read contract and operator activation instructions are in [publication-generation.md](publication-generation.md).
+Creation uses the authenticated `generate-project` function. The backend and scheduler are active; production frontend rollout remains separate. If the service becomes unavailable, the UI reports it and never silently falls back to n8n. The authoritative wire/read contract and operator activation instructions are in [publication-generation.md](publication-generation.md).
 
 ## User-visible behavior (S1–S4)
 
@@ -10,6 +10,15 @@ Creation now uses the authenticated `generate-project` function. **This is not a
 - Retry is offered only for a consistent terminal job with `canRetry`. It sends `retry_failed` for that exact job, not a new creation; successful preview IDs are not changed by the frontend.
 - AI and non-AI creation use the same acceptance/completion lifecycle. Neither HTTP acceptance nor an unrelated preview insert means completion. The server alone chooses the model and materializes previews.
 - Status text uses polite live regions; unchanged poll values do not change the announced text. Buttons and links reuse the dashboard styling and `PillButton`. Spanish, English and Catalan have matching translation keys.
+
+## Available attempt details (S14)
+
+- The existing banner exposes a keyboard-native, collapsed `details` section outside the live status announcement. It remains available after successful retries and identifies the job, variant, saved preview, requested/actual model and prompt version.
+- Each available record shows its actual attempt number, timestamp, outcome and localized closed-code reason. Numeric metadata includes output budget, input/output/reasoning usage, request duration, text counts and HTTP status when recorded. Reasoning is already included in output; missing values are never estimated or shown as zero.
+- A successful retry does not hide earlier failures. Older, interrupted or fenced attempts may have no saved diagnostics; the panel says so instead of inventing history. It displays available records, not a claim of complete attempt coverage.
+- RPC summaries use optional `attemptDiagnostics`; restoration selects `attempt_diagnostics` under unchanged RLS and actor checks. The diagnostics migration must precede this frontend update. Old summaries without the optional field remain usable.
+- A bounded parser reconstructs only closed fields. Malformed history becomes unavailable rather than failing the job or changing retry eligibility; arbitrary messages, prompts and response bodies are never rendered. Existing request storage, polling, actions and navigation remain unchanged.
+- Copy is provided in Spanish, English and Catalan. Static-render checks do not establish actual browser layout, keyboard or screen-reader behavior.
 
 ## Request safety and restoration
 

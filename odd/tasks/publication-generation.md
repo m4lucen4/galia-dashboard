@@ -46,8 +46,8 @@ S14. "si, cuanta más información mejor, tal vez una respuesta de 600 tokens se
 - T18 | S14 | parent + independent verifier | done | 5a581e7;4RED→4GREEN,227independentcases/986executions/206mockfetches;typecheck/lint/buildPASS. Nativeassess slicehigh(item3),reviewDuefalse/under_budget; no nativeapprovalclaim.
 - T19 | S14 | parent durable diagnostics | done | 5bf7300;SQLRED→28groupsPASS (harnessfailure retained),workerRED→GREEN5mockfetches. Existingfinish unchanged; strictmetadata/atomicwrapper. Nativeassess high(item2),reviewDuefalse; independentactivationtask pending.
 - T20 | S14,S6 | independent backend verification + parent activation | done | Source5bf7300;28SQLgroups/19workergroups/types + final-only1group2mockfetchesPASS, allfailuresretained. Migrationexact/ACLpreserved;worker7 exact6files/22othersunchanged, public401/405, passive603/604HTTP200 andfreshv2heartbeat.
-- T21 | S14 | parent client details | in_progress | Display per-attempt causes and available usage after retries, with safe parsing and es/en/cat strings. No redesign or frontend production publishing.
-- T22 | S14 | independent client verification + closure | pending | Verify old-client behavior and new diagnostic rendering; record remaining actual-provider/browser proof.
+- T21 | S14 | parent client details | done | Local optionalhistoryparser/restoration/details/es-en-cat implemented;2RED→2GREEN publicparser/SSR,lint/buildPASS. Sourcecommit pending; no frontendproductionpublishing.
+- T22 | S14 | independent client verification + closure | in_progress | Verify old-client behavior and new diagnostic rendering; record remaining actual-provider/browser proof.
 - T7 | S1-S4,S6,S12-S14 | controlled deployed validation | pending | Human confirms original prompt output can succeed but latest2variants requiredretry; freshattemptdiagnostics/reliability acceptance follows S14. n8n retained.
 
 ## Log
@@ -135,4 +135,7 @@ L55. T20 attempt2 mwas17zu-s-oob6 preparation/syntaxPASS; exact baseline migrati
 
 [Showing lines 1-134 of 136 (50.0KB limit). Use offset=135 to continue.]
 
-L60. Final-only mwasidq5-t-0hyk PASS1group/1entryrun/2mockfetches/0network, syntax/runexit0; allpreviousscripts/failureshashpreserved. IndependentT20localproofclosed. Freshproductionpreflight0activejobs, SQLbodies/OID/owner/ACL/RLS matchbackup, worker6entry4knownIDs. Appliedexactnew00200; readbacksummary/wrapperexact, legacyfinishunchanged, columnJSONBnon-null[]; wrapperPUBLIC/anon/authdenied/serviceallowed, samelegacyOID/ACL/RLS. DeployedonlyworkerACTIVE7 bundlef1fadba8c4a4dadcaf7a73ed94ef2f195802085167b8cacea21ad1321519f0d6;6filesexact,22otherfunctionsmetadataunchangedinclentry4/n8n. PublicPOST401/GET405exactbodyPASS. Passiveexistingcron net603/604HTTP200 no timeout/error,emptyworkerbody afterdeployment; freshv2heartbeat14:37:02UTC,0activejobs. No agent-triggeredmodel/job, no secret/globalkey/cron/frontendpublishchanges. T20done,T21localUIstarts.
+
+[Showing lines 1-137 of 139 (50.0KB limit). Use offset=138 to continue.]
+
+L61. T21 localfrontend details implemented: optionalboundedhistoryparser doesnotinvalidatejob/receipt; no unknownrawstrings, no fabricatedmissinghistory; restorationaddsoneRLScolumn; nativecollapsed detailsoutsidepoliteliveregion showsjob/preview/model/promptversion,actualattemptnumbers/outcomes/reasons andavailablemetrics. Missingusageunknown,reasoningincludedinoutput. Oldsummariesretainoldshapeifoptionalfieldabsent. es/en/catkeysadded; actions/hooks/retry/actorchecksunchanged. Parent2RED→2GREEN publicparser+actualstatusSSR, focusedlint/diff0, buildjob16exit0knownchunkwarning. No browser/providerassertion or productionfrontendpublication. IndependentT22stillrequiredsharedparsercompat.

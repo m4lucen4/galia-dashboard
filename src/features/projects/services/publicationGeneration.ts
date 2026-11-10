@@ -1,3 +1,4 @@
+import { parseAttemptDiagnostics } from "./publicationGenerationDiagnostics";
 import { supabase } from "@/helpers/supabase";
 import type { GenerationIssue, GenerationJob, GenerationRequest, GenerationSlot, JobStatus } from "../types/publicationGeneration";
 
@@ -62,6 +63,9 @@ export function parseGenerationJob(value: unknown): GenerationJob {
       previewId: slot.previewId === null ? null : id(slot.previewId, decimal),
       errorCode: nullableText(slot.errorCode), retryable: slot.retryable,
       actualModel: nullableText(slot.actualModel),
+      ...(slot.attemptDiagnostics === undefined ? {} : {
+        attemptDiagnostics: parseAttemptDiagnostics(slot.attemptDiagnostics, slot.attempts as number),
+      }),
     };
   });
   const succeeded = slots.filter((s) => s.state === "succeeded").length;
@@ -170,7 +174,7 @@ export async function invokeGeneration(request: GenerationRequest): Promise<Gene
 }
 
 const jobColumns = "id,project_id::text,status,total,retry_count,requested_model,prompt_version,created_at,updated_at";
-const slotColumns = "job_id,slot,state,attempts,preview_id::text,error_code,retryable,actual_model";
+const slotColumns = "job_id,slot,state,attempts,preview_id::text,error_code,retryable,actual_model,attempt_diagnostics";
 function readFailure(error: { code?: string }, status: number) {
   return issue(status === 401 || error.code === "PGRST301" ? "unauthorized"
     : ["42P01", "PGRST205"].includes(error.code ?? "") ? "not_ready" : "read_failed");
@@ -224,6 +228,7 @@ export async function restoreGenerationJobs(actor: string, signal: AbortSignal):
         slot: slot.slot, state: slot.state, attempts: slot.attempts,
         previewId: slot.preview_id, errorCode: slot.error_code,
         retryable: slot.retryable, actualModel: slot.actual_model,
+        attemptDiagnostics: slot.attempt_diagnostics,
       })),
     }));
   }

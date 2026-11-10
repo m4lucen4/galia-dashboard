@@ -1,3 +1,5 @@
+import type { GenerationAttempt } from "./publicationGenerationDiagnostics";
+
 export type GenerationRequest = {
   projectId: string;
   action: "start" | "retry_failed";
@@ -16,6 +18,7 @@ export type GenerationSlot = {
   errorCode: string | null;
   retryable: boolean;
   actualModel: string | null;
+  attemptDiagnostics?: GenerationAttempt[];
 };
 export type GenerationJob = {
   jobId: string;
