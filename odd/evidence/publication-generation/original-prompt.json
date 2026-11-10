@@ -1,0 +1,38 @@
+{
+  "spec": "S13",
+  "baseCommit": "49cc5d3686c64966ffdef97acf6b1b5b85c174bd",
+  "source": "src/n8n/creacion_publicaciones.json OpenAI messages.values[0].content",
+  "literalRule": "Remove n8n expression marker only; replace original three placeholders once; optional project prompt separate",
+  "parent": {
+    "red": {
+      "exit": 1,
+      "failed": 2
+    },
+    "green": {
+      "exit": 0,
+      "passed": 2
+    },
+    "regressions": {
+      "passed": 26,
+      "details": "Exact template plus8v1/v2 request comparisons,9legacy/nested response cases,5malformed shapes,1composition parity,1unknown-version rejection,1mixed-version worker scenario",
+      "initialExecution": "syntax0/run1 after25passinggroups; worker mock incorrectly matched /heartbeat instead of /publication_generation_heartbeat, producing500 before provider calls",
+      "orchestrationFailure": "Corrective codemode load of failed-script store returned undefined; zero additional probes, only todo updated",
+      "correction": "Only pending worker scenario rerun with correct RPC routes: exit0, both v1/v2 settled,7mockcalls,0network;25passedgroups not repeated"
+    },
+    "focusedLintExit": 0,
+    "diffCheckExit": 0,
+    "build": "job-10 exit0; known chunk-size warning",
+    "edgeTypeDiagnostics": 0
+  },
+  "independent": "pending",
+  "deployment": "not deployed",
+  "liveProvider": "not invoked",
+  "preserved": [
+    "v1 requests for old jobs/retries",
+    "non-AI descriptions",
+    "credits/hashtags",
+    "queue/leases/auth",
+    "immediate wake/cron",
+    "n8n functions"
+  ]
+}

@@ -1,5 +1,5 @@
 import { GenerationError, jsonResponse, safeFailure, type FailureCode } from "../_shared/publication-generation-errors.ts";
-import { composeDescription, generateText, PROMPT_VERSION, validateSnapshot } from "../_shared/publication-generation.ts";
+import { composeDescription, generateText, supportedPromptVersion, validateSnapshot } from "../_shared/publication-generation.ts";
 import { createStore, type Environment, workerAuthorized, workerConfig } from "../_shared/publication-generation-store.ts";
 
 // At most two sequential claims: <=90s provider time, with separate 120s leases.
@@ -25,9 +25,9 @@ export function createHandler(env: Environment, fetcher: typeof fetch = fetch) {
         let result: { description: string; model: string | null } | { error: FailureCode };
         try {
           validateSnapshot(claim.snapshot);
-          if (claim.promptVersion !== PROMPT_VERSION) throw new GenerationError("internal_error");
+          if (!supportedPromptVersion(claim.promptVersion)) throw new GenerationError("internal_error");
           const generated = claim.snapshot.requiredAI
-            ? await generateText(claim.snapshot, claim.slot, claim.model, config.apiKey, fetcher)
+            ? await generateText(claim.snapshot, claim.slot, claim.model, config.apiKey, fetcher, claim.promptVersion)
             : undefined;
           result = { description: composeDescription(claim.snapshot, generated), model: generated?.model ?? null };
         } catch (error) {
