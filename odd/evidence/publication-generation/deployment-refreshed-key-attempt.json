@@ -1,0 +1,35 @@
+{
+  "target": "mygqfdbloqojffhsurgo",
+  "humanPrerequisite": "ya he vuelto a guardar publication_generation_service_role_key",
+  "probe": {
+    "activation_check": {
+      "jobs": 0,
+      "readiness": null,
+      "worker_http": {
+        "result": {
+          "code": "unauthorized",
+          "fenced": null,
+          "claimed": null,
+          "settled": null
+        },
+        "status": 401,
+        "timed_out": false,
+        "request_id": 306,
+        "transport_error": false
+      }
+    }
+  },
+  "correlation": {
+    "id": 306,
+    "created": "2026-11-10 08:40:58.317263+00",
+    "status_code": 401,
+    "gateway_request_id": "01a1c49e-1c11-7342-86e7-913a238410ab",
+    "execution_id": "3af196ba-be8d-4056-95ab-f8df81f0c834"
+  },
+  "sourceDiagnosis": "No demonstrated source defect. 401 means missing runtime service key or missing/malformed/mismatching bearer before heartbeat. Vault role/ref claims alone do not prove equality or signature. WebCrypto error would be500; model/OpenAI config failures503.",
+  "availableMcpLogsTool": false,
+  "additionalInvocations": 0,
+  "schedulerActivated": false,
+  "openAICalls": 0,
+  "next": "Need operator-side execution/config metadata; never paste secrets or request headers. Do not repeat blind key copy, invoke unchanged credential, weaken auth or redeploy unproven fix."
+}
