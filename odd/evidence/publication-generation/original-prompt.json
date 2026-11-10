@@ -71,16 +71,119 @@
         "exact": true
       }
     ],
-    "entry": "still v3; not redeployed",
+    "entry": {
+      "id": "c99f4f4d-f3c2-4150-9658-c5f3d339382b",
+      "slug": "generate-project",
+      "name": "generate-project",
+      "status": "ACTIVE",
+      "version": 4,
+      "created_at": 1794264874072,
+      "updated_at": 1794313871108,
+      "verify_jwt": false,
+      "import_map": false,
+      "entrypoint_path": "file:///tmp/user_fn_mygqfdbloqojffhsurgo_c99f4f4d-f3c2-4150-9658-c5f3d339382b_4/source/generate-project/index.ts",
+      "ezbr_sha256": "bab49f8345310507fe2cde6802f0e0de862d38afbc70cc222085e8332183a30b"
+    },
     "probe": {
       "id": 452,
       "status": 503,
       "code": "not_ready",
       "activeJobs": 0
     },
-    "blocker": "Original immutable001 heartbeat function rejects every prompt version exceptv1; local mock and staticSQL003 verification missed it. T17 forward correction required; no invocation replay or rollback."
+    "blocker": "Resolved by verified forward heartbeat migration2d2ab3f; failed452retained.",
+    "finalReadback": {
+      "entryFiles": [
+        {
+          "name": "generate-project/index.ts",
+          "exact": true
+        },
+        {
+          "name": "_shared/publication-generation.ts",
+          "exact": true
+        },
+        {
+          "name": "_shared/publication-generation-errors.ts",
+          "exact": true
+        },
+        {
+          "name": "_shared/publication-generation-store.ts",
+          "exact": true
+        },
+        {
+          "name": "_shared/publication-generation-wake.ts",
+          "exact": true
+        },
+        {
+          "name": "_shared/publication-generation-prompt.ts",
+          "exact": true
+        }
+      ],
+      "otherFunctionsUnchanged": [
+        "n8n-trigger",
+        "linkedin-exchange-code",
+        "linkedin-verify-token",
+        "n8n-linkedln-trigger",
+        "linkedin-fetch-admin-pages",
+        "instagram-exchange-code",
+        "instagram-verify-token",
+        "instagram-fetch-admin-pages",
+        "n8n-create-publications",
+        "instant-publication",
+        "iterate-publication",
+        "create-folder-synology",
+        "serve-photo",
+        "stripe-webhook",
+        "contact",
+        "project-analytics",
+        "odoo-project-sync",
+        "odoo-project-sync-partner-name",
+        "odoo-contacts",
+        "move-user-media",
+        "public-projects"
+      ]
+    },
+    "correctedRuntime": {
+      "response": {
+        "id": 470,
+        "timed_out": false,
+        "status_code": 200,
+        "transport_error": false,
+        "empty_worker_result": true
+      },
+      "readiness": {
+        "fresh": true,
+        "model": "gpt-6-luna",
+        "last_seen": "2026-11-10T12:30:00.644065+00:00",
+        "prompt_version": "publication-es-v2"
+      },
+      "active_jobs": 0
+    },
+    "publicSmokes": {
+      "exit": 0,
+      "credentialsSent": false,
+      "cases": [
+        {
+          "endpoint": "generate-project",
+          "method": "POST",
+          "status": 401,
+          "exactBody": true
+        },
+        {
+          "endpoint": "generate-project",
+          "method": "GET",
+          "status": 405,
+          "exactBody": true
+        },
+        {
+          "endpoint": "process-publication-generation",
+          "method": "POST",
+          "status": 401,
+          "exactBody": true
+        }
+      ]
+    }
   },
-  "liveProvider": "not invoked",
+  "liveProvider": "No paid invocation in this rollout; human test of restored prompt pending. Earlier AI test and subsequently visible consumption were confirmed by human.",
   "preserved": [
     "v1 requests for old jobs/retries",
     "non-AI descriptions",
@@ -89,5 +192,13 @@
     "immediate wake/cron",
     "n8n functions"
   ],
-  "sourceCommit": "a514491f9011ff6e1df09f77d8eab06faa4df759"
+  "sourceCommit": "a514491f9011ff6e1df09f77d8eab06faa4df759",
+  "nativeAssessment": {
+    "baseRef": "49cc5d3686c64966ffdef97acf6b1b5b85c174bd",
+    "changedLines": 167,
+    "reviewDue": false,
+    "reason": "under_budget",
+    "highRisk": 3,
+    "independentCompleted": true
+  }
 }

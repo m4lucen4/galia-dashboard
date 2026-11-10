@@ -10,11 +10,19 @@
   "environment": {
     "container": "galia-prompt-heartbeat-01a1c184",
     "network": "none",
-    "mounts": "none",
+    "mounts": "No host bind mounts; image-managed anonymous data volume",
     "image": "postgres:17-alpine cached sha256:3540c0362c809df084ffac0ae69fe794515f9de92692f02178bcdce0ef0302ac",
     "setupJob": 11,
     "setupExit": 0,
-    "syntheticOnly": true
+    "syntheticOnly": true,
+    "cleanup": {
+      "containerId": "b64d9b4d96a4505c911557ca74343e138d0c21c65b090f7102b14776e1078644",
+      "stopped": true,
+      "autoRemove": true,
+      "hostBinds": 0,
+      "publishedPorts": 0,
+      "evidencePreserved": true
+    }
   },
   "parent": {
     "red": {
@@ -37,6 +45,77 @@
     },
     "original001Sha256": "070eec3f3e8e99e5876a4b0915d1b4cbfe1aa5243369cd255e0ba47673424542"
   },
-  "independent": "pending",
-  "production": "not applied; worker6/entry3 retained; no request452 replay"
+  "independent": {
+    "task": "mwanx7yv-o-ky41",
+    "verdict": "PASS S13/T17",
+    "groups": 36,
+    "sqlCalls": 74,
+    "successExits": 34,
+    "expectedRejectionExits": 40,
+    "legacyDifferentials": 21,
+    "syntaxExit": 0,
+    "runExit": 0,
+    "setupErrors": 0,
+    "reruns": 0,
+    "advisoryLockObserved": "ExclusiveLock (740219,1)",
+    "applicationRolesServiceOnly": true,
+    "missingPrerequisiteLeavesEmptyDb": true
+  },
+  "production": {
+    "migration": {
+      "success": true
+    },
+    "backup": "heartbeat-before-v2.json",
+    "postcondition": {
+      "heartbeat": {
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "oid": "432294",
+        "body": "\nbegin\n  perform pg_advisory_xact_lock(740219, 1);\n  if p_model is null or p_model !~ '^[a-zA-Z0-9._:-]{1,120}$' or p_prompt_version not in ('publication-es-v1', 'publication-es-v2') or p_prompt_version is null then\n    raise exception 'not_ready';\n  end if;\n  insert into public.publication_generation_readiness(singleton, last_seen, model, prompt_version)\n    values (true, clock_timestamp(), p_model, p_prompt_version)\n    on conflict (singleton) do update set last_seen = excluded.last_seen,\n      model = excluded.model, prompt_version = excluded.prompt_version;\nend;\n",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "security_definer": true
+      },
+      "readiness": {
+        "fresh": false,
+        "model": "gpt-6-luna",
+        "last_seen": "2026-11-10T12:11:00.554568+00:00",
+        "prompt_version": "publication-es-v1"
+      },
+      "active_jobs": 0
+    },
+    "correctedProbe": {
+      "response": {
+        "id": 470,
+        "timed_out": false,
+        "status_code": 200,
+        "transport_error": false,
+        "empty_worker_result": true
+      },
+      "readiness": {
+        "fresh": true,
+        "model": "gpt-6-luna",
+        "last_seen": "2026-11-10T12:30:00.644065+00:00",
+        "prompt_version": "publication-es-v2"
+      },
+      "active_jobs": 0
+    },
+    "originalFailure": {
+      "id": 452,
+      "status": 503,
+      "code": "not_ready",
+      "preserved": true
+    },
+    "note": "New invocation470 followed actual allowlist correction; no replay of452 or worker redeploy."
+  },
+  "sourceCommit": "2d2ab3fb390c1e8a1795fbaedf644ca15fe52968",
+  "nativeAssessment": {
+    "baseRef": "a514491f9011ff6e1df09f77d8eab06faa4df759",
+    "changedLines": 137,
+    "reviewDue": false,
+    "reason": "under_budget",
+    "highRisk": 2,
+    "independentCompleted": true
+  }
 }

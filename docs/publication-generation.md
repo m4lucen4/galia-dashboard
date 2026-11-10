@@ -156,7 +156,7 @@ New jobs store `requested_model` and `prompt_version = publication-es-v2`; alrea
 
 ## Immediate wake and durable recovery
 
-S12 activation: source `f2d551b` is deployed as `generate-project` v3 after 43 independent differential cases passed. All five deployed files match exactly; the other 22 functions, including worker v5 and n8n, are unchanged. Live unauthenticated POST and invalid-method GET return the expected401/405 bodies. Evidence: `odd/evidence/publication-generation/immediate-worker-wake.json`. Actual post-change user latency still requires a browser test; neither deployment nor mock probes establish it.
+Historical S12 activation: source `f2d551b` was deployed as `generate-project` v3 (superseded by the S13 versions below) after 43 independent differential cases passed. All five deployed files match exactly; the other 22 functions, including worker v5 and n8n, are unchanged. Live unauthenticated POST and invalid-method GET return the expected401/405 bodies. Evidence: `odd/evidence/publication-generation/immediate-worker-wake.json`. Actual post-change user latency still requires a browser test; neither deployment nor mock probes establish it.
 
 After Auth validation and a successful transactional `start`/`retry_failed`, the entry builds the unchanged job response. If the returned job is queued/running with pending slots, it registers one best-effort worker POST with `EdgeRuntime.waitUntil` without awaiting completion. Active-job replay may also wake it; a terminal response does not. The destination is the fixed worker path on the server's HTTPS `SUPABASE_URL`, never request input. Only the dedicated worker secret is sent: no user Bearer, database key, snapshot or project identifiers. Redirects are forbidden and the request is bounded to 145 seconds; response bodies are discarded, never logged.
 
@@ -282,6 +282,8 @@ Independent verifier must exercise, against an isolated real database/runtime:
 Each slice is removable without changing unrelated features. Receipt/data rollback must preserve generated previews and durable identities; production rollback needs an operator plan, not destructive SQL. Backend line count exceeds the advisory review target; do not compress safeguards to fit it.
 
 ## Original n8n editorial prompt
+
+Activated under S13: worker v6 and entry v4 contain exact source `a514491`; forward heartbeat migration `2d2ab3f` is applied with the same owner/OID/ACL/search path. Independent prompt checks passed47 groups; independent SQL checks passed36 groups/74 calls. After correcting the retained503 failure, fresh private probe470 returned200 with no claimed work and fresh v2 readiness. All deployed files match; the other21 functions, including n8n, are unchanged. Live public rejection checks passed. See `odd/evidence/publication-generation/{original-prompt,prompt-v2-readiness}.json`. A human-generated publication using the restored prompt remains the final content-acceptance check.
 
 `publication-es-v2` restores the exact OpenAI message template from `src/n8n/creacion_publicaciones.json`. The deployment copy lives in `_shared/publication-generation-prompt.ts`: only n8n's leading `=` expression marker is removed. Description, keywords and variant are interpolated in one pass, preserving whitespace, wording and literal placeholder-like text inside project data. No extra editorial angle or rewritten tone is appended. The optional project prompt remains a separate user message; technical trust instructions remain separate from the editorial template.
 
