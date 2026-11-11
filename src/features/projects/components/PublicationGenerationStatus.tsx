@@ -1,4 +1,5 @@
 import { PublicationGenerationDetails } from "./PublicationGenerationDetails";
+import { selectGenerationJob } from "../utils/publicationGenerationSelection";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PillButton } from "@/components/shared/ui/PillButton";
@@ -9,21 +10,33 @@ type Props = {
   generation: ReturnType<typeof usePublicationGeneration>;
   projects: { id: string; title: string }[];
   onConfigure: (projectId: string) => void;
+  recoveryOnly?: boolean;
 };
 
-export function PublicationGenerationStatus({ generation, projects, onConfigure }: Props) {
+export function PublicationGenerationStatus({ generation, projects, onConfigure, recoveryOnly = false }: Props) {
   const { t } = useTranslation();
   const { jobs, requests, issues, busy, readIssue, loading, start, refresh } = generation;
-  const projectIds = [...new Set([
-    ...jobs.map((job) => job.projectId), ...requests.map((request) => request.projectId),
+  const attentionIds = [...new Set([
+    ...requests.map((request) => request.projectId),
     ...Object.keys(issues).filter((key) => key !== "storage" && issues[key].code),
   ])];
+  const selected = selectGenerationJob(jobs);
+  const projectIds = recoveryOnly ? attentionIds : selected ? [selected.projectId] : [];
   const message = (code: string) => t(`publicationGeneration.errors.${safeGenerationIssue({ code }).code}`);
-  if (!projectIds.length && !readIssue && !issues.storage && !loading) return null;
+  if (recoveryOnly && !projectIds.length && !readIssue && !issues.storage && !loading) return null;
 
   return (
     <section aria-label={t("publicationGeneration.title")} className="space-y-4 border-b border-[#010000]/15 pb-8">
-      <h2 className="text-xl font-medium">{t("publicationGeneration.title")}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-medium">{t(recoveryOnly ? "publicationGeneration.history.attention" : "publicationGeneration.title")}</h2>
+        {!recoveryOnly && (
+          <Link to="/projects/generation-history" state={{ actor: generation.actor, issues }}
+            className="inline-flex min-h-11 items-center rounded-full px-3 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">
+            {t("publicationGeneration.history.title")}
+            {attentionIds.length > 0 && ` · ${t("publicationGeneration.history.attentionCount", { count: attentionIds.length })}`}
+          </Link>
+        )}
+      </div>
       <p className="text-sm text-[#010000]/75">{t("publicationGeneration.navigation")}</p>
       {loading && <p role="status">{t("publicationGeneration.restoring")}</p>}
       {issues.storage && <p role="status">{message("storage")}</p>}
@@ -37,7 +50,7 @@ export function PublicationGenerationStatus({ generation, projects, onConfigure 
       )}
       <ul className="space-y-5">
         {projectIds.map((projectId) => {
-          const job = jobs.find((entry) => entry.projectId === projectId);
+          const job = recoveryOnly ? jobs.find((entry) => entry.projectId === projectId) : selected;
           const request = requests.find((entry) => entry.projectId === projectId);
           const failure = issues[projectId];
           const sending = busy.includes(projectId);

@@ -240,6 +240,20 @@ async function readStoredGenerationJob(
   };
 }
 
+// Exact RLS-visible job for a deliberate historical retry, never a client snapshot.
+export async function readGenerationJob(
+  actor: string, jobId: string, signal: AbortSignal,
+): Promise<PersistedGenerationJob | null> {
+  await verifyGenerationActor(actor);
+  const { data, error, status } = await supabase.from("publication_generation_jobs")
+    .select(jobColumns).eq("id", id(jobId, uuid)).abortSignal(signal);
+  if (error) throw readFailure(error, status);
+  if (!Array.isArray(data) || data.length > 1) throw issue("read_failed");
+  const job = data.length ? await readStoredGenerationJob(object(data[0]), signal) : null;
+  await verifyGenerationActor(actor);
+  return job;
+}
+
 export async function readGenerationHistory(
   actor: string, page: number, signal: AbortSignal,
 ): Promise<GenerationHistoryPage> {

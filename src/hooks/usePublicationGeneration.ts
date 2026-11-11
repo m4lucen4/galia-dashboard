@@ -3,7 +3,7 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { updateProjectPreview } from "@/redux/actions/ProjectActions";
 import {
   acknowledgeGenerationRequest, isActive, outstandingRequests, prepareGenerationRequest,
-  restoreGenerationJobs, safeGenerationIssue,
+  readGenerationJob, restoreGenerationJobs, safeGenerationIssue,
 } from "@/features/projects/services/publicationGeneration";
 import type { GenerationConfiguration, GenerationIssue, GenerationJob, GenerationRequest } from "@/features/projects/types/publicationGeneration";
 
@@ -23,6 +23,7 @@ type Session = {
   busy: Set<string>;
   jobs: GenerationJob[];
   revision: number;
+  signal: AbortSignal;
   refresh: () => void;
   accept: (jobs: GenerationJob[]) => void;
 };
@@ -37,12 +38,12 @@ export function usePublicationGeneration(onResultsChanged: () => void) {
   useEffect(() => { notify.current = onResultsChanged; }, [onResultsChanged]);
 
   useEffect(() => {
+    const controller = new AbortController();
     const context: Session = {
       actor, alive: true, authorized: true, busy: new Set(), jobs: [], revision: 0,
-      refresh: () => {}, accept: () => {},
+      signal: controller.signal, refresh: () => {}, accept: () => {},
     };
     session.current = context;
-    const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout> | undefined;
     let reading = false;
     let readAgain = false;
@@ -56,6 +57,10 @@ export function usePublicationGeneration(onResultsChanged: () => void) {
     };
     context.accept = (jobs) => {
       if (!current()) return;
+      jobs = jobs.map((job) => {
+        const known = context.jobs.find((previous) => previous.jobId === job.jobId);
+        return !job.createdAt && known?.createdAt ? { ...job, createdAt: known.createdAt } : job;
+      });
       context.jobs = jobs;
       update({ jobs });
       let changed = false;
@@ -127,11 +132,25 @@ export function usePublicationGeneration(onResultsChanged: () => void) {
     };
     let request: GenerationRequest | undefined;
     try {
-      const pending = outstandingRequests(actor).find((r) => r.projectId === projectId);
+      let pending = outstandingRequests(actor).find((r) => r.projectId === projectId);
       if (!pending && context.jobs.some((job) => job.projectId === projectId && isActive(job))) return;
       if (retryJob && !pending) {
-        const latest = context.jobs.find((job) => job.jobId === retryJob.jobId);
-        if (!latest?.canRetry || !latest.consistent) return;
+        patch({ busy: [...context.busy] });
+        const [latest, restored] = await Promise.all([
+          readGenerationJob(actor, retryJob.jobId, context.signal),
+          restoreGenerationJobs(actor, context.signal),
+        ]);
+        if (!current()) return;
+        // A receipt created during validation still wins over a new retry.
+        pending = outstandingRequests(actor).find((r) => r.projectId === projectId);
+        if (!pending) {
+          if (!latest || latest.projectId !== projectId) throw { code: "forbidden" };
+          if ([...restored, ...context.jobs].some((job) => job.projectId === projectId && isActive(job))) {
+            throw { code: "conflict" };
+          }
+          if (!latest.canRetry || !latest.consistent) throw { code: "conflict" };
+          retryJob = latest;
+        }
       }
       request = prepareGenerationRequest(actor, projectId, retryJob, configuration);
       patch({ requests: outstandingRequests(actor), busy: [...context.busy] });
@@ -139,7 +158,9 @@ export function usePublicationGeneration(onResultsChanged: () => void) {
       const job = await dispatch(updateProjectPreview({ actor, request })).unwrap();
       if (!current()) return; // Keep receipt for replay after navigation/actor switch.
       context.revision++;
-      context.accept([...context.jobs.filter((old) => old.projectId !== projectId), job]);
+      const accepted = !job.createdAt && retryJob?.jobId === job.jobId && retryJob.createdAt
+        ? { ...job, createdAt: retryJob.createdAt } : job;
+      context.accept([...context.jobs.filter((old) => old.projectId !== projectId), accepted]);
       acknowledgeGenerationRequest(actor, request.requestId);
       patch({ requests: outstandingRequests(actor) });
       context.refresh();

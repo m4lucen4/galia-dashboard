@@ -2,9 +2,8 @@ import { useTranslation } from "react-i18next";
 import type { GenerationJob } from "../types/publicationGeneration";
 import { diagnosticMetrics } from "../types/publicationGenerationDiagnostics";
 
-export function PublicationGenerationDetails({ job }: { job: GenerationJob }) {
+export function PublicationGenerationDetails({ job }: Readonly<{ job: GenerationJob }>) {
   const { t, i18n } = useTranslation();
-  if (!job.slots.some((slot) => slot.attempts > 0)) return null;
   const language = i18n.resolvedLanguage ?? i18n.language ?? "es";
   const locale = language.startsWith("en") ? "en" : language.startsWith("ca") ? "ca" : "es";
   const prefix = "publicationGeneration.diagnostics";
@@ -15,7 +14,7 @@ export function PublicationGenerationDetails({ job }: { job: GenerationJob }) {
       </summary>
       <div className="space-y-4 pb-4">
         <p className="break-all">{t(`${prefix}.job`, { id: job.jobId })}</p>
-        <p className="break-words">{t(`${prefix}.model`, { model: job.requestedModel })}</p>
+        <p className="wrap-break-word">{t(`${prefix}.model`, { model: job.requestedModel })}</p>
         <p>{t(`${prefix}.promptVersion`, { version: job.promptVersion })}</p>
         {job.slots.map((slot) => (
           <div key={slot.slot} className="space-y-2 border-t border-[#010000]/10 pt-3">

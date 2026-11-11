@@ -1,5 +1,17 @@
 {
   "publicationGeneration": {
+    "history": {
+      "title": "Generation history",
+      "description": "Generations for projects you can access, newest first. Unavailable projects are identified by their number.",
+      "back": "Back to projects",
+      "loading": "Loading generation history…",
+      "empty": "No visible generations on this page. Refresh or generate from Projects.",
+      "firstPage": "Go to the first page",
+      "page": "Page {{page}} of {{total}} · {{count}} generations",
+      "attention": "Pending requests and notices",
+      "attentionCount": "Projects with notices: {{count}}",
+      "active": "This project has an active generation. Wait for it to finish before retrying another."
+    },
     "modal": {
       "title": "Generate publications",
       "description": "Choose settings for this generation. They are saved only when you generate.",
