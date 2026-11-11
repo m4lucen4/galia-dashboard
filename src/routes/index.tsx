@@ -6,6 +6,7 @@ import { Profile } from "../features/profile/screens/Profile";
 import { Settings } from "../features/settings/screens/Settings";
 import { Users } from "../features/users/screens/Users";
 import { Projects } from "../features/projects/screens/Projects";
+import { PublicationGenerationHistory } from "../features/projects/screens/PublicationGenerationHistory";
 import { ProjectsAnalytics } from "../features/projects/screens/ProjectsAnalytics";
 import { MyGpts } from "../features/adminPanel/screens/MyGpts";
 import { Documentation } from "../features/documentation/screens/Documentation";
@@ -59,6 +60,7 @@ export const AppRoutes = () => (
       <Route path="/settings" element={<Settings />} />
       <Route path="/my-gpts" element={<MyGpts />} />
       <Route path="/projects" element={<Projects />} />
+      <Route path="/projects/generation-history" element={<PublicationGenerationHistory />} />
       <Route path="/projects-analytics" element={<ProjectsAnalytics />} />
       <Route path="/multimedia" element={<Multimedia />} />
       <Route path="/preview-projects" element={<PreviewProjects />} />

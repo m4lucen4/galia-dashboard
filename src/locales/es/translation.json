@@ -1,5 +1,17 @@
 {
   "publicationGeneration": {
+    "history": {
+      "title": "Histórico de generaciones",
+      "description": "Generaciones de los proyectos a los que tienes acceso, de más reciente a más antigua. Los proyectos no disponibles se identifican por su número.",
+      "back": "Volver a proyectos",
+      "loading": "Cargando el histórico…",
+      "empty": "No hay generaciones visibles en esta página. Puedes volver a consultar o generar desde Proyectos.",
+      "firstPage": "Ir a la primera página",
+      "page": "Página {{page}} de {{total}} · {{count}} generaciones",
+      "attention": "Solicitudes y avisos pendientes",
+      "attentionCount": "Proyectos con avisos: {{count}}",
+      "active": "Hay una generación activa en este proyecto. Espera a que termine antes de reintentar otra."
+    },
     "modal": {
       "title": "Generar publicaciones",
       "description": "Elige los ajustes para esta generación. Solo se guardan al generar.",

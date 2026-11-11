@@ -1,5 +1,17 @@
 {
   "publicationGeneration": {
+    "history": {
+      "title": "Històric de generacions",
+      "description": "Generacions dels projectes als quals tens accés, de més recent a més antiga. Els projectes no disponibles s’identifiquen pel seu número.",
+      "back": "Tornar a projectes",
+      "loading": "Carregant l’històric…",
+      "empty": "No hi ha generacions visibles en aquesta pàgina. Pots tornar a consultar o generar des de Projectes.",
+      "firstPage": "Anar a la primera pàgina",
+      "page": "Pàgina {{page}} de {{total}} · {{count}} generacions",
+      "attention": "Sol·licituds i avisos pendents",
+      "attentionCount": "Projectes amb avisos: {{count}}",
+      "active": "Hi ha una generació activa en aquest projecte. Espera que acabi abans de reintentar-ne una altra."
+    },
     "modal": {
       "title": "Generar publicacions",
       "description": "Tria els ajustos per a aquesta generació. Només es desen en generar.",

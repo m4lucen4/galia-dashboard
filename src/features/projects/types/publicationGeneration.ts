@@ -35,6 +35,8 @@ export type GenerationJob = {
   total: number;
   retryCount: number;
   updatedAt: string;
+  // Present on database reads; existing start/retry/replay summaries omit it.
+  createdAt?: string;
   requestedModel: string;
   promptVersion: string;
   succeeded: number;
@@ -44,4 +46,14 @@ export type GenerationJob = {
   slots: GenerationSlot[];
   // Jobs and slots are separate SELECTs: don't announce a torn snapshot as settled.
   consistent: boolean;
+};
+
+export type PersistedGenerationJob = GenerationJob & { createdAt: string };
+
+export type GenerationHistoryPage = {
+  jobs: PersistedGenerationJob[];
+  // One-based; page size is fixed, not caller-configurable.
+  page: number;
+  pageSize: 10;
+  totalCount: number;
 };
