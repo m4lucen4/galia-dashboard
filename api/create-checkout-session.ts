@@ -93,8 +93,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (!req.body?.uid) return await createPendingRegistrationCheckout(req.body ?? {}, res);
 
-    // Legacy flow (account created before payment). Kept until public sign-ups are
-    // disabled (T5) so tabs opened before the deploy keep working.
+    // Existing account starting a subscription (Settings → Subscription, startSubscription).
+    // Always requires the account's own session: accounts are no longer created before payment.
     const { uid, email, plan_type, billing_period, myweb = false } = req.body ?? {};
     if (!uid || !email || !plan_type || !billing_period) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -103,16 +103,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "Invalid plan type, billing period or myWeb selection" });
     }
 
+    const { user } = await authenticatedUser(req);
+    if (user.id !== uid) throw new BillingError(403, "Forbidden");
+
     const db = database();
     const { data: profile, error: profileError } = await db.from("userData")
       .select("uid, email, first_name, last_name, phone, active, has_web").eq("uid", uid).single();
     if (profileError || !profile || profile.email.toLowerCase() !== String(email).toLowerCase()) {
       return res.status(400).json({ error: "Invalid registration profile" });
-    }
-    // New registrations can still check out before email confirmation. Existing active users must authenticate.
-    if (profile.active || req.headers.authorization) {
-      const { user } = await authenticatedUser(req);
-      if (user.id !== uid) throw new BillingError(403, "Forbidden");
     }
     const { data: existing, error: existingError } = await db.from("subscriptions")
       .select("stripe_subscription_id").eq("user_id", uid).in("status", ["active", "trialing", "past_due", "incomplete"]);
