@@ -64,10 +64,8 @@ async function createPendingRegistrationCheckout(body: Record<string, unknown>, 
 
   const password_hash = await bcrypt.hash(password, BCRYPT_COST);
 
-  // A new attempt replaces any unpaid registration for the same email.
-  const { error: cleanupError } = await db.from("pending_registrations").delete().eq("email", email).is("consumed_at", null);
-  if (cleanupError) throw new Error("Could not replace previous registration");
-
+  // Earlier unpaid registrations for this email are left alone: deleting them here would let
+  // anyone cancel another person's in-flight checkout. They expire and the daily cleanup drops them.
   const { data: pending, error: pendingError } = await db
     .from("pending_registrations")
     .insert({ email, first_name, last_name, phone, password_hash, billing_period, myweb })
