@@ -18,7 +18,7 @@ Branch: feat/register-after-payment (stacked on fix/user-data-billing-guard). Ev
 ## Tasks
 
 - [x] T1 (4.1) S2 S9 — DB: `pending_registrations` + `stripe_webhook_events` tables, server-only — route: inline migration — commit: 64748d7
-- [ ] T2 (4.2) S2 S4 S6 S9 — stripe-webhook creates the user from a pending registration; event dedupe; legacy uid flow unchanged — route: inline — commit: -
+- [x] T2 (4.2) S2 S4 S6 S9 — stripe-webhook creates the user from a pending registration; event dedupe; legacy uid flow unchanged — route: inline — commit: 88b89b0
 - [ ] T3 (4.3) S2 S3 S9 — create-checkout-session hashes the password and stores the pending registration; RegisterActions stops calling signUp/insert; form unchanged — route: inline — commit: -
 - [ ] T4 (4.4) S7 — admin user creation through a server endpoint with the same form, fields and active option — route: inline — commit: -
 - [ ] T5 (4.5) S1 S2 — user disables "Allow new users to sign up"; verify direct signUp fails — route: user action + check — commit: -
