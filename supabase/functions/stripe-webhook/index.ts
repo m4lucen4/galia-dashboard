@@ -9,16 +9,35 @@ const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET")!;
 const resendApiKey = Deno.env.get("RESEND_API_KEY")!;
 const n8nWebhook = Deno.env.get("N8N_CREATE_PROJECT_WEBHOOK")!;
 
-async function verifyStripeSignature(payload: string, signature: string, secret: string): Promise<boolean> {
-  const parts: Record<string, string> = {};
+// Stripe's default tolerance: reject signatures older or newer than 5 minutes (replays).
+const SIGNATURE_TOLERANCE_SECONDS = 300;
+
+type SignatureCheck = "valid" | "invalid" | "stale";
+
+function timingSafeEqualHex(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+async function verifyStripeSignature(payload: string, signature: string, secret: string): Promise<SignatureCheck> {
+  if (!secret) return "invalid";
+
+  let timestamp: string | undefined;
+  const signatures: string[] = [];
   for (const part of signature.split(",")) {
-    const [key, value] = part.split("=");
-    parts[key] = value;
+    const separator = part.indexOf("=");
+    if (separator === -1) continue;
+    const key = part.slice(0, separator).trim();
+    const value = part.slice(separator + 1).trim();
+    if (key === "t") timestamp = value;
+    // Stripe sends several v1 signatures while a webhook secret is being rolled.
+    if (key === "v1" && value) signatures.push(value);
   }
 
-  const timestamp = parts["t"];
-  const sig = parts["v1"];
-  if (!timestamp || !sig) return false;
+  if (!timestamp || !/^\d+$/.test(timestamp) || signatures.length === 0) return "invalid";
+  if (Math.abs(Math.floor(Date.now() / 1000) - Number(timestamp)) > SIGNATURE_TOLERANCE_SECONDS) return "stale";
 
   const signedPayload = `${timestamp}.${payload}`;
   const key = await crypto.subtle.importKey(
@@ -34,7 +53,12 @@ async function verifyStripeSignature(payload: string, signature: string, secret:
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
-  return computedSig === sig;
+  return signatures.some((sig) => timingSafeEqualHex(computedSig, sig)) ? "valid" : "invalid";
+}
+
+// PostgREST returns PGRST116 when .single() matches no row: retrying cannot fix that.
+function isNoRowsError(error: any): boolean {
+  return error?.code === "PGRST116";
 }
 
 async function stripeGet(path: string) {
@@ -117,8 +141,11 @@ Deno.serve(async (req) => {
   }
 
   const body = await req.text();
-  const valid = await verifyStripeSignature(body, signature, webhookSecret);
-  if (!valid) {
+  const check = await verifyStripeSignature(body, signature, webhookSecret);
+  if (check === "stale") {
+    return new Response("Signature timestamp outside tolerance", { status: 400 });
+  }
+  if (check !== "valid") {
     return new Response("Invalid signature", { status: 400 });
   }
 
@@ -145,7 +172,7 @@ Deno.serve(async (req) => {
         const invoice = event.data.object;
         const subscriptionId = invoice.subscription ?? invoice.parent?.subscription_details?.subscription;
         if (subscriptionId && await syncNewSubscription(subscriptionId, supabase)) break;
-        if (event.type === "invoice.payment_failed") await handlePaymentFailed(invoice, supabase);
+        if (event.type === "invoice.payment_failed") await handlePaymentFailed(subscriptionId, supabase);
         break;
       }
       default:
@@ -198,7 +225,8 @@ async function handleCheckoutCompleted(session: any, supabase: any) {
     .update({ active: true })
     .eq("uid", uid);
 
-  if (activateError) console.error("Error activating user:", activateError);
+  // Throw so the handler answers 500 and Stripe retries instead of leaving a paid user inactive.
+  if (activateError) throw new Error(`Error activating user: ${activateError.message}`);
 
   const { error: subError } = await supabase
     .from("subscriptions")
@@ -216,7 +244,7 @@ async function handleCheckoutCompleted(session: any, supabase: any) {
       { onConflict: "stripe_subscription_id" },
     );
 
-  if (subError) console.error("Error creating subscription:", subError);
+  if (subError) throw new Error(`Error creating subscription: ${subError.message}`);
   }
 
   try {
@@ -304,10 +332,14 @@ async function handleSubscriptionUpdated(subscription: any, supabase: any) {
     .select("user_id")
     .single();
 
-  if (error) { console.error("Error updating subscription:", error); return; }
+  if (error) {
+    if (isNoRowsError(error)) { console.error("Subscription not found for update:", subscription.id); return; }
+    throw new Error(`Error updating subscription: ${error.message}`);
+  }
 
   if (subRecord?.user_id) {
-    await supabase.from("userData").update({ active: status === "active" }).eq("uid", subRecord.user_id);
+    const { error: userError } = await supabase.from("userData").update({ active: status === "active" }).eq("uid", subRecord.user_id);
+    if (userError) throw new Error(`Error updating user access: ${userError.message}`);
   }
 }
 
@@ -319,25 +351,36 @@ async function handleSubscriptionDeleted(subscription: any, supabase: any) {
     .select("user_id")
     .single();
 
-  if (error) { console.error("Error cancelling subscription:", error); return; }
+  if (error) {
+    if (isNoRowsError(error)) { console.error("Subscription not found for cancellation:", subscription.id); return; }
+    throw new Error(`Error cancelling subscription: ${error.message}`);
+  }
 
   if (subRecord?.user_id) {
-    await supabase.from("userData").update({ active: false }).eq("uid", subRecord.user_id);
+    const { error: userError } = await supabase.from("userData").update({ active: false }).eq("uid", subRecord.user_id);
+    if (userError) throw new Error(`Error deactivating user: ${userError.message}`);
   }
 }
 
-async function handlePaymentFailed(invoice: any, supabase: any) {
-  const subscriptionId = invoice.subscription;
+// subscriptionId is resolved by the caller from invoice.subscription or, on newer Stripe API
+// versions, invoice.parent.subscription_details.subscription.
+async function handlePaymentFailed(subscriptionId: string | undefined, supabase: any) {
   if (!subscriptionId) return;
 
-  const { data: subRecord } = await supabase
+  const { data: subRecord, error } = await supabase
     .from("subscriptions")
     .update({ status: "past_due", updated_at: new Date().toISOString() })
     .eq("stripe_subscription_id", subscriptionId)
     .select("user_id")
     .single();
 
+  if (error) {
+    if (isNoRowsError(error)) { console.error("Subscription not found for failed payment:", subscriptionId); return; }
+    throw new Error(`Error marking subscription past_due: ${error.message}`);
+  }
+
   if (subRecord?.user_id) {
-    await supabase.from("userData").update({ active: false }).eq("uid", subRecord.user_id);
+    const { error: userError } = await supabase.from("userData").update({ active: false }).eq("uid", subRecord.user_id);
+    if (userError) throw new Error(`Error deactivating user: ${userError.message}`);
   }
 }
