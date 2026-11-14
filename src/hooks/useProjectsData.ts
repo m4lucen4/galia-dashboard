@@ -18,9 +18,9 @@ export const useProjectsData = (user: UserDataProps | null | undefined) => {
   const fetchProjectsData = useCallback(() => {
     if (!user) return;
 
-    dispatch(fetchUsers());
-
     if (user.role === "admin") {
+      // Only admins may read other users' rows (userData RLS).
+      dispatch(fetchUsers());
       dispatch(fetchProjects());
     } else if (
       user.role === "customer" ||

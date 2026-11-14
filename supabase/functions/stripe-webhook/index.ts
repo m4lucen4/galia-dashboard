@@ -9,16 +9,35 @@ const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET")!;
 const resendApiKey = Deno.env.get("RESEND_API_KEY")!;
 const n8nWebhook = Deno.env.get("N8N_CREATE_PROJECT_WEBHOOK")!;
 
-async function verifyStripeSignature(payload: string, signature: string, secret: string): Promise<boolean> {
-  const parts: Record<string, string> = {};
+// Stripe's default tolerance: reject signatures older or newer than 5 minutes (replays).
+const SIGNATURE_TOLERANCE_SECONDS = 300;
+
+type SignatureCheck = "valid" | "invalid" | "stale";
+
+function timingSafeEqualHex(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+async function verifyStripeSignature(payload: string, signature: string, secret: string): Promise<SignatureCheck> {
+  if (!secret) return "invalid";
+
+  let timestamp: string | undefined;
+  const signatures: string[] = [];
   for (const part of signature.split(",")) {
-    const [key, value] = part.split("=");
-    parts[key] = value;
+    const separator = part.indexOf("=");
+    if (separator === -1) continue;
+    const key = part.slice(0, separator).trim();
+    const value = part.slice(separator + 1).trim();
+    if (key === "t") timestamp = value;
+    // Stripe sends several v1 signatures while a webhook secret is being rolled.
+    if (key === "v1" && value) signatures.push(value);
   }
 
-  const timestamp = parts["t"];
-  const sig = parts["v1"];
-  if (!timestamp || !sig) return false;
+  if (!timestamp || !/^\d+$/.test(timestamp) || signatures.length === 0) return "invalid";
+  if (Math.abs(Math.floor(Date.now() / 1000) - Number(timestamp)) > SIGNATURE_TOLERANCE_SECONDS) return "stale";
 
   const signedPayload = `${timestamp}.${payload}`;
   const key = await crypto.subtle.importKey(
@@ -34,7 +53,12 @@ async function verifyStripeSignature(payload: string, signature: string, secret:
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
-  return computedSig === sig;
+  return signatures.some((sig) => timingSafeEqualHex(computedSig, sig)) ? "valid" : "invalid";
+}
+
+// PostgREST returns PGRST116 when .single() matches no row: retrying cannot fix that.
+function isNoRowsError(error: any): boolean {
+  return error?.code === "PGRST116";
 }
 
 async function stripeGet(path: string) {
@@ -43,6 +67,126 @@ async function stripeGet(path: string) {
   });
   if (!res.ok) throw new Error(`Stripe lookup failed (${res.status})`);
   return res.json();
+}
+
+async function stripePost(path: string, params: Record<string, string>) {
+  const res = await fetch(`https://api.stripe.com/v1${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${stripeSecretKey}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams(params).toString(),
+  });
+  if (!res.ok) throw new Error(`Stripe update failed (${res.status})`);
+  return res.json();
+}
+
+const PENDING_REGISTRATION_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
+
+type ProvisionedUser = { uid: string; email: string; first_name: string; last_name: string };
+
+// Register-after-payment: create the account for a paid pending registration.
+// Idempotent across Stripe retries: the created uid is stored on the pending row
+// right away and every later write tolerates an existing user/profile.
+async function provisionPendingRegistration(pendingId: string, subscriptionId: string, supabase: any): Promise<ProvisionedUser | null> {
+  const { data: pending, error } = await supabase
+    .from("pending_registrations")
+    .select("id, email, first_name, last_name, phone, password_hash, user_id, consumed_at, created_at")
+    .eq("id", pendingId)
+    .maybeSingle();
+  if (error) throw new Error(`Error loading pending registration: ${error.message}`);
+  if (!pending) {
+    // Retrying cannot fix this: a payment arrived without registration data.
+    console.error(`CRITICAL: paid checkout without pending registration ${pendingId} (subscription ${subscriptionId}); create the account manually`);
+    return null;
+  }
+
+  // Keep the row while Stripe may still retry this event (up to 3 days).
+  if (!pending.consumed_at) {
+    const { error: extendError } = await supabase
+      .from("pending_registrations")
+      .update({ expires_at: new Date(Date.now() + PENDING_REGISTRATION_GRACE_MS).toISOString() })
+      .eq("id", pending.id);
+    if (extendError) throw new Error(`Error extending pending registration: ${extendError.message}`);
+  }
+
+  let uid: string | null = pending.user_id;
+  if (!uid) {
+    const { data: created, error: createError } = await supabase.auth.admin.createUser({
+      email: pending.email,
+      password_hash: pending.password_hash,
+      email_confirm: true,
+    });
+    if (created?.user?.id) {
+      uid = created.user.id;
+    } else if (createError?.code === "email_exists" || createError?.status === 422) {
+      // A previous attempt created the auth user but failed before storing its uid.
+      const { data: found, error: lookupError } = await supabase.rpc("registration_auth_user_id", { p_email: pending.email });
+      const existing = Array.isArray(found) ? found[0] : found;
+      if (lookupError || !existing?.id) throw new Error(`Auth user exists but could not be resolved: ${lookupError?.message ?? "not found"}`);
+      // Only an account created for this registration may be reused. An older account
+      // with the same email belongs to someone else: never attach this payment to it.
+      if (new Date(existing.created_at).getTime() < new Date(pending.created_at).getTime()) {
+        console.error(`CRITICAL: paid pending registration ${pending.id} (subscription ${subscriptionId}) matches pre-existing account ${existing.id}; not linked, resolve manually`);
+        return null;
+      }
+      console.error(`Pending registration ${pending.id} reused auth user ${existing.id} created by a previous attempt`);
+      uid = existing.id;
+    } else {
+      throw new Error(`Error creating auth user: ${createError?.message ?? "unknown"}`);
+    }
+
+    const { error: linkError } = await supabase
+      .from("pending_registrations")
+      .update({ user_id: uid })
+      .eq("id", pending.id);
+    if (linkError) throw new Error(`Error linking pending registration: ${linkError.message}`);
+  }
+
+  const { error: profileError } = await supabase.from("userData").upsert(
+    {
+      uid,
+      email: pending.email,
+      first_name: pending.first_name,
+      last_name: pending.last_name,
+      phone: pending.phone,
+      role: "customer",
+      active: false,
+      has_web: false,
+      avatar_url: "",
+      company: "",
+      vat: "",
+      description: "",
+    },
+    { onConflict: "uid", ignoreDuplicates: true },
+  );
+  if (profileError) throw new Error(`Error creating user profile: ${profileError.message}`);
+
+  // Later subscription events resolve the account through this metadata.
+  await stripePost(`/subscriptions/${subscriptionId}`, { "metadata[uid]": uid! });
+
+  return { uid: uid!, email: pending.email, first_name: pending.first_name, last_name: pending.last_name };
+}
+
+async function consumePendingRegistration(pendingId: string, supabase: any) {
+  const { error } = await supabase
+    .from("pending_registrations")
+    .update({ consumed_at: new Date().toISOString(), password_hash: "" })
+    .eq("id", pendingId)
+    .is("consumed_at", null);
+  if (error) throw new Error(`Error consuming pending registration: ${error.message}`);
+}
+
+// Records the event before one-time side effects (welcome email, n8n call).
+// Returns false when a previous delivery of the same event already did them.
+async function claimEventSideEffects(event: any, supabase: any): Promise<boolean> {
+  const { error } = await supabase
+    .from("stripe_webhook_events")
+    .insert({ event_id: event.id, type: event.type });
+  if (!error) return true;
+  if (error.code === "23505") return false;
+  throw new Error(`Error recording webhook event: ${error.message}`);
 }
 
 const catalogVersion = "profesional_myweb_v1";
@@ -117,8 +261,11 @@ Deno.serve(async (req) => {
   }
 
   const body = await req.text();
-  const valid = await verifyStripeSignature(body, signature, webhookSecret);
-  if (!valid) {
+  const check = await verifyStripeSignature(body, signature, webhookSecret);
+  if (check === "stale") {
+    return new Response("Signature timestamp outside tolerance", { status: 400 });
+  }
+  if (check !== "valid") {
     return new Response("Invalid signature", { status: 400 });
   }
 
@@ -128,7 +275,7 @@ Deno.serve(async (req) => {
   try {
     switch (event.type) {
       case "checkout.session.completed":
-        await handleCheckoutCompleted(event.data.object, supabase);
+        await handleCheckoutCompleted(event.data.object, supabase, event);
         break;
       case "customer.subscription.updated":
       case "customer.subscription.pending_update_applied":
@@ -145,7 +292,7 @@ Deno.serve(async (req) => {
         const invoice = event.data.object;
         const subscriptionId = invoice.subscription ?? invoice.parent?.subscription_details?.subscription;
         if (subscriptionId && await syncNewSubscription(subscriptionId, supabase)) break;
-        if (event.type === "invoice.payment_failed") await handlePaymentFailed(invoice, supabase);
+        if (event.type === "invoice.payment_failed") await handlePaymentFailed(subscriptionId, supabase);
         break;
       }
       default:
@@ -161,17 +308,24 @@ Deno.serve(async (req) => {
   });
 });
 
-async function handleCheckoutCompleted(session: any, supabase: any) {
+async function handleCheckoutCompleted(session: any, supabase: any, event: any) {
   const metadata = session.metadata || {};
-  const { uid, email, first_name, last_name, plan_type, billing_period } = metadata;
+  let { uid, email, first_name, last_name } = metadata;
+  const { plan_type, billing_period, pending_registration_id } = metadata;
+
+  const stripeCustomerId = session.customer;
+  const stripeSubscriptionId = session.subscription;
+
+  if (!uid && pending_registration_id && stripeSubscriptionId) {
+    const provisioned = await provisionPendingRegistration(pending_registration_id, stripeSubscriptionId, supabase);
+    if (!provisioned) return;
+    ({ uid, email, first_name, last_name } = provisioned);
+  }
 
   if (!uid || !email) {
     console.error("Missing metadata in checkout session");
     return;
   }
-
-  const stripeCustomerId = session.customer;
-  const stripeSubscriptionId = session.subscription;
 
   const subscription = await stripeGet(`/subscriptions/${stripeSubscriptionId}?expand[]=items`);
   const subItem = subscription.items?.data?.[0];
@@ -198,7 +352,8 @@ async function handleCheckoutCompleted(session: any, supabase: any) {
     .update({ active: true })
     .eq("uid", uid);
 
-  if (activateError) console.error("Error activating user:", activateError);
+  // Throw so the handler answers 500 and Stripe retries instead of leaving a paid user inactive.
+  if (activateError) throw new Error(`Error activating user: ${activateError.message}`);
 
   const { error: subError } = await supabase
     .from("subscriptions")
@@ -216,7 +371,14 @@ async function handleCheckoutCompleted(session: any, supabase: any) {
       { onConflict: "stripe_subscription_id" },
     );
 
-  if (subError) console.error("Error creating subscription:", subError);
+  if (subError) throw new Error(`Error creating subscription: ${subError.message}`);
+  }
+
+  if (pending_registration_id) await consumePendingRegistration(pending_registration_id, supabase);
+
+  if (!(await claimEventSideEffects(event, supabase))) {
+    console.error(`Event ${event.id} already processed; skipping welcome email and n8n call`);
+    return;
   }
 
   try {
@@ -304,10 +466,14 @@ async function handleSubscriptionUpdated(subscription: any, supabase: any) {
     .select("user_id")
     .single();
 
-  if (error) { console.error("Error updating subscription:", error); return; }
+  if (error) {
+    if (isNoRowsError(error)) { console.error("Subscription not found for update:", subscription.id); return; }
+    throw new Error(`Error updating subscription: ${error.message}`);
+  }
 
   if (subRecord?.user_id) {
-    await supabase.from("userData").update({ active: status === "active" }).eq("uid", subRecord.user_id);
+    const { error: userError } = await supabase.from("userData").update({ active: status === "active" }).eq("uid", subRecord.user_id);
+    if (userError) throw new Error(`Error updating user access: ${userError.message}`);
   }
 }
 
@@ -319,25 +485,36 @@ async function handleSubscriptionDeleted(subscription: any, supabase: any) {
     .select("user_id")
     .single();
 
-  if (error) { console.error("Error cancelling subscription:", error); return; }
+  if (error) {
+    if (isNoRowsError(error)) { console.error("Subscription not found for cancellation:", subscription.id); return; }
+    throw new Error(`Error cancelling subscription: ${error.message}`);
+  }
 
   if (subRecord?.user_id) {
-    await supabase.from("userData").update({ active: false }).eq("uid", subRecord.user_id);
+    const { error: userError } = await supabase.from("userData").update({ active: false }).eq("uid", subRecord.user_id);
+    if (userError) throw new Error(`Error deactivating user: ${userError.message}`);
   }
 }
 
-async function handlePaymentFailed(invoice: any, supabase: any) {
-  const subscriptionId = invoice.subscription;
+// subscriptionId is resolved by the caller from invoice.subscription or, on newer Stripe API
+// versions, invoice.parent.subscription_details.subscription.
+async function handlePaymentFailed(subscriptionId: string | undefined, supabase: any) {
   if (!subscriptionId) return;
 
-  const { data: subRecord } = await supabase
+  const { data: subRecord, error } = await supabase
     .from("subscriptions")
     .update({ status: "past_due", updated_at: new Date().toISOString() })
     .eq("stripe_subscription_id", subscriptionId)
     .select("user_id")
     .single();
 
+  if (error) {
+    if (isNoRowsError(error)) { console.error("Subscription not found for failed payment:", subscriptionId); return; }
+    throw new Error(`Error marking subscription past_due: ${error.message}`);
+  }
+
   if (subRecord?.user_id) {
-    await supabase.from("userData").update({ active: false }).eq("uid", subRecord.user_id);
+    const { error: userError } = await supabase.from("userData").update({ active: false }).eq("uid", subRecord.user_id);
+    if (userError) throw new Error(`Error deactivating user: ${userError.message}`);
   }
 }

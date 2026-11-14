@@ -100,106 +100,40 @@ export const addUser = createAsyncThunk(
   "users/addUser",
   async (userData: CreateUserProps, { rejectWithValue }) => {
     try {
-      // 1. Save the current admin session
-      const sessionResult = await supabase.auth.getSession();
-      const currentSession = sessionResult.data.session;
-
-      if (!currentSession) {
+      // 1. The admin session authorizes the server-side creation (service_role).
+      //    Public sign-ups are disabled, so the browser never calls auth.signUp.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
         return rejectWithValue({
           message: "Admin user is not authenticated",
           status: 401,
         });
       }
+      const authHeaders = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      };
 
-      const adminAccessToken = currentSession.access_token;
-      const adminRefreshToken = currentSession.refresh_token;
-
-      // 2. Create user in the authentication system
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
+      // 2. Create the auth user and its userData row on the server
+      const createResponse = await fetch("/api/admin-create-user", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify(userData),
       });
-
-      if (authError) {
+      const createResult = await createResponse.json().catch(() => ({}));
+      if (!createResponse.ok || !createResult.user) {
         return rejectWithValue({
-          message: authError.message,
-          status: authError.status,
+          message: createResult.error || "Error creating user",
+          status: createResponse.status,
         });
       }
+      const userRecord = createResult.user;
 
-      if (!authData.user) {
-        return rejectWithValue({
-          message: "Could not create user in the authentication system",
-          status: 400,
-        });
-      }
-
-      // 3. Restore the admin session
-      await supabase.auth.setSession({
-        access_token: adminAccessToken,
-        refresh_token: adminRefreshToken,
-      });
-
-      // 4. Create user in the database
-      const { error: dbError } = await supabase.from("userData").insert({
-        uid: authData.user.id,
-        active: userData.active,
-        avatar_url: userData.avatar_url,
-        first_name: userData.first_name,
-        last_name: userData.last_name,
-        email: userData.email,
-        phone: userData.phone,
-        company: userData.company,
-        vat: userData.vat,
-        description: userData.description,
-        role: userData.role,
-        address: userData.address,
-        postal_code: userData.postal_code,
-        city: userData.city,
-        province: userData.province,
-        province_id: userData.province_id,
-        country: userData.country,
-        job_position: userData.job_position,
-        web: userData.web,
-        tags: userData.tags,
-        odoo_id: userData.odoo_id,
-        folder_nas: userData.folder_nas,
-        has_web: userData.has_web ?? false,
-      });
-
-      if (dbError) {
-        return rejectWithValue({
-          message: `Error creating user in database: ${dbError.message}`,
-          status: dbError.code,
-        });
-      }
-
-      // 5. Recover the user data from the database
-      const { data: userRecord, error: fetchError } = await supabase
-        .from("userData")
-        .select("*")
-        .eq("uid", authData.user.id)
-        .single();
-
-      if (fetchError) {
-        return {
-          user: {
-            ...userData,
-            uid: authData.user.id,
-            password: undefined,
-          },
-          message:
-            "User created successfully, but not all data could be retrieved",
-        };
-      }
-
-      // 6. Send a welcome email to the user
+      // 3. Send a welcome email to the user
       try {
         const emailResponse = await fetch("/api/create-user-template", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: authHeaders,
           body: JSON.stringify({
             email: userRecord.email,
             password: userData.password,
@@ -220,7 +154,7 @@ export const addUser = createAsyncThunk(
         console.error("Network error sending welcome email:", emailError);
       }
 
-      // 7. Call n8n webhook with user id
+      // 4. Call n8n webhook with user id
 
       const webhookUrl = import.meta.env.VITE_N8N_CREATE_PROJECT_WEBHOOK;
       if (webhookUrl && userRecord.id) {
@@ -234,7 +168,7 @@ export const addUser = createAsyncThunk(
         });
       }
 
-      // 8. Return the created user data
+      // 5. Return the created user data
       return {
         user: userRecord,
         message: "User created successfully",
