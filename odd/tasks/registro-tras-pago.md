@@ -17,7 +17,7 @@ Branch: feat/register-after-payment (stacked on fix/user-data-billing-guard). Ev
 
 ## Tasks
 
-- [x] T1 (4.1) S2 S9 — DB: `pending_registrations` + `stripe_webhook_events` tables, server-only — route: inline migration — commit: (this commit)
+- [x] T1 (4.1) S2 S9 — DB: `pending_registrations` + `stripe_webhook_events` tables, server-only — route: inline migration — commit: 64748d7
 - [ ] T2 (4.2) S2 S4 S6 S9 — stripe-webhook creates the user from a pending registration; event dedupe; legacy uid flow unchanged — route: inline — commit: -
 - [ ] T3 (4.3) S2 S3 S9 — create-checkout-session hashes the password and stores the pending registration; RegisterActions stops calling signUp/insert; form unchanged — route: inline — commit: -
 - [ ] T4 (4.4) S7 — admin user creation through a server endpoint with the same form, fields and active option — route: inline — commit: -
@@ -32,3 +32,5 @@ Branch: feat/register-after-payment (stacked on fix/user-data-billing-guard). Ev
 - L4 (user): "Si, procede" — plan 4.1–4.6 with bcrypt `pending_registrations` approved.
 - L5 (context): prerequisite security steps already done on fix/user-data-billing-guard: 1dd1a62 (guard billing columns), ce50e52 (drop anon read), 510b583 (admin-only cross-user reads), 663acd0 (stripe-webhook v42: signature tolerance, legacy 500 on write errors, payment_failed subscription id). Failed renewals keep deactivating on first failure (user: "Prefiero opción A").
 - L6 (user): "Si, aplica" — T1 applied to prod as migration 20261114222850_registration_pending_tables. Verified in a rolled-back transaction: anon/authenticated (admin included) denied on both tables and the cleanup function; service_role inserts; duplicate event id and invalid billing_period rejected; cleanup keeps live, drops expired unpaid, scrubs consumed, drops events older than 90 days; cron job cleanup-registration-data scheduled 17 3 * * *; tables empty afterwards.
+- L7 (user): "SI, APLICA LA FASE 4.2 y para el punto 2 mejor dejarlos y ya los analizo yo manualmente" — the 10 inactive never-paid users are left untouched for manual review. T2 adds pending-row expiry extension to 7 days on payment (verifier caveat from T1).
+- L8 (evidence): T2 deployed as stripe-webhook v43 (identical to commit) + migration 20261114223505_registration_auth_user_lookup (service_role only: admin/anon denied, service resolves case-insensitively, unknown -> null). Local harness 17/17 on v43 (v42 fails 13): pending flow creates one auth user with password_hash + email_confirm, customer userData row, Stripe metadata uid, activation via projection, consume + scrub, expiry extended, email/n8n once; redelivery, crash-after-createUser and projection-busy retries create no second user or email; missing pending -> 200 logged CRITICAL; legacy uid flows unchanged except no duplicate email/n8n. Prod probes: no-sig/stale/bad-sig -> 400.

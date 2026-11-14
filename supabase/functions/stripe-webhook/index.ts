@@ -69,6 +69,119 @@ async function stripeGet(path: string) {
   return res.json();
 }
 
+async function stripePost(path: string, params: Record<string, string>) {
+  const res = await fetch(`https://api.stripe.com/v1${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${stripeSecretKey}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams(params).toString(),
+  });
+  if (!res.ok) throw new Error(`Stripe update failed (${res.status})`);
+  return res.json();
+}
+
+const PENDING_REGISTRATION_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
+
+type ProvisionedUser = { uid: string; email: string; first_name: string; last_name: string };
+
+// Register-after-payment: create the account for a paid pending registration.
+// Idempotent across Stripe retries: the created uid is stored on the pending row
+// right away and every later write tolerates an existing user/profile.
+async function provisionPendingRegistration(pendingId: string, subscriptionId: string, supabase: any): Promise<ProvisionedUser | null> {
+  const { data: pending, error } = await supabase
+    .from("pending_registrations")
+    .select("id, email, first_name, last_name, phone, password_hash, user_id, consumed_at")
+    .eq("id", pendingId)
+    .maybeSingle();
+  if (error) throw new Error(`Error loading pending registration: ${error.message}`);
+  if (!pending) {
+    // Retrying cannot fix this: a payment arrived without registration data.
+    console.error(`CRITICAL: paid checkout without pending registration ${pendingId} (subscription ${subscriptionId}); create the account manually`);
+    return null;
+  }
+
+  // Keep the row while Stripe may still retry this event (up to 3 days).
+  if (!pending.consumed_at) {
+    const { error: extendError } = await supabase
+      .from("pending_registrations")
+      .update({ expires_at: new Date(Date.now() + PENDING_REGISTRATION_GRACE_MS).toISOString() })
+      .eq("id", pending.id);
+    if (extendError) throw new Error(`Error extending pending registration: ${extendError.message}`);
+  }
+
+  let uid: string | null = pending.user_id;
+  if (!uid) {
+    const { data: created, error: createError } = await supabase.auth.admin.createUser({
+      email: pending.email,
+      password_hash: pending.password_hash,
+      email_confirm: true,
+    });
+    if (created?.user?.id) {
+      uid = created.user.id;
+    } else if (createError?.code === "email_exists" || createError?.status === 422) {
+      // A previous attempt created the auth user but failed before storing its uid.
+      const { data: existingId, error: lookupError } = await supabase.rpc("registration_auth_user_id", { p_email: pending.email });
+      if (lookupError || !existingId) throw new Error(`Auth user exists but could not be resolved: ${lookupError?.message ?? "not found"}`);
+      console.error(`Pending registration ${pending.id} reused existing auth user ${existingId}`);
+      uid = existingId;
+    } else {
+      throw new Error(`Error creating auth user: ${createError?.message ?? "unknown"}`);
+    }
+
+    const { error: linkError } = await supabase
+      .from("pending_registrations")
+      .update({ user_id: uid })
+      .eq("id", pending.id);
+    if (linkError) throw new Error(`Error linking pending registration: ${linkError.message}`);
+  }
+
+  const { error: profileError } = await supabase.from("userData").upsert(
+    {
+      uid,
+      email: pending.email,
+      first_name: pending.first_name,
+      last_name: pending.last_name,
+      phone: pending.phone,
+      role: "customer",
+      active: false,
+      has_web: false,
+      avatar_url: "",
+      company: "",
+      vat: "",
+      description: "",
+    },
+    { onConflict: "uid", ignoreDuplicates: true },
+  );
+  if (profileError) throw new Error(`Error creating user profile: ${profileError.message}`);
+
+  // Later subscription events resolve the account through this metadata.
+  await stripePost(`/subscriptions/${subscriptionId}`, { "metadata[uid]": uid! });
+
+  return { uid: uid!, email: pending.email, first_name: pending.first_name, last_name: pending.last_name };
+}
+
+async function consumePendingRegistration(pendingId: string, supabase: any) {
+  const { error } = await supabase
+    .from("pending_registrations")
+    .update({ consumed_at: new Date().toISOString(), password_hash: "" })
+    .eq("id", pendingId)
+    .is("consumed_at", null);
+  if (error) throw new Error(`Error consuming pending registration: ${error.message}`);
+}
+
+// Records the event before one-time side effects (welcome email, n8n call).
+// Returns false when a previous delivery of the same event already did them.
+async function claimEventSideEffects(event: any, supabase: any): Promise<boolean> {
+  const { error } = await supabase
+    .from("stripe_webhook_events")
+    .insert({ event_id: event.id, type: event.type });
+  if (!error) return true;
+  if (error.code === "23505") return false;
+  throw new Error(`Error recording webhook event: ${error.message}`);
+}
+
 const catalogVersion = "profesional_myweb_v1";
 
 function newPriceIds(component: "PROFESSIONAL_V1" | "MYWEB") {
@@ -155,7 +268,7 @@ Deno.serve(async (req) => {
   try {
     switch (event.type) {
       case "checkout.session.completed":
-        await handleCheckoutCompleted(event.data.object, supabase);
+        await handleCheckoutCompleted(event.data.object, supabase, event);
         break;
       case "customer.subscription.updated":
       case "customer.subscription.pending_update_applied":
@@ -188,17 +301,24 @@ Deno.serve(async (req) => {
   });
 });
 
-async function handleCheckoutCompleted(session: any, supabase: any) {
+async function handleCheckoutCompleted(session: any, supabase: any, event: any) {
   const metadata = session.metadata || {};
-  const { uid, email, first_name, last_name, plan_type, billing_period } = metadata;
+  let { uid, email, first_name, last_name } = metadata;
+  const { plan_type, billing_period, pending_registration_id } = metadata;
+
+  const stripeCustomerId = session.customer;
+  const stripeSubscriptionId = session.subscription;
+
+  if (!uid && pending_registration_id && stripeSubscriptionId) {
+    const provisioned = await provisionPendingRegistration(pending_registration_id, stripeSubscriptionId, supabase);
+    if (!provisioned) return;
+    ({ uid, email, first_name, last_name } = provisioned);
+  }
 
   if (!uid || !email) {
     console.error("Missing metadata in checkout session");
     return;
   }
-
-  const stripeCustomerId = session.customer;
-  const stripeSubscriptionId = session.subscription;
 
   const subscription = await stripeGet(`/subscriptions/${stripeSubscriptionId}?expand[]=items`);
   const subItem = subscription.items?.data?.[0];
@@ -245,6 +365,13 @@ async function handleCheckoutCompleted(session: any, supabase: any) {
     );
 
   if (subError) throw new Error(`Error creating subscription: ${subError.message}`);
+  }
+
+  if (pending_registration_id) await consumePendingRegistration(pending_registration_id, supabase);
+
+  if (!(await claimEventSideEffects(event, supabase))) {
+    console.error(`Event ${event.id} already processed; skipping welcome email and n8n call`);
+    return;
   }
 
   try {
