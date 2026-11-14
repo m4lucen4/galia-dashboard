@@ -1,5 +1,7 @@
 import { Resend } from "resend";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { BillingError } from "./_lib/billing.js";
+import { requireAdmin } from "./_lib/admin.js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -8,7 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
   if (req.method === "OPTIONS") {
     res.status(200).end();
@@ -17,6 +19,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
+  }
+
+  // Only admins may send this email: unauthenticated callers could otherwise send mail
+  // from noreply@mocklab.app to any address with arbitrary content.
+  try {
+    await requireAdmin(req);
+  } catch (error) {
+    return res.status(error instanceof BillingError ? error.status : 500)
+      .json({ message: error instanceof BillingError ? error.message : "Internal server error" });
   }
 
   try {
