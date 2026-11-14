@@ -92,7 +92,7 @@ type ProvisionedUser = { uid: string; email: string; first_name: string; last_na
 async function provisionPendingRegistration(pendingId: string, subscriptionId: string, supabase: any): Promise<ProvisionedUser | null> {
   const { data: pending, error } = await supabase
     .from("pending_registrations")
-    .select("id, email, first_name, last_name, phone, password_hash, user_id, consumed_at")
+    .select("id, email, first_name, last_name, phone, password_hash, user_id, consumed_at, created_at")
     .eq("id", pendingId)
     .maybeSingle();
   if (error) throw new Error(`Error loading pending registration: ${error.message}`);
@@ -122,10 +122,17 @@ async function provisionPendingRegistration(pendingId: string, subscriptionId: s
       uid = created.user.id;
     } else if (createError?.code === "email_exists" || createError?.status === 422) {
       // A previous attempt created the auth user but failed before storing its uid.
-      const { data: existingId, error: lookupError } = await supabase.rpc("registration_auth_user_id", { p_email: pending.email });
-      if (lookupError || !existingId) throw new Error(`Auth user exists but could not be resolved: ${lookupError?.message ?? "not found"}`);
-      console.error(`Pending registration ${pending.id} reused existing auth user ${existingId}`);
-      uid = existingId;
+      const { data: found, error: lookupError } = await supabase.rpc("registration_auth_user_id", { p_email: pending.email });
+      const existing = Array.isArray(found) ? found[0] : found;
+      if (lookupError || !existing?.id) throw new Error(`Auth user exists but could not be resolved: ${lookupError?.message ?? "not found"}`);
+      // Only an account created for this registration may be reused. An older account
+      // with the same email belongs to someone else: never attach this payment to it.
+      if (new Date(existing.created_at).getTime() < new Date(pending.created_at).getTime()) {
+        console.error(`CRITICAL: paid pending registration ${pending.id} (subscription ${subscriptionId}) matches pre-existing account ${existing.id}; not linked, resolve manually`);
+        return null;
+      }
+      console.error(`Pending registration ${pending.id} reused auth user ${existing.id} created by a previous attempt`);
+      uid = existing.id;
     } else {
       throw new Error(`Error creating auth user: ${createError?.message ?? "unknown"}`);
     }

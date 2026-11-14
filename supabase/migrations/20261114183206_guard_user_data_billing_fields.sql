@@ -3,6 +3,8 @@
 -- and database maintenance may change active, has_web, folder_nas and odoo_id.
 -- Re-sending an unchanged value stays allowed (the profile screen re-sends active).
 
+CREATE SCHEMA IF NOT EXISTS private;
+
 CREATE OR REPLACE FUNCTION private.guard_user_data_role_and_uid()
  RETURNS trigger
  LANGUAGE plpgsql
