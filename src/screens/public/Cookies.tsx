@@ -27,9 +27,9 @@ export const Cookies = () => (
         <h3>Sesión de usuario</h3>
         <ul>
           <li><strong>Nombre:</strong> sb-&#123;referencia-del-proyecto&#125;-auth-token.</li>
-          <li><strong>Tecnología:</strong> cookie de sesión gestionada por la aplicación mediante Supabase.</li>
+          <li><strong>Tecnología:</strong> localStorage, gestionado por la aplicación mediante Supabase.</li>
           <li><strong>Finalidad:</strong> mantener la autenticación y permitir el acceso a tu cuenta.</li>
-          <li><strong>Duración:</strong> 30 días desde la última escritura; puede renovarse mientras utilizas la cuenta. Se elimina al cerrar sesión.</li>
+          <li><strong>Duración:</strong> se conserva mientras la sesión siga activa y se renueva mientras utilizas la cuenta. Se elimina al cerrar sesión.</li>
           <li><strong>Cuándo se utiliza:</strong> al iniciar sesión, no por el mero hecho de visitar la web informativa.</li>
         </ul>
         <h3>Conexión con LinkedIn e Instagram</h3>

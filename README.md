@@ -30,7 +30,7 @@ Plataforma SaaS de gestión de proyectos y publicación en redes sociales orient
 - **Multimedia** — Explorador de archivos conectado a NAS (Synology) con compresión de imagen en cliente
 - **Suscripciones** — Planes Estudiante y Profesional, periodos mensual y anual, portal de cliente Stripe
 - **Panel de administración** — Gestión de usuarios, acceso a archivo y módulo de GPTs
-- **Autenticación** — Email/contraseña con sesión persistente en cookies, recuperación de contraseña, guards por rol
+- **Autenticación** — Email/contraseña con sesión persistente en localStorage, recuperación de contraseña, guards por rol
 - **Tiempo real** — Sincronización en vivo de proyectos y previews vía Supabase Realtime
 - **Multiidioma** — Español, inglés y catalán con detección automática del navegador
 
@@ -192,7 +192,7 @@ La configuración de Vite se mantiene únicamente en `vite.config.ts`. `pnpm bui
 2. Se crea la cuenta en Supabase Auth y se redirige a Stripe Checkout
 3. Tras el pago, el webhook de Stripe activa la suscripción
 4. En login, se autentica con Supabase y se carga el perfil extendido de `userData`
-5. La sesión se persiste en cookies seguras (`SameSite=Strict`)
+5. La sesión se persiste en `localStorage` (almacenamiento por defecto de `supabase-js`)
 6. Los guards de ruta comprueban `authenticated`, `role` y flags como `has_web`
 
 ## Integraciones externas

@@ -15,7 +15,7 @@ La web de Mocklab no incorpora analítica de audiencia, campañas ni píxeles pu
 
 | Nombre | Soporte | Finalidad | Duración |
 |---|---|---|---|
-| `sb-{referencia-del-proyecto}-auth-token` | Cookie escrita por la aplicación mediante Supabase | Sesión autenticada | 30 días desde cada escritura; se renueva y se elimina al cerrar sesión |
+| `sb-{referencia-del-proyecto}-auth-token` | localStorage, gestionado por la aplicación mediante Supabase | Sesión autenticada | Mientras la sesión siga activa; se renueva y se elimina al cerrar sesión |
 | `linkedln_auth_state` | localStorage | Comprobación del flujo OAuth de LinkedIn solicitado por el usuario | Hasta procesar la respuesta; si se abandona, puede persistir hasta su sustitución o eliminación |
 | `instagram_auth_state` | localStorage | Comprobación del flujo OAuth de Instagram solicitado por el usuario | Hasta procesar la respuesta; si se abandona, puede persistir hasta su sustitución o eliminación |
 
