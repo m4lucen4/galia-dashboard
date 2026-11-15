@@ -24,6 +24,17 @@ Branch: feat/register-after-payment (stacked on fix/user-data-billing-guard). Ev
 - [x] T5 (4.5) S1 S2 — user disables "Allow new users to sign up"; verify direct signUp fails — route: user action + check — commit: (settings change, verified)
 - [x] T6 (4.6) S5 — end-to-end test in production with refunds: paid registration, abandoned payment, duplicate email, Stripe resend, admin creation active/inactive — route: user + checks — commit: (production test, verified)
 
+Follow-ups (open, to resume later):
+
+- [ ] T7 S3 — user enables Supabase Auth password requirements (min length 8 + lowercase, uppercase, digits, symbols) so Supabase also enforces the rule on updateUser — route: user action + check — commit: -
+- [ ] T8 S3 — check in the browser that Profile → change password rejects a weak password (72c1800) — route: user check — commit: -
+- [ ] T9 S6 — protect or replace the n8n "Crear usuario en Odoo" flow: GET ?id= without auth, URL exposed in the bundle via VITE_N8N_CREATE_PROJECT_WEBHOOK, always creates an Odoo res.partner and overwrites odoo_id — route: user decision (n8n/Odoo replacement) — commit: -
+- [ ] T10 — escape the HTML interpolated in api/create-user-template.ts (admin-only now) — route: inline — commit: -
+- [ ] T11 S1 — captcha or rate limit on api/create-checkout-session.ts only if abuse appears (bots no longer create users or send mail) — route: user decision — commit: -
+- [ ] T12 — user reviews manually the 10 inactive never-paid legacy users (L7) — route: user — commit: -
+- [ ] T13 — Settings-initiated checkouts cancel back to /register?payment=cancelled instead of Settings — route: inline — commit: -
+- [ ] T14 — apply these migrations to the supabase-test environment so it matches production — route: user decision + migration — commit: -
+
 ## Log
 
 - L1 (user, original request): "quiero que analices la feature register ya que me he dado cuenta que en la generación de un usuario debería poner un check o algo que valide que lo hace una persona y no un bot, tú que opinas? valora antes de aplicar la corrección"
@@ -53,3 +64,4 @@ Branch: feat/register-after-payment (stacked on fix/user-data-billing-guard). Ev
 - L25 (user): "Pasos 1 y 2 correctos" — welcome email received, login with the password chosen in the form works, re-registering the same email shows the red "already registered" error without reaching Stripe. Remaining: Stripe resend of evt_1Uc2nPE52sWnk13ZzV4HaSJU, refund.
 - L26 (user): "ya he reenviado el evento y me sale un 200 en stripe" — verified after the Stripe resend of evt_1Uc2nPE52sWnk13ZzV4HaSJU: still 1 auth user, 1 userData row, odoo_id 166 (no new Odoo contact), 1 subscription, the event recorded once (no new processed row), pending row unchanged (consumed, hash scrubbed), account still active; total auth users 51 (50 + this registration). Remaining: user confirms no second welcome email; refund.
 - L27 (user): "No me ha llegado nada de segundo email y ya me he devuelto el dinero y cancelada la suscripción" — verified: after refund + cancellation the subscription is "cancelled" (updated 12:50:32) and userData.active is false (has_web false) through the existing projection; no leftover projection leases; no second welcome email after the resend. T6 complete.
+- L28 (user): "en ese documento se refleja lo que queda pendiente y se ha guardado en engram?" — open follow-ups consolidated as T7-T14 under ## Tasks; Engram mirror odd/registro-tras-pago/tasks updated with the final state.
