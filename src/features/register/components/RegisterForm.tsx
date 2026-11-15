@@ -8,6 +8,10 @@ import { PillButton } from "@/components/shared/ui/PillButton";
 import { AuthPanel, AuthHeading, AuthActionLink } from "@/components/shared/auth/AuthLayout";
 import { RegistrationMemberships } from "./RegistrationMemberships";
 
+// Register form only: make field errors clearly visible (red text and border).
+const FIELD_ERROR_BORDER = "border-red-600 focus-visible:outline-red-600";
+const FIELD_ERROR_TEXT = "text-base text-red-600";
+
 interface RegisterFormProps {
   registerInProgress: boolean;
 }
@@ -96,6 +100,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
       const payload = result.payload as string;
       if (payload === "email_already_exists") {
         setErrors({ email: t("register.emailExists") });
+        // Bring the user to the field that needs fixing.
+        requestAnimationFrame(() => document.getElementById("email")?.focus());
       } else {
         setGeneralError(payload || t("register.generalError"));
       }
@@ -118,6 +124,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
                 type="text"
                 value={formData.first_name}
                 error={errors.first_name}
+                className={errors.first_name ? FIELD_ERROR_BORDER : undefined}
+                errorClassName={FIELD_ERROR_TEXT}
               />
               <TextField
                 label={t("register.lastName")}
@@ -127,6 +135,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
                 type="text"
                 value={formData.last_name}
                 error={errors.last_name}
+                className={errors.last_name ? FIELD_ERROR_BORDER : undefined}
+                errorClassName={FIELD_ERROR_TEXT}
               />
             </div>
 
@@ -138,6 +148,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
               type="email"
               value={formData.email}
               error={errors.email}
+              className={errors.email ? FIELD_ERROR_BORDER : undefined}
+              errorClassName={FIELD_ERROR_TEXT}
             />
 
             <TextField
@@ -148,6 +160,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
               type="tel"
               value={formData.phone}
               error={errors.phone}
+              className={errors.phone ? FIELD_ERROR_BORDER : undefined}
+              errorClassName={FIELD_ERROR_TEXT}
             />
 
             <TextField
@@ -158,6 +172,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
               type="password"
               value={formData.password}
               error={errors.password}
+              className={errors.password ? FIELD_ERROR_BORDER : undefined}
+              errorClassName={FIELD_ERROR_TEXT}
             />
 
             <label className="flex items-start gap-3 cursor-pointer">

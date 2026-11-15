@@ -4,9 +4,11 @@ import { twMerge } from "tailwind-merge";
 type TextFieldProps = ComponentPropsWithoutRef<"input"> & {
   label: string;
   error?: string;
+  /** Extra classes for the error message (defaults keep the neutral style). */
+  errorClassName?: string;
 };
 
-export const TextField = ({ label, error, id: customId, name, className, ...props }: TextFieldProps) => {
+export const TextField = ({ label, error, errorClassName, id: customId, name, className, ...props }: TextFieldProps) => {
   const generatedId = useId();
   const id = customId ?? generatedId;
   const describedBy = [props["aria-describedby"], error ? `${id}-error` : undefined].filter(Boolean).join(" ") || undefined;
@@ -28,7 +30,7 @@ export const TextField = ({ label, error, id: customId, name, className, ...prop
           className,
         )}
       />
-      {error && <p id={`${id}-error`} className="text-sm font-medium">{error}</p>}
+      {error && <p id={`${id}-error`} className={twMerge("text-sm font-medium", errorClassName)}>{error}</p>}
     </div>
   );
 };
