@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../helpers/supabase";
+import { isStrongPassword } from "../helpers/passwordPolicy";
 import { Card } from "../components/shared/ui/Card";
 import { InputField } from "../components/shared/ui/InputField";
 import { Button } from "../components/shared/ui/Button";
@@ -43,10 +44,10 @@ export const RecoveryPasswordScreen = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password.length < 6) {
+    if (!isStrongPassword(password)) {
       setMessage({
         type: "error",
-        text: "Password must be at least 6 characters long",
+        text: "Password must be at least 8 characters and include uppercase, lowercase, a number and a symbol",
       });
       return;
     }

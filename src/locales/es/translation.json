@@ -220,7 +220,9 @@
     "goToLogin": "Ya tengo cuenta, iniciar sesión",
     "paymentCancelled": "El pago fue cancelado. Puedes intentarlo de nuevo.",
     "emailExists": "Este correo electrónico ya está registrado.",
-    "generalError": "Ha ocurrido un error. Por favor, inténtalo de nuevo."
+    "generalError": "Ha ocurrido un error. Por favor, inténtalo de nuevo.",
+    "passwordRequirements": "Mínimo 8 caracteres, con mayúscula, minúscula, número y símbolo.",
+    "passwordWeak": "La contraseña debe tener al menos 8 caracteres e incluir mayúscula, minúscula, número y símbolo."
   },
   "users": {
     "searchLabel": "Buscar usuarios por nombre, correo electrónico o empresa",
@@ -263,7 +265,10 @@
     "web": "Web",
     "tags": "Etiquetas",
     "addTag": "Escribe y pulsa Enter para añadir",
-    "hasWeb": "Tiene página web"
+    "hasWeb": "Tiene página web",
+    "validation": {
+      "passwordWeak": "La contraseña debe tener al menos 8 caracteres e incluir mayúscula, minúscula, número y símbolo."
+    }
   },
   "settings": {
     "connectInstagram": "Conectar Instagram",

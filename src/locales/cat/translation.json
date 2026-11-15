@@ -220,7 +220,9 @@
     "goToLogin": "Ja tinc compte, iniciar sessió",
     "paymentCancelled": "El pagament va ser cancel·lat. Pots tornar-ho a intentar.",
     "emailExists": "Aquest correu electrònic ja està registrat.",
-    "generalError": "S'ha produït un error. Si us plau, torna-ho a intentar."
+    "generalError": "S'ha produït un error. Si us plau, torna-ho a intentar.",
+    "passwordRequirements": "Mínim 8 caràcters, amb majúscula, minúscula, número i símbol.",
+    "passwordWeak": "La contrasenya ha de tenir almenys 8 caràcters i incloure majúscula, minúscula, número i símbol."
   },
   "users": {
     "searchLabel": "Cercar usuaris per nom, correu electrònic o empresa",
@@ -263,7 +265,10 @@
     "web": "Web",
     "tags": "Etiquetes",
     "addTag": "Escriu i prem Enter per afegir",
-    "hasWeb": "Té pàgina web"
+    "hasWeb": "Té pàgina web",
+    "validation": {
+      "passwordWeak": "La contrasenya ha de tenir almenys 8 caràcters i incloure majúscula, minúscula, número i símbol."
+    }
   },
   "settings": {
     "connectInstagram": "Connectar Instagram",

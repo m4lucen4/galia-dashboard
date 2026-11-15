@@ -1,14 +1,13 @@
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { isStrongPassword } from "@/helpers/passwordPolicy";
 
 interface UsePasswordValidationProps {
   isEditMode: boolean;
-  minLength?: number;
 }
 
 export const usePasswordValidation = ({
   isEditMode,
-  minLength = 6,
 }: UsePasswordValidationProps) => {
   const { t } = useTranslation();
   const [passwordError, setPasswordError] = useState("");
@@ -28,19 +27,14 @@ export const usePasswordValidation = ({
       if (isEditMode && (!password || password.trim() === "")) {
         return true;
       }
-      if (password.length < minLength) {
-        setPasswordError(
-          t("users.validation.passwordMinLength", {
-            defaultValue: `Password must be at least ${minLength} characters`,
-            count: minLength,
-          }),
-        );
+      if (!isStrongPassword(password)) {
+        setPasswordError(t("users.validation.passwordWeak"));
         return false;
       }
 
       return true;
     },
-    [isEditMode, minLength, t],
+    [isEditMode, t],
   );
 
   return {

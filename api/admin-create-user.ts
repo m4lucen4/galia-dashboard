@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { BillingError } from "./_lib/billing.js";
 import { requireAdmin } from "./_lib/admin.js";
+import { PASSWORD_POLICY_MESSAGE, isStrongPassword } from "./_lib/passwordPolicy.js";
 
 // Register-after-payment, T4 (odd/tasks/registro-tras-pago.md): admins create users
 // server-side with service_role, so public sign-ups can be disabled in Supabase Auth.
@@ -27,8 +28,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const body = req.body ?? {};
     const email = typeof body.email === "string" ? body.email.trim() : "";
     const password = typeof body.password === "string" ? body.password : "";
-    if (!EMAIL_PATTERN.test(email) || password.length < 6) {
-      return res.status(400).json({ error: "A valid email and a password of at least 6 characters are required" });
+    if (!EMAIL_PATTERN.test(email)) {
+      return res.status(400).json({ error: "A valid email is required" });
+    }
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({ error: PASSWORD_POLICY_MESSAGE });
     }
 
     const { data: created, error: createError } = await db.auth.admin.createUser({ email, password, email_confirm: true });

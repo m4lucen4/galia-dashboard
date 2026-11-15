@@ -219,7 +219,9 @@
     "goToLogin": "I already have an account, log in",
     "paymentCancelled": "Payment was cancelled. You can try again.",
     "emailExists": "This email address is already registered.",
-    "generalError": "An error occurred. Please try again."
+    "generalError": "An error occurred. Please try again.",
+    "passwordRequirements": "At least 8 characters, including uppercase, lowercase, a number and a symbol.",
+    "passwordWeak": "The password must be at least 8 characters long and include uppercase, lowercase, a number and a symbol."
   },
   "users": {
     "searchLabel": "Search users by name, email or company",
@@ -262,7 +264,10 @@
     "web": "Website",
     "tags": "Tags",
     "addTag": "Type and press Enter to add",
-    "hasWeb": "Has website"
+    "hasWeb": "Has website",
+    "validation": {
+      "passwordWeak": "The password must be at least 8 characters long and include uppercase, lowercase, a number and a symbol."
+    }
   },
   "settings": {
     "connectInstagram": "Connect Instagram",

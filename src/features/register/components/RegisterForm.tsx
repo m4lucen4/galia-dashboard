@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useAppDispatch } from "@/redux/hooks";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
+import { isStrongPassword } from "@/helpers/passwordPolicy";
 import { registerUser } from "../../../redux/actions/RegisterActions";
 import { RegisterFormData, BillingPeriod } from "../../../types";
 import { TextField } from "@/components/shared/ui/TextField";
@@ -25,7 +27,7 @@ interface FormErrors {
   general?: string;
 }
 
-const validateForm = (formData: RegisterFormData): FormErrors => {
+const validateForm = (formData: RegisterFormData, t: TFunction): FormErrors => {
   const errors: FormErrors = {};
 
   if (!formData.first_name || formData.first_name.length < 2) {
@@ -40,8 +42,8 @@ const validateForm = (formData: RegisterFormData): FormErrors => {
   if (!formData.phone || formData.phone.length < 6) {
     errors.phone = "Introduce un teléfono válido";
   }
-  if (!formData.password || formData.password.length < 6) {
-    errors.password = "La contraseña debe tener al menos 6 caracteres";
+  if (!formData.password || !isStrongPassword(formData.password)) {
+    errors.password = t("register.passwordWeak");
   }
 
   return errors;
@@ -88,7 +90,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
     e.preventDefault();
     setGeneralError(null);
 
-    const validationErrors = validateForm(formData);
+    const validationErrors = validateForm(formData, t);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
@@ -174,7 +176,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ registerInProgress }
               error={errors.password}
               className={errors.password ? FIELD_ERROR_BORDER : undefined}
               errorClassName={FIELD_ERROR_TEXT}
+              aria-describedby="password-requirements"
             />
+            <p id="password-requirements" className="-mt-4 text-sm text-[#010000]/70">
+              {t("register.passwordRequirements")}
+            </p>
 
             <label className="flex items-start gap-3 cursor-pointer">
               <input

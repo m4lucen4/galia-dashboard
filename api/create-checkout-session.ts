@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import bcrypt from "bcryptjs";
+import { PASSWORD_POLICY_MESSAGE, isStrongPassword } from "./_lib/passwordPolicy.js";
 import { BillingError, CATALOG_VERSION, authenticatedUser, catalogPrice, database, stripeClient, vatRate } from "./_lib/billing.js";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -44,9 +45,12 @@ async function createPendingRegistrationCheckout(body: Record<string, unknown>, 
 
   if (
     first_name.length < 2 || last_name.length < 2 || !EMAIL_PATTERN.test(email) || phone.length < 6 ||
-    password.length < 6 || Buffer.byteLength(password, "utf8") > BCRYPT_MAX_BYTES
+    Buffer.byteLength(password, "utf8") > BCRYPT_MAX_BYTES
   ) {
     return res.status(400).json({ error: "Invalid registration data" });
+  }
+  if (!isStrongPassword(password)) {
+    return res.status(400).json({ error: PASSWORD_POLICY_MESSAGE });
   }
   if (plan_type !== "professional" || (billing_period !== "monthly" && billing_period !== "annual") || typeof myweb !== "boolean") {
     return res.status(400).json({ error: "Invalid plan type, billing period or myWeb selection" });
