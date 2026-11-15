@@ -9,6 +9,7 @@ import {
 import { changePassword } from "../../redux/actions/AuthActions";
 import { useTranslation } from "react-i18next";
 import { UserDataProps } from "../../types/index";
+import { isStrongPassword } from "@/helpers/passwordPolicy";
 
 interface UseProfileHandlersProps {
   formData: UpdateUserProps | null;
@@ -26,7 +27,7 @@ export const useProfileHandlers = ({
   user,
 }: UseProfileHandlersProps) => {
   const dispatch = useAppDispatch();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [passwordError, setPasswordError] = useState("");
   const [showPasswordAlert, setShowPasswordAlert] = useState(false);
@@ -87,8 +88,8 @@ export const useProfileHandlers = ({
   };
 
   const handlePasswordAlertAccept = () => {
-    if (newPassword.length < 6) {
-      setPasswordError("Password must be at least 6 characters");
+    if (!isStrongPassword(newPassword)) {
+      setPasswordError(t("register.passwordWeak"));
       return;
     }
 
