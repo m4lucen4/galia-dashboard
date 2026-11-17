@@ -63,7 +63,7 @@ export const PreviewProjectForm = ({
     if (project?.versions && project.versions.length > 0) {
       const mainVersionIndex = project.versions.findIndex((v) => v.main);
       const currentVersion =
-        project.versions[mainVersionIndex >= 0 ? mainVersionIndex : 0];
+        project.versions[Math.max(mainVersionIndex, 0)];
       return currentVersion?.description || "";
     }
     return project?.description_rich || "";
@@ -77,7 +77,7 @@ export const PreviewProjectForm = ({
   const [currentVersionIndex, setCurrentVersionIndex] = useState(() => {
     if (project?.versions && project.versions.length > 0) {
       const mainVersionIndex = project.versions.findIndex((v) => v.main);
-      return mainVersionIndex >= 0 ? mainVersionIndex : 0;
+      return Math.max(mainVersionIndex, 0);
     }
     return 0;
   });
@@ -136,7 +136,7 @@ export const PreviewProjectForm = ({
   };
 
   const handleSetAsMainVersion = async () => {
-    if (!project.versions || !project.versions[currentVersionIndex]) {
+    if (!project.versions?.[currentVersionIndex]) {
       return;
     }
 
