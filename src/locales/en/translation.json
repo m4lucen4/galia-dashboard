@@ -119,6 +119,28 @@
       "read_failed": "The status could not be updated. The information shown may be out of date."
     }
   },
+  "publicationIteration": {
+    "loading": "Generating new version…",
+    "success": "New version created and selected as the current version.",
+    "retry": "Retry",
+    "errors": {
+      "invalid_request": "The request is not valid. Check the instructions (200 characters maximum) and try again.",
+      "unauthorized": "Your session has expired. Sign in again to continue.",
+      "forbidden": "You do not have permission to iterate this publication.",
+      "conflict": "This request was already used with different data. Try again.",
+      "in_progress": "A new version of this publication is already being generated. Wait a few seconds and try again.",
+      "version_limit": "This publication already has the maximum of 10 versions. No more can be created.",
+      "invalid_project": "This publication cannot be iterated because it has no valid description.",
+      "project_changed": "The publication changed while the version was being generated. Reload the data and try again.",
+      "not_ready": "Publication iteration is not available yet. Try again later.",
+      "provider_unavailable": "The AI service is unavailable right now. Try again in a few minutes.",
+      "provider_refusal": "The AI could not generate a version with these instructions. Try rephrasing them.",
+      "invalid_response": "The response could not be validated. Reload the list to check whether the version was created before retrying.",
+      "lease_expired": "Generation took too long and was cancelled. Try again.",
+      "internal_error": "An unexpected error occurred. Try again; if it persists, contact support.",
+      "uncertain": "We could not confirm the result (connection or timeout). The version may have been created: reload the list before retrying."
+    }
+  },
   "shared": {
     "clearSearch": "Clear search",
     "search": "Search",

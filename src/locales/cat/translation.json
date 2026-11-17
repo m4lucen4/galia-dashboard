@@ -119,6 +119,28 @@
       "read_failed": "No s'ha pogut actualitzar l'estat. La informació mostrada pot estar desactualitzada."
     }
   },
+  "publicationIteration": {
+    "loading": "Generant una nova versió…",
+    "success": "Nova versió creada i seleccionada com a versió actual.",
+    "retry": "Torna-ho a provar",
+    "errors": {
+      "invalid_request": "La sol·licitud no és vàlida. Revisa les indicacions (màxim 200 caràcters) i torna-ho a provar.",
+      "unauthorized": "La teva sessió ha caducat. Torna a iniciar sessió per continuar.",
+      "forbidden": "No tens permís per iterar aquesta publicació.",
+      "conflict": "Aquesta sol·licitud ja s'havia fet servir amb altres dades. Torna-ho a provar.",
+      "in_progress": "Ja s'està generant una nova versió d'aquesta publicació. Espera uns segons i torna-ho a provar.",
+      "version_limit": "Aquesta publicació ja té el màxim de 10 versions. No se'n poden crear més.",
+      "invalid_project": "Aquesta publicació no es pot iterar perquè no té una descripció vàlida.",
+      "project_changed": "La publicació ha canviat mentre es generava la versió. Recarrega les dades i torna-ho a provar.",
+      "not_ready": "La iteració de publicacions encara no està disponible. Torna-ho a provar més tard.",
+      "provider_unavailable": "El servei d'IA no està disponible ara mateix. Torna-ho a provar d'aquí a uns minuts.",
+      "provider_refusal": "La IA no ha pogut generar una versió amb aquestes indicacions. Prova de reformular-les.",
+      "invalid_response": "La resposta no s'ha pogut validar. Recarrega la llista per comprovar si la versió s'ha creat abans de tornar-ho a provar.",
+      "lease_expired": "La generació ha trigat massa i s'ha cancel·lat. Torna-ho a provar.",
+      "internal_error": "Ha passat un error inesperat. Torna-ho a provar; si persisteix, contacta amb suport.",
+      "uncertain": "No hem pogut confirmar el resultat (connexió o temps d'espera). Pot ser que la versió s'hagi creat: recarrega la llista abans de tornar-ho a provar."
+    }
+  },
   "shared": {
     "clearSearch": "Netejar la cerca",
     "search": "Cercar",

@@ -11,7 +11,6 @@ import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { RootState } from "../../../redux/store";
 import { usePreviewProjectsData } from "../../../hooks/usePreviewProjectsData";
 import { useAlertManager } from "../../../hooks/useAlertManager";
-import { useIterationRealtime } from "../../../hooks/useIterationRealtime";
 import {
   InstagramPageInfo,
   LinkedInPageInfo,
@@ -35,7 +34,6 @@ import { CardsList } from "../components/cardList";
 import { CalendarView } from "../components/calendarView";
 import { PreviewProjectForm } from "../../../components/previewProjects/PreviewProjectForm";
 import { Filters } from "../components/Filters";
-import { WorkingInProgress } from "../../../components/shared/ui/WorkingInProgress";
 import { LoadingSpinner } from "../../../components/shared/ui/LoadingSpinner";
 import { DashboardPage } from "@/components/shared/ui/DashboardPage";
 
@@ -64,11 +62,6 @@ export const PreviewProjects = () => {
     "grid",
   );
   const [itemsPerPage, setItemsPerPage] = useState<number>(6);
-  const [isIterating, setIsIterating] = useState<boolean>(false);
-  const [iteratingProjectId, setIteratingProjectId] = useState<string | null>(
-    null,
-  );
-  const [showSuccessAlert, setShowSuccessAlert] = useState<boolean>(false);
 
   const user = useAppSelector((state: RootState) => state.auth.user);
   const { userData } = useAppSelector((state: RootState) => state.user);
@@ -165,25 +158,6 @@ export const PreviewProjects = () => {
 
   const fetchPreviewProjectsData = usePreviewProjectsData(user);
 
-  // Listen for iteration completion via realtime updates
-  const { isCompleted: isIterationCompleted } = useIterationRealtime(
-    iteratingProjectId,
-    isIterating,
-  );
-
-  // Handle iteration completion
-  useEffect(() => {
-    if (isIterationCompleted && isIterating) {
-      // Use setTimeout to avoid calling setState synchronously within an effect
-      setTimeout(() => {
-        setIsIterating(false);
-        setIteratingProjectId(null);
-        setShowSuccessAlert(true);
-        fetchPreviewProjectsData();
-      }, 0);
-    }
-  }, [isIterationCompleted, isIterating, fetchPreviewProjectsData]);
-
   const handleOpenInstagram = (project: PreviewProjectDataProps) => {
     dispatch(clearSelectedProject());
     dispatch(fetchPreviewProjectById(project.id));
@@ -207,31 +181,15 @@ export const PreviewProjects = () => {
   };
 
   const handleSavePreviewProject = () => {
-    // Don't close drawer on save - only close when iterating
+    // Don't close the drawer on save
     fetchPreviewProjectsData();
   };
 
-  const handleIterateStart = () => {
-    if (!project) return;
-
-    // Close drawer and show full-screen loading
-    setDrawerOpen(false);
-    setEditSeePreview(false);
-    setIsIterating(true);
-    setIteratingProjectId(project.id);
-
-    // Safety timeout (3 minutes) in case realtime fails
-    setTimeout(
-      () => {
-        if (isIterating) {
-          setIsIterating(false);
-          setIteratingProjectId(null);
-          setShowSuccessAlert(true);
-          fetchPreviewProjectsData();
-        }
-      },
-      3 * 60 * 1000,
-    ); // 3 minutes
+  const handleIterated = (previewId: string) => {
+    // The form keeps the drawer open and shows the new version itself; refresh
+    // the list, and the selected project only if it is still the iterated one.
+    fetchPreviewProjectsData();
+    if (project?.id === previewId) dispatch(fetchPreviewProjectById(previewId));
   };
 
   const getDrawerTitle = () => {
@@ -414,7 +372,7 @@ export const PreviewProjects = () => {
             key={project.id}
             project={project}
             onSave={handleSavePreviewProject}
-            onIterateStart={handleIterateStart}
+            onIterated={handleIterated}
             loading={previewProjectUpdateRequest.inProgress}
             readOnly={isReadOnlyPreview}
           />
@@ -490,26 +448,6 @@ export const PreviewProjects = () => {
         />
       )}
 
-      {showSuccessAlert && (
-        <Alert
-          title="¡Éxito!"
-          description="La nueva versión de la publicación se ha creado correctamente."
-          onAccept={() => setShowSuccessAlert(false)}
-        />
-      )}
-
-      {isIterating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#d8e4d6] p-5 font-['Hanken_Grotesk',system-ui,sans-serif] text-[#010000]">
-          <WorkingInProgress
-            customMessages={[
-              "Iterando la nueva descripción...",
-              "Esto puede tardar unos segundos...",
-              "No refresques la página, estamos trabajando...",
-            ]}
-            messageInterval={7000}
-          />
-        </div>
-      )}
     </DashboardPage>
   );
 };

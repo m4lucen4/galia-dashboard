@@ -119,6 +119,28 @@
       "read_failed": "No se ha podido actualizar el estado. La información mostrada puede estar desactualizada."
     }
   },
+  "publicationIteration": {
+    "loading": "Generando nueva versión…",
+    "success": "Nueva versión creada y seleccionada como versión actual.",
+    "retry": "Reintentar",
+    "errors": {
+      "invalid_request": "La solicitud no es válida. Revisa las indicaciones (máximo 200 caracteres) e inténtalo de nuevo.",
+      "unauthorized": "Tu sesión ha caducado. Vuelve a iniciar sesión para continuar.",
+      "forbidden": "No tienes permiso para iterar esta publicación.",
+      "conflict": "Esta solicitud ya se había usado con otros datos. Inténtalo de nuevo.",
+      "in_progress": "Ya se está generando una nueva versión de esta publicación. Espera unos segundos e inténtalo de nuevo.",
+      "version_limit": "Esta publicación ya tiene el máximo de 10 versiones. No se pueden crear más.",
+      "invalid_project": "Esta publicación no se puede iterar porque no tiene una descripción válida.",
+      "project_changed": "La publicación ha cambiado mientras se generaba la versión. Recarga los datos e inténtalo de nuevo.",
+      "not_ready": "La iteración de publicaciones aún no está disponible. Inténtalo más tarde.",
+      "provider_unavailable": "El servicio de IA no está disponible en este momento. Inténtalo de nuevo en unos minutos.",
+      "provider_refusal": "La IA no ha podido generar una versión con estas indicaciones. Prueba a reformularlas.",
+      "invalid_response": "La respuesta no se ha podido validar. Recarga la lista para comprobar si se creó la versión antes de reintentar.",
+      "lease_expired": "La generación tardó demasiado y se canceló. Inténtalo de nuevo.",
+      "internal_error": "Ha ocurrido un error inesperado. Inténtalo de nuevo; si persiste, contacta con soporte.",
+      "uncertain": "No hemos podido confirmar el resultado (conexión o tiempo de espera). Puede que la versión se haya creado: recarga la lista antes de reintentar."
+    }
+  },
   "shared": {
     "clearSearch": "Limpiar búsqueda",
     "search": "Buscar",

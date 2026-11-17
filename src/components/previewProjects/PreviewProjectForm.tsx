@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   updatePreviewProject,
@@ -7,11 +8,18 @@ import {
 import {
   PreviewProjectDataProps,
   ProjectImageData,
+  PublishVersions,
   FileItem as FileItemType,
 } from "../../types";
 import { InputField } from "../shared/ui/InputField";
 import { Button } from "../shared/ui/Button";
-import { supabase } from "../../helpers/supabase";
+import {
+  MAX_ITERATION_INSTRUCTIONS,
+  isPublicationIterationError,
+  iteratePublication,
+  newIterationRequestId,
+  type PublicationIterationError,
+} from "@/features/postPreview/services/publicationIteration";
 import { LoadingSpinner } from "../shared/ui/LoadingSpinner";
 import { MediaGallerySelector } from "../../features/projects/components/MediaGallerySelector";
 import {
@@ -27,7 +35,8 @@ type PreviewProjectFormProps = {
   project: PreviewProjectDataProps;
   loading: boolean;
   onSave: () => void;
-  onIterateStart: () => void;
+  // Called after a new version was created so the parent can refresh its data.
+  onIterated: (previewId: string) => void;
   readOnly?: boolean;
 };
 
@@ -41,10 +50,11 @@ export const PreviewProjectForm = ({
   project,
   loading,
   onSave,
-  onIterateStart,
+  onIterated,
   readOnly = false,
 }: PreviewProjectFormProps) => {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const updateMainVersionRequest = useAppSelector(
     (state) => state.previewProject.previewProjectUpdateMainVersionRequest,
   );
@@ -72,31 +82,57 @@ export const PreviewProjectForm = ({
     return 0;
   });
   const [iterationInstructions, setIterationInstructions] = useState("");
-  const MAX_INSTRUCTIONS_LENGTH = 200;
+  const MAX_INSTRUCTIONS_LENGTH = MAX_ITERATION_INSTRUCTIONS;
+  const [versions, setVersions] = useState<PublishVersions[]>(
+    () => project?.versions || [],
+  );
+  const [syncedVersions, setSyncedVersions] = useState(project?.versions);
+  const [isIterating, setIsIterating] = useState(false);
+  const [iterationError, setIterationError] =
+    useState<PublicationIterationError | null>(null);
+  const [iterationSucceeded, setIterationSucceeded] = useState(false);
+  const iteratingRef = useRef(false);
+  const onIteratedRef = useRef(onIterated);
+  useEffect(() => {
+    onIteratedRef.current = onIterated;
+  }, [onIterated]);
+
+  // Re-sync local state when the stored versions change (iteration refresh,
+  // saving, setting the main version). The new main version becomes current.
+  if (project?.versions !== syncedVersions) {
+    const nextVersions = project?.versions || [];
+    const mainIndex = Math.max(nextVersions.findIndex((v) => v.main), 0);
+    setSyncedVersions(project?.versions);
+    setVersions(nextVersions);
+    setCurrentVersionIndex(mainIndex);
+    if (nextVersions.length > 0) {
+      setDescription(nextVersions[mainIndex]?.description || "");
+    }
+  }
   const [showGallerySelector, setShowGallerySelector] = useState(false);
 
   const handlePreviousVersion = () => {
-    if (project.versions && currentVersionIndex > 0) {
+    if (currentVersionIndex > 0) {
       const newIndex = currentVersionIndex - 1;
       setCurrentVersionIndex(newIndex);
       // Update description when navigating to a different version
-      const currentVersion = project.versions[newIndex];
+      const currentVersion = versions[newIndex];
       setDescription(currentVersion?.description || "");
     }
   };
 
   const handleNextVersion = () => {
-    if (project.versions && currentVersionIndex < project.versions.length - 1) {
+    if (currentVersionIndex < versions.length - 1) {
       const newIndex = currentVersionIndex + 1;
       setCurrentVersionIndex(newIndex);
       // Update description when navigating to a different version
-      const currentVersion = project.versions[newIndex];
+      const currentVersion = versions[newIndex];
       setDescription(currentVersion?.description || "");
     }
   };
 
   const isCurrentVersionMain = () => {
-    return project.versions?.[currentVersionIndex]?.main || false;
+    return versions[currentVersionIndex]?.main || false;
   };
 
   const handleSetAsMainVersion = async () => {
@@ -104,7 +140,7 @@ export const PreviewProjectForm = ({
       return;
     }
 
-    const versionId = project.versions[currentVersionIndex].id;
+    const versionId = versions[currentVersionIndex].id;
 
     try {
       await dispatch(
@@ -188,8 +224,8 @@ export const PreviewProjectForm = ({
 
   const handleSave = async () => {
     // If versions exist, update the versions array
-    if (project.versions && project.versions.length > 0) {
-      const updatedVersions = project.versions.map((version, index) => {
+    if (versions.length > 0) {
+      const updatedVersions = versions.map((version, index) => {
         if (index === currentVersionIndex) {
           return {
             ...version,
@@ -220,52 +256,79 @@ export const PreviewProjectForm = ({
   };
 
   const handleIteratePublication = async () => {
-    // Notify parent to close drawer and show full-screen loading
-    onIterateStart();
-
+    if (iteratingRef.current) return;
+    iteratingRef.current = true;
+    setIsIterating(true);
+    setIterationError(null);
+    setIterationSucceeded(false);
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        console.error("No active session found");
-        return;
-      }
-
-      const webhookUrl = import.meta.env
-        .VITE_SUPABASE_FUNCTION_N8N_ITERATE_PUBLICATION;
-
-      // Build URL with project ID and instructions (if provided)
-      let url = `${webhookUrl}?id=${project.id}`;
-
-      if (iterationInstructions.trim()) {
-        url += `&instructions=${encodeURIComponent(iterationInstructions.trim())}`;
-      }
-
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
+      // Every click, including "Reintentar", is a new deliberate request.
+      const result = await iteratePublication({
+        previewId: project.id,
+        instructions: iterationInstructions,
+        requestId: newIterationRequestId(),
       });
-
-      if (!response.ok) {
-        console.error(
-          "Error calling iterate publication webhook:",
-          await response.text(),
-        );
-      }
-
-      // Clear instructions after iteration attempt (success or failure)
+      const newIndex = Math.max(
+        result.versions.findIndex((v) => v.id === result.versionId),
+        0,
+      );
+      setVersions(result.versions);
+      setCurrentVersionIndex(newIndex);
+      setDescription(result.versions[newIndex]?.description || "");
       setIterationInstructions("");
+      setIterationSucceeded(true);
+      onIteratedRef.current(project.id);
     } catch (error) {
-      console.error("Failed to call iterate publication workflow:", error);
-      // Clear instructions even on error
-      setIterationInstructions("");
+      setIterationError(
+        isPublicationIterationError(error)
+          ? error
+          : { code: "uncertain", retryable: true },
+      );
+    } finally {
+      iteratingRef.current = false;
+      setIsIterating(false);
     }
   };
+
+  const iterationFeedback = (
+    <div aria-live="polite" className="space-y-2">
+      {isIterating && (
+        <p
+          role="status"
+          className="flex items-center justify-center gap-2 text-sm text-[#010000]/75"
+        >
+          <LoadingSpinner size="small" color="secondary" />
+          <span>{t("publicationIteration.loading")}</span>
+        </p>
+      )}
+      {!isIterating && iterationSucceeded && (
+        <p
+          role="status"
+          className="rounded-2xl border border-[#010000]/25 bg-white/50 px-4 py-3 text-sm"
+        >
+          {t("publicationIteration.success")}
+        </p>
+      )}
+      {!isIterating && iterationError && (
+        <div
+          role="alert"
+          className="space-y-3 rounded-2xl border border-red-700/40 bg-red-50 px-4 py-3 text-sm text-red-900"
+        >
+          <p>{t(`publicationIteration.errors.${iterationError.code}`)}</p>
+          {iterationError.retryable && (
+            <button
+              type="button"
+              onClick={handleIteratePublication}
+              disabled={loading}
+              className={actionClassName}
+            >
+              {t("publicationIteration.retry")}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
 
   if (updateMainVersionRequest.inProgress) {
     return (
@@ -289,21 +352,20 @@ export const PreviewProjectForm = ({
           placeholder="Escribe una descripción..."
           disabled={
             readOnly ||
-            (project.versions &&
-              project.versions.length > 0 &&
-              !isCurrentVersionMain())
+            isIterating ||
+            (versions.length > 0 && !isCurrentVersionMain())
           }
         />
       </div>
 
       {/* Version Navigation */}
-      {project.versions && project.versions.length > 0 && (
+      {versions.length > 0 && (
         <div className={projectPanelClassName}>
           {/* Navigation arrows and version counter */}
           <div className="flex items-center justify-between gap-3">
             <button
               onClick={handlePreviousVersion}
-              disabled={currentVersionIndex === 0}
+              disabled={isIterating || currentVersionIndex === 0}
               className={`${actionClassName} shrink-0 px-3 ${
                 currentVersionIndex === 0
                   ? "text-[#010000]/25 cursor-not-allowed"
@@ -328,7 +390,7 @@ export const PreviewProjectForm = ({
 
             <div className="flex flex-col items-center gap-1">
               <span className="font-['Geist_Mono'] text-sm tabular-nums">
-                {currentVersionIndex + 1}/{project.versions.length}
+                {currentVersionIndex + 1}/{versions.length}
               </span>
               {isCurrentVersionMain() && (
                 <span className="rounded-full border border-[#010000]/25 px-3 py-1 text-xs font-medium">
@@ -339,9 +401,9 @@ export const PreviewProjectForm = ({
 
             <button
               onClick={handleNextVersion}
-              disabled={currentVersionIndex === project.versions.length - 1}
+              disabled={isIterating || currentVersionIndex === versions.length - 1}
               className={`${actionClassName} shrink-0 px-3 ${
-                currentVersionIndex === project.versions.length - 1
+                currentVersionIndex === versions.length - 1
                   ? "text-[#010000]/25 cursor-not-allowed"
                   : "text-[#010000]"
               }`}
@@ -366,8 +428,7 @@ export const PreviewProjectForm = ({
           {/* Instructions and iterate button - only on main version */}
           {!readOnly &&
             isCurrentVersionMain() &&
-            project.versions &&
-            project.versions.length < 10 && (
+            versions.length < 10 && (
               <div className="space-y-2">
                 {/* Instructions field */}
                 <div className="w-full">
@@ -382,6 +443,7 @@ export const PreviewProjectForm = ({
                     placeholder="Indicaciones para la nueva versión (opcional)..."
                     className={`${projectControlClassName} resize-none text-sm`}
                     rows={4}
+                    disabled={isIterating}
                   />
                   <div className="flex justify-end mt-1">
                     <span
@@ -399,7 +461,7 @@ export const PreviewProjectForm = ({
                 <div className="flex justify-center">
                   <button
                     onClick={handleIteratePublication}
-                    disabled={loading}
+                    disabled={loading || isIterating}
                     className={actionClassName}
                   >
                     Iterar esta publicación
@@ -408,12 +470,16 @@ export const PreviewProjectForm = ({
               </div>
             )}
 
+          {iterationFeedback}
+
           {/* Set as main version button - only on non-main versions */}
           {!readOnly && !isCurrentVersionMain() && (
             <div className="flex justify-center">
               <button
                 onClick={handleSetAsMainVersion}
-                disabled={loading || updateMainVersionRequest.inProgress}
+                disabled={
+                  loading || isIterating || updateMainVersionRequest.inProgress
+                }
                 className={actionClassName}
               >
                 {updateMainVersionRequest.inProgress ? (
@@ -431,7 +497,7 @@ export const PreviewProjectForm = ({
       )}
 
       {/* Instructions and button when versions don't exist */}
-      {!readOnly && (!project.versions || project.versions.length === 0) && (
+      {!readOnly && versions.length === 0 && (
         <div className={`${projectPanelClassName} ${sharedButtonClassName}`}>
           {/* Instructions field */}
           <div className="w-full">
@@ -446,6 +512,7 @@ export const PreviewProjectForm = ({
               placeholder="Indicaciones para la nueva versión (opcional)..."
               className={`${projectControlClassName} resize-none text-sm`}
               rows={4}
+              disabled={isIterating}
             />
             <div className="flex justify-end mt-1">
               <span
@@ -463,9 +530,10 @@ export const PreviewProjectForm = ({
           <Button
             fullWidth
             title="Iterar publicación"
-            disabled={loading}
+            disabled={loading || isIterating}
             onClick={handleIteratePublication}
           />
+          {iterationFeedback}
         </div>
       )}
 
@@ -577,7 +645,7 @@ export const PreviewProjectForm = ({
           <Button
             fullWidth
             title={loading ? "Guardando..." : "Guardar publicación"}
-            disabled={loading}
+            disabled={loading || isIterating}
             onClick={handleSave}
           />
         </div>
