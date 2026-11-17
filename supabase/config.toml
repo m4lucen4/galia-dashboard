@@ -11,6 +11,10 @@ entrypoint = "./functions/odoo-contacts/index.ts"
 verify_jwt = false
 entrypoint = "./functions/generate-project/index.ts"
 
+[functions.iterate-publication]
+verify_jwt = false
+entrypoint = "./functions/iterate-publication/index.ts"
+
 [functions.process-publication-generation]
 verify_jwt = false
 entrypoint = "./functions/process-publication-generation/index.ts"
