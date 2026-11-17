@@ -30,17 +30,30 @@ function failureCode(value: unknown): IterationFailureCode {
 export function createHandler(env: Environment, fetcher: typeof fetch = fetch) {
   return async (request: Request): Promise<Response> => {
     if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-    if (request.method !== "POST") return jsonResponse(iterationFailure(new IterationError("invalid_request")).body, 405);
+    const legacy = request.method === "GET" && new URL(request.url).searchParams.has("id");
+    if (request.method !== "POST" && !legacy) {
+      return jsonResponse(iterationFailure(new IterationError("invalid_request")).body, 405);
+    }
     try {
       const authorization = request.headers.get("Authorization");
       if (!authorization || !/^Bearer \S+$/u.test(authorization) || authorization.length > 8192) {
         throw new IterationError("unauthorized");
       }
-      if (Number(request.headers.get("Content-Length")) > 4096) throw new IterationError("invalid_request");
-      const raw = await request.text();
-      if (raw.length > 4096) throw new IterationError("invalid_request");
       let body: unknown;
-      try { body = JSON.parse(raw); } catch { throw new IterationError("invalid_request"); }
+      if (legacy) {
+        // Transitional: dashboards deployed before the POST client send
+        // GET ?id=&instructions= with the user's bearer token. Same auth and SQL rules.
+        const params = new URL(request.url).searchParams;
+        body = {
+          previewId: params.get("id"), requestId: crypto.randomUUID(),
+          ...(params.has("instructions") ? { instructions: params.get("instructions") } : {}),
+        };
+      } else {
+        if (Number(request.headers.get("Content-Length")) > 4096) throw new IterationError("invalid_request");
+        const raw = await request.text();
+        if (raw.length > 4096) throw new IterationError("invalid_request");
+        try { body = JSON.parse(raw); } catch { throw new IterationError("invalid_request"); }
+      }
       const input = parseIterationRequest(body);
 
       const url = required(env, "SUPABASE_URL").replace(/\/$/u, "");

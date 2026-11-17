@@ -56,4 +56,6 @@ Diagnostics stored in `publication_iteration_requests.diagnostics` are content-f
 
 Secrets: `OPENAI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY` and the optional `OPENAI_GENERATION_MODEL`. These are already configured for generation.
 
-The old variable `VITE_SUPABASE_FUNCTION_N8N_ITERATE_PUBLICATION` is no longer read. Disable the n8n webhook once the new flow is verified in production.
+The old variable `VITE_SUPABASE_FUNCTION_N8N_ITERATE_PUBLICATION` is no longer read by this branch's client.
+
+**Transitional `GET ?id=&instructions=`.** The production function slug `iterate-publication` already existed (version 45, created 2025-11-26) before this migration, and its source is not in the repository. Dashboards deployed before the POST client may still send that request with the user's bearer token. The function therefore accepts it and runs the same authenticated flow with a fresh `requestId`. Remove this branch once the new client is deployed. Disable the n8n webhook once the new flow is verified in production.
