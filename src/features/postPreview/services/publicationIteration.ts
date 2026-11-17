@@ -70,8 +70,11 @@ function parseSuccess(data: unknown): PublicationIterationResult {
 }
 
 export async function iteratePublication(
-  { previewId, instructions, requestId }: PublicationIterationRequest,
+  { previewId: rawPreviewId, instructions, requestId }: PublicationIterationRequest,
 ): Promise<PublicationIterationResult> {
+  // Supabase returns bigint ids as JS numbers at runtime despite the string type;
+  // the API contract requires a digit string.
+  const previewId = String(rawPreviewId);
   const trimmed = instructions?.trim() ?? "";
   if (!digits.test(previewId) || !uuid.test(requestId)
     || trimmed.length > MAX_ITERATION_INSTRUCTIONS) {
