@@ -41,21 +41,42 @@ Effective expiry (`expires_at`):
 
 ## Edge Functions
 
-All take `POST` with the user's Supabase session (`Authorization: Bearer <JWT>`), resolve the user through Supabase Auth, and answer `{ connection }` (the summary above) or `{ code, message, retryable }` on error. They never return tokens.
+The two OAuth functions take `POST` with the user's Supabase session (`Authorization: Bearer <JWT>`) and a JSON body `{ action, ... }`. They resolve the user through Supabase Auth `/user` (never a decoded JWT), so they are deployed with `verify_jwt = false` like the other handlers that validate identity themselves. They answer `{ connection }` (the summary above; `null` for `status` when the user never connected) or `{ code, message, retryable }`. They never return tokens.
 
 | Function | Actions (`body.action`) |
 |---|---|
-| `social-connect-linkedin` | `exchange` `{code, redirectUri}` · `pages` · `status` · `disconnect` |
-| `social-connect-instagram` | `exchange` `{code, redirectUri}` (short-lived → long-lived user token, `debug_token`, pages with `instagram_business_account`) · `pages` · `status` · `disconnect` |
-| `social-credentials-check` | Worker, called by cron with the worker secret header. Refreshes LinkedIn access tokens expiring within 7 days, checks Instagram tokens with `debug_token`, reports status, sends the Resend email when `social_connection_claim_notice` returns a recipient. |
+| `social-connect-linkedin` | `exchange` `{code, redirectUri}` (code → access + refresh token, member id and name through `/v2/userinfo`) · `pages` (the member plus the organizations where they are an approved `ADMINISTRATOR`, versioned REST API `Linkedin-Version: 202611`) · `status` · `disconnect` |
+| `social-connect-instagram` | `exchange` `{code, redirectUri}` (Graph v27.0: short-lived → long-lived user token, `debug_token`, `/me`, then the pages with an `instagram_business_account` and their page tokens) · `pages` · `status` · `disconnect` |
+| `social-credentials-check` | `POST` only, worker header `X-Social-Worker-Secret` (64 hex, constant-time comparison with `SOCIAL_WORKER_SECRET`). Loops `social_connections_due_check(50)`. LinkedIn: refreshes the access token when it expires within 7 days and a refresh token exists (`invalid_grant` → `revoked` / `token_invalid`). Instagram: `debug_token` on the user token and every page token (invalid → `revoked` / `token_invalid`; no `instagram_content_publish` → `revoked` / `permission_missing`). Network or 5xx errors leave the status untouched. After each report it calls `social_connection_claim_notice` and sends the Resend email when a recipient comes back. Answers counts: `checked, refreshed, revoked, unchanged, skipped, failed, notices, emailsSent, emailsFailed, deadlineReached`. |
 
-Server configuration: `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `RESEND_API_KEY`, worker secret.
+Rules of `exchange`: `redirectUri` must belong to an origin of `SOCIAL_OAUTH_REDIRECT_ORIGINS` (no credentials, query or fragment; `http` only for localhost) and must be the exact string used in the authorization request; `code` is 8–2048 printable ASCII characters. Instagram refuses a token without `instagram_content_publish` (`permission_missing`) and keeps the connection if the immediate page fetch fails (`pages` retries it).
+
+Errors (closed set): `invalid_request` 400, `unauthorized` 401, `forbidden` 403, `not_connected` 409, `provider_unavailable` 503 (retryable), `provider_rejected` 422, `token_invalid` 422, `permission_missing` 422, `internal_error` 500 (retryable). Provider text is never returned or logged; logs carry the code only.
+
+The worker stops after about 110 s; connections not reached stay due, so cron may call it more often than daily (a connection is checked at most every 20 hours anyway).
+
+Email (Resend, `Mocklab <noreply@mocklab.app>`): Spanish by default, English when `userData.language` starts with `en`, Catalan when it starts with `ca` (`cat`). It names the network, the status (expiring with date, expired, revoked with the reason) and links to `${APP_BASE_URL}/settings`. A failed email is logged and never fails the run.
+
+### Server configuration
+
+| Variable | Used by |
+|---|---|
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | all three (RPCs and the `userData` mirror) |
+| `SUPABASE_ANON_KEY` | OAuth functions (Auth `/user`) |
+| `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` | `social-connect-linkedin`, worker (refresh) |
+| `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET` | `social-connect-instagram`, worker (`debug_token` with the app token) |
+| `SOCIAL_OAUTH_REDIRECT_ORIGINS` | OAuth functions: comma-separated allowed origins, e.g. `https://app.mocklab.app,http://localhost:5173` |
+| `SOCIAL_WORKER_SECRET` | worker: 64 hex characters |
+| `RESEND_API_KEY` | worker |
+| `APP_BASE_URL` | worker, optional (default `https://app.mocklab.app`) |
+
+Shared code: `supabase/functions/_shared/social-*.ts`.
 
 ## Coexistence with n8n (until the cutover)
 
 n8n still publishes with tokens it reads from `userData.linkedln_data.access_token` (plus `linkedin_person_id`, `permissions_granted`) and from `projectsPreview.checkSocialNetworks.instagram.accessToken`. Until the cutover:
 
-- The OAuth functions and the worker also write those `userData` fields in the same shape as the old functions.
+- The OAuth functions and the worker also write those `userData` fields in the same shape as the old functions (`linkedln_data`: `linkedin_person_id, access_token, refresh_token, id_token, token_expires_at, is_connected, permissions_granted, user_name, connected_at, admin_pages, pages_fetched_at`; `instagram_data`: `instagram_user_id, access_token, token_expires_at, data_access_expires_at, is_connected, username, user_id, app_id, connected_at, permissions_granted, granular_scopes, token_type, application, issued_at, business_pages` (with `page_access_token`), `pages_fetched_at`). The write merges into the existing JSON, so unknown keys survive. The worker mirrors `access_token` / `token_expires_at` (and a rotated `refresh_token`) after a LinkedIn refresh; a disconnect only sets `is_connected: false`. A mirror failure is logged and does not undo the stored connection; the next reconnection rewrites it.
 - The trigger `bridge_instagram_page_token` fills `checkSocialNetworks.instagram.accessToken` from `social_credentials` when the browser saves an Instagram selection without a token.
 - The old functions (`linkedin-*`, `instagram-*`) stay deployed and untouched.
 
