@@ -22,6 +22,7 @@ import { ShowGoogleMaps } from "./projectsForm/ShowGoogleMaps";
 import { NasFilesModal } from "./NasFilesModal";
 import { PhotoIcon, FolderOpenIcon } from "@heroicons/react/24/outline";
 import { useProjectsForm } from "../hooks/useProjectsForm";
+import { ProjectVideosSection } from "../videos/ProjectVideosSection";
 import { ProjectTranslationsEditor, type RegisterTranslationGuard } from "./ProjectTranslationsEditor";
 
 interface ProjectsFormProps {
@@ -194,6 +195,8 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
               </div>
             </div>
           </fieldset>
+
+          <ProjectVideosSection key={projectId ?? "new"} projectId={projectId} />
 
           <fieldset className={projectPanelClassName}>
             <legend className={projectLegendClassName}>

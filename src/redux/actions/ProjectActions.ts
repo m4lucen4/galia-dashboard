@@ -4,6 +4,7 @@ import { supabase } from "../../helpers/supabase";
 import type { RootState } from "../store";
 import { invokeGeneration, safeGenerationIssue } from "@/features/projects/services/publicationGeneration";
 import type { GenerationRequest } from "@/features/projects/types/publicationGeneration";
+import { removeAllProjectVideoObjects } from "@/features/projects/videos/projectVideosService";
 
 const PROJECT_LANGUAGE_SUMMARY = `translation_settings:project_translation_settings(
   original_language, translations:project_translations(language)
@@ -489,6 +490,21 @@ export const deleteProject = createAsyncThunk(
         return rejectWithValue({
           message: `Error fetching project for deletion: ${fetchError.message}`,
           status: fetchError.code,
+        });
+      }
+
+      // Project videos live in their own bucket and are not removed by the row cascade.
+      // They go first: if their cleanup fails the project stays intact, images included.
+      try {
+        await removeAllProjectVideoObjects(projectId);
+      } catch (videoCleanupError) {
+        const detail =
+          videoCleanupError instanceof Error
+            ? videoCleanupError.message
+            : "unknown error";
+        return rejectWithValue({
+          message: `Error deleting project videos: ${detail}`,
+          status: 500,
         });
       }
 
