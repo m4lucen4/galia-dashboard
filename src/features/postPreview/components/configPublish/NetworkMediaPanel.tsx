@@ -27,7 +27,8 @@ interface NetworkMediaPanelProps {
   /** VITE_SOCIAL_MEDIA_VARIANTS: shows the "Ajustar imágenes" step. */
   variantsEnabled: boolean;
   onAdjust: () => void;
-  onRetryConversion: (url: string) => void;
+  /** "Reintentar" for one image: measure again and/or convert again. */
+  onRetry: (url: string) => void;
 }
 
 function issueMessage(
@@ -36,33 +37,37 @@ function issueMessage(
   network: SocialNetwork,
   issue: ImageIssue,
   row: MediaRow,
+  variantsEnabled: boolean,
 ): string {
+  // Switch on: the copy is generated, so the message says what will happen. Switch off: n8n
+  // publishes the original untouched, so the message only says what the network would reject.
+  const issues = variantsEnabled ? `${PREFIX}.issues` : `${PREFIX}.issuesReport`;
   const facts = row.facts;
   const ratio = facts ? ratioLabel(facts.width / facts.height, locale) : "";
   const number = (value: number | undefined) =>
     new Intl.NumberFormat(locale).format(value ?? 0);
   switch (issue.code) {
     case "unsupported_format":
-      return t(`${PREFIX}.issues.unsupportedFormat.${network}`, {
+      return t(`${issues}.unsupportedFormat.${network}`, {
         format: facts?.mime ? formatLabel(facts.mime) : "",
       });
     case "too_heavy":
-      return t(`${PREFIX}.issues.tooHeavy`, {
+      return t(`${issues}.tooHeavy`, {
         size: formatBytes(issue.actual ?? 0, locale),
         limit: formatBytes(INSTAGRAM_MEDIA.maxBytes, locale),
       });
     case "width_too_small":
-      return t(`${PREFIX}.issues.widthTooSmall`, {
+      return t(`${issues}.widthTooSmall`, {
         width: number(issue.actual),
         min: number(INSTAGRAM_MEDIA.minWidth),
       });
     case "width_too_large":
-      return t(`${PREFIX}.issues.widthTooLarge`, {
+      return t(`${issues}.widthTooLarge`, {
         width: number(issue.actual),
         max: number(INSTAGRAM_MEDIA.maxWidth),
       });
     case "too_many_pixels":
-      return t(`${PREFIX}.issues.tooManyPixels`, {
+      return t(`${issues}.tooManyPixels`, {
         pixels: number(issue.actual),
         limit: number(LINKEDIN_MEDIA.pixelsLimit),
       });
@@ -93,7 +98,7 @@ export const NetworkMediaPanel: React.FC<NetworkMediaPanelProps> = ({
   stats,
   variantsEnabled,
   onAdjust,
-  onRetryConversion,
+  onRetry,
 }) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language;
@@ -109,7 +114,12 @@ export const NetworkMediaPanel: React.FC<NetworkMediaPanelProps> = ({
       continue;
     }
     if (row.state === "error") {
-      lines.push({ key: `${row.index}-error`, tone: "warn", text: `${label}: ${t(`${PREFIX}.measureError`)}` });
+      lines.push({
+        key: `${row.index}-error`,
+        tone: "warn",
+        text: `${label}: ${t(row.errorKind === "timeout" ? `${PREFIX}.measureTimeout` : `${PREFIX}.measureError`)}`,
+        retryUrl: row.url,
+      });
       continue;
     }
     if (row.variant) {
@@ -126,18 +136,26 @@ export const NetworkMediaPanel: React.FC<NetworkMediaPanelProps> = ({
       lines.push({ key: `${row.index}-converting`, tone: "info", text: `${label}: ${t(`${PREFIX}.converting`)}` });
     }
     if (row.conversionFailed || (variantsEnabled && !row.variant && row.source && !row.source.corsOk)) {
+      // Retry also for a browser-blocked image: it measures the image again (CORS may be fixed).
       lines.push({
         key: `${row.index}-failed`,
         tone: "warn",
         text: `${label}: ${t(row.source?.corsOk === false ? `${PREFIX}.corsBlocked` : `${PREFIX}.conversionFailed`)}`,
-        retryUrl: row.source?.corsOk === false ? undefined : row.url,
+        retryUrl: row.url,
+      });
+    }
+    if (row.unknownFacts) {
+      lines.push({
+        key: `${row.index}-unknown`,
+        tone: "info",
+        text: `${label}: ${t(`${PREFIX}.unknownFacts`)}`,
       });
     }
     row.issues.forEach((issue, position) => {
       lines.push({
         key: `${row.index}-${issue.code}-${position}`,
         tone: "warn",
-        text: `${label}: ${issueMessage(t, locale, network, issue, row)}`,
+        text: `${label}: ${issueMessage(t, locale, network, issue, row, variantsEnabled)}`,
       });
     });
   }
@@ -198,7 +216,7 @@ export const NetworkMediaPanel: React.FC<NetworkMediaPanelProps> = ({
                 <button
                   type="button"
                   className="ml-2 underline"
-                  onClick={() => onRetryConversion(line.retryUrl as string)}
+                  onClick={() => onRetry(line.retryUrl as string)}
                 >
                   {t(`${PREFIX}.retry`)}
                 </button>

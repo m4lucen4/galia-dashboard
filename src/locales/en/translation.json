@@ -650,6 +650,8 @@
       "imageLabel": "Image {{index}}",
       "measuring": "checking…",
       "measureError": "could not be loaded to be checked; make sure the image is still available",
+      "measureTimeout": "took more than 15 seconds to load and could not be checked",
+      "unknownFacts": "its format or weight could not be read; to be safe it will be converted to JPEG when publishing",
       "variantReady": "adjusted for this network ({{width}} × {{height}} px)",
       "converting": "preparing the JPEG copy…",
       "conversionFailed": "the JPEG copy could not be prepared",
@@ -669,6 +671,16 @@
         "tooManyImages": "{{network}} accepts at most {{max}} images and there are {{found}}",
         "noImages": "{{network}} needs at least one image"
       },
+      "issuesReport": {
+        "unsupportedFormat": {
+          "instagram": "Instagram only accepts JPEG (this one is {{format}})",
+          "linkedin": "LinkedIn only accepts JPG, PNG and GIF (this one is {{format}})"
+        },
+        "tooHeavy": "it weighs {{size}} and Instagram accepts up to {{limit}}",
+        "widthTooSmall": "it is {{width}} px wide and Instagram requires at least {{min}} px",
+        "widthTooLarge": "it is {{width}} px wide and Instagram accepts up to {{max}} px",
+        "tooManyPixels": "it has {{pixels}} pixels and LinkedIn requires fewer than {{limit}}"
+      },
       "imagesOk": "The images meet the network requirements.",
       "adjustImages": "Adjust images",
       "textTitle": "Text",
@@ -684,7 +696,7 @@
         "variantsLoading": "Loading saved image adjustments…",
         "variantsError": "Image adjustments could not be loaded. Close this window and try again.",
         "measuring": "Checking the {{network}} images…",
-        "measureError": "{{found}} {{network}} image(s) cannot be checked. Make sure they are still available.",
+        "measureError": "{{found}} {{network}} image(s) cannot be checked. Make sure they are still available and press “Retry”.",
         "tooManyImages": "{{network}} does not accept that many images. Deselect some in the publication.",
         "noImages": "{{network}} needs at least one selected image.",
         "crop": "{{found}} {{network}} image(s) need cropping. Press “Adjust images” to continue.",

@@ -653,6 +653,8 @@
       "imageLabel": "Imagen {{index}}",
       "measuring": "comprobando…",
       "measureError": "no se ha podido cargar para comprobarla; revisa que la imagen siga disponible",
+      "measureTimeout": "ha tardado más de 15 segundos en cargar y no se ha podido comprobar",
+      "unknownFacts": "no se ha podido leer su formato o peso; por seguridad se convertirá a JPEG al publicar",
       "variantReady": "ajustada para esta red ({{width}} × {{height}} px)",
       "converting": "preparando la copia JPEG…",
       "conversionFailed": "no se ha podido preparar la copia JPEG",
@@ -672,6 +674,16 @@
         "tooManyImages": "{{network}} admite como máximo {{max}} imágenes y hay {{found}}",
         "noImages": "{{network}} necesita al menos una imagen"
       },
+      "issuesReport": {
+        "unsupportedFormat": {
+          "instagram": "Instagram solo acepta JPEG (esta es {{format}})",
+          "linkedin": "LinkedIn solo acepta JPG, PNG y GIF (esta es {{format}})"
+        },
+        "tooHeavy": "pesa {{size}} y Instagram admite hasta {{limit}}",
+        "widthTooSmall": "mide {{width}} px de ancho y Instagram pide al menos {{min}} px",
+        "widthTooLarge": "mide {{width}} px de ancho y Instagram admite hasta {{max}} px",
+        "tooManyPixels": "tiene {{pixels}} píxeles y LinkedIn exige menos de {{limit}}"
+      },
       "imagesOk": "Las imágenes cumplen los requisitos de la red.",
       "adjustImages": "Ajustar imágenes",
       "textTitle": "Texto",
@@ -687,7 +699,7 @@
         "variantsLoading": "Cargando los ajustes de imagen guardados…",
         "variantsError": "No se han podido cargar los ajustes de imagen. Cierra la configuración y vuelve a intentarlo.",
         "measuring": "Comprobando las imágenes de {{network}}…",
-        "measureError": "No se pueden comprobar {{found}} imagen(es) de {{network}}. Revisa que sigan disponibles.",
+        "measureError": "No se pueden comprobar {{found}} imagen(es) de {{network}}. Revisa que sigan disponibles y pulsa «Reintentar».",
         "tooManyImages": "{{network}} no admite tantas imágenes. Desmarca algunas en la publicación.",
         "noImages": "{{network}} necesita al menos una imagen seleccionada.",
         "crop": "{{found}} imagen(es) de {{network}} necesitan recorte. Pulsa «Ajustar imágenes» para continuar.",

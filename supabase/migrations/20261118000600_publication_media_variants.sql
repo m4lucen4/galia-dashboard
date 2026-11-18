@@ -109,7 +109,14 @@ create table if not exists public.publication_media_variants (
     storage_path ~ '^[0-9]{1,18}/(instagram|linkedin)/[0-9a-f-]{36}\.jpg$'
     and starts_with(storage_path, preview_id::text || '/' || network || '/')
   ),
-  public_url text not null check (char_length(public_url) <= 2000 and public_url ~ '^https://[^[:space:]]+$'),
+  -- Must be the public URL of exactly this object: https://<host>/storage/v1/object/public/publication-variants/<storage_path>
+  public_url text not null constraint publication_media_variants_public_url_check check (
+    char_length(public_url) <= 2000
+    and public_url ~ '^https://[^[:space:]]+$'
+    and char_length(public_url) > char_length('https://' || '/storage/v1/object/public/publication-variants/' || storage_path)
+    and right(public_url, char_length('/storage/v1/object/public/publication-variants/' || storage_path))
+        = '/storage/v1/object/public/publication-variants/' || storage_path
+  ),
   width integer not null check (width > 0),
   height integer not null check (height > 0),
   bytes integer not null check (bytes between 1 and 8388608),
@@ -149,6 +156,11 @@ create table if not exists public.publication_media_variants (
 
 create index if not exists publication_media_variants_preview_idx
   on public.publication_media_variants (preview_id, network, position);
+
+-- One derivative object backs at most one row: a path cannot be claimed by two rows (or two
+-- networks / publications), so removing one row can never orphan or delete another's image.
+create unique index if not exists publication_media_variants_storage_path_key
+  on public.publication_media_variants (storage_path);
 
 -- Server-controlled columns cannot be rewritten from the browser (an upsert may still send them).
 create or replace function private.publication_media_variants_touch()

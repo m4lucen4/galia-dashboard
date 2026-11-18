@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PreviewProjectDataProps } from "@/types";
 import {
+  failureKind,
+  forgetMeasurement,
   loadCorsImage,
   measureImage,
   publishedImages,
   type ImageMeasurement,
+  type MeasureFailureKind,
 } from "../../helpers/publicationImages";
 import { renderVariant } from "../../helpers/imageVariants";
 import {
@@ -33,6 +36,8 @@ export interface MediaRow {
   index: number;
   url: string;
   state: "loading" | "error" | "ok";
+  /** Why the measurement failed ("timeout": the image did not load in 15 s); null otherwise. */
+  errorKind: MeasureFailureKind | null;
   source: ImageMeasurement | null;
   /** Derivative stored for this network, when one exists (switch on only). */
   variant: PublicationMediaVariant | null;
@@ -40,6 +45,14 @@ export interface MediaRow {
   facts: ImageFacts | null;
   /** Issues of `facts`, per image (carousel mismatch included). */
   issues: ImageIssue[];
+  /**
+   * Switch on, Instagram: the format or the weight of the original could not be read (HEAD
+   * blocked, no extension). Unknown is treated as "needs conversion" so the JPEG copy is generated
+   * and Instagram never receives something unverified.
+   */
+  unknownFacts: boolean;
+  /** The JPEG / resized copy is due: convert-only issues or unknownFacts, and no variant yet. */
+  needsConversion: boolean;
   converting: boolean;
   conversionFailed: boolean;
 }
@@ -69,7 +82,9 @@ export interface NetworkMedia {
   blocker: MediaBlocker | null;
 }
 
-type MeasureState = { status: "ok"; measurement: ImageMeasurement } | { status: "error" };
+type MeasureState =
+  | { status: "ok"; measurement: ImageMeasurement }
+  | { status: "error"; kind: MeasureFailureKind };
 type VariantsState = "off" | "loading" | "ready" | "error";
 
 const factsOf = (
@@ -103,23 +118,31 @@ export function useMediaChecks(
   const images = useMemo(() => publishedImages(project), [project]);
   const urls = useMemo(() => images.map((image) => image.url), [images]);
 
+  // Images are measured only for networks that are checked and connected (D2): with no active
+  // network no HEAD / image load happens at all.
+  const anyActive = MEDIA_NETWORKS.some((network) => active[network]);
   const [measures, setMeasures] = useState<Record<string, MeasureState>>({});
+  const [retryTick, setRetryTick] = useState(0);
   const requested = useRef(new Set<string>());
 
   useEffect(() => {
+    if (!anyActive) return;
     for (const url of urls) {
       if (requested.current.has(url)) continue;
       requested.current.add(url);
+      // Concurrency (3) and the 15 s timeout live in measureImage. A failure stays failed (also
+      // across reopenings of this window) until the user presses "Reintentar".
       measureImage(url).then(
         (measurement) =>
           setMeasures((previous) => ({ ...previous, [url]: { status: "ok", measurement } })),
-        () => {
-          requested.current.delete(url);
-          setMeasures((previous) => ({ ...previous, [url]: { status: "error" } }));
-        },
+        (error: unknown) =>
+          setMeasures((previous) => ({
+            ...previous,
+            [url]: { status: "error", kind: failureKind(error) },
+          })),
       );
     }
-  }, [urls]);
+  }, [urls, anyActive, retryTick]);
 
   const [variants, setVariants] = useState<PublicationMediaVariant[]>([]);
   const [variantsState, setVariantsState] = useState<VariantsState>(enabled ? "loading" : "off");
@@ -181,10 +204,13 @@ export function useMediaChecks(
           index,
           url: image.url,
           state: measured ? (measured.status === "ok" ? "ok" : "error") : "loading",
+          errorKind: measured?.status === "error" ? measured.kind : null,
           source,
           variant,
           facts: factsOf(source, variant),
           issues: [],
+          unknownFacts: false,
+          needsConversion: false,
           converting: conversions[key] === "running",
           conversionFailed: conversions[key] === "failed",
         };
@@ -198,6 +224,17 @@ export function useMediaChecks(
         row.issues = evaluation.issues.filter(
           (issue) => issue.index === row.index && !COLLECTION_CODES.has(issue.code),
         );
+      }
+      for (const row of rows) {
+        row.unknownFacts =
+          enabled &&
+          network === "instagram" &&
+          !row.variant &&
+          row.source !== null &&
+          (row.facts?.mime == null || row.facts?.bytes == null) &&
+          !row.issues.some(isCropIssue);
+        row.needsConversion =
+          enabled && !row.variant && row.source !== null && (isConvertOnly(row.issues) || row.unknownFacts);
       }
       const collectionIssues = evaluation.issues.filter((issue) => COLLECTION_CODES.has(issue.code));
 
@@ -217,7 +254,7 @@ export function useMediaChecks(
     for (const network of MEDIA_NETWORKS) {
       if (!active[network]) continue;
       networks[network].rows.forEach((row) => {
-        if (row.state !== "ok" || row.variant || !row.source || !isConvertOnly(row.issues)) return;
+        if (row.state !== "ok" || !row.source || !row.needsConversion) return;
         const key = `${network}|${row.url}`;
         if (attempted.current.has(key)) return;
         attempted.current.add(key);
@@ -246,11 +283,24 @@ export function useMediaChecks(
     }
   }, [enabled, variantsState, previewId, networks, active, applyVariant]);
 
-  const retryConversion = useCallback((network: SocialNetwork, url: string) => {
-    const key = `${network}|${url}`;
-    attempted.current.delete(key);
-    setConversions((previous) => withoutKey(previous, key));
-  }, []);
+  // "Reintentar" for one image: runs the conversion again and, when the measurement failed (or
+  // the browser could not draw the image, corsOk false), forgets the cached result and measures
+  // again (D2/D3).
+  const retryRow = useCallback(
+    (network: SocialNetwork, url: string) => {
+      const key = `${network}|${url}`;
+      attempted.current.delete(key);
+      setConversions((previous) => withoutKey(previous, key));
+      const state = measures[url];
+      if (state?.status === "error" || (state?.status === "ok" && !state.measurement.corsOk)) {
+        forgetMeasurement(url);
+        requested.current.delete(url);
+        setMeasures((previous) => withoutKey(previous, url));
+        setRetryTick((tick) => tick + 1);
+      }
+    },
+    [measures],
+  );
 
   const text = useMemo(() => publishedText(project), [project]);
   const stats: TextStats = useMemo(() => textStats(text), [text]);
@@ -264,7 +314,7 @@ export function useMediaChecks(
     variantsState,
     applyVariant,
     removeVariant,
-    retryConversion,
+    retryRow,
   };
 }
 
@@ -284,7 +334,7 @@ function blockerFor(
   if (collectionIssues.some((issue) => issue.code === "no_images")) return { code: "noImages" };
   const crop = rows.filter((row) => row.issues.some(isCropIssue)).length;
   if (crop > 0) return { code: "crop", count: crop };
-  const pending = rows.filter((row) => !row.variant && isConvertOnly(row.issues));
+  const pending = rows.filter((row) => row.needsConversion);
   if (pending.some((row) => row.conversionFailed || (row.source && !row.source.corsOk))) {
     return { code: "conversionFailed", count: pending.length };
   }

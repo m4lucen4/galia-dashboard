@@ -651,6 +651,8 @@
       "imageLabel": "Imatge {{index}}",
       "measuring": "comprovant…",
       "measureError": "no s'ha pogut carregar per comprovar-la; revisa que la imatge continuï disponible",
+      "measureTimeout": "ha trigat més de 15 segons a carregar i no s'ha pogut comprovar",
+      "unknownFacts": "no s'ha pogut llegir el seu format o pes; per seguretat es convertirà a JPEG en publicar",
       "variantReady": "ajustada per a aquesta xarxa ({{width}} × {{height}} px)",
       "converting": "preparant la còpia JPEG…",
       "conversionFailed": "no s'ha pogut preparar la còpia JPEG",
@@ -670,6 +672,16 @@
         "tooManyImages": "{{network}} admet com a màxim {{max}} imatges i n'hi ha {{found}}",
         "noImages": "{{network}} necessita almenys una imatge"
       },
+      "issuesReport": {
+        "unsupportedFormat": {
+          "instagram": "Instagram només accepta JPEG (aquesta és {{format}})",
+          "linkedin": "LinkedIn només accepta JPG, PNG i GIF (aquesta és {{format}})"
+        },
+        "tooHeavy": "pesa {{size}} i Instagram admet fins a {{limit}}",
+        "widthTooSmall": "fa {{width}} px d'amplada i Instagram demana almenys {{min}} px",
+        "widthTooLarge": "fa {{width}} px d'amplada i Instagram admet fins a {{max}} px",
+        "tooManyPixels": "té {{pixels}} píxels i LinkedIn exigeix menys de {{limit}}"
+      },
       "imagesOk": "Les imatges compleixen els requisits de la xarxa.",
       "adjustImages": "Ajustar imatges",
       "textTitle": "Text",
@@ -685,7 +697,7 @@
         "variantsLoading": "Carregant els ajustos d'imatge desats…",
         "variantsError": "No s'han pogut carregar els ajustos d'imatge. Tanca la configuració i torna-ho a provar.",
         "measuring": "Comprovant les imatges de {{network}}…",
-        "measureError": "No es poden comprovar {{found}} imatge(s) de {{network}}. Revisa que continuïn disponibles.",
+        "measureError": "No es poden comprovar {{found}} imatge(s) de {{network}}. Revisa que continuïn disponibles i prem «Torna-ho a provar».",
         "tooManyImages": "{{network}} no admet tantes imatges. Desmarca'n algunes a la publicació.",
         "noImages": "{{network}} necessita almenys una imatge seleccionada.",
         "crop": "{{found}} imatge(s) de {{network}} necessiten retall. Prem «Ajustar imatges» per continuar.",

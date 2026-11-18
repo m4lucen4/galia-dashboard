@@ -47,15 +47,15 @@ One row says "for this network, use this derivative instead of this original".
 | `source_url` | the original as in `image_data[].url`; https, <= 2000 chars |
 | `position` | >= 0, order inside the publication |
 | `storage_path` | must start with `<preview_id>/<network>/` and follow the file-name rule |
-| `public_url` | https, <= 2000 chars |
+| `public_url` | https, <= 2000 chars, and it must end with `/storage/v1/object/public/publication-variants/` + `storage_path` (the public URL of exactly that object) |
 | `width`, `height`, `bytes` | of the derivative |
 | `crop` | nullable `{x, y, width, height, aspect}`; numeric x/y >= 0, width/height > 0, `aspect` in `1:1`, `4:5`, `1.91:1`, `original`; <= 256 bytes |
 | `created_by` | default `auth.uid()`; on insert from the browser it must equal `auth.uid()` |
 | `created_at`, `updated_at` | `updated_at` is set by a trigger; the trigger also keeps `id`, `created_by`, `created_at` from being rewritten |
 
-Unique `(preview_id, network, source_url)`.
+Unique `(preview_id, network, source_url)`, and unique `(storage_path)` (index `publication_media_variants_storage_path_key`): an object backs at most one row, so deleting a row's object can never remove another row's image.
 
-CHECKs: `bytes` 1..8388608; Instagram: `width` 320..1440 and `round(width/height, 2)` between 0.8 and 1.91;
+CHECKs: `public_url` ends with `/storage/v1/object/public/publication-variants/<storage_path>`; `bytes` 1..8388608; Instagram: `width` 320..1440 and `round(width/height, 2)` between 0.8 and 1.91;
 LinkedIn: `width * height < 36152320`.
 
 RLS: `authenticated` select / insert / update / delete through `private.preview_id_access_allowed(preview_id)`
@@ -100,12 +100,45 @@ Issue codes are stable keys for the client to translate; they carry `actual` / `
 
 Both modules are plain TypeScript (no Deno or Node APIs) and run unchanged in Edge Functions, the client build and Node.
 
-## The switch (S18)
+## The switch (S18): `VITE_SOCIAL_MEDIA_VARIANTS`
 
-- Visible now, never blocking: per-network image warnings and text counters in the dashboard.
-- Behind `VITE_SOCIAL_MEDIA_VARIANTS` (off): the cropper, the automatic JPEG conversion, the variant upload and the
-  blocking rule (a network with a non-compliant image is blocked until it is fixed, S5). It is switched on at the
-  cutover, when variants are actually published.
+Client build variable read in `src/features/postPreview/helpers/socialMediaRules.ts`
+(`SOCIAL_MEDIA_VARIANTS_ENABLED`): only the exact value `true` turns it on. **Default: off** (unset).
+It is switched on at the cutover, when variants are actually published, by setting
+`VITE_SOCIAL_MEDIA_VARIANTS=true` in the build environment (Vercel) and redeploying. It is not
+listed in `.env.example` on purpose (out of scope for phase 3); this document is its reference.
+
+| | Switch off (now) | Switch on (cutover) |
+|---|---|---|
+| Per-network image warnings, text counters | visible, never blocking | visible |
+| Wording of format / weight / pixel / width issues | what the network would reject and why ("Instagram solo acepta JPEG (esta es PNG)", "pesa 9,2 MB y Instagram admite hasta 8 MB"): n8n publishes the original, so no conversion is promised | the copy that will be generated ("se convertirá a JPEG al publicar", "se comprimirá"...) |
+| Ratio issues | said as what the network rejects | same |
+| Cropper ("Ajustar imágenes"), automatic JPEG copy, variant upload | no | yes |
+| Blocking rule (S5) | no | yes: a network with a non-compliant image is blocked until it is fixed |
+
+### Measuring images (both modes)
+
+- Images are only measured (image load + `HEAD`) for networks that are **checked and connected**; with none
+  active nothing is requested.
+- At most **3** images are measured at the same time (module-level queue shared by the whole session).
+- Each image has a **15 s** budget for its load and for its `HEAD`. An image that does not load in time fails with
+  the message "ha tardado más de 15 segundos en cargar..." (a `HEAD` that fails or times out only leaves format /
+  weight unknown; the URL extension is the fallback for the format).
+- A **failed** measurement is cached for the session (also when the window is closed and reopened), so a broken URL
+  is not requested again on its own. The panel shows **Reintentar** next to the image: it clears that image's cached
+  result and measures again.
+
+### Switch on: recovery and unknown facts
+
+- `measureError`, `conversionFailed` and a browser-blocked image (no CORS, cannot be drawn on a canvas) each show
+  **Reintentar** on their line; it re-runs the conversion and, for measurement failures or a blocked image, measures
+  again. The blocker text says to press it.
+- **Unknown format or weight counts as "needs conversion" for Instagram.** When the browser cannot read the mime type
+  (no `Content-Type`, `HEAD` blocked, no known extension) or the weight, and the ratio fits, the JPEG copy is generated
+  anyway: Instagram only accepts JPEG up to 8 MB, and an unverified original must not reach it. The cost is that such
+  images are converted even if they were fine. LinkedIn does not do this (it accepts JPG, PNG and GIF with no weight
+  limit, so only a known unsupported format or pixel count triggers a conversion). With the switch off, unknown values
+  are skipped (nothing is reported), as before.
 
 ## n8n coexistence (S14)
 

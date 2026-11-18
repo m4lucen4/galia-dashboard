@@ -283,7 +283,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
       stats={media.stats}
       variantsEnabled={media.enabled}
       onAdjust={() => setAdjusting(network)}
-      onRetryConversion={(url) => media.retryConversion(network, url)}
+      onRetry={(url) => media.retryRow(network, url)}
     />
   );
 
