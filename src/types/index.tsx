@@ -54,6 +54,22 @@ export type ProjectImageData = {
   };
 };
 
+export type ProjectVideo = {
+  id: string;
+  project_id: number;
+  storage_path: string;
+  poster_path: string | null;
+  original_name: string;
+  bytes: number;
+  duration_ms: number;
+  width: number;
+  height: number;
+  faststart: boolean;
+  position: number;
+  created_by: string | null;
+  created_at: string;
+};
+
 export type ProjectCollaboratorsProps = {
   id: string;
   profession: string;
