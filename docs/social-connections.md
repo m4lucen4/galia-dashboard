@@ -71,10 +71,10 @@ Email (Resend, `Mocklab <noreply@mocklab.app>`): Spanish by default, English whe
 | `SUPABASE_ANON_KEY` | OAuth functions (Auth `/user`) |
 | `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` | `social-connect-linkedin`, worker (refresh) |
 | `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET` | `social-connect-instagram`, worker (`debug_token` with the app token) |
-| `SOCIAL_OAUTH_REDIRECT_ORIGINS` | OAuth functions: comma-separated allowed origins, e.g. `https://app.mocklab.app,http://localhost:5173` |
+| `SOCIAL_OAUTH_REDIRECT_ORIGINS` | OAuth functions: comma-separated allowed origins, e.g. `https://www.mocklab.app,http://localhost:5173` |
 | `SOCIAL_WORKER_SECRET` | worker: 64 hex characters |
 | `RESEND_API_KEY` | worker |
-| `APP_BASE_URL` | worker, optional (default `https://app.mocklab.app`) |
+| `APP_BASE_URL` | worker, optional (default `https://www.mocklab.app`) |
 
 Shared code: `supabase/functions/_shared/social-*.ts`.
 

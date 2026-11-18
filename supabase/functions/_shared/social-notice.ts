@@ -96,8 +96,9 @@ export function noticeLanguage(language: string | null | undefined): Language {
 const escapeHtml = (value: string) =>
   value.replace(/&/gu, "&amp;").replace(/</gu, "&lt;").replace(/>/gu, "&gt;").replace(/"/gu, "&quot;");
 
+// Production dashboard (publications /preview-projects, settings /settings); APP_BASE_URL overrides it.
 export function appBaseUrl(env: Environment): string {
-  const fallback = "https://app.mocklab.app";
+  const fallback = "https://www.mocklab.app";
   const value = env("APP_BASE_URL")?.trim();
   if (!value) return fallback;
   try {

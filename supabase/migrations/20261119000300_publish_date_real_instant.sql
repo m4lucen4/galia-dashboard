@@ -29,7 +29,10 @@
 -- DST: (publishDate at time zone 'UTC') yields the naive wall-clock; "at time zone 'Europe/Madrid'"
 -- turns it into the instant using the Madrid offset of that very date (+01 winter, +02 summer).
 -- A wall-clock that does not exist (the spring-forward gap, 02:00-03:00) moves forward one hour; an
--- ambiguous one (the autumn repeat, 02:00-03:00) resolves to the standard-time (second) occurrence.
+-- ambiguous one (the autumn repeat, 02:00-03:00 on the last Sunday of October) resolves to the FIRST
+-- occurrence (summer time, CEST), like the client (madridWallClockToIso) and n8n do: Postgres returns the
+-- second (standard time) occurrence, so when "that instant minus one hour" renders to the same Madrid
+-- wall-clock, the earlier instant is used.
 begin;
 set local lock_timeout = '5s';
 
@@ -49,8 +52,11 @@ declare
 begin
   with candidate as (
     select p.id, p."publishDate" as previous, p.state,
-      ((p."publishDate" at time zone 'UTC')::timestamp at time zone 'Europe/Madrid') as converted
+      case when ((w.standard - interval '1 hour') at time zone 'Europe/Madrid') = w.wall
+        then w.standard - interval '1 hour' else w.standard end as converted
     from public."projectsPreview" p
+    cross join lateral (select (p."publishDate" at time zone 'UTC') as wall) l
+    cross join lateral (select l.wall as wall, (l.wall at time zone 'Europe/Madrid') as standard) w
     where p.state in ('scheduled', 'preview') and p."publishDate" is not null
       and not exists (select 1 from public.publication_targets t where t.preview_id = p.id)
       and not exists (select 1 from private.publish_date_conversions c where c.preview_id = p.id)

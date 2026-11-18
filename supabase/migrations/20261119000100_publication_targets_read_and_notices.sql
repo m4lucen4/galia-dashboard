@@ -4,18 +4,20 @@
 -- or writes, and nothing calls these objects until the client switch (VITE_SOCIAL_PUBLISHING_EDGE) is on.
 --
 -- 1. Read access. The people who may read a publication (admin, owner, project owner or assigned editor:
---    the projectsPreview rule, private.preview_access_allowed) may read its targets and attempts through
---    RLS. They get SELECT only; every write stays service_role only.
---    Table-level SELECT is enough: no secret is stored in these tables. Provider tokens live in
---    social_credentials; step_state holds container ids / image URNs (see the publishers), diagnostics hold
---    http status, provider codes and trace ids, and lease_token is a fencing token that only works through
---    service_role RPCs. Client code should still select explicit columns and ignore those three.
--- 2. Realtime. Both tables join the supabase_realtime publication (when it exists) so cards update live.
+--    the projectsPreview rule, private.preview_access_allowed) may read its targets through RLS. They get
+--    SELECT only, and only on the columns the client uses (column grants; no table-level SELECT, so
+--    lease_token, lease_expires_at, step, step_state, diagnostics, owner_id, requested_by and the notice
+--    columns are never readable and `select *` is refused). publication_target_attempts is NOT readable
+--    from the browser (the client never reads it). Every write stays service_role only.
+-- 2. Realtime. publication_targets joins the supabase_realtime publication (when it exists) so cards
+--    update live. publication_target_attempts does not.
 -- 3. Failure notices. publication_target_claim_notice returns the email recipient once per new terminal
 --    problem status (needs_action | failed) of a current target, publication_target_release_notice gives it
 --    back when the email could not be sent, publication_targets_notice_due lists the targets whose notice is
---    still owed (retry after a failed send, lease recovery that ended in needs_action). Notices are reset by a
---    trigger whenever the target leaves needs_action/failed (retry, publish, new schedule).
+--    still owed and due (retry after a failed send, lease recovery that ended in needs_action). A failed
+--    send is retried with backoff (1, 5, 15, 60 minutes, then every 6 hours) and given up after 8 attempts
+--    (notice_attempts / notice_next_at). Notices are reset by a trigger whenever the target leaves
+--    needs_action/failed or changes terminal status (retry, publish, new schedule).
 -- 4. publication_targets_owner: authorizes the actor and returns the publication owner, so the entry
 --    function can validate the requested accounts against the OWNER's connections only after the actor
 --    proved access (a stranger gets forbidden, never information about connections).
@@ -65,25 +67,25 @@ create policy "publication_target_attempts_select_authorized" on public.publicat
   for select to authenticated
   using (private.publication_attempt_readable(target_id));
 
-grant select on table public.publication_targets to authenticated;
-grant select on table public.publication_target_attempts to authenticated;
+-- Column grants, no table-level SELECT. The policy helpers read the tables as their owner.
+revoke select on table public.publication_targets from authenticated;
+revoke select on table public.publication_target_attempts from authenticated;
+grant select (
+  id, preview_id, network, status, run_at, attempts, max_attempts, error_code, error_kind,
+  account_kind, account_name, external_post_id, permalink, published_at, archived_at, updated_at
+) on table public.publication_targets to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 2. Realtime
 -- ---------------------------------------------------------------------------
 
 do $$
-declare
-  v_table text;
 begin
-  -- Plain Postgres (tests) has no such publication; a FOR ALL TABLES one already includes them.
-  if exists (select 1 from pg_publication where pubname = 'supabase_realtime' and not puballtables) then
-    foreach v_table in array array['publication_targets', 'publication_target_attempts'] loop
-      if not exists (select 1 from pg_publication_tables
-        where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = v_table) then
-        execute format('alter publication supabase_realtime add table public.%I', v_table);
-      end if;
-    end loop;
+  -- Plain Postgres (tests) has no such publication; a FOR ALL TABLES one already includes the table.
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime' and not puballtables)
+    and not exists (select 1 from pg_publication_tables
+      where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'publication_targets') then
+    alter publication supabase_realtime add table public.publication_targets;
   end if;
 end;
 $$;
@@ -100,18 +102,30 @@ alter table public.publication_targets
   add constraint publication_targets_notified_pair_check
     check ((notified_status is null) = (notified_at is null));
 
+-- Retry bookkeeping of a notice whose send failed: how many sends failed for the current terminal status
+-- and when the next one may be tried (null = now). Reset together with the notice.
+alter table public.publication_targets
+  add column notice_attempts integer not null default 0,
+  add column notice_next_at timestamptz,
+  add constraint publication_targets_notice_attempts_check check (notice_attempts >= 0);
+
 create index publication_targets_notice_due
-  on public.publication_targets (updated_at)
+  on public.publication_targets (notice_next_at nulls first, updated_at)
   where archived_at is null and status in ('needs_action', 'failed');
 
 -- The notice belongs to one terminal status: any other status (retry -> pending, running, published)
--- clears it, so the next failure notifies again. Runs for every writer, including the existing RPCs.
+-- clears it, so the next failure notifies again. A change of status also restarts the send backoff.
+-- Runs for every writer, including the existing RPCs.
 create function private.publication_targets_reset_notice()
 returns trigger language plpgsql set search_path = '' as $$
 begin
   if new.status not in ('needs_action', 'failed') then
     new.notified_status := null;
     new.notified_at := null;
+  end if;
+  if new.status is distinct from old.status then
+    new.notice_attempts := 0;
+    new.notice_next_at := null;
   end if;
   return new;
 end;
@@ -128,8 +142,9 @@ update public.publication_targets set notified_status = status, notified_at = cl
 
 -- Claims the right to email the publication owner about the current terminal status of a target,
 -- once per status. Returns the recipient, or null when nothing is due (not terminal, archived,
--- already notified, or the owner has no email: that case is closed as notified because there is
--- nobody to write to). The owner is the recipient because reconnecting an account is theirs to do.
+-- already notified, backing off after a failed send, or the owner has no email: that case is closed as
+-- notified because there is nobody to write to). The owner is the recipient because reconnecting an
+-- account is theirs to do.
 create function public.publication_target_claim_notice(p_target uuid)
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare
@@ -140,7 +155,8 @@ begin
   if p_target is null then raise exception 'invalid_request'; end if;
   select * into v_target from public.publication_targets t where t.id = p_target for update;
   if not found or v_target.archived_at is not null or v_target.status not in ('needs_action', 'failed')
-    or v_target.notified_status is not distinct from v_target.status then
+    or v_target.notified_status is not distinct from v_target.status
+    or coalesce(v_target.notice_next_at > clock_timestamp(), false) then
     return null;
   end if;
   update public.publication_targets set notified_status = status, notified_at = clock_timestamp()
@@ -155,34 +171,49 @@ begin
 end;
 $$;
 
--- Gives the notice back when the email could not be sent. Only while the claim still matches
--- p_status (a newer terminal status keeps its own claim). Returns whether it released.
+-- Gives the notice back when the email could not be sent (a transient failure: mail service down,
+-- 408/429/5xx, network). Only while the claim still matches p_status (a newer terminal status keeps its
+-- own claim). Each release counts an attempt and delays the next one: 1, 5, 15, 60 minutes, then 6 hours.
+-- After 8 failed attempts the notice is given up: the claim stays closed (notified) and nothing is
+-- sent for this status any more. Returns true only when the notice is owed again (released for a retry).
+-- A permanent failure (the mail service refuses this email) is NOT released: the worker leaves the claim.
 create function public.publication_target_release_notice(p_target uuid, p_status text)
 returns boolean language plpgsql security definer set search_path = '' as $$
 declare
-  v_id uuid;
+  v_attempts integer;
 begin
   if p_target is null or p_status is null then raise exception 'invalid_request'; end if;
-  update public.publication_targets set notified_status = null, notified_at = null
-    where id = p_target and notified_status = p_status
-    returning id into v_id;
-  return v_id is not null;
+  select t.notice_attempts + 1 into v_attempts from public.publication_targets t
+    where t.id = p_target and t.notified_status = p_status for update;
+  if v_attempts is null then return false; end if;
+  if v_attempts >= 8 then
+    update public.publication_targets set notice_attempts = v_attempts, notice_next_at = null where id = p_target;
+    return false;
+  end if;
+  update public.publication_targets set notified_status = null, notified_at = null, notice_attempts = v_attempts,
+    notice_next_at = clock_timestamp() + case v_attempts
+      when 1 then interval '1 minute' when 2 then interval '5 minutes' when 3 then interval '15 minutes'
+      when 4 then interval '1 hour' else interval '6 hours' end
+    where id = p_target;
+  return true;
 end;
 $$;
 
--- Targets whose notice is still owed: a send that failed (released) or a terminal status reached
--- without the worker finishing it (lease recovery). Only recent problems: anything older than
--- 3 days is history and is never emailed.
+-- Targets whose notice is still owed and due: a send that failed (released, once its backoff has passed)
+-- or a terminal status reached without the worker finishing it (lease recovery). Only recent problems:
+-- anything older than 3 days is history and is never emailed. Targets never tried (notice_next_at null)
+-- come first, so a target whose sends keep failing cannot starve the others; then the oldest.
 create function public.publication_targets_notice_due(p_limit integer)
 returns jsonb language plpgsql stable security definer set search_path = '' as $$
 begin
   if p_limit is null or p_limit not between 1 and 100 then raise exception 'invalid_request'; end if;
-  return (select coalesce(jsonb_agg(d.id), '[]'::jsonb) from (
-    select t.id from public.publication_targets t
+  return (select coalesce(jsonb_agg(d.id order by d.notice_next_at nulls first, d.updated_at), '[]'::jsonb) from (
+    select t.id, t.notice_next_at, t.updated_at from public.publication_targets t
     where t.archived_at is null and t.status in ('needs_action', 'failed')
       and t.notified_status is distinct from t.status
       and t.updated_at > clock_timestamp() - interval '3 days'
-    order by t.updated_at limit p_limit) d);
+      and (t.notice_next_at is null or t.notice_next_at <= clock_timestamp())
+    order by t.notice_next_at nulls first, t.updated_at limit p_limit) d);
 end;
 $$;
 

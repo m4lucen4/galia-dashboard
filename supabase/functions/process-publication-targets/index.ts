@@ -15,7 +15,7 @@ import { type Fetcher, socialFetch } from "../_shared/social-http.ts";
 import { isSupabasePublicStorageUrl } from "../_shared/social-publish-errors.ts";
 import { publishInstagram } from "../_shared/social-publish-instagram.ts";
 import { publishLinkedin } from "../_shared/social-publish-linkedin.ts";
-import { sendPublicationNotice } from "../_shared/social-publication-notice.ts";
+import { type NoticeSendResult, sendPublicationNotice } from "../_shared/social-publication-notice.ts";
 import {
   type ClaimedTarget, createPublicationStore, type Environment, type PublicationStore, type TargetNotice,
 } from "../_shared/social-publication-store.ts";
@@ -44,8 +44,12 @@ export interface WorkerOptions {
   clock?: () => number;
   sleep?: (ms: number) => Promise<void>;
   publishers?: Record<PublishNetwork, Publisher>;
-  /** Sends the failure email (default: Resend). Must resolve false instead of throwing. */
-  sendNotice?: (notice: TargetNotice) => Promise<boolean>;
+  /**
+   * Sends the failure email (default: Resend). Must resolve instead of throwing: "sent", "transient"
+   * (retry later with backoff) or "permanent" (refused for good). A boolean is accepted: true = sent,
+   * false = transient.
+   */
+  sendNotice?: (notice: TargetNotice) => Promise<NoticeSendResult | boolean>;
 }
 
 export interface WorkerSummary {
@@ -171,7 +175,7 @@ interface Run {
   publishers: Record<PublishNetwork, Publisher>;
   budgetEnd: number;
   supabaseUrl: string;
-  sendNotice: (notice: TargetNotice) => Promise<boolean>;
+  sendNotice: (notice: TargetNotice) => Promise<NoticeSendResult | boolean>;
   emails: { sent: number; failed: number };
 }
 
@@ -193,39 +197,47 @@ async function finishWithRetry(run: Run, target: ClaimedTarget, result: PublishR
   }
 }
 
-// Failure email of one target (S1, S10). Never throws: a failure is logged and counted, and the claim is
-// released so the sweep (or the next run) retries it. Nothing is claimed after the time budget: the target
-// stays owed and the next run's sweep sends it.
-async function notifyTarget(run: Run, targetId: string): Promise<"sent" | "failed" | "none"> {
+// Failure email of one target (S1, S10). Never throws: a failure is logged and counted. A transient failure
+// (mail service down, 408/429/5xx, network, no configuration) releases the claim so the sweep retries it
+// with backoff (the database delays and finally gives up); a permanent one (any other 4xx from Resend: this
+// email is refused) leaves the claim closed. Nothing is claimed after the time budget: the target stays owed
+// and the next run's sweep sends it.
+type NoticeOutcome = "sent" | "transient" | "permanent" | "none";
+
+async function notifyTarget(run: Run, targetId: string): Promise<NoticeOutcome> {
   if (run.clock() >= run.budgetEnd) return "none";
   try {
     const notice = await run.store.claimNotice(targetId);
     if (!notice) return "none";
-    let sent = false;
+    let sent: NoticeSendResult | boolean = "transient";
     try {
       sent = await run.sendNotice(notice);
     } catch (error) {
       logSocialError(SCOPE, error);
     }
-    if (sent) {
+    const result: NoticeSendResult = sent === true ? "sent" : sent === "sent" || sent === "permanent" ? sent : "transient";
+    if (result === "sent") {
       run.emails.sent++;
       return "sent";
     }
     run.emails.failed++;
+    if (result === "permanent") return "permanent"; // closed: retrying the same email cannot succeed
     try {
       await run.store.releaseNotice(targetId, notice.status);
     } catch (error) {
       logSocialError(SCOPE, error);
     }
-    return "failed";
+    return "transient";
   } catch (error) {
     logSocialError(SCOPE, error);
     return "none";
   }
 }
 
-// Targets whose notice is still owed: a send that failed earlier, or a terminal status reached without a
-// finish (lease recovery). Stops at the first failed send (the mail service is down or unconfigured).
+// Targets whose notice is still owed and due: a send that failed earlier (after its backoff), or a terminal
+// status reached without a finish (lease recovery). A permanent failure only closes that target and the
+// sweep goes on with the next one; the sweep stops at the first transient failure (the mail service is down
+// or unconfigured: the rest would fail the same way and are retried by the next run).
 async function sweepNotices(run: Run): Promise<void> {
   let due: string[];
   try {
@@ -236,7 +248,9 @@ async function sweepNotices(run: Run): Promise<void> {
   }
   for (const targetId of due) {
     if (run.clock() >= run.budgetEnd) break;
-    if (await notifyTarget(run, targetId) === "failed") break;
+    const outcome = await notifyTarget(run, targetId);
+    if (outcome === "permanent") continue;
+    if (outcome === "transient") break;
   }
 }
 

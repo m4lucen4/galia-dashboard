@@ -86,8 +86,6 @@ export type EntryRequest =
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 const PREVIEW_ID = /^[1-9]\d{0,18}$/u;
 const EXTERNAL_ID = /^[A-Za-z0-9:_-]{1,100}$/u;
-// A real instant: date, time and an explicit offset (a wall-clock without offset is ambiguous).
-const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,6})?)?(?:Z|[+-]\d{2}:\d{2})$/u;
 const KINDS_BY_NETWORK: Record<Network, readonly AccountKind[]> = {
   instagram: ["instagram_business"],
   linkedin: ["linkedin_person", "linkedin_organization"],
@@ -116,10 +114,24 @@ function parseAcknowledge(value: unknown): boolean {
   return value;
 }
 
+// Strict ISO 8601 instant: date, "T", hh:mm[:ss[.ffffff]] and an explicit Z or +-hh:mm offset.
+const RUN_AT_PARTS =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,6}))?)?(?:Z|([+-])(\d{2}):(\d{2}))$/u;
+
 export function parseRunAt(value: unknown): string {
-  if (typeof value !== "string" || value.length > 40 || !ISO_INSTANT.test(value)) throw invalid();
+  if (typeof value !== "string" || value.length > 40) throw invalid();
+  const match = RUN_AT_PARTS.exec(value);
+  if (!match) throw invalid();
   const ms = Date.parse(value);
   if (!Number.isFinite(ms)) throw invalid();
+  // Impossible calendar dates and times must not be "fixed" silently (2026-02-30 -> 2026-03-02, T24:00 ->
+  // next day, offset +99:99): shift the instant back into the offset the caller used and require the very
+  // same wall-clock digits.
+  const [, year, month, day, hour, minute, second = "00", , sign, offsetHours = "00", offsetMinutes = "00"] = match;
+  if (Number(offsetHours) > 23 || Number(offsetMinutes) > 59) throw invalid();
+  const offsetMs = (sign === "-" ? -1 : 1) * (Number(offsetHours) * 60 + Number(offsetMinutes)) * 60_000;
+  const wall = new Date(ms + offsetMs).toISOString();
+  if (wall.slice(0, 19) !== `${year}-${month}-${day}T${hour}:${minute}:${second}`) throw invalid();
   // The database enforces the allowed range; this only normalises the instant.
   return new Date(ms).toISOString();
 }

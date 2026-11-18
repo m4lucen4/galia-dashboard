@@ -171,14 +171,28 @@ export function buildPublicationNotice(recipient: PublicationNoticeRecipient, ba
   return { to: recipient.email, subject, html };
 }
 
-// Failures are logged (status only) and returned as false; they never throw.
+/**
+ * Result of one send. `transient`: the mail service may accept it later (408, 429, 5xx, network error,
+ * missing configuration): the worker releases the claim and retries with backoff. `permanent`: Resend
+ * refused this very email (any other 4xx): retrying cannot help, the claim stays closed.
+ */
+export type NoticeSendResult = "sent" | "transient" | "permanent";
+
+export function classifyResendStatus(status: number): NoticeSendResult {
+  if (status >= 200 && status < 300) return "sent";
+  if (status === 408 || status === 429) return "transient";
+  if (status >= 400 && status < 500) return "permanent";
+  return "transient";
+}
+
+// Failures are logged (status only) and classified; they never throw.
 export async function sendPublicationNotice(
   env: Environment, fetcher: Fetcher, recipient: PublicationNoticeRecipient,
-): Promise<boolean> {
+): Promise<NoticeSendResult> {
   const apiKey = env("RESEND_API_KEY")?.trim();
   if (!apiKey) {
     console.error("[social-publication-notice] RESEND_API_KEY is not configured");
-    return false;
+    return "transient";
   }
   try {
     const notice = buildPublicationNotice(recipient, appBaseUrl(env));
@@ -188,10 +202,11 @@ export async function sendPublicationNotice(
       body: JSON.stringify({ from: "Mocklab <noreply@mocklab.app>", to: [notice.to], subject: notice.subject, html: notice.html }),
     });
     await response.body?.cancel();
-    if (!response.ok) console.error(`[social-publication-notice] Resend answered ${response.status}`);
-    return response.ok;
+    const result = classifyResendStatus(response.status);
+    if (result !== "sent") console.error(`[social-publication-notice] Resend answered ${response.status} (${result})`);
+    return result;
   } catch (error) {
     console.error(`[social-publication-notice] email not sent (${error instanceof Error ? error.name : "error"})`);
-    return false;
+    return "transient";
   }
 }
