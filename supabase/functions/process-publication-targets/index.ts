@@ -12,7 +12,7 @@
 import { workerAuthorized } from "../_shared/publication-generation-store.ts";
 import { corsHeaders, jsonResponse, logSocialError, SocialError, socialFailure } from "../_shared/social-errors.ts";
 import { type Fetcher, socialFetch } from "../_shared/social-http.ts";
-import { isSupabasePublicStorageUrl } from "../_shared/social-publish-errors.ts";
+import { isProjectVideoPublicUrl, isSupabasePublicStorageUrl } from "../_shared/social-publish-errors.ts";
 import { publishInstagram } from "../_shared/social-publish-instagram.ts";
 import { publishLinkedin } from "../_shared/social-publish-linkedin.ts";
 import { type NoticeSendResult, sendPublicationNotice } from "../_shared/social-publication-notice.ts";
@@ -23,6 +23,7 @@ import {
   failed, LeaseLostError, type PublishContext, type PublishErrorKind, type PublishNetwork, type Publisher,
   type PublishResult,
 } from "../_shared/social-publisher.ts";
+import { createUploadStateStore, type UploadStateStore } from "../_shared/social-upload-state.ts";
 
 const SCOPE = "process-publication-targets";
 // Total time of one invocation (claiming stops after it; Edge Functions have a wall-clock limit).
@@ -169,6 +170,7 @@ function normalize(result: PublishResult, secret: string | null): PublishResult 
 
 interface Run {
   store: PublicationStore;
+  uploads: UploadStateStore;
   fetcher: Fetcher;
   clock: () => number;
   sleep: (ms: number) => Promise<void>;
@@ -268,11 +270,21 @@ async function processTarget(run: Run, target: ClaimedTarget): Promise<Settled> 
     } else {
       const payload = await run.store.payload(target);
       // Image URLs are fetched by the networks (and by the LinkedIn publisher itself): only public
-      // objects of this Supabase project are accepted, before any credential is resolved.
+      // objects of this Supabase project are accepted, before any credential is resolved. The video and
+      // its poster must be public objects of the bucket project-videos.
       const badImage = payload.images.findIndex((image) => !isSupabasePublicStorageUrl(image.url, run.supabaseUrl));
-      const resolution = badImage >= 0 ? null : await run.store.credentials(target);
+      const badVideo = payload.video === null ? null
+        : !isProjectVideoPublicUrl(payload.video.url, run.supabaseUrl) ? "video"
+        : payload.video.posterUrl !== null && !isProjectVideoPublicUrl(payload.video.posterUrl, run.supabaseUrl)
+          ? "poster"
+        : null;
+      const resolution = badImage >= 0 || badVideo !== null ? null : await run.store.credentials(target);
       if (resolution === null) {
-        result = failed("media_url_invalid", "action_required", { reason: "url_not_allowed", index: badImage });
+        result = failed(
+          "media_url_invalid",
+          "action_required",
+          badImage >= 0 ? { reason: "url_not_allowed", index: badImage } : { reason: "url_not_allowed", field: badVideo },
+        );
       } else if (!resolution.ok) {
         result = resolution.result;
       } else {
@@ -281,6 +293,7 @@ async function processTarget(run: Run, target: ClaimedTarget): Promise<Settled> 
           target,
           payload,
           credentials: resolution.credentials,
+          uploads: run.uploads,
           async checkpoint(step, stepState, pending) {
             // Marked before the call: a request without answer may still have been applied.
             if (pending) sideEffectPending = true;
@@ -340,7 +353,10 @@ export function createHandler(env: Environment, fetcher: Fetcher = fetch, option
       }
       const started = clock();
       const run: Run = {
-        store: createPublicationStore(env, fetcher), fetcher, clock, sleep, publishers, budgetEnd: started + BUDGET_MS,
+        store: createPublicationStore(env, fetcher),
+        uploads: createUploadStateStore(
+          { supabaseUrl: env("SUPABASE_URL") ?? "", serviceRoleKey: env("SUPABASE_SERVICE_ROLE_KEY") ?? "" }, fetcher),
+        fetcher, clock, sleep, publishers, budgetEnd: started + BUDGET_MS,
         supabaseUrl: env("SUPABASE_URL") ?? "", sendNotice, emails: { sent: 0, failed: 0 },
       };
       const summary: WorkerSummary = {

@@ -150,6 +150,19 @@ export function isSupabasePublicStorageUrl(value: string, supabaseUrl: string): 
   }
 }
 
+/**
+ * Video or poster URL taken from the payload: same rules as isSupabasePublicStorageUrl, but only the
+ * public bucket project-videos is accepted (the path must start with /storage/v1/object/public/project-videos/).
+ */
+export function isProjectVideoPublicUrl(value: string, supabaseUrl: string): boolean {
+  if (!isSupabasePublicStorageUrl(value, supabaseUrl)) return false;
+  try {
+    return new URL(value).pathname.startsWith("/storage/v1/object/public/project-videos/");
+  } catch {
+    return false;
+  }
+}
+
 function clampSeconds(seconds: number): number {
   return Math.min(MAX_RETRY_AFTER, Math.max(1, Math.ceil(seconds)));
 }
