@@ -643,7 +643,81 @@
     },
     "goToSettings": "Ir a Ajustes",
     "connectionProblem": "Hay que volver a conectar: {{reason}}.",
-    "connectionExpiresBeforePublishing": "La conexión caducará el {{date}}, antes de la fecha de publicación."
+    "connectionExpiresBeforePublishing": "La conexión caducará el {{date}}, antes de la fecha de publicación.",
+    "mediaChecks": {
+      "title": "Comprobaciones para {{network}}",
+      "networks": {
+        "instagram": "Instagram",
+        "linkedin": "LinkedIn"
+      },
+      "imageLabel": "Imagen {{index}}",
+      "measuring": "comprobando…",
+      "measureError": "no se ha podido cargar para comprobarla; revisa que la imagen siga disponible",
+      "variantReady": "ajustada para esta red ({{width}} × {{height}} px)",
+      "converting": "preparando la copia JPEG…",
+      "conversionFailed": "no se ha podido preparar la copia JPEG",
+      "corsBlocked": "el navegador no permite procesar esta imagen; no se puede recortar ni convertir desde aquí",
+      "retry": "Reintentar",
+      "issues": {
+        "unsupportedFormat": {
+          "instagram": "es {{format}}; se convertirá a JPEG al publicar",
+          "linkedin": "es {{format}} y LinkedIn solo admite JPG, PNG y GIF; se convertirá a JPEG al publicar"
+        },
+        "tooHeavy": "pesa {{size}} y Instagram admite hasta {{limit}}; se comprimirá al publicar",
+        "widthTooSmall": "mide {{width}} px de ancho y Instagram pide al menos {{min}} px; se ampliará al publicar",
+        "widthTooLarge": "mide {{width}} px de ancho y Instagram admite hasta {{max}} px; se reducirá al publicar",
+        "tooManyPixels": "tiene {{pixels}} píxeles y LinkedIn exige menos de {{limit}}; se reducirá al publicar",
+        "ratioOutOfRange": "Instagram solo acepta proporciones entre 4:5 y 1,91:1 (esta es {{ratio}})",
+        "ratioMismatch": "en un carrusel de Instagram todas las imágenes se recortan a la proporción de la primera ({{expected}}) y esta es {{ratio}}",
+        "tooManyImages": "{{network}} admite como máximo {{max}} imágenes y hay {{found}}",
+        "noImages": "{{network}} necesita al menos una imagen"
+      },
+      "imagesOk": "Las imágenes cumplen los requisitos de la red.",
+      "adjustImages": "Ajustar imágenes",
+      "textTitle": "Texto",
+      "characters": "{{used}} de {{limit}} caracteres",
+      "hashtags": "{{used}} de {{limit}} hashtags",
+      "mentions": "{{used}} de {{limit}} menciones",
+      "textTooLong": {
+        "instagram": "El texto supera el límite de {{limit}} caracteres de Instagram.",
+        "linkedin": "El texto supera los {{limit}} caracteres que admite LinkedIn."
+      },
+      "instagramLimitsProvisional": "Los límites de texto de Instagram son orientativos y se confirmarán antes de publicar.",
+      "blocked": {
+        "variantsLoading": "Cargando los ajustes de imagen guardados…",
+        "variantsError": "No se han podido cargar los ajustes de imagen. Cierra la configuración y vuelve a intentarlo.",
+        "measuring": "Comprobando las imágenes de {{network}}…",
+        "measureError": "No se pueden comprobar {{found}} imagen(es) de {{network}}. Revisa que sigan disponibles.",
+        "tooManyImages": "{{network}} no admite tantas imágenes. Desmarca algunas en la publicación.",
+        "noImages": "{{network}} necesita al menos una imagen seleccionada.",
+        "crop": "{{found}} imagen(es) de {{network}} necesitan recorte. Pulsa «Ajustar imágenes» para continuar.",
+        "converting": "Preparando {{found}} imagen(es) de {{network}}…",
+        "conversionFailed": "No se han podido preparar {{found}} imagen(es) de {{network}}. Pulsa «Reintentar» o usa «Ajustar imágenes»."
+      },
+      "dialog": {
+        "title": "Ajustar imágenes para {{network}}",
+        "description": {
+          "instagram": "Elige una proporción para todo el carrusel y encuadra cada imagen. Se guardará una copia JPEG para Instagram; el original no cambia.",
+          "linkedin": "Encuadra cada imagen si lo necesitas. Se guardará una copia JPEG para LinkedIn; el original no cambia."
+        },
+        "ratio": "Proporción",
+        "firstRatio": "Primera imagen ({{ratio}})",
+        "original": "Original",
+        "free": "Libre",
+        "freeRatio": "Proporción libre ({{ratio}})",
+        "carouselNote": "Todas las imágenes del carrusel usan la misma proporción.",
+        "zoom": "Zoom",
+        "revert": "Volver al original",
+        "saving": "Guardando imagen {{current}} de {{total}}…",
+        "save": "Guardar ajustes",
+        "errors": {
+          "load": "No se ha podido cargar una de las imágenes.",
+          "render": "No se ha podido generar la copia de una de las imágenes.",
+          "save": "No se ha podido guardar el ajuste. Inténtalo de nuevo.",
+          "remove": "No se ha podido eliminar el ajuste. Inténtalo de nuevo."
+        }
+      }
+    }
   },
   "profile": {
     "sections": {

@@ -640,7 +640,81 @@
     },
     "goToSettings": "Go to Settings",
     "connectionProblem": "Reconnect needed: {{reason}}.",
-    "connectionExpiresBeforePublishing": "The connection will expire on {{date}}, before the publication date."
+    "connectionExpiresBeforePublishing": "The connection will expire on {{date}}, before the publication date.",
+    "mediaChecks": {
+      "title": "Checks for {{network}}",
+      "networks": {
+        "instagram": "Instagram",
+        "linkedin": "LinkedIn"
+      },
+      "imageLabel": "Image {{index}}",
+      "measuring": "checking…",
+      "measureError": "could not be loaded to be checked; make sure the image is still available",
+      "variantReady": "adjusted for this network ({{width}} × {{height}} px)",
+      "converting": "preparing the JPEG copy…",
+      "conversionFailed": "the JPEG copy could not be prepared",
+      "corsBlocked": "the browser does not allow processing this image; it cannot be cropped or converted from here",
+      "retry": "Retry",
+      "issues": {
+        "unsupportedFormat": {
+          "instagram": "it is {{format}}; it will be converted to JPEG when publishing",
+          "linkedin": "it is {{format}} and LinkedIn only accepts JPG, PNG and GIF; it will be converted to JPEG when publishing"
+        },
+        "tooHeavy": "it weighs {{size}} and Instagram accepts up to {{limit}}; it will be compressed when publishing",
+        "widthTooSmall": "it is {{width}} px wide and Instagram requires at least {{min}} px; it will be enlarged when publishing",
+        "widthTooLarge": "it is {{width}} px wide and Instagram accepts up to {{max}} px; it will be reduced when publishing",
+        "tooManyPixels": "it has {{pixels}} pixels and LinkedIn requires fewer than {{limit}}; it will be reduced when publishing",
+        "ratioOutOfRange": "Instagram only accepts aspect ratios between 4:5 and 1.91:1 (this one is {{ratio}})",
+        "ratioMismatch": "in an Instagram carousel all images are cropped to the ratio of the first one ({{expected}}) and this one is {{ratio}}",
+        "tooManyImages": "{{network}} accepts at most {{max}} images and there are {{found}}",
+        "noImages": "{{network}} needs at least one image"
+      },
+      "imagesOk": "The images meet the network requirements.",
+      "adjustImages": "Adjust images",
+      "textTitle": "Text",
+      "characters": "{{used}} of {{limit}} characters",
+      "hashtags": "{{used}} of {{limit}} hashtags",
+      "mentions": "{{used}} of {{limit}} mentions",
+      "textTooLong": {
+        "instagram": "The text exceeds Instagram's {{limit}} character limit.",
+        "linkedin": "The text exceeds the {{limit}} characters LinkedIn accepts."
+      },
+      "instagramLimitsProvisional": "Instagram text limits are indicative and will be confirmed before publishing.",
+      "blocked": {
+        "variantsLoading": "Loading saved image adjustments…",
+        "variantsError": "Image adjustments could not be loaded. Close this window and try again.",
+        "measuring": "Checking the {{network}} images…",
+        "measureError": "{{found}} {{network}} image(s) cannot be checked. Make sure they are still available.",
+        "tooManyImages": "{{network}} does not accept that many images. Deselect some in the publication.",
+        "noImages": "{{network}} needs at least one selected image.",
+        "crop": "{{found}} {{network}} image(s) need cropping. Press “Adjust images” to continue.",
+        "converting": "Preparing {{found}} {{network}} image(s)…",
+        "conversionFailed": "{{found}} {{network}} image(s) could not be prepared. Press “Retry” or use “Adjust images”."
+      },
+      "dialog": {
+        "title": "Adjust images for {{network}}",
+        "description": {
+          "instagram": "Choose one ratio for the whole carousel and frame each image. A JPEG copy is saved for Instagram; the original does not change.",
+          "linkedin": "Frame each image if you need to. A JPEG copy is saved for LinkedIn; the original does not change."
+        },
+        "ratio": "Aspect ratio",
+        "firstRatio": "First image ({{ratio}})",
+        "original": "Original",
+        "free": "Free",
+        "freeRatio": "Free ratio ({{ratio}})",
+        "carouselNote": "All carousel images use the same ratio.",
+        "zoom": "Zoom",
+        "revert": "Back to the original",
+        "saving": "Saving image {{current}} of {{total}}…",
+        "save": "Save adjustments",
+        "errors": {
+          "load": "One of the images could not be loaded.",
+          "render": "The copy of one of the images could not be generated.",
+          "save": "The adjustment could not be saved. Try again.",
+          "remove": "The adjustment could not be removed. Try again."
+        }
+      }
+    }
   },
   "profile": {
     "sections": {
