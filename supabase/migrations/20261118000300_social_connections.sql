@@ -513,6 +513,12 @@ begin
 end;
 $$;
 
+-- The admin informs the users whose connections are already broken in person:
+-- no email for the statuses found by this backfill ("Prefiero que en esta primero no se
+-- mande nada, yo aviso a los usuarios manualmente"). Later status changes do notify.
+update public.social_connections set notified_status = status, notified_at = clock_timestamp()
+where status in ('expiring', 'expired', 'revoked', 'error');
+
 do $$
 declare
   v_fn text;
