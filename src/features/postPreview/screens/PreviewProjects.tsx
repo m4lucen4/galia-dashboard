@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -36,6 +36,17 @@ import { PreviewProjectForm } from "../../../components/previewProjects/PreviewP
 import { Filters } from "../components/Filters";
 import { LoadingSpinner } from "../../../components/shared/ui/LoadingSpinner";
 import { DashboardPage } from "@/components/shared/ui/DashboardPage";
+import {
+  SOCIAL_PUBLISHING_EDGE_ENABLED,
+  instantToMadridWallClockLabel,
+} from "@/helpers/publishDate";
+import { PublicationTargetsStatus } from "../components/publicationStatus/PublicationTargetsStatus";
+import { UnknownOutcomeDialog } from "../components/publicationStatus/UnknownOutcomeDialog";
+import { PublicationNotice } from "../components/publicationStatus/PublicationNotice";
+import { usePublicationTargets } from "../hooks/usePublicationTargets";
+import { usePublicationActions } from "../hooks/usePublicationActions";
+import { sortPreviewProjects } from "../helpers/sortProjects";
+import { mayHaveTargets, visibleTargets } from "../helpers/publicationTargets";
 
 export const PreviewProjects = () => {
   const dispatch = useAppDispatch();
@@ -54,6 +65,8 @@ export const PreviewProjects = () => {
   // Only set with VITE_SOCIAL_MEDIA_VARIANTS on: why the image variants block the publication.
   const [mediaBlockReason, setMediaBlockReason] = useState<string | null>(null);
   const [publishNow, setPublishNow] = useState(false);
+  // Edge pipeline only: message of the last failed confirm, shown inside the configuration dialog.
+  const [publishError, setPublishError] = useState<string | null>(null);
   const [socialNetworks, setSocialNetworks] = useState<SocialNetworksCheck>({
     instagram: false,
     linkedln: false,
@@ -148,6 +161,14 @@ export const PreviewProjects = () => {
 
   const handleConfirmPublishAgain = () => {
     const selectedProject = getSelectedProject();
+    if (selectedProject && SOCIAL_PUBLISHING_EDGE_ENABLED) {
+      // The Edge pipeline archives the targets and clears the legacy columns in one step.
+      publicationActions.reset(selectedProject, {
+        onSuccess: closeAlert,
+        onError: closeAlert,
+      });
+      return;
+    }
     if (selectedProject) {
       dispatch(resetProjectToPreview(selectedProject.id.toString()))
         .unwrap()
@@ -159,6 +180,34 @@ export const PreviewProjects = () => {
   };
 
   const fetchPreviewProjectsData = usePreviewProjectsData(user);
+
+  // Edge pipeline: per-network targets of the visible publications (one read + realtime).
+  const visibleProjects = !SOCIAL_PUBLISHING_EDGE_ENABLED
+    ? []
+    : (viewMode === "calendar"
+        ? filteredProjects
+        : sortPreviewProjects(filteredProjects).slice(
+            (currentPage - 1) * itemsPerPage,
+            currentPage * itemsPerPage,
+          )
+      ).filter(mayHaveTargets);
+  const visibleIds = visibleProjects.map((visible) => String(visible.id));
+  if (project && mayHaveTargets(project) && !visibleIds.includes(String(project.id))) {
+    visibleIds.push(String(project.id));
+  }
+  const { targets: targetsByPreview, applyTargets } = usePublicationTargets(
+    visibleIds,
+    fetchPreviewProjectsData,
+  );
+  const targetsFor = useCallback(
+    (previewId: string) => targetsByPreview[String(previewId)] ?? [],
+    [targetsByPreview],
+  );
+  const publicationActions = usePublicationActions({
+    targetsFor,
+    applyTargets,
+    onRefresh: fetchPreviewProjectsData,
+  });
 
   const handleOpenInstagram = (project: PreviewProjectDataProps) => {
     dispatch(clearSelectedProject());
@@ -205,15 +254,20 @@ export const PreviewProjects = () => {
 
   const handleOpenPublishConfig = (project: PreviewProjectDataProps) => {
     if (project.publishDate) {
-      // Preserve the full timestampz format for the dateTime input
-      // Format: "2025-06-10 00:00:00+00"
-      setPublishDate(project.publishDate);
+      // The date input works in Madrid wall-clock ("YYYY-MM-DD HH:mm:ss+00"). With the Edge pipeline
+      // the stored value is a real instant: show it in Europe/Madrid.
+      setPublishDate(
+        SOCIAL_PUBLISHING_EDGE_ENABLED
+          ? instantToMadridWallClockLabel(project.publishDate)
+          : project.publishDate,
+      );
     } else {
       setPublishDate("");
     }
 
     // Reset publishNow when opening modal
     setPublishNow(false);
+    setPublishError(null);
     setMediaBlockReason(null);
 
     // Never carry the Instagram page token in browser state; the server fills it for n8n.
@@ -260,8 +314,32 @@ export const PreviewProjects = () => {
     }
   };
 
+  // Volver a programar: reset the publication (archives its targets), then open the configuration.
+  const handleReschedule = (target: PreviewProjectDataProps) => {
+    publicationActions.reset(target, {
+      onSuccess: () => {
+        handleCloseDrawer();
+        handleOpenPublishConfig({
+          ...target,
+          state: "preview",
+          publishDate: undefined,
+          instagramResult: undefined,
+          linkedlnResult: undefined,
+        });
+      },
+    });
+  };
+
   const handlePublishProject = () => {
     const selectedProject = getSelectedProject();
+    if (selectedProject && SOCIAL_PUBLISHING_EDGE_ENABLED) {
+      setPublishError(null);
+      publicationActions.publish(
+        { project: selectedProject, publishDate, publishNow, socialNetworks },
+        { onSuccess: closeAlert, onError: setPublishError },
+      );
+      return;
+    }
     if (selectedProject) {
       dispatch(
         updateProjectPublishing({
@@ -308,6 +386,13 @@ export const PreviewProjects = () => {
           </p>
         </div>
       </header>
+
+      {SOCIAL_PUBLISHING_EDGE_ENABLED && (
+        <PublicationNotice
+          notice={publicationActions.notice}
+          onDismiss={publicationActions.dismissNotice}
+        />
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-5">
         <Filters
@@ -375,6 +460,26 @@ export const PreviewProjects = () => {
         {seeLinkedln && project && userData && (
           <LinkedInPost key={project.id} project={project} user={userData} />
         )}
+        {SOCIAL_PUBLISHING_EDGE_ENABLED &&
+          seeEditPreview &&
+          project &&
+          visibleTargets(targetsByPreview[String(project.id)]).length > 0 && (
+            <section
+              aria-label={t("previewProjects.publication.panelTitle")}
+              className="mb-6 space-y-3"
+            >
+              <h3 className="text-sm font-medium">
+                {t("previewProjects.publication.panelTitle")}
+              </h3>
+              <PublicationTargetsStatus
+                detailed
+                targets={targetsByPreview[String(project.id)]}
+                busy={publicationActions.isBusy(String(project.id))}
+                onRetry={publicationActions.retry}
+                onReschedule={() => handleReschedule(project)}
+              />
+            </section>
+          )}
         {seeEditPreview && project && (
           <PreviewProjectForm
             key={project.id}
@@ -391,6 +496,7 @@ export const PreviewProjects = () => {
         <CalendarView
           projects={filteredProjects}
           onSelectProject={handleViewProjectDetails}
+          targetsByPreview={targetsByPreview}
         />
       ) : (
         <CardsList
@@ -409,6 +515,10 @@ export const PreviewProjects = () => {
           handleOpenInstagram={handleOpenInstagram}
           handleOpenLinkedln={handleOpenLinkedln}
           handlePublishAgain={handlePublishAgain}
+          targetsByPreview={targetsByPreview}
+          isPublicationBusy={publicationActions.isBusy}
+          onRetryTarget={publicationActions.retry}
+          onReschedule={handleReschedule}
         />
       )}
 
@@ -420,6 +530,8 @@ export const PreviewProjects = () => {
           onAccept={handlePublishProject}
           onCancel={closeAlert}
           disabledConfirmButton={
+            (SOCIAL_PUBLISHING_EDGE_ENABLED &&
+              publicationActions.isBusy(String(getSelectedProject()?.id))) ||
             hasDateValidationError ||
             !!mediaBlockReason ||
             (!socialNetworks.instagram &&
@@ -437,6 +549,11 @@ export const PreviewProjects = () => {
             onPublishNowChange={setPublishNow}
             onMediaBlockChange={setMediaBlockReason}
           />
+          {publishError && (
+            <p role="alert" className="mt-4 rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900">
+              {publishError}
+            </p>
+          )}
         </Alert>
       )}
 
@@ -459,6 +576,12 @@ export const PreviewProjects = () => {
         />
       )}
 
+      {SOCIAL_PUBLISHING_EDGE_ENABLED && publicationActions.acknowledgement && (
+        <UnknownOutcomeDialog
+          acknowledgement={publicationActions.acknowledgement}
+          onCancel={publicationActions.cancelAcknowledgement}
+        />
+      )}
     </DashboardPage>
   );
 };

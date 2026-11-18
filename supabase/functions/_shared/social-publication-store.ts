@@ -23,6 +23,18 @@ export interface FinishOutcome {
   nextRunAt: string | null;
 }
 
+/** What publication_target_claim_notice returns: the owner to email about a terminal problem. */
+export interface TargetNotice {
+  email: string;
+  firstName: string | null;
+  language: string | null;
+  network: PublishNetwork;
+  status: "needs_action" | "failed";
+  errorCode: string | null;
+  previewId: number;
+  title: string | null;
+}
+
 export type CredentialsResolution =
   | { ok: true; credentials: PublishCredentials }
   | { ok: false; result: PublishResult };
@@ -71,6 +83,21 @@ function parsePayload(value: unknown): PublishPayload {
     title: asString(row.title),
     weblink: asString(row.weblink),
     images: row.images.map(parseImage),
+  };
+}
+
+function parseNotice(value: unknown): TargetNotice | null {
+  if (value === null) return null;
+  const row = asRecord(value);
+  const email = asString(row?.email);
+  const network = asString(row?.network) as PublishNetwork | null;
+  const status = row?.status;
+  const previewId = asNumber(row?.previewId);
+  if (!row || !email || !network || !NETWORKS.includes(network) || (status !== "needs_action" && status !== "failed") ||
+    previewId === null) throw new SocialError("internal_error");
+  return {
+    email, firstName: asString(row.firstName), language: asString(row.language), network, status,
+    errorCode: asString(row.errorCode), previewId, title: asString(row.title),
   };
 }
 
@@ -150,6 +177,23 @@ export function createPublicationStore(env: Environment, fetcher: Fetcher = fetc
       const status = answer?.status;
       if (!FINISH_STATUSES.includes(status as typeof FINISH_STATUSES[number])) throw new SocialError("internal_error");
       return { status: status as FinishOutcome["status"], nextRunAt: asString(answer?.nextRunAt) };
+    },
+
+    /** Claims the failure email of a target once per terminal status; null when nothing is due. */
+    async claimNotice(targetId: string): Promise<TargetNotice | null> {
+      return parseNotice(await rpc<unknown>("publication_target_claim_notice", { p_target: targetId }));
+    },
+
+    /** Gives the notice back after a failed send so a later run retries it. */
+    async releaseNotice(targetId: string, status: string): Promise<boolean> {
+      return (await rpc<unknown>("publication_target_release_notice", { p_target: targetId, p_status: status })) === true;
+    },
+
+    /** Targets whose notice is still owed (released after a failed send, or recovered by lease expiry). */
+    async noticesDue(limit: number): Promise<string[]> {
+      const ids = await rpc<unknown>("publication_targets_notice_due", { p_limit: limit });
+      if (!Array.isArray(ids)) throw new SocialError("internal_error");
+      return ids.filter((id): id is string => typeof id === "string" && UUID.test(id));
     },
 
     /**

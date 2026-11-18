@@ -5,11 +5,18 @@
 // Unlike the server, the browser may not know the weight or the format of an image (HEAD request
 // blocked, no extension); an unknown value is skipped instead of reported.
 
+import { SOCIAL_PUBLISHING_EDGE_ENABLED } from "@/helpers/publishDate";
+
 export type SocialNetwork = "instagram" | "linkedin";
 
-/** Switch for the cropper, the automatic conversion and the blocking rule (S18). Off by default. */
+/**
+ * Switch for the cropper, the automatic conversion and the blocking rule (S18). Off by default.
+ * The cutover switch VITE_SOCIAL_PUBLISHING_EDGE also turns it on (S23): variants are only
+ * published by the Edge pipeline, so both go live together.
+ */
 export const SOCIAL_MEDIA_VARIANTS_ENABLED =
-  import.meta.env.VITE_SOCIAL_MEDIA_VARIANTS === "true";
+  import.meta.env.VITE_SOCIAL_MEDIA_VARIANTS === "true" ||
+  SOCIAL_PUBLISHING_EDGE_ENABLED;
 
 export const INSTAGRAM_MEDIA = {
   mimeTypes: ["image/jpeg"],

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { SOCIAL_PUBLISHING_EDGE_ENABLED } from "@/helpers/publishDate";
 
 interface InputFieldProps {
   label: string;
@@ -127,7 +128,18 @@ export const InputField: React.FC<InputFieldProps> = ({
     }
   };
 
+  // A stored time off the 15-minute grid (for example a rescheduled retry) stays selectable.
+  // Only behind the cutover switch: with it off the field behaves exactly as before.
   const timeSlots = generateTimeSlots();
+  if (
+    SOCIAL_PUBLISHING_EDGE_ENABLED &&
+    type === "dateTime" &&
+    /^\d{2}:\d{2}$/.test(timeValue) &&
+    !timeSlots.includes(timeValue)
+  ) {
+    timeSlots.push(timeValue);
+    timeSlots.sort();
+  }
 
   return (
     <div>

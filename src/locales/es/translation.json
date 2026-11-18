@@ -753,6 +753,197 @@
           "remove": "No se ha podido eliminar el ajuste. Inténtalo de nuevo."
         }
       }
+    },
+    "publication": {
+      "panelTitle": "Estado de la publicación",
+      "reasonLabel": "Motivo:",
+      "viewPost": "Ver publicación",
+      "networks": {
+        "instagram": "Instagram",
+        "linkedin": "LinkedIn",
+        "generic": "la red social"
+      },
+      "status": {
+        "scheduled": "Programado · {{date}}",
+        "publishing": "Publicando…",
+        "published": "Publicado",
+        "publishedAt": "Publicado · {{date}}",
+        "retrying": "Reintentando",
+        "needsAction": "Requiere acción",
+        "failed": "Error",
+        "scheduledShort": "Programado",
+        "publishingShort": "Publicando…",
+        "publishedShort": "Publicado",
+        "retryingShort": "Reintentando",
+        "needsActionShort": "Requiere acción",
+        "failedShort": "Error",
+        "nextAttemptAt": "Próximo intento a las {{time}}.",
+        "nextAttemptOn": "Próximo intento el {{date}}.",
+        "attempt": "(intento {{attempts}} de {{max}})"
+      },
+      "actions": {
+        "retry": "Reintentar",
+        "working": "Un momento…",
+        "reschedule": "Volver a programar",
+        "dismiss": "Cerrar aviso"
+      },
+      "unknownOutcome": {
+        "title": "Comprueba la publicación antes de reintentar",
+        "description": "Comprueba en {{network}} que la publicación no se haya hecho antes de reintentar. Si ya existe, reintentar la publicaría dos veces.",
+        "confirm": "He comprobado en {{network}} que la publicación no existe"
+      },
+      "notices": {
+        "scheduled": "Publicación programada para el {{date}} (hora de Madrid).",
+        "publishingNow": "Publicando ahora. Verás aquí el resultado en cada red social.",
+        "retried": "Reintento en marcha en {{network}}. Verás aquí el resultado.",
+        "reset": "La publicación está lista para volver a programarse."
+      },
+      "requestErrors": {
+        "invalid_request": "Los datos de la publicación no son válidos. Revisa la fecha y las cuentas elegidas.",
+        "forbidden": "No tienes permiso para publicar esta publicación.",
+        "conflict": "La publicación ha cambiado mientras la configurabas. Actualiza la página e inténtalo de nuevo.",
+        "invalid_project": "El proyecto de esta publicación ya no es válido.",
+        "run_at_out_of_range": "La fecha elegida está fuera del rango permitido: no puede ser anterior a ahora ni superar un año.",
+        "in_progress": "La publicación se está publicando ahora mismo. Espera a que termine.",
+        "already_published": "Esta publicación ya está publicada. Usa «Publicar de nuevo» para empezar otra vez.",
+        "not_retryable": "Esta publicación ya no se puede reintentar; puede que ya esté en marcha.",
+        "confirmation_required": "Antes de continuar hay que comprobar en la red social que la publicación no se hizo ya.",
+        "account_not_connected": "La red social elegida no está conectada. Conéctala en Ajustes.",
+        "account_not_allowed": "La cuenta o página elegida no está autorizada. Vuelve a conectarla en Ajustes y selecciónala de nuevo.",
+        "unauthorized": "Tu sesión ha caducado. Vuelve a iniciar sesión.",
+        "internal_error": "Ha ocurrido un error en el servidor. Inténtalo de nuevo en unos minutos.",
+        "account_missing": "Selecciona una cuenta o página para cada red social elegida.",
+        "no_networks": "Selecciona al menos una red social.",
+        "invalid_date": "La fecha o la hora no son válidas.",
+        "uncertain": "No hemos podido confirmar el resultado. Comprueba el estado de la publicación antes de repetir la acción.",
+        "default": "No se ha podido completar la acción. Inténtalo de nuevo."
+      },
+      "targetErrors": {
+        "no_images": {
+          "reason": "La publicación no tiene ninguna imagen seleccionada.",
+          "fix": "Selecciona al menos una imagen y vuelve a programar la publicación."
+        },
+        "too_many_images": {
+          "reason": "Hay más imágenes de las que admite {{network}}.",
+          "fix": "Quita las imágenes que sobren (el máximo es 20) y vuelve a programar la publicación."
+        },
+        "media_needs_crop": {
+          "reason": "Una imagen tiene una proporción que {{network}} no admite.",
+          "fix": "Recorta la imagen para {{network}} en «Configurar publicación» y vuelve a programarla."
+        },
+        "media_format": {
+          "reason": "El formato, el peso o el tamaño de una imagen no es válido para {{network}}.",
+          "fix": "Ajusta las imágenes en «Configurar publicación» para generar una copia válida y vuelve a programarla."
+        },
+        "media_rejected": {
+          "reason": "{{network}} ha rechazado una de las imágenes.",
+          "fix": "Prueba con otra imagen o ajústala de nuevo y vuelve a programar la publicación."
+        },
+        "caption_too_long": {
+          "reason": "El texto supera el límite de caracteres de Instagram.",
+          "fix": "Acorta el texto de la publicación y vuelve a programarla."
+        },
+        "commentary_too_long": {
+          "reason": "El texto supera el límite de 3.000 caracteres de LinkedIn.",
+          "fix": "Acorta el texto de la publicación y vuelve a programarla."
+        },
+        "too_many_hashtags": {
+          "reason": "El texto lleva más de 30 hashtags, el máximo de Instagram.",
+          "fix": "Quita algunos hashtags y vuelve a programar la publicación."
+        },
+        "too_many_mentions": {
+          "reason": "El texto lleva más de 20 menciones, el máximo de Instagram.",
+          "fix": "Quita algunas menciones y vuelve a programar la publicación."
+        },
+        "rate_limited": {
+          "reason": "{{network}} ha limitado temporalmente las publicaciones de la cuenta.",
+          "fix": "No tienes que hacer nada: se reintentará automáticamente."
+        },
+        "processing": {
+          "reason": "{{network}} todavía está procesando las imágenes.",
+          "fix": "No tienes que hacer nada: se reintentará automáticamente en unos minutos."
+        },
+        "container_expired": {
+          "reason": "La preparación de la publicación en Instagram ha caducado.",
+          "fix": "No tienes que hacer nada: se volverá a preparar automáticamente."
+        },
+        "token_invalid": {
+          "reason": "{{network}} ha rechazado el acceso: la conexión ha caducado o ya no es válida.",
+          "fix": "Vuelve a conectar {{network}} en Ajustes y pulsa Reintentar."
+        },
+        "permission_missing": {
+          "reason": "Falta un permiso para publicar en {{network}}.",
+          "fix": "Vuelve a conectar {{network}} en Ajustes aceptando todos los permisos y pulsa Reintentar."
+        },
+        "account_restricted": {
+          "reason": "La cuenta de {{network}} no puede publicar ahora (restricción o verificación pendiente).",
+          "fix": "Revisa el estado de la cuenta en {{network}} y pulsa Reintentar cuando se resuelva."
+        },
+        "provider_unavailable": {
+          "reason": "{{network}} no ha respondido o ha tenido un fallo temporal.",
+          "fix": "Se reintentará automáticamente; si se agotan los intentos, pulsa Reintentar."
+        },
+        "invalid_request": {
+          "reason": "{{network}} ha rechazado la publicación.",
+          "fix": "Revisa el texto y las imágenes y vuelve a programarla, o pulsa Reintentar si crees que ha sido un fallo puntual."
+        },
+        "not_connected": {
+          "reason": "No hay una conexión activa con {{network}}.",
+          "fix": "Conecta {{network}} en Ajustes y pulsa Reintentar."
+        },
+        "connection_expired": {
+          "reason": "La conexión con {{network}} ha caducado o se ha revocado.",
+          "fix": "Vuelve a conectar {{network}} en Ajustes y pulsa Reintentar."
+        },
+        "page_not_authorized": {
+          "reason": "La cuenta o página elegida ya no está autorizada en {{network}}.",
+          "fix": "Vuelve a conectar {{network}} en Ajustes, selecciona la cuenta de nuevo y pulsa Reintentar."
+        },
+        "outcome_unknown": {
+          "reason": "No sabemos si la publicación llegó a hacerse en {{network}}.",
+          "fix": "Comprueba en {{network}} si la publicación ya existe antes de reintentar, para no publicarla dos veces."
+        },
+        "lease_expired": {
+          "reason": "El proceso de publicación se interrumpió.",
+          "fix": "No tienes que hacer nada: se reintentará automáticamente."
+        },
+        "internal_error": {
+          "reason": "Ha ocurrido un error interno al publicar.",
+          "fix": "Pulsa Reintentar; si se repite, contacta con soporte."
+        },
+        "provider_rejected": {
+          "reason": "{{network}} ha rechazado la publicación sin indicar el motivo.",
+          "fix": "Revisa el contenido y pulsa Reintentar."
+        },
+        "provider_response_invalid": {
+          "reason": "{{network}} ha dado una respuesta que no hemos podido interpretar.",
+          "fix": "Pulsa Reintentar; si se repite, contacta con soporte."
+        },
+        "api_version_unsupported": {
+          "reason": "La versión de la API de {{network}} ya no se admite.",
+          "fix": "Es un problema nuestro: contacta con soporte."
+        },
+        "invalid_account": {
+          "reason": "La cuenta elegida en {{network}} no es válida.",
+          "fix": "Vuelve a programar la publicación eligiendo la cuenta de nuevo."
+        },
+        "media_url_invalid": {
+          "reason": "Una imagen no está en un almacenamiento válido para publicar.",
+          "fix": "Vuelve a seleccionar o subir la imagen y programa la publicación de nuevo."
+        },
+        "media_too_large": {
+          "reason": "Una imagen pesa demasiado (más de 30 MB).",
+          "fix": "Usa una imagen más ligera y vuelve a programar la publicación."
+        },
+        "media_unreadable": {
+          "reason": "No se ha podido leer una de las imágenes.",
+          "fix": "Sustituye la imagen por otra y vuelve a programar la publicación."
+        },
+        "unknown": {
+          "reason": "No se ha podido publicar en {{network}}.",
+          "fix": "Pulsa Reintentar; si se repite, contacta con soporte."
+        }
+      }
     }
   },
   "profile": {

@@ -8,61 +8,7 @@ import {
   isBrokenConnection,
   reasonTranslationKey,
 } from "../../../settings/helpers/socialConnectionStatus";
-
-const MADRID_PARTS = new Intl.DateTimeFormat("en-US", {
-  timeZone: "Europe/Madrid",
-  hourCycle: "h23",
-  year: "numeric",
-  month: "numeric",
-  day: "numeric",
-  hour: "numeric",
-  minute: "numeric",
-  second: "numeric",
-});
-
-// Europe/Madrid offset (ms, DST included) at a real instant.
-const madridOffsetMs = (instantMs: number): number => {
-  const parts: Record<string, number> = {};
-  for (const part of MADRID_PARTS.formatToParts(new Date(instantMs))) {
-    if (part.type !== "literal") parts[part.type] = Number(part.value);
-  }
-  const asUtc = Date.UTC(
-    parts.year,
-    parts.month - 1,
-    parts.day,
-    parts.hour,
-    parts.minute,
-    parts.second
-  );
-  return asUtc - Math.floor(instantMs / 1000) * 1000;
-};
-
-// The stored publishDate ("YYYY-MM-DD HH:mm:ss+00") is Madrid wall-clock labelled +00 (S9: converted
-// to a real instant at cutover). Read the digits as Madrid wall-clock and return the real instant.
-const madridWallClockToInstant = (value?: string): Date | null => {
-  const match = value
-    ?.trim()
-    .match(
-      /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?(?:\.\d+)?(?:Z|\+00(?::?00)?)?$/
-    );
-  if (!match) return null;
-  const [year, month, day, hour, minute, second] = match
-    .slice(1)
-    .map((part) => Number(part ?? 0));
-  const wall = Date.UTC(year, month - 1, day, hour, minute, second);
-  const check = new Date(wall);
-  if (
-    check.getUTCFullYear() !== year ||
-    check.getUTCMonth() !== month - 1 ||
-    check.getUTCDate() !== day ||
-    check.getUTCHours() !== hour
-  ) {
-    return null;
-  }
-  // Two passes settle the offset around DST changes.
-  const first = wall - madridOffsetMs(wall);
-  return new Date(wall - madridOffsetMs(first));
-};
+import { madridWallClockToInstant } from "../../../../helpers/publishDate";
 
 interface CheckSocialNetworkProps {
   id: string;

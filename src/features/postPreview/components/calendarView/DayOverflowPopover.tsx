@@ -1,5 +1,6 @@
 import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
 import { PreviewProjectDataProps } from "../../../../types";
+import type { TargetsByPreview } from "../../helpers/publicationTargets";
 import { EventChip } from "./EventChip";
 
 interface DayOverflowPopoverProps {
@@ -7,6 +8,7 @@ interface DayOverflowPopoverProps {
   projects: PreviewProjectDataProps[];
   hiddenCount: number;
   onSelectProject: (project: PreviewProjectDataProps) => void;
+  targetsByPreview?: TargetsByPreview;
 }
 
 export const DayOverflowPopover: React.FC<DayOverflowPopoverProps> = ({
@@ -14,6 +16,7 @@ export const DayOverflowPopover: React.FC<DayOverflowPopoverProps> = ({
   projects,
   hiddenCount,
   onSelectProject,
+  targetsByPreview,
 }) => {
   return (
     <Popover className="relative">
@@ -35,6 +38,7 @@ export const DayOverflowPopover: React.FC<DayOverflowPopoverProps> = ({
                   key={project.id}
                   project={project}
                   maxTitleLength={30}
+                  targets={targetsByPreview?.[String(project.id)]}
                   onClick={() => {
                     onSelectProject(project);
                     close();
