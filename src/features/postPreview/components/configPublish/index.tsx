@@ -302,7 +302,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   );
 
   return (
-    <div className="min-w-0 space-y-6 font-[Hanken_Grotesk] text-[#010000]">
+    <div className="-mr-2 max-h-[65vh] min-w-0 space-y-6 overflow-y-auto overscroll-contain pr-2 font-[Hanken_Grotesk] text-[#010000]">
       {/* Instant Publish Checkbox */}
       <div className="flex items-center gap-3 rounded-full border border-[#010000]/15 bg-[#010000]/5 px-4 py-3">
         <input
