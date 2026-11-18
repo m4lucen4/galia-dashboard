@@ -1,8 +1,14 @@
 // Instagram publisher (Graph API v27.0): resumable state machine for the worker (S1, S3, S4, S11, S21).
 //
 //   containers  one container per image (is_carousel_item for 2+), then the CAROUSEL container;
-//               every created id is checkpointed, so a retry never creates the same one twice
-//   processing  poll status_code every 3 s until FINISHED
+//               every created id is checkpointed, so a retry never creates the same one twice.
+//               Video formats (T3) create a single container: reel (REELS + video_url + caption +
+//               share_to_feed + cover_url), story_video (STORIES + video_url), story_image (STORIES +
+//               image_url of the first image). Stories carry no caption.
+//   processing  poll status_code every 3 s (5 s for video) until FINISHED. A video can take minutes:
+//               when it is still IN_PROGRESS and the in-run window (or the deadline) is over, the target
+//               is handed back as transient "processing" (60 s) and the next run resumes at this step
+//               with the checkpointed container id, never creating the container again
 //   publishing  checkpoint(side_effect_pending) then media_publish; only an allow-listed definitive
 //               provider rejection is notPublished (the database then resets the step to
 //               'processing', so the retry polls and publishes again); anything else => outcome_unknown
@@ -29,6 +35,10 @@ import {
 
 const GRAPH = "https://graph.facebook.com/v27.0";
 const POLL_INTERVAL_MS = 3000;
+// Video processing takes much longer than images: poll less often and only for a short in-run window
+// so one video does not hold the worker; the rest is polled by later runs.
+const VIDEO_POLL_INTERVAL_MS = 5000;
+const VIDEO_POLL_WINDOW_MS = 30_000;
 const REQUEST_TIMEOUT_MS = 20_000;
 const PUBLISH_TIMEOUT_MS = 30_000;
 // The irreversible call needs its whole timeout plus this margin left before the deadline.
@@ -92,9 +102,11 @@ function graph(
   );
 }
 
-function transientProcessing(step: string): PublishResult {
-  return failed("processing", "transient", { step }, 60);
+function transientProcessing(step: string, video = false): PublishResult {
+  return failed("processing", "transient", video ? { step, reason: "media_processing" } : { step }, 60);
 }
+
+type Poll = { video: boolean };
 
 const unreadable = (step: string): PublishResult => failed("provider_response_invalid", "transient", { step });
 
@@ -138,7 +150,14 @@ async function checkQuota(ctx: PublishContext, ig: string, flag: Flag): Promise<
 }
 
 // Polls every container until FINISHED. null = all finished.
-async function awaitFinished(ctx: PublishContext, step: string, ids: string[]): Promise<PublishResult | null> {
+async function awaitFinished(
+  ctx: PublishContext,
+  step: string,
+  ids: string[],
+  poll: Poll = { video: false },
+): Promise<PublishResult | null> {
+  const interval = poll.video ? VIDEO_POLL_INTERVAL_MS : POLL_INTERVAL_MS;
+  const pollUntil = poll.video ? ctx.now() + VIDEO_POLL_WINDOW_MS : Number.POSITIVE_INFINITY;
   for (let index = 0; index < ids.length; index += 1) {
     const id = ids[index];
     for (;;) {
@@ -166,8 +185,9 @@ async function awaitFinished(ctx: PublishContext, step: string, ids: string[]): 
         // A container that is already published means a previous attempt got through.
         return outcomeUnknown(step, { status_code: statusCode });
       }
-      if (ctx.now() + POLL_INTERVAL_MS > ctx.deadline) return transientProcessing(step);
-      await ctx.sleep(POLL_INTERVAL_MS);
+      // Never sleep past the deadline (or the video window): the container id is already checkpointed.
+      if (ctx.now() + interval > Math.min(ctx.deadline, pollUntil)) return transientProcessing(step, poll.video);
+      await ctx.sleep(interval);
     }
   }
   return null;
@@ -205,19 +225,49 @@ async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
   if (!/^\d{1,30}$/u.test(ig)) return failed("invalid_account", "action_required", { step: "validate" });
 
   // 1. Validation, before any network call.
-  const caption = instagramCaption(payload.text);
-  const imageFailure = validateImages("instagram", payload.images);
-  if (imageFailure) return validationResult(imageFailure, "validate");
-  const textFailure = textValidationFailure("instagram", validateInstagramCaption(payload.text));
-  if (textFailure) return validationResult(textFailure, "validate");
+  const format = target.format;
+  const isVideoFormat = format === "reel" || format === "story_video";
+  const isStory = format === "story_image" || format === "story_video";
+  if (isVideoFormat && !payload.video) {
+    return failed("video_missing", "action_required", { step: "validate", format });
+  }
+  // Stories carry no caption.
+  const caption = isStory ? "" : instagramCaption(payload.text);
   const urls: string[] = [];
-  for (const image of payload.images) {
-    const url = asciiHttpsUrl(image.url);
+  let videoUrl: string | null = null;
+  let coverUrl: string | null = null;
+
+  if (isVideoFormat) {
+    const video = payload.video!;
+    if (format === "reel") {
+      const textFailure = textValidationFailure("instagram", validateInstagramCaption(payload.text));
+      if (textFailure) return validationResult(textFailure, "validate");
+    }
+    videoUrl = asciiHttpsUrl(video.url);
+    if (!videoUrl) return failed("media_url_invalid", "action_required", { step: "validate" });
+    // The cover is optional: an unusable poster URL only means Instagram picks its own frame.
+    coverUrl = format === "reel" && video.posterUrl ? asciiHttpsUrl(video.posterUrl) : null;
+  } else if (format === "story_image") {
+    // The story is the first image; the feed ratio rules of validateImages do not apply to 9:16.
+    const first = payload.images[0];
+    if (!first) return validationResult({ code: "no_images", diagnostics: { network: "instagram" } }, "validate");
+    const url = asciiHttpsUrl(first.url);
     if (!url) return failed("media_url_invalid", "action_required", { step: "validate" });
     urls.push(url);
+  } else {
+    const imageFailure = validateImages("instagram", payload.images);
+    if (imageFailure) return validationResult(imageFailure, "validate");
+    const textFailure = textValidationFailure("instagram", validateInstagramCaption(payload.text));
+    if (textFailure) return validationResult(textFailure, "validate");
+    for (const image of payload.images) {
+      const url = asciiHttpsUrl(image.url);
+      if (!url) return failed("media_url_invalid", "action_required", { step: "validate" });
+      urls.push(url);
+    }
   }
 
-  const fp = fingerprint([caption, ...urls]);
+  // The image fingerprint stays exactly as before so in-flight image states remain valid.
+  const fp = format === "image" ? fingerprint([caption, ...urls]) : fingerprint([format, caption, ...urls, videoUrl ?? "", coverUrl ?? ""]);
   const state = readState(target.stepState, fp);
   const resumeProcessing = target.step === "processing" && state.container !== null;
 
@@ -228,13 +278,23 @@ async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
       if (limited) return limited;
     }
 
-    if (urls.length === 1) {
+    if (format !== "image" || urls.length === 1) {
       if (state.container === null) {
-        if (ctx.now() >= ctx.deadline) return transientProcessing("containers");
-        const created = await createContainer(ctx, ig, {
-          image_url: urls[0],
-          ...(caption ? { caption } : {}),
-        });
+        if (ctx.now() >= ctx.deadline) return transientProcessing("containers", isVideoFormat);
+        const params: Record<string, string> = format === "reel"
+          ? {
+            media_type: "REELS",
+            video_url: videoUrl as string,
+            ...(caption ? { caption } : {}),
+            share_to_feed: "true",
+            ...(coverUrl ? { cover_url: coverUrl } : {}),
+          }
+          : format === "story_video"
+          ? { media_type: "STORIES", video_url: videoUrl as string }
+          : format === "story_image"
+          ? { media_type: "STORIES", image_url: urls[0] }
+          : { image_url: urls[0], ...(caption ? { caption } : {}) };
+        const created = await createContainer(ctx, ig, params);
         if ("result" in created) return created.result;
         state.container = created.id;
         await ctx.checkpoint("processing", toRecord(state), false);
@@ -269,7 +329,7 @@ async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
 
   // 3. Processing.
   const container = state.container as string;
-  const processed = await awaitFinished(ctx, "processing", [container]);
+  const processed = await awaitFinished(ctx, "processing", [container], { video: isVideoFormat });
   if (processed) return processed;
 
   // 4. Publishing: the irreversible call. It needs its whole timeout: otherwise hand the target back
