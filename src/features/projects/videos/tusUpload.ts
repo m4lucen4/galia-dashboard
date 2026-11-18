@@ -71,15 +71,16 @@ export const uploadWithTus = async ({
   if (signal?.aborted) throw new VideoUploadCancelledError();
   const initialToken = await getAccessToken();
 
+  let firstRequest = true;
   await new Promise<void>((resolve, reject) => {
     const upload = new Upload(body, {
       endpoint: RESUMABLE_ENDPOINT,
       retryDelays: [0, 3000, 5000, 10000, 20000],
       chunkSize: TUS_CHUNK_SIZE,
-      // Only the user's access token, as in Supabase's resumable upload guide.
-      // Sending the project key as apikey made Storage answer "Invalid Compact JWS".
+      // The authorization header is set only in onBeforeRequest: XMLHttpRequest
+      // appends repeated headers ("Bearer a, Bearer a"), which Storage rejects
+      // with "Invalid Compact JWS".
       headers: {
-        authorization: `Bearer ${initialToken}`,
         "x-upsert": "false",
       },
       // Object names are unique per upload, so resuming across page loads is not used.
@@ -94,7 +95,9 @@ export const uploadWithTus = async ({
       },
       // Long uploads can outlive the access token; always send the current one.
       onBeforeRequest: async (request) => {
-        request.setHeader("authorization", `Bearer ${await getAccessToken()}`);
+        const token = firstRequest ? initialToken : await getAccessToken();
+        firstRequest = false;
+        request.setHeader("authorization", `Bearer ${token}`);
       },
       onError: (error) => {
         signal?.removeEventListener("abort", onAbort);
