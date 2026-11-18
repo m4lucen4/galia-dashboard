@@ -252,12 +252,14 @@ export const updatePreviewProject = createAsyncThunk(
   "projectsPreview/updateProject",
   async (data: UpdatePreviewProjectProps, { rejectWithValue }) => {
     try {
-      const { projectId, description_rich, image_data, versions } = data;
+      const { projectId, description_rich, image_data, versions, video_id } =
+        data;
 
       const updateData: {
         description_rich?: string;
         image_data?: Array<ProjectImageData>;
         versions?: any[];
+        video_id?: string | null;
       } = {};
 
       if (description_rich !== undefined) {
@@ -270,6 +272,10 @@ export const updatePreviewProject = createAsyncThunk(
 
       if (versions !== undefined) {
         updateData.versions = versions;
+      }
+
+      if (video_id !== undefined) {
+        updateData.video_id = video_id;
       }
 
       const { data: updatedProject, error } = await supabase

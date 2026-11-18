@@ -54,6 +54,34 @@ export const listProjectVideos = async (
   return (data ?? []) as ProjectVideo[];
 };
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/**
+ * Poster public URLs of the given videos (publication cards), one query.
+ * Videos without a poster, or that the caller cannot read, are absent.
+ */
+export const getVideoPosterUrls = async (
+  videoIds: string[],
+): Promise<Record<string, string>> => {
+  const ids = [...new Set(videoIds)].filter((id) => UUID_PATTERN.test(id));
+  if (ids.length === 0) return {};
+  const { data, error } = await supabase
+    .from("project_videos")
+    .select("id,poster_path")
+    .in("id", ids);
+  if (error) {
+    throw new ProjectVideoError(
+      "No se pudieron cargar las miniaturas de los vídeos.",
+    );
+  }
+  const urls: Record<string, string> = {};
+  for (const row of data ?? []) {
+    if (row.poster_path) urls[row.id] = getProjectVideoPublicUrl(row.poster_path);
+  }
+  return urls;
+};
+
 /**
  * Removes objects and confirms they are gone. Storage silently skips paths the
  * policies filter out, so every path missing from the response is looked up:
