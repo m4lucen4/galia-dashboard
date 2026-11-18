@@ -153,6 +153,15 @@ export const toInstagramPages = (
     facebook_page_name: page.facebookPageName ?? "",
   }));
 
+// OAuth `state` (CSRF): 32 random bytes from the Web Crypto CSPRNG, hex encoded.
+const generateOAuthState = (): string => {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join(
+    ""
+  );
+};
+
 const parseFunctionFailure = async (
   error: unknown
 ): Promise<SocialConnectError> => {
@@ -256,7 +265,7 @@ export const initiateLinkedInAuth = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       // Generate a random state string to prevent CSRF attacks
-      const state = Math.random().toString(36).substring(2, 15);
+      const state = generateOAuthState();
 
       // Save the state in localStorage
       localStorage.setItem("linkedln_auth_state", state);
@@ -344,7 +353,7 @@ export const initiateInstagramAuth = createAsyncThunk(
   "socialNetworks/initiateInstagramAuth",
   async (_, { rejectWithValue }) => {
     try {
-      const state = Math.random().toString(36).substring(2, 15);
+      const state = generateOAuthState();
       localStorage.setItem("instagram_auth_state", state);
 
       const authUrl = `https://www.facebook.com/v27.0/dialog/oauth?client_id=${INSTAGRAM_APP_ID}&redirect_uri=${encodeURIComponent(

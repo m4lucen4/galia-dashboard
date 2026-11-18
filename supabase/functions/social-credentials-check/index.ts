@@ -1,8 +1,8 @@
 import { workerAuthorized } from "../_shared/publication-generation-store.ts";
 import { corsHeaders, jsonResponse, logSocialError, SocialError, socialFailure } from "../_shared/social-errors.ts";
-import { instagramDebugToken, PUBLISH_SCOPE } from "../_shared/social-instagram.ts";
+import { instagramDebugToken, PUBLISH_SCOPE, type TokenDebug } from "../_shared/social-instagram.ts";
 import { linkedinRefresh, type LinkedInTokens } from "../_shared/social-linkedin.ts";
-import { mirrorLinkedInRefresh, safeMirror } from "../_shared/social-n8n-mirror.ts";
+import { safeMirror, syncLinkedInMirror } from "../_shared/social-n8n-mirror.ts";
 import { sendNotice } from "../_shared/social-notice.ts";
 import {
   type ConnectionSummary, createSocialStore, type CredentialInput, type Environment, type ReportInput,
@@ -56,7 +56,7 @@ async function decideLinkedIn(connection: ConnectionSummary, ctx: Context): Prom
     if (code === "provider_rejected") return { report: NO_CHANGE };
     throw error;
   }
-  const credentials2: CredentialInput[] = [
+  const rotated: CredentialInput[] = [
     { kind: "user_access", token: tokens.accessToken, expiresAt: tokens.accessExpiresAt.toISOString() },
     ...(tokens.refreshToken
       ? [{
@@ -68,28 +68,45 @@ async function decideLinkedIn(connection: ConnectionSummary, ctx: Context): Prom
   return {
     report: {
       status: null, reason: null, accessExpiresAt: tokens.accessExpiresAt, refreshExpiresAt: tokens.refreshExpiresAt,
-      credentials: credentials2, refreshed: true,
+      credentials: rotated, refreshed: true,
     },
     refreshed: tokens,
   };
 }
 
+// Instagram health is decided from the page tokens, the ones that publish. An invalid or expired user
+// token alone is not a revocation: page tokens are long-lived and outlive it, so the dates decide
+// (expiring / expired) through data_access_expires_at.
+//   revoked token_invalid     every page token is invalid (or no page tokens and the user token is invalid)
+//   revoked permission_missing no valid page token carries instagram_content_publish (a page token that
+//                              reports no scopes at all is not judged; with no page tokens, the user token)
+//   otherwise                  status null: dates drive the status
 async function decideInstagram(connection: ConnectionSummary, ctx: Context): Promise<Decision | null> {
   const credentials = await ctx.store.credentials(connection.id);
   const user = credentials.find((c) => c.kind === "user_access");
   if (!user) return { report: NO_CHANGE };
   try {
-    const debug = await instagramDebugToken(ctx.env, ctx.fetcher, user.token);
-    if (!debug.isValid) return { report: { status: "revoked", reason: "token_invalid" } };
-    if (!debug.scopes.includes(PUBLISH_SCOPE)) return { report: { status: "revoked", reason: "permission_missing" } };
-    for (const page of credentials.filter((c) => c.kind === "page_access").slice(0, MAX_PAGE_TOKENS_CHECKED)) {
-      if (!(await instagramDebugToken(ctx.env, ctx.fetcher, page.token)).isValid) {
-        return { report: { status: "revoked", reason: "token_invalid" } };
+    const userDebug = await instagramDebugToken(ctx.env, ctx.fetcher, user.token);
+    const pageTokens = credentials.filter((c) => c.kind === "page_access").slice(0, MAX_PAGE_TOKENS_CHECKED);
+    const pageDebugs: TokenDebug[] = [];
+    for (const page of pageTokens) pageDebugs.push(await instagramDebugToken(ctx.env, ctx.fetcher, page.token));
+    const validPages = pageDebugs.filter((d) => d.isValid);
+
+    if (pageTokens.length === 0) {
+      if (!userDebug.isValid) return { report: { status: "revoked", reason: "token_invalid" } };
+      if (!userDebug.scopes.includes(PUBLISH_SCOPE)) return { report: { status: "revoked", reason: "permission_missing" } };
+    } else {
+      if (validPages.length === 0) return { report: { status: "revoked", reason: "token_invalid" } };
+      if (validPages.every((d) => d.scopes.length > 0 && !d.scopes.includes(PUBLISH_SCOPE))) {
+        return { report: { status: "revoked", reason: "permission_missing" } };
       }
     }
+    const dated = [...(userDebug.isValid ? [userDebug] : []), ...validPages];
     return {
       report: {
-        status: null, reason: null, accessExpiresAt: debug.expiresAt, dataAccessExpiresAt: debug.dataAccessExpiresAt,
+        status: null, reason: null,
+        accessExpiresAt: userDebug.isValid ? userDebug.expiresAt : null,
+        dataAccessExpiresAt: dated.find((d) => d.dataAccessExpiresAt)?.dataAccessExpiresAt ?? null,
       },
     };
   } catch (error) {
@@ -114,7 +131,8 @@ export function createHandler(env: Environment, fetcher: typeof fetch = fetch, c
       const started = clock();
       const summary = {
         checked: 0, refreshed: 0, revoked: 0, unchanged: 0, skipped: 0, failed: 0,
-        notices: 0, emailsSent: 0, emailsFailed: 0, deadlineReached: false,
+        mirrorRepairs: 0, mirrorUserDataMissing: 0,
+        notices: 0, emailsSent: 0, emailsFailed: 0, noticesReleased: 0, deadlineReached: false,
       };
       const seen = new Set<string>();
 
@@ -130,29 +148,57 @@ export function createHandler(env: Environment, fetcher: typeof fetch = fetch, c
           seen.add(connection.id);
           const ctx: Context = { env, fetcher, store, now: clock() };
           try {
-            const decision = connection.network === "linkedin"
-              ? await decideLinkedIn(connection, ctx)
-              : await decideInstagram(connection, ctx);
-            if (!decision) {
-              summary.skipped++;
-              continue;
+            // A revoked connection is only listed to retry its email: there is nothing to check.
+            if (connection.status !== "revoked") {
+              const decision = connection.network === "linkedin"
+                ? await decideLinkedIn(connection, ctx)
+                : await decideInstagram(connection, ctx);
+              if (!decision) {
+                summary.skipped++;
+                continue;
+              }
+              const reported = await store.report(connection.id, {
+                ...decision.report, expectedConnectedAt: connection.connectedAt,
+              });
+              // Reconnected while this check ran: the database dropped the stale report, so the
+              // refreshed token is stale too and must not reach the mirror.
+              if (connection.connectedAt !== null && reported.connectedAt !== connection.connectedAt) {
+                summary.skipped++;
+                continue;
+              }
+              summary.checked++;
+              if (decision.refreshed) summary.refreshed++;
+              else if (decision.report.status) summary.revoked++;
+              else summary.unchanged++;
+
+              // Every LinkedIn check re-syncs the n8n mirror (not only right after a refresh), so a
+              // failed mirror write is repaired on the next run.
+              if (connection.network === "linkedin" && reported.status !== "disconnected") {
+                const outcome = await safeMirror(SCOPE, async () => {
+                  const stored = await store.credentials(connection.id);
+                  const server = stored.find((c) => c.kind === "user_access");
+                  if (!server) return "unchanged";
+                  const rotated = stored.find((c) => c.kind === "refresh");
+                  const expires = ms(server.expiresAt ?? reported.accessExpiresAt);
+                  return syncLinkedInMirror(store, connection.userId, {
+                    accessToken: server.token, tokenExpiresAt: expires === null ? null : new Date(expires),
+                    refreshToken: rotated?.token ?? null,
+                  });
+                });
+                if (outcome === "written" && !decision.refreshed) summary.mirrorRepairs++;
+                if (outcome === "user_data_missing") summary.mirrorUserDataMissing++;
+              }
             }
-            await store.report(connection.id, decision.report);
-            summary.checked++;
-            if (decision.refreshed) {
-              summary.refreshed++;
-              const tokens = decision.refreshed;
-              await safeMirror(SCOPE, () => mirrorLinkedInRefresh(store, connection.userId, {
-                accessToken: tokens.accessToken, tokenExpiresAt: tokens.accessExpiresAt, refreshToken: tokens.refreshToken,
-              }));
-            } else if (decision.report.status) summary.revoked++;
-            else summary.unchanged++;
 
             const recipient = await store.claimNotice(connection.id);
             if (recipient) {
               summary.notices++;
               if (await sendNotice(env, fetcher, recipient, new Date(clock()))) summary.emailsSent++;
-              else summary.emailsFailed++;
+              else {
+                summary.emailsFailed++;
+                // Give the claim back so the next run retries the email.
+                if (await store.releaseNotice(connection.id, recipient.connection.status)) summary.noticesReleased++;
+              }
             }
           } catch (error) {
             // Transient provider trouble leaves the status alone; one bad connection never stops the run.

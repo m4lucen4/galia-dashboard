@@ -213,8 +213,13 @@ export const PreviewProjects = () => {
     // Reset publishNow when opening modal
     setPublishNow(false);
 
+    // Never carry the Instagram page token in browser state; the server fills it for n8n.
+    const storedInstagram = project.checkSocialNetworks?.instagram;
     setSocialNetworks({
-      instagram: project.checkSocialNetworks?.instagram || false,
+      instagram:
+        storedInstagram && typeof storedInstagram === "object"
+          ? { ...storedInstagram, accessToken: undefined }
+          : storedInstagram || false,
       linkedln: project.checkSocialNetworks?.linkedln || false,
     });
 

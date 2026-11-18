@@ -135,6 +135,7 @@ declare
   v_conn public.social_connections;
   v_has_refresh boolean;
   v_expires timestamptz;
+  v_status text;
 begin
   select * into v_conn from public.social_connections where id = p_connection;
   if not found then return; end if;
@@ -142,9 +143,14 @@ begin
     into v_has_refresh;
   v_expires := private.social_effective_expiry(v_conn.network, v_conn.access_expires_at,
     v_conn.refresh_expires_at, v_conn.data_access_expires_at, v_has_refresh);
+  v_status := case when v_conn.status in ('revoked', 'error', 'disconnected') then v_conn.status
+    else private.social_status_for(v_expires) end;
   update public.social_connections set expires_at = v_expires,
-    status = case when status in ('revoked', 'error', 'disconnected') then status else private.social_status_for(v_expires) end,
-    status_reason = case when status in ('revoked', 'error', 'disconnected') then status_reason else null end,
+    status = v_status,
+    status_reason = case when v_conn.status in ('revoked', 'error', 'disconnected') then v_conn.status_reason else null end,
+    -- Healthy again: a later expiry must notify again.
+    notified_status = case when v_status = 'connected' then null else notified_status end,
+    notified_at = case when v_status = 'connected' then null else notified_at end,
     updated_at = clock_timestamp()
   where id = p_connection;
 end;
@@ -259,10 +265,13 @@ $$;
 
 -- Result of a health check or token refresh by the worker.
 -- p_status null recomputes from dates; 'revoked' or 'error' (with reason) are kept until reconnection.
+-- p_expected_connected_at: the connected_at the worker read when it started the check. When given
+-- and different from the row's, the connection was reconnected during the run: the stale report is
+-- dropped (nothing changes, the current summary is returned).
 create function public.social_connection_report(
   p_connection uuid, p_status text, p_reason text,
   p_access_expires_at timestamptz, p_refresh_expires_at timestamptz, p_data_access_expires_at timestamptz,
-  p_credentials jsonb, p_refreshed boolean
+  p_credentials jsonb, p_refreshed boolean, p_expected_connected_at timestamptz default null
 ) returns jsonb language plpgsql security definer set search_path = '' as $$
 declare
   v_conn public.social_connections;
@@ -276,6 +285,9 @@ begin
   if not found then raise exception 'not_found'; end if;
   -- A disconnection or a newer reconnection wins over a stale check.
   if v_conn.status = 'disconnected' then return private.social_connection_summary(p_connection); end if;
+  if p_expected_connected_at is not null and v_conn.connected_at is distinct from p_expected_connected_at then
+    return private.social_connection_summary(p_connection);
+  end if;
 
   perform private.social_credentials_upsert(p_connection, p_credentials);
   update public.social_connections set
@@ -330,8 +342,10 @@ begin
   if p_limit is null or p_limit not between 1 and 200 then raise exception 'invalid_request'; end if;
   return (select coalesce(jsonb_agg(private.social_connection_summary(c.id)), '[]'::jsonb) from (
     select id from public.social_connections
-    where status in ('connected', 'expiring', 'error', 'expired')
-      and (last_checked_at is null or last_checked_at < clock_timestamp() - interval '20 hours')
+    where (status in ('connected', 'expiring', 'error', 'expired')
+        and (last_checked_at is null or last_checked_at < clock_timestamp() - interval '20 hours'))
+      -- A revoked connection is not checked again, but its email must be retried when the send failed.
+      or (status = 'revoked' and notified_status is distinct from status)
     order by last_checked_at nulls first limit p_limit) c);
 end;
 $$;
@@ -359,12 +373,32 @@ begin
 end;
 $$;
 
+-- Gives the notice back when the email could not be sent, so the next run retries it.
+-- Only releases while the claim still matches p_status (a newer status keeps its own claim).
+create function public.social_connection_release_notice(p_connection uuid, p_status text)
+returns boolean language plpgsql security definer set search_path = '' as $$
+declare
+  v_id uuid;
+begin
+  if p_connection is null or p_status is null then raise exception 'invalid_request'; end if;
+  update public.social_connections set notified_status = null, notified_at = null
+    where id = p_connection and notified_status = p_status
+    returning id into v_id;
+  return v_id is not null;
+end;
+$$;
+
 -- ---------------------------------------------------------------------------
 -- Transitional n8n bridge (remove at cutover)
 -- ---------------------------------------------------------------------------
 -- n8n publishes to Instagram with checkSocialNetworks.instagram.accessToken. The browser no
 -- longer receives page tokens, so the server fills it in from social_credentials of the
 -- publication owner when the selected Instagram account has no token in the payload.
+-- Known, accepted cost while n8n still reads the column: that page token is stored in
+-- projectsPreview.checkSocialNetworks, which the publication owner and admins can read from
+-- the browser through the projectsPreview RLS (select *). Page tokens are not returned by the
+-- social functions or readable in social_credentials, but this copy is. Removed at cutover
+-- together with this trigger, when the publisher reads social_credentials server-side.
 create function private.bridge_instagram_page_token()
 returns trigger language plpgsql security definer set search_path = '' as $$
 declare
@@ -494,12 +528,13 @@ begin
     'private.bridge_instagram_page_token()',
     'public.social_connection_store(uuid,text,text,text,text[],timestamptz,timestamptz,timestamptz,jsonb)',
     'public.social_connection_set_pages(uuid,text,jsonb,jsonb)',
-    'public.social_connection_report(uuid,text,text,timestamptz,timestamptz,timestamptz,jsonb,boolean)',
+    'public.social_connection_report(uuid,text,text,timestamptz,timestamptz,timestamptz,jsonb,boolean,timestamptz)',
     'public.social_connection_disconnect(uuid,text)',
     'public.social_credentials_get(uuid)',
     'public.social_connection_for_user(uuid,text)',
     'public.social_connections_due_check(integer)',
-    'public.social_connection_claim_notice(uuid)'
+    'public.social_connection_claim_notice(uuid)',
+    'public.social_connection_release_notice(uuid,text)'
   ] loop
     execute format('alter function %s owner to postgres', v_fn);
     execute format('revoke all on function %s from public, anon, authenticated, service_role', v_fn);

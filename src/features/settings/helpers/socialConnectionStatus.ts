@@ -30,10 +30,3 @@ export const reasonTranslationKey = (reason?: string | null): string =>
   reason && /^[a-z_]{1,60}$/.test(reason)
     ? `socialConnections.reasons.${reason}`
     : "socialConnections.reasons.unknown";
-
-// Parses the "YYYY-MM-DD HH:mm:ss+00" value used by the publish configuration.
-export const parsePublishDate = (value?: string): Date | null => {
-  if (!value) return null;
-  const date = new Date(value.replace(" ", "T").replace(/\+00$/, "Z"));
-  return Number.isNaN(date.getTime()) ? null : date;
-};

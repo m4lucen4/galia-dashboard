@@ -73,20 +73,38 @@ const INSTAGRAM_CONNECT_KEYS = [
   "issued_at",
 ];
 
-// Last write wins; a lost race only delays n8n until the next daily check or reconnection.
+// Result of a mirror write. Never a silent no-op: a missing userData row is its own outcome.
+//   written           the column was rewritten
+//   unchanged         nothing to do (already in sync)
+//   no_data           the row exists but the column has no JSON to merge into
+//   user_data_missing there is no userData row for the user
+export type MirrorOutcome = "written" | "unchanged" | "no_data" | "user_data_missing";
+
+// Last write wins; a lost race only delays n8n until the next daily check (which re-syncs LinkedIn).
+// `change` returns the new JSON, "unchanged" when already in sync, or null when there is nothing to merge into.
 async function update(
-  access: UserDataAccess, userId: string, column: MirrorColumn, change: (current: Json | null) => Json | null,
-): Promise<boolean> {
-  const next = change(await access.readUserData(userId, column));
-  if (!next) return false;
+  access: UserDataAccess, userId: string, column: MirrorColumn,
+  change: (current: Json | null) => Json | null | "unchanged",
+): Promise<MirrorOutcome> {
+  const { exists, value } = await access.readUserData(userId, column);
+  if (!exists) return "user_data_missing";
+  const next = change(value);
+  if (next === "unchanged") return "unchanged";
+  if (!next) return "no_data";
   await access.writeUserData(userId, column, next);
-  return true;
+  return "written";
 }
 
 function withoutKeys(source: Json, keys: string[]): Json {
   const copy = { ...source };
   for (const key of keys) delete copy[key];
   return copy;
+}
+
+// The old client wrote a fixed list whatever LinkedIn granted; n8n may rely on it. Keep that list
+// first and add whatever else LinkedIn returned, without duplicates.
+export function linkedInPermissions(returned: string[]): string[] {
+  return [...new Set([...LINKEDIN_LEGACY_SCOPES, ...returned])];
 }
 
 export function mirrorLinkedInConnect(access: UserDataAccess, userId: string, data: LinkedInMirrorConnect) {
@@ -105,7 +123,7 @@ export function mirrorLinkedInConnect(access: UserDataAccess, userId: string, da
       ...(data.idToken ? { id_token: data.idToken } : {}),
       token_expires_at: data.tokenExpiresAt.toISOString(),
       is_connected: true,
-      permissions_granted: data.scopes,
+      permissions_granted: linkedInPermissions(data.scopes),
       user_name: data.userName,
       connected_at: data.connectedAt.toISOString(),
     };
@@ -117,17 +135,23 @@ export function mirrorLinkedInPages(access: UserDataAccess, userId: string, page
     current ? { ...current, admin_pages: pages, pages_fetched_at: new Date().toISOString() } : null);
 }
 
-// Token refresh by the worker: access_token / token_expires_at (and a rotated refresh token).
-export function mirrorLinkedInRefresh(
+// Idempotent re-sync by the worker, on every LinkedIn check: when the access token n8n reads differs
+// from the current server token, rewrite access_token / token_expires_at (and refresh_token when there
+// is one) and keep every other key. Repairs a mirror write that failed after a refresh.
+export function syncLinkedInMirror(
   access: UserDataAccess, userId: string,
-  data: { accessToken: string; tokenExpiresAt: Date; refreshToken: string | null },
+  server: { accessToken: string; tokenExpiresAt: Date | null; refreshToken: string | null },
 ) {
-  return update(access, userId, "linkedln_data", (current) => current ? {
-    ...current,
-    access_token: data.accessToken,
-    token_expires_at: data.tokenExpiresAt.toISOString(),
-    ...(data.refreshToken ? { refresh_token: data.refreshToken } : {}),
-  } : null);
+  return update(access, userId, "linkedln_data", (current) => {
+    if (!current) return null;
+    if (current.access_token === server.accessToken) return "unchanged";
+    return {
+      ...current,
+      access_token: server.accessToken,
+      ...(server.tokenExpiresAt ? { token_expires_at: server.tokenExpiresAt.toISOString() } : {}),
+      ...(server.refreshToken ? { refresh_token: server.refreshToken } : {}),
+    };
+  });
 }
 
 // Same as the old disconnect: only is_connected changes, and only when there is data.
@@ -172,9 +196,14 @@ export function mirrorInstagramPages(access: UserDataAccess, userId: string, pag
 }
 
 // A mirror failure must not undo a stored connection: log the code only and carry on.
-export async function safeMirror(scope: string, run: () => Promise<boolean>): Promise<boolean> {
-  try { return await run(); } catch (error) {
+// A missing userData row is logged with its own code (no tokens, no ids) and returned as an outcome.
+export async function safeMirror(scope: string, run: () => Promise<MirrorOutcome>): Promise<MirrorOutcome | "failed"> {
+  try {
+    const outcome = await run();
+    if (outcome === "user_data_missing") console.error(`[${scope}:mirror] user_data_missing`);
+    return outcome;
+  } catch (error) {
     logSocialError(`${scope}:mirror`, error);
-    return false;
+    return "failed";
   }
 }

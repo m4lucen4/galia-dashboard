@@ -65,6 +65,9 @@ export interface ReportInput {
   dataAccessExpiresAt?: Date | null;
   credentials?: CredentialInput[] | null;
   refreshed?: boolean;
+  // connectedAt exactly as the summary returned it (microsecond precision, never re-serialized from a
+  // Date): the database drops the report when the connection was reconnected in the meantime.
+  expectedConnectedAt?: string | null;
 }
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
@@ -137,6 +140,7 @@ export function createSocialStore(env: Environment, fetcher: Fetcher = fetch) {
         p_access_expires_at: iso(input.accessExpiresAt), p_refresh_expires_at: iso(input.refreshExpiresAt),
         p_data_access_expires_at: iso(input.dataAccessExpiresAt),
         p_credentials: input.credentials ?? null, p_refreshed: input.refreshed ?? false,
+        p_expected_connected_at: input.expectedConnectedAt ?? null,
       });
     },
 
@@ -160,8 +164,16 @@ export function createSocialStore(env: Environment, fetcher: Fetcher = fetch) {
       return rpc("social_connection_claim_notice", { p_connection: connectionId });
     },
 
+    // Gives the notice back after a failed email so the next run retries it.
+    releaseNotice(connectionId: string, status: string): Promise<boolean> {
+      return rpc("social_connection_release_notice", { p_connection: connectionId, p_status: status });
+    },
+
     // n8n coexistence: the legacy token blobs on userData. Only the two known columns.
-    async readUserData(userId: string, column: MirrorColumn): Promise<Record<string, unknown> | null> {
+    // `exists` is false when the userData row itself is missing (distinct from an empty column).
+    async readUserData(
+      userId: string, column: MirrorColumn,
+    ): Promise<{ exists: boolean; value: Record<string, unknown> | null }> {
       if (!uuidPattern.test(userId) || !mirrorColumns.includes(column)) throw new SocialError("internal_error");
       const response = await socialFetch(fetcher, `${url}/rest/v1/userData?uid=eq.${userId}&select=${column}`, {
         headers: { ...serviceHeaders, Accept: "application/json" },
@@ -169,8 +181,12 @@ export function createSocialStore(env: Environment, fetcher: Fetcher = fetch) {
       if (!response.ok) throw new SocialError("internal_error");
       let rows: unknown;
       try { rows = await response.json(); } catch { throw new SocialError("internal_error"); }
-      const value = Array.isArray(rows) ? (rows[0] as Record<string, unknown> | undefined)?.[column] : null;
-      return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+      const row = Array.isArray(rows) ? rows[0] as Record<string, unknown> | undefined : undefined;
+      const value = row?.[column];
+      return {
+        exists: !!row,
+        value: value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null,
+      };
     },
 
     async writeUserData(userId: string, column: MirrorColumn, value: Record<string, unknown>): Promise<void> {
