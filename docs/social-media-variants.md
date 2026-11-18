@@ -140,6 +140,52 @@ listed in `.env.example` on purpose (out of scope for phase 3); this document is
   limit, so only a known unsupported format or pixel count triggers a conversion). With the switch off, unknown values
   are skipped (nothing is reported), as before.
 
+## Image adjuster, per image (S22)
+
+Only with the switch on. Opened with **Ajustar imágenes** in the network's checks panel; the flow is the same on
+Instagram and LinkedIn. Nothing is written until the user presses **Aplicar** for an image.
+
+**Left: the images of the publication**, each with a state badge (click, or arrow keys + Enter/Space, to select):
+
+| Badge | Meaning |
+|---|---|
+| **Aplicada (1080 × 1350 px)** | a copy for this network exists and fits (size of the copy shown) |
+| **Pendiente** | the image needs a crop or a conversion and has no valid copy yet, or its applied copy no longer matches the carousel ratio (note: «la proporción ha cambiado, vuelve a aplicar»); a conversion due is generated automatically (S19) and the image then shows as applied |
+| **Correcta** | nothing to do; the original is published |
+
+**Right: the editor of the selected image only.**
+
+- Ratio: **1:1, 4:5, 1.91:1, Original, Libre**, the same on both networks. On Instagram **Original** is disabled (with the
+  reason) when the image's own ratio is outside 0.8..1.91; **Libre** is a slider limited to 0.8..1.91 on Instagram
+  (0.5..2.5 on LinkedIn, which is more permissive but offers the same flow).
+- Zoom slider and the crop area (drag the image).
+- **Aplicar**: renders the JPEG with the existing rules (Instagram width 320..1440 and <= 8 MB, LinkedIn pixel cap),
+  uploads it and upserts the variant of **this image only** (the previous object of that image is replaced). It shows
+  «Aplicando…» and the image becomes «Aplicada». Errors are shown on that image with **Reintentar**.
+- **Volver al original**: deletes this image's variant row and object, so the image returns to its natural state. If the
+  original still needs a conversion (S19) the automatic JPEG copy is generated again. On an image with no variant it
+  only resets the unapplied edits.
+
+**Instagram carousel (2+ images).** Instagram crops every item to the first item's ratio, so there is one **Proporción
+del carrusel** above the list (same choices; «Original» there means the first image's ratio, only if it is inside
+0.8..1.91). The per-image ratio selector is replaced by a note with that ratio. Changing it marks the already applied
+images whose copy has a different ratio as **Pendiente** («la proporción ha cambiado, vuelve a aplicar»); nothing is
+deleted automatically, and every image must be applied again to the new ratio. A single Instagram image and every
+LinkedIn image choose their ratio per image.
+
+**Closing.** The dialog has **Cerrar** (no «Guardar ajustes»); closing never writes anything. If the selected image has
+unapplied edits (ratio, crop or zoom changed since the last apply) closing, selecting another image or changing the
+carousel ratio asks «Tienes cambios sin aplicar en esta imagen. ¿Descartarlos?» (**Seguir editando** / **Descartar cambios**).
+When the image already has an applied copy, reopening it restores its crop and ratio.
+
+**Blocking (S5) stays the same.** A **Pendiente** image, including one whose copy mismatches the carousel ratio, keeps the
+network blocked with the existing reason («N imagen(es) de Instagram necesitan recorte»). The carousel ratio chosen in the
+adjuster is kept for the session while the set of selected images does not change; the rule compares every item
+(first included) against it, and falls back to the first image's ratio (clamped to 0.8..1.91) when none was chosen.
+
+Accessibility: the list is a keyboard-navigable listbox (arrow keys / Home / End move, Enter or Space select), every
+button has a text label, the discard confirmation is inline and takes the focus, so focus stays inside the dialog.
+
 ## n8n coexistence (S14)
 
 Until the cutover n8n keeps reading `projectsPreview` (`image_data`, description) and publishes the **original** images.

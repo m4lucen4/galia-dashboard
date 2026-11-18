@@ -383,6 +383,8 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
           network={adjusting}
           previewId={media.previewId}
           rows={media.networks[adjusting].rows}
+          commonRatio={media.networks[adjusting].commonRatio}
+          onCommonRatioChange={media.setCarouselRatio}
           onSaved={media.applyVariant}
           onRemoveVariant={media.removeVariant}
           onClose={() => setAdjusting(null)}

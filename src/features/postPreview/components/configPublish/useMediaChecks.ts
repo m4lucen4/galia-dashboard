@@ -9,7 +9,7 @@ import {
   type ImageMeasurement,
   type MeasureFailureKind,
 } from "../../helpers/publicationImages";
-import { renderVariant } from "../../helpers/imageVariants";
+import { clampInstagramRatio, renderVariant } from "../../helpers/imageVariants";
 import {
   evaluateCarousel,
   SOCIAL_MEDIA_VARIANTS_ENABLED,
@@ -73,9 +73,42 @@ export interface MediaBlocker {
   count?: number;
 }
 
+export type ImageStatusKind = "applied" | "pending" | "ok";
+
+export interface ImageStatus {
+  kind: ImageStatusKind;
+  /** Pending because an applied variant no longer matches the carousel's common ratio. */
+  ratioChanged: boolean;
+  /** Pending because the ratio does not fit and the image must be cropped. */
+  needsCrop: boolean;
+}
+
+/**
+ * Per-image state shown by the adjuster (S22): "applied" (a valid variant exists), "pending"
+ * (needs a crop or a conversion and has no valid variant, or its variant no longer matches the
+ * common ratio) or "ok" (nothing to do). The blocking rule uses the same facts.
+ */
+export function imageStatus(row: MediaRow): ImageStatus {
+  const needsCrop = row.issues.some(isCropIssue);
+  if (row.variant) {
+    return needsCrop
+      ? { kind: "pending", ratioChanged: true, needsCrop }
+      : { kind: "applied", ratioChanged: false, needsCrop };
+  }
+  if (needsCrop || row.needsConversion || row.converting || row.conversionFailed) {
+    return { kind: "pending", ratioChanged: false, needsCrop };
+  }
+  return { kind: "ok", ratioChanged: false, needsCrop };
+}
+
 export interface NetworkMedia {
   network: SocialNetwork;
   rows: MediaRow[];
+  /**
+   * Instagram with 2+ images: the one ratio every item of the carousel is cropped to (the user's
+   * choice, else the first image's ratio inside 0.8..1.91). null otherwise.
+   */
+  commonRatio: number | null;
   /** Issues about the whole set of images (too many, none). */
   collectionIssues: ImageIssue[];
   /** Why this network cannot be published yet; null with the switch off or when it is ready. */
@@ -143,6 +176,16 @@ export function useMediaChecks(
       );
     }
   }, [urls, anyActive, retryTick]);
+
+  // The Instagram carousel's common ratio chosen in the adjuster. It belongs to the current set of
+  // images: when the selection changes it stops applying (derived, no effect needed).
+  const urlsKey = urls.join("\n");
+  const [carouselChoice, setCarouselChoice] = useState<{ key: string; ratio: number } | null>(null);
+  const chosenRatio = carouselChoice && carouselChoice.key === urlsKey ? carouselChoice.ratio : null;
+  const setCarouselRatio = useCallback(
+    (ratio: number) => setCarouselChoice({ key: urlsKey, ratio }),
+    [urlsKey],
+  );
 
   const [variants, setVariants] = useState<PublicationMediaVariant[]>([]);
   const [variantsState, setVariantsState] = useState<VariantsState>(enabled ? "loading" : "off");
@@ -216,9 +259,18 @@ export function useMediaChecks(
         };
       });
 
+      // Instagram carousel: every item is compared against one common ratio, the chosen one or the
+      // first image's (clamped into the accepted range).
+      const firstFacts = rows[0]?.facts ?? null;
+      const commonRatio =
+        network === "instagram" && rows.length > 1
+          ? (chosenRatio ??
+            (firstFacts ? clampInstagramRatio(firstFacts.width / firstFacts.height) : null))
+          : null;
       const evaluation = evaluateCarousel(
         network,
         rows.map((row) => row.facts),
+        commonRatio !== null ? { referenceRatio: commonRatio } : undefined,
       );
       for (const row of rows) {
         row.issues = evaluation.issues.filter(
@@ -241,12 +293,13 @@ export function useMediaChecks(
       return {
         network,
         rows,
+        commonRatio,
         collectionIssues,
         blocker: enabled && active[network] ? blockerFor(rows, collectionIssues, variantsState) : null,
       };
     };
     return { instagram: build("instagram"), linkedin: build("linkedin") };
-  }, [images, measures, variants, variantsState, conversions, enabled, previewId, active]);
+  }, [images, measures, variants, variantsState, conversions, enabled, previewId, active, chosenRatio]);
 
   // Automatic conversion (S19): the ratio fits but format / weight / pixels / width do not.
   useEffect(() => {
@@ -314,6 +367,7 @@ export function useMediaChecks(
     variantsState,
     applyVariant,
     removeVariant,
+    setCarouselRatio,
     retryRow,
   };
 }
