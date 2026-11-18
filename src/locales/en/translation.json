@@ -667,7 +667,7 @@
         "widthTooLarge": "it is {{width}} px wide and Instagram accepts up to {{max}} px; it will be reduced when publishing",
         "tooManyPixels": "it has {{pixels}} pixels and LinkedIn requires fewer than {{limit}}; it will be reduced when publishing",
         "ratioOutOfRange": "Instagram only accepts aspect ratios between 4:5 and 1.91:1 (this one is {{ratio}})",
-        "ratioMismatch": "in an Instagram carousel all images are cropped to the ratio of the first one ({{expected}}) and this one is {{ratio}}",
+        "ratioMismatch": "in an Instagram carousel all images are cropped to the same ratio ({{expected}}) and this one is {{ratio}}",
         "tooManyImages": "{{network}} accepts at most {{max}} images and there are {{found}}",
         "noImages": "{{network}} needs at least one image"
       },
@@ -706,22 +706,46 @@
       "dialog": {
         "title": "Adjust images for {{network}}",
         "description": {
-          "instagram": "Choose one ratio for the whole carousel and frame each image. A JPEG copy is saved for Instagram; the original does not change.",
-          "linkedin": "Frame each image if you need to. A JPEG copy is saved for LinkedIn; the original does not change."
+          "instagram": "Pick an image, set its zoom and framing and press “Apply”: a JPEG copy of that image alone is saved. In a carousel every image uses the same ratio. The original does not change.",
+          "linkedin": "Pick an image, set its ratio, zoom and framing and press “Apply”: a JPEG copy of that image alone is saved. The original does not change."
         },
+        "images": "Images",
         "ratio": "Aspect ratio",
+        "carouselRatio": "Carousel ratio",
         "firstRatio": "First image ({{ratio}})",
         "original": "Original",
         "free": "Free",
         "freeRatio": "Free ratio ({{ratio}})",
-        "carouselNote": "All carousel images use the same ratio.",
+        "originalUnavailable": "“Original” is not available: Instagram only accepts ratios between 4:5 and 1.91:1 (this one is {{ratio}}).",
+        "carouselNote": "Instagram crops every carousel image to the same ratio, so one is chosen for all of them.",
+        "carouselRatioLocked": "This image uses the carousel ratio ({{ratio}}). Change it in “Carousel ratio”.",
+        "ratioChanged": "the ratio has changed, apply again",
+        "status": {
+          "applied": "Applied ({{width}} × {{height}} px)",
+          "pending": "Pending",
+          "ok": "Fine"
+        },
+        "reasons": {
+          "needsCrop": "needs a crop; press “Apply”",
+          "willConvert": "will be converted to JPEG automatically"
+        },
         "zoom": "Zoom",
+        "apply": "Apply",
+        "applying": "Applying…",
         "revert": "Back to the original",
-        "saving": "Saving image {{current}} of {{total}}…",
-        "save": "Save adjustments",
+        "reverting": "Going back to the original…",
+        "unapplied": "This image has changes that are not applied.",
+        "appliedMessage": "Image {{index}} applied.",
+        "revertedMessage": "Image {{index}} is back to the original.",
+        "close": "Close",
+        "discard": {
+          "message": "You have unapplied changes on this image. Discard them?",
+          "keep": "Keep editing",
+          "confirm": "Discard changes"
+        },
         "errors": {
-          "load": "One of the images could not be loaded.",
-          "render": "The copy of one of the images could not be generated.",
+          "load": "The image could not be loaded.",
+          "render": "The copy of the image could not be generated.",
           "save": "The adjustment could not be saved. Try again.",
           "remove": "The adjustment could not be removed. Try again."
         }

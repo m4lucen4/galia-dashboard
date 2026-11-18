@@ -9,7 +9,7 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import { PreviewProjectDataProps, UserDataProps } from "../../../types";
-import { publishedImages } from "../helpers/publicationImages";
+import { usePreviewImages } from "../helpers/usePreviewImages";
 import { publishedText } from "../helpers/socialText";
 
 interface IProjectInstagramPostProps {
@@ -22,8 +22,12 @@ export default function InstagramPost({
   user,
 }: IProjectInstagramPostProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  // Same images and text as the publish payload: what you see is what gets published.
-  const pendingImages = useMemo(() => publishedImages(project), [project]);
+  // Same images and text as the publish payload: what you see is what gets published,
+  // including the Instagram-adjusted copies when the adjuster is on.
+  const pendingImages = usePreviewImages(project, "instagram");
+  // Instagram shows every carousel item with the first image's ratio.
+  const first = pendingImages[0];
+  const frameRatio = first?.width && first?.height ? `${first.width} / ${first.height}` : "1 / 1";
   const text = useMemo(() => publishedText(project), [project]);
 
   const hasMultipleImages = pendingImages.length > 1;
@@ -64,7 +68,7 @@ export default function InstagramPost({
         </button>
       </div>
 
-      <div className="aspect-square relative">
+      <div className="relative" style={{ aspectRatio: frameRatio }}>
         <div className="w-full h-full relative">
           <img
             src={

@@ -670,7 +670,7 @@
         "widthTooLarge": "mide {{width}} px de ancho y Instagram admite hasta {{max}} px; se reducirá al publicar",
         "tooManyPixels": "tiene {{pixels}} píxeles y LinkedIn exige menos de {{limit}}; se reducirá al publicar",
         "ratioOutOfRange": "Instagram solo acepta proporciones entre 4:5 y 1,91:1 (esta es {{ratio}})",
-        "ratioMismatch": "en un carrusel de Instagram todas las imágenes se recortan a la proporción de la primera ({{expected}}) y esta es {{ratio}}",
+        "ratioMismatch": "en un carrusel de Instagram todas las imágenes se recortan a la misma proporción ({{expected}}) y esta es {{ratio}}",
         "tooManyImages": "{{network}} admite como máximo {{max}} imágenes y hay {{found}}",
         "noImages": "{{network}} necesita al menos una imagen"
       },
@@ -709,22 +709,46 @@
       "dialog": {
         "title": "Ajustar imágenes para {{network}}",
         "description": {
-          "instagram": "Elige una proporción para todo el carrusel y encuadra cada imagen. Se guardará una copia JPEG para Instagram; el original no cambia.",
-          "linkedin": "Encuadra cada imagen si lo necesitas. Se guardará una copia JPEG para LinkedIn; el original no cambia."
+          "instagram": "Elige una imagen, ajusta su zoom y encuadre y pulsa «Aplicar»: queda guardada una copia JPEG solo de esa imagen. En un carrusel todas usan la misma proporción. El original no cambia.",
+          "linkedin": "Elige una imagen, ajusta su proporción, zoom y encuadre y pulsa «Aplicar»: queda guardada una copia JPEG solo de esa imagen. El original no cambia."
         },
+        "images": "Imágenes",
         "ratio": "Proporción",
+        "carouselRatio": "Proporción del carrusel",
         "firstRatio": "Primera imagen ({{ratio}})",
         "original": "Original",
         "free": "Libre",
         "freeRatio": "Proporción libre ({{ratio}})",
-        "carouselNote": "Todas las imágenes del carrusel usan la misma proporción.",
+        "originalUnavailable": "«Original» no está disponible: Instagram solo acepta proporciones entre 4:5 y 1,91:1 (esta es {{ratio}}).",
+        "carouselNote": "Instagram recorta todas las imágenes del carrusel a la misma proporción, por eso se elige una para todas.",
+        "carouselRatioLocked": "Esta imagen usa la proporción del carrusel ({{ratio}}). Cámbiala en «Proporción del carrusel».",
+        "ratioChanged": "la proporción ha cambiado, vuelve a aplicar",
+        "status": {
+          "applied": "Aplicada ({{width}} × {{height}} px)",
+          "pending": "Pendiente",
+          "ok": "Correcta"
+        },
+        "reasons": {
+          "needsCrop": "necesita recorte; pulsa «Aplicar»",
+          "willConvert": "se convertirá a JPEG automáticamente"
+        },
         "zoom": "Zoom",
+        "apply": "Aplicar",
+        "applying": "Aplicando…",
         "revert": "Volver al original",
-        "saving": "Guardando imagen {{current}} de {{total}}…",
-        "save": "Guardar ajustes",
+        "reverting": "Volviendo al original…",
+        "unapplied": "Hay cambios sin aplicar en esta imagen.",
+        "appliedMessage": "Imagen {{index}} aplicada.",
+        "revertedMessage": "Imagen {{index}} vuelve al original.",
+        "close": "Cerrar",
+        "discard": {
+          "message": "Tienes cambios sin aplicar en esta imagen. ¿Descartarlos?",
+          "keep": "Seguir editando",
+          "confirm": "Descartar cambios"
+        },
         "errors": {
-          "load": "No se ha podido cargar una de las imágenes.",
-          "render": "No se ha podido generar la copia de una de las imágenes.",
+          "load": "No se ha podido cargar la imagen.",
+          "render": "No se ha podido generar la copia de la imagen.",
           "save": "No se ha podido guardar el ajuste. Inténtalo de nuevo.",
           "remove": "No se ha podido eliminar el ajuste. Inténtalo de nuevo."
         }

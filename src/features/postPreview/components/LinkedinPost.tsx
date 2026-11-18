@@ -9,7 +9,7 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import { PreviewProjectDataProps, UserDataProps } from "../../../types";
-import { publishedImages } from "../helpers/publicationImages";
+import { usePreviewImages } from "../helpers/usePreviewImages";
 import { publishedText } from "../helpers/socialText";
 import { useState, useMemo } from "react";
 
@@ -23,8 +23,9 @@ export default function LinkedInPost({
   user,
 }: IProjectLinkedlnPostProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  // Same images and text as the publish payload: what you see is what gets published.
-  const pendingImages = useMemo(() => publishedImages(project), [project]);
+  // Same images and text as the publish payload: what you see is what gets published,
+  // including the LinkedIn-adjusted copies when the adjuster is on.
+  const pendingImages = usePreviewImages(project, "linkedin");
   const text = useMemo(() => publishedText(project), [project]);
 
   const nextImage = () => {

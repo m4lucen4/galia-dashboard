@@ -172,10 +172,15 @@ export function evaluateImage(network: SocialNetwork, image: ImageFacts): ImageE
  * an image that could not be measured: it is skipped. Instagram: more than 20 items is an issue
  * and every item whose ratio differs from the first by more than 0.01 needs a crop. LinkedIn:
  * more than 20 is an issue.
+ *
+ * `options.referenceRatio` (Instagram, 2+ images) replaces the first image's ratio as the common
+ * ratio of the carousel (the one the user chose in the adjuster): then every item is compared
+ * against it, the first one included (unless it already reports a range issue).
  */
 export function evaluateCarousel(
   network: SocialNetwork,
   images: Array<ImageFacts | null>,
+  options: { referenceRatio?: number } = {},
 ): CarouselEvaluation {
   const items = images.map((image) => (image ? evaluateImage(network, image) : finalize([])));
   const issues: ImageIssue[] = [];
@@ -188,18 +193,22 @@ export function evaluateCarousel(
   if (network === "instagram" && images.length === 0) issues.push({ code: "no_images" });
 
   const first = images[0];
-  if (network === "instagram" && images.length > 1 && first && validSize(first)) {
-    const firstRatio = first.width / first.height;
-    for (let index = 1; index < images.length; index += 1) {
+  const reference =
+    options.referenceRatio ?? (first && validSize(first) ? first.width / first.height : null);
+  if (network === "instagram" && images.length > 1 && reference !== null && reference > 0) {
+    // Without an explicit reference the first image is the reference itself.
+    const start = options.referenceRatio === undefined ? 1 : 0;
+    for (let index = start; index < images.length; index += 1) {
       const image = images[index];
       if (!image || !validSize(image)) continue;
+      if (index === 0 && items[0].needsCrop) continue;
       const ratio = image.width / image.height;
-      if (Math.abs(ratio - firstRatio) > INSTAGRAM_MEDIA.carouselRatioTolerance + 1e-9) {
+      if (Math.abs(ratio - reference) > INSTAGRAM_MEDIA.carouselRatioTolerance + 1e-9) {
         issues.push({
           code: "ratio_mismatch",
           index,
           actual: Number(ratio.toFixed(4)),
-          limit: Number(firstRatio.toFixed(4)),
+          limit: Number(reference.toFixed(4)),
         });
       }
     }
