@@ -14,7 +14,17 @@ export interface TusUploadOptions {
   signal?: AbortSignal;
 }
 
-const RESUMABLE_ENDPOINT = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/upload/resumable`;
+/**
+ * Supabase recommends the direct storage host (<ref>.storage.supabase.co) for
+ * resumable uploads; other URLs (custom domains, local stacks) are kept as is.
+ */
+const storageBaseUrl = (projectUrl: string): string => {
+  const trimmed = projectUrl.replace(/\/+$/, "");
+  const match = /^https:\/\/([a-z0-9]+)\.supabase\.co$/.exec(trimmed);
+  return match ? `https://${match[1]}.storage.supabase.co` : trimmed;
+};
+
+const RESUMABLE_ENDPOINT = `${storageBaseUrl(import.meta.env.VITE_SUPABASE_URL)}/storage/v1/upload/resumable`;
 
 const getAccessToken = async (): Promise<string> => {
   const { data, error } = await supabase.auth.getSession();
@@ -61,14 +71,16 @@ export const uploadWithTus = async ({
   if (signal?.aborted) throw new VideoUploadCancelledError();
   const initialToken = await getAccessToken();
 
+  let firstRequest = true;
   await new Promise<void>((resolve, reject) => {
     const upload = new Upload(body, {
       endpoint: RESUMABLE_ENDPOINT,
       retryDelays: [0, 3000, 5000, 10000, 20000],
       chunkSize: TUS_CHUNK_SIZE,
+      // The authorization header is set only in onBeforeRequest: XMLHttpRequest
+      // appends repeated headers ("Bearer a, Bearer a"), which Storage rejects
+      // with "Invalid Compact JWS".
       headers: {
-        authorization: `Bearer ${initialToken}`,
-        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         "x-upsert": "false",
       },
       // Object names are unique per upload, so resuming across page loads is not used.
@@ -83,7 +95,9 @@ export const uploadWithTus = async ({
       },
       // Long uploads can outlive the access token; always send the current one.
       onBeforeRequest: async (request) => {
-        request.setHeader("authorization", `Bearer ${await getAccessToken()}`);
+        const token = firstRequest ? initialToken : await getAccessToken();
+        firstRequest = false;
+        request.setHeader("authorization", `Bearer ${token}`);
       },
       onError: (error) => {
         signal?.removeEventListener("abort", onAbort);
