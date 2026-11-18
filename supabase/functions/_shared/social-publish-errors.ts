@@ -21,7 +21,8 @@ export interface ProviderReply {
 
 export type ProviderCall =
   | { ok: true; reply: ProviderReply }
-  | { ok: false; result: PublishResult; uncertain: boolean };
+  // reply is null when no response arrived (network error, timeout, redirect).
+  | { ok: false; result: PublishResult; uncertain: boolean; reply: ProviderReply | null };
 
 const MAX_BODY_CHARS = 1_000_000;
 const MAX_DIAGNOSTICS_CHARS = 1800;
@@ -78,12 +79,13 @@ export async function providerCall(
     return {
       ok: false,
       uncertain: true,
+      reply: null,
       result: failed("provider_unavailable", "transient", boundedDiagnostics({ step, reason: "network_or_timeout" })),
     };
   }
   const reply = await readReply(response);
   if (reply.ok) return { ok: true, reply };
-  return { ok: false, uncertain: isUncertainStatus(reply.status), result: classify(reply, step) };
+  return { ok: false, uncertain: isUncertainStatus(reply.status), reply, result: classify(reply, step) };
 }
 
 export function boundedDiagnostics(diagnostics: Record<string, unknown>): Record<string, unknown> {
@@ -97,6 +99,55 @@ export function boundedDiagnostics(diagnostics: Record<string, unknown>): Record
 /** Uncertain outcome after the irreversible call: never retried automatically (S11). */
 export function outcomeUnknown(step: string, diagnostics: Record<string, unknown> = {}): PublishResult {
   return failed("outcome_unknown", "action_required", boundedDiagnostics({ ...diagnostics, step }));
+}
+
+// Graph error codes that are a definitive answer to the irreversible call (nothing was published):
+// rate limits 4, 17, 32, 613, 9 (and HTTP 429), token 190, permission 10 and 200-299,
+// invalid parameter 100, restricted account 368.
+const GRAPH_DEFINITIVE_CODES: ReadonlySet<number> = new Set([4, 17, 32, 613, 9, 190, 10, 100, 368]);
+
+/**
+ * True only when a failed media_publish reply proves nothing was published (S11). An explicit
+ * allow-list: Graph codes 4, 17, 32, 613, 9 or HTTP 429; 190; 10 and 200-299; 100; 368. Never
+ * (checked first) for code 1 or 2, is_transient, subcodes 2207xxx, 408, 5xx, a body that is not a
+ * JSON object, or anything not listed: those stay outcome_unknown.
+ */
+export function isDefinitiveGraphRejection(reply: ProviderReply): boolean {
+  if (reply.ok || reply.body === null) return false;
+  if (reply.status >= 500 || reply.status === 408) return false;
+  const error = asRecord(reply.body.error);
+  const code = asNumber(error?.code);
+  const subcode = asNumber(error?.error_subcode);
+  if (code === 1 || code === 2) return false;
+  if (error?.is_transient === true || error?.is_transient === "true") return false;
+  if (subcode !== null && subcode >= 2_207_000 && subcode <= 2_207_999) return false;
+  if (reply.status === 429) return true;
+  return code !== null && (GRAPH_DEFINITIVE_CODES.has(code) || (code >= 200 && code <= 299));
+}
+
+/**
+ * True only when a failed POST /rest/posts reply proves nothing was published: HTTP 400, 401, 403,
+ * 422 or 429 with a JSON object body. Everything else (404, 409, 426, 408, 5xx, empty or non-JSON
+ * body) stays outcome_unknown.
+ */
+export function isDefinitiveLinkedinRejection(reply: ProviderReply): boolean {
+  return !reply.ok && reply.body !== null && [400, 401, 403, 422, 429].includes(reply.status);
+}
+
+/**
+ * Image URL taken from the payload: https, the host of the Supabase project (SUPABASE_URL), the
+ * default port, no userinfo and a path under /storage/v1/object/public/ (any bucket). Compared
+ * after URL normalisation (dot segments resolved), the same parse the publishers use.
+ */
+export function isSupabasePublicStorageUrl(value: string, supabaseUrl: string): boolean {
+  try {
+    const url = new URL(value);
+    const host = new URL(supabaseUrl).hostname;
+    return url.protocol === "https:" && host !== "" && url.hostname === host && url.port === "" &&
+      url.username === "" && url.password === "" && url.pathname.startsWith("/storage/v1/object/public/");
+  } catch {
+    return false;
+  }
 }
 
 function clampSeconds(seconds: number): number {

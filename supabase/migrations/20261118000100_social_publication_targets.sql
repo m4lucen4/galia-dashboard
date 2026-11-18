@@ -169,8 +169,11 @@ $$;
 -- Schedules (run_at in the future) or publishes now (run_at = now) a publication.
 -- p_targets: [{network, format?, accountKind, accountExternalId, accountName?}], one per network.
 -- Idempotent per (actor, request): a replay returns the current targets.
+-- A current target with error_code outcome_unknown (a post may exist) is only replaced when the
+-- caller acknowledges it (p_acknowledge_unknown_outcome = true); otherwise confirmation_required.
 create function public.publication_targets_schedule(
-  p_actor uuid, p_preview bigint, p_request uuid, p_run_at timestamptz, p_targets jsonb
+  p_actor uuid, p_preview bigint, p_request uuid, p_run_at timestamptz, p_targets jsonb,
+  p_acknowledge_unknown_outcome boolean default false
 ) returns jsonb language plpgsql security definer set search_path = '' as $$
 declare
   v_preview record;
@@ -242,6 +245,11 @@ begin
     where t.preview_id = p_preview and t.archived_at is null and t.status = 'running') then
     raise exception 'in_progress';
   end if;
+  -- An unknown outcome (the network may have published) is never replaced silently.
+  if not coalesce(p_acknowledge_unknown_outcome, false) and exists (select 1 from public.publication_targets t
+    where t.preview_id = p_preview and t.archived_at is null and t.error_code = 'outcome_unknown') then
+    raise exception 'confirmation_required';
+  end if;
   -- Publishing again after a success is an explicit reset, never a silent repeat.
   if exists (select 1 from public.publication_targets t
     where t.preview_id = p_preview and t.archived_at is null and t.status = 'published') then
@@ -310,8 +318,11 @@ $$;
 
 -- Unschedules a publication, or prepares it to be published again after a result.
 -- Same legacy effect as the current client reset: state preview, no date, no results.
-create function public.publication_targets_reset(p_actor uuid, p_preview bigint)
-returns jsonb language plpgsql security definer set search_path = '' as $$
+-- A current target with error_code outcome_unknown needs p_acknowledge_unknown_outcome = true
+-- (the user checked the network); otherwise confirmation_required.
+create function public.publication_targets_reset(
+  p_actor uuid, p_preview bigint, p_acknowledge_unknown_outcome boolean default false
+) returns jsonb language plpgsql security definer set search_path = '' as $$
 declare
   v_preview record;
 begin
@@ -329,6 +340,10 @@ begin
   if exists (select 1 from public.publication_targets t
     where t.preview_id = p_preview and t.archived_at is null and t.status = 'running') then
     raise exception 'in_progress';
+  end if;
+  if not coalesce(p_acknowledge_unknown_outcome, false) and exists (select 1 from public.publication_targets t
+    where t.preview_id = p_preview and t.archived_at is null and t.error_code = 'outcome_unknown') then
+    raise exception 'confirmation_required';
   end if;
 
   update public.publication_targets set
@@ -505,6 +520,11 @@ $$;
 --   failed + transient           -> pending again with backoff, or failed when attempts are exhausted
 --   failed + action_required     -> needs_action (user fixes, then retries)
 --   failed + permanent           -> failed
+-- p_not_published = true means the provider gave a definitive answer to the irreversible call
+-- (nothing was published). It only counts when the target had side_effect_pending and the code is
+-- not outcome_unknown. Then a transient failure is not turned into outcome_unknown, and the step is
+-- reset to 'processing' (step_state kept) so the next attempt polls readiness and publishes again
+-- instead of resuming at 'publishing' (which is always an unknown outcome).
 create function public.publication_target_finish(
   p_target uuid, p_lease uuid, p_outcome text, p_external_post_id text, p_permalink text,
   p_error_code text, p_error_kind text, p_retry_after_seconds integer, p_diagnostics jsonb,
@@ -517,6 +537,7 @@ declare
   v_outcome text;
   v_delay integer;
   v_next timestamptz;
+  v_not_published boolean;
 begin
   if p_target is null or p_lease is null or p_outcome is null or p_outcome not in ('published', 'failed')
     or (p_diagnostics is not null and (jsonb_typeof(p_diagnostics) <> 'object'
@@ -542,8 +563,10 @@ begin
   -- A transient failure after the irreversible call started (timeout, 5xx) may have
   -- published anyway: never retry it automatically. p_not_published is set only when the
   -- provider answered with a definitive rejection (nothing was published).
+  v_not_published := p_outcome = 'failed' and coalesce(p_not_published, false)
+    and v_target.side_effect_pending and p_error_code is distinct from 'outcome_unknown';
   if p_outcome = 'failed' and p_error_kind = 'transient' and v_target.side_effect_pending
-    and not coalesce(p_not_published, false) then
+    and not v_not_published then
     p_error_code := 'outcome_unknown'; p_error_kind := 'action_required';
   end if;
 
@@ -562,6 +585,7 @@ begin
   end if;
 
   update public.publication_targets set status = v_status,
+    step = case when v_not_published then 'processing' else step end,
     error_code = p_error_code, error_kind = p_error_kind,
     external_post_id = p_external_post_id, permalink = p_permalink,
     published_at = case when v_status = 'published' then clock_timestamp() end,
@@ -586,9 +610,9 @@ begin
     'private.publication_targets_summary(bigint)',
     'private.publication_target_legacy_result(bigint,text)',
     'private.publication_targets_sync_legacy(bigint)',
-    'public.publication_targets_schedule(uuid,bigint,uuid,timestamptz,jsonb)',
+    'public.publication_targets_schedule(uuid,bigint,uuid,timestamptz,jsonb,boolean)',
     'public.publication_target_retry(uuid,uuid,boolean)',
-    'public.publication_targets_reset(uuid,bigint)',
+    'public.publication_targets_reset(uuid,bigint,boolean)',
     'public.publication_targets_claim(integer,integer)',
     'public.publication_target_payload(uuid,uuid)',
     'public.publication_target_checkpoint(uuid,uuid,text,jsonb,boolean,integer)',

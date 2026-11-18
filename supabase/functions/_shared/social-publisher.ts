@@ -80,9 +80,12 @@ export type PublishResult =
       /** At most 2 KB, no tokens, no publication text. */
       diagnostics: Record<string, unknown>;
       /**
-       * True only when the provider answered the irreversible call with a definitive
-       * rejection (for example 429 or 4xx), so nothing was published and an automatic
-       * retry is safe. Never set it for timeouts, network errors or 5xx.
+       * True only when the provider answered the irreversible call with one of an explicit
+       * allow-list of definitive rejections (Graph codes 4, 17, 32, 613, 9, 190, 10, 200-299,
+       * 100, 368 or HTTP 429; LinkedIn HTTP 400, 401, 403, 422, 429), so nothing was published
+       * and an automatic retry is safe: the database then resets the step to 'processing'.
+       * Never set it for Graph code 1/2, is_transient, 2207xxx subcodes, timeouts, network
+       * errors, 5xx, a missing id/urn or a non-JSON answer: those are outcome_unknown.
        */
       notPublished?: boolean;
     };

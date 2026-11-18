@@ -3,7 +3,9 @@
 //   containers  one container per image (is_carousel_item for 2+), then the CAROUSEL container;
 //               every created id is checkpointed, so a retry never creates the same one twice
 //   processing  poll status_code every 3 s until FINISHED
-//   publishing  checkpoint(side_effect_pending) then media_publish; uncertain result => outcome_unknown
+//   publishing  checkpoint(side_effect_pending) then media_publish; only an allow-listed definitive
+//               provider rejection is notPublished (the database then resets the step to
+//               'processing', so the retry polls and publishes again); anything else => outcome_unknown
 //
 // Pure TypeScript: only ctx.fetch / ctx.sleep / ctx.now / ctx.checkpoint, no Deno APIs.
 // The token travels in the Authorization header (GET) or the POST body, never in a URL.
@@ -16,6 +18,7 @@ import {
   classifyGraphFailure,
   fingerprint,
   idLike,
+  isDefinitiveGraphRejection,
   outcomeUnknown,
   type ProviderCall,
   providerCall,
@@ -28,6 +31,8 @@ const GRAPH = "https://graph.facebook.com/v27.0";
 const POLL_INTERVAL_MS = 3000;
 const REQUEST_TIMEOUT_MS = 20_000;
 const PUBLISH_TIMEOUT_MS = 30_000;
+// The irreversible call needs its whole timeout plus this margin left before the deadline.
+const PUBLISH_MARGIN_MS = 5000;
 const DEFAULT_QUOTA_RETRY = 3600;
 
 interface InstagramState {
@@ -36,7 +41,7 @@ interface InstagramState {
   container: string | null;
 }
 
-type Flag = { sideEffectStarted: boolean };
+type Flag = { sideEffectStarted: boolean; quotaUnknown: boolean };
 
 const isId = (value: unknown): value is string => typeof value === "string" && /^\d{5,30}$/u.test(value);
 
@@ -105,20 +110,30 @@ async function createContainer(
   return isId(text) ? { id: text } : { result: unreadable("containers") };
 }
 
+const positive = (value: unknown): number | null => {
+  const number = typeof value === "string" && value.trim() !== "" ? Number(value) : value;
+  return typeof number === "number" && Number.isFinite(number) && number > 0 ? number : null;
+};
+
 // Daily publishing quota (content_publishing_limit). Returns a transient failure when exhausted.
-async function checkQuota(ctx: PublishContext, ig: string): Promise<PublishResult | null> {
+// The limit is config.quota_total or config.quota_value; when it cannot be read the check fails
+// open (Instagram enforces the limit itself) and flag.quotaUnknown is added to the diagnostics.
+async function checkQuota(ctx: PublishContext, ig: string, flag: Flag): Promise<PublishResult | null> {
   const call = await graph(ctx, "containers", "GET", `/${ig}/content_publishing_limit`, { fields: "quota_usage,config" });
   if (!call.ok) return call.result;
   const first = Array.isArray(call.reply.body?.data) ? call.reply.body.data[0] : null;
-  if (!first || typeof first !== "object") return null;
-  const entry = first as Record<string, unknown>;
+  const entry = first && typeof first === "object" ? first as Record<string, unknown> : {};
   const config = entry.config && typeof entry.config === "object" ? entry.config as Record<string, unknown> : {};
   const usage = Number(entry.quota_usage);
-  const total = Number(config.quota_total);
-  if (!Number.isFinite(usage) || !Number.isFinite(total) || total <= 0 || usage < total) return null;
-  const duration = Number(config.quota_duration);
+  const total = positive(config.quota_total) ?? positive(config.quota_value);
+  if (!Number.isFinite(usage) || entry.quota_usage === null || entry.quota_usage === undefined || total === null) {
+    flag.quotaUnknown = true;
+    return null;
+  }
+  if (usage < total) return null;
+  const duration = positive(config.quota_duration);
   // quota_duration is the whole window (24 h); retry earlier, the oldest publication leaves it sooner.
-  const retry = Number.isFinite(duration) && duration > 0 ? Math.min(duration, DEFAULT_QUOTA_RETRY) : DEFAULT_QUOTA_RETRY;
+  const retry = duration !== null ? Math.min(duration, DEFAULT_QUOTA_RETRY) : DEFAULT_QUOTA_RETRY;
   return failed("rate_limited", "transient", boundedDiagnostics({ step: "containers", quota_usage: usage, quota_total: total }), retry);
 }
 
@@ -174,8 +189,9 @@ async function resumeAfterPublishing(ctx: PublishContext, state: InstagramState)
 async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
   const { target, payload } = ctx;
   const ig = target.accountExternalId;
-  if (!/^\d{1,30}$/u.test(ig)) return failed("invalid_account", "action_required", { step: "validate" });
 
+  // First of all: a previous attempt that reached the irreversible call is always an unknown
+  // outcome, whatever the account or the payload look like now.
   if (target.step === "publishing") {
     const raw = target.stepState;
     const children = Array.isArray(raw?.children) ? raw.children : [];
@@ -185,6 +201,8 @@ async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
       container: isId(raw?.container) ? raw.container : null,
     });
   }
+
+  if (!/^\d{1,30}$/u.test(ig)) return failed("invalid_account", "action_required", { step: "validate" });
 
   // 1. Validation, before any network call.
   const caption = instagramCaption(payload.text);
@@ -206,7 +224,7 @@ async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
   if (!resumeProcessing) {
     // 2. Containers.
     if (state.children.length === 0 && state.container === null) {
-      const limited = await checkQuota(ctx, ig);
+      const limited = await checkQuota(ctx, ig, flag);
       if (limited) return limited;
     }
 
@@ -254,15 +272,28 @@ async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
   const processed = await awaitFinished(ctx, "processing", [container]);
   if (processed) return processed;
 
-  // 4. Publishing: the irreversible call.
+  // 4. Publishing: the irreversible call. It needs its whole timeout: otherwise hand the target back
+  // before the guard is set (state stays as checkpointed, no network call).
+  if (ctx.deadline - ctx.now() < PUBLISH_TIMEOUT_MS + PUBLISH_MARGIN_MS) {
+    return failed("processing", "transient", { step: "publishing", reason: "deadline" }, 30);
+  }
   await ctx.checkpoint("publishing", toRecord(state), true);
   flag.sideEffectStarted = true;
   const published = await graph(ctx, "publishing", "POST", `/${ig}/media_publish`, { creation_id: container }, PUBLISH_TIMEOUT_MS);
   if (!published.ok) {
-    // Network error, timeout or 5xx: Instagram may have published. Never retry automatically.
-    if (published.uncertain) return outcomeUnknown("publishing", { reason: "no_reliable_response" });
-    // A definitive provider answer: nothing was published, so a retry is safe.
-    return published.result.outcome === "failed" ? { ...published.result, notPublished: true } : published.result;
+    // Only an allow-listed definitive rejection proves nothing was published; the database then
+    // retries from step 'processing'. Everything else (network error, timeout, 5xx, code 1/2,
+    // is_transient, 2207xxx, unlisted codes) may have published: never retry automatically.
+    if (published.result.outcome === "failed" && published.reply && isDefinitiveGraphRejection(published.reply)) {
+      return { ...published.result, notPublished: true };
+    }
+    const { http, code, subcode } = published.result.outcome === "failed" ? published.result.diagnostics : {} as Record<string, unknown>;
+    return outcomeUnknown("publishing", {
+      reason: published.reply ? "provider_answer_not_definitive" : "no_reliable_response",
+      http,
+      code,
+      subcode,
+    });
   }
   const rawId = published.reply.body?.id;
   const mediaId = typeof rawId === "number" ? String(rawId) : rawId;
@@ -281,9 +312,12 @@ async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
 }
 
 export const publishInstagram: Publisher = async (ctx) => {
-  const flag: Flag = { sideEffectStarted: false };
+  const flag: Flag = { sideEffectStarted: false, quotaUnknown: false };
   try {
-    return await run(ctx, flag);
+    const result = await run(ctx, flag);
+    return flag.quotaUnknown && result.outcome === "failed"
+      ? { ...result, diagnostics: boundedDiagnostics({ ...result.diagnostics, quota_unknown: true }) }
+      : result;
   } catch (error) {
     if (error instanceof LeaseLostError) throw error;
     // Unexpected failure: its message may embed anything, so only the class is reported.

@@ -4,18 +4,21 @@
 //   uploads     per image: initializeUpload, download the bytes, PUT them; the image URN is
 //               checkpointed when its upload completes (a retry skips finished images)
 //   processing  poll GET /images/{urn} until AVAILABLE
-//   publishing  checkpoint(side_effect_pending) then POST /posts; uncertain result => outcome_unknown
+//   publishing  checkpoint(side_effect_pending) then POST /posts; only an allow-listed definitive
+//               provider rejection (HTTP 400/401/403/422/429 with a JSON body) is notPublished (the
+//               database then resets the step to 'processing'); anything else => outcome_unknown
 //
 // Pure TypeScript: only ctx.fetch / ctx.sleep / ctx.now / ctx.checkpoint, no Deno APIs.
 
 import { failed, LeaseLostError, type PublishContext, type PublishResult, type Publisher } from "./social-publisher.ts";
-import { linkedinCommentary, normalizeText, validateLinkedinCommentary } from "./social-text.ts";
+import { LINKEDIN_COMMENTARY_MAX, linkedinCommentary, normalizeText } from "./social-text.ts";
 import {
   asciiHttpsUrl,
   boundedDiagnostics,
   classifyLinkedinFailure,
   fingerprint,
   idLike,
+  isDefinitiveLinkedinRejection,
   outcomeUnknown,
   type ProviderCall,
   providerCall,
@@ -31,9 +34,18 @@ const REQUEST_TIMEOUT_MS = 20_000;
 const DOWNLOAD_TIMEOUT_MS = 30_000;
 const UPLOAD_TIMEOUT_MS = 60_000;
 const POST_TIMEOUT_MS = 30_000;
+// The irreversible call needs its whole timeout plus this margin left before the deadline.
+const PUBLISH_MARGIN_MS = 5000;
 // Defensive cap on the image kept in memory while it is relayed (Edge Function memory).
 const MAX_DOWNLOAD_BYTES = 30 * 1024 * 1024;
 const MAX_TITLE_CHARS = 200;
+
+// What LinkedIn's Images API accepts here: content-type and the file's magic bytes must agree.
+const IMAGE_SIGNATURES: Record<string, (bytes: Uint8Array) => boolean> = {
+  "image/jpeg": (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+  "image/png": (b) => [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((v, i) => b[i] === v),
+  "image/gif": (b) => [0x47, 0x49, 0x46, 0x38].every((v, i) => b[i] === v) && (b[4] === 0x37 || b[4] === 0x39) && b[5] === 0x61,
+};
 
 interface LinkedinState {
   fp: string;
@@ -41,6 +53,8 @@ interface LinkedinState {
 }
 
 type Flag = { sideEffectStarted: boolean };
+
+const characterCount = (text: string): number => Array.from(text).length;
 
 const IMAGE_URN = /^urn:li:image:[A-Za-z0-9_-]{1,100}$/u;
 const POST_URN = /^urn:li:(?:share|ugcPost):\d{1,30}$/u;
@@ -106,14 +120,16 @@ async function download(
   ctx: PublishContext,
   url: string,
   index: number,
-): Promise<{ bytes: ArrayBuffer; contentType: string } | { result: PublishResult }> {
+): Promise<{ bytes: Uint8Array; contentType: string } | { result: PublishResult }> {
   let response: Response;
   try {
     response = await ctx.fetch(url, { method: "GET", timeoutMs: DOWNLOAD_TIMEOUT_MS });
   } catch {
     return { result: failed("provider_unavailable", "transient", { step: "uploads", index, reason: "image_download" }) };
   }
+  const discard = () => response.body?.cancel().catch(() => undefined);
   if (!response.ok) {
+    await discard();
     const transient = response.status >= 500 || response.status === 408 || response.status === 429;
     return {
       result: failed(
@@ -123,22 +139,52 @@ async function download(
       ),
     };
   }
+  const type = (response.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
+  if (!Object.hasOwn(IMAGE_SIGNATURES, type)) {
+    await discard();
+    return { result: failed("media_format", "action_required", { step: "uploads", index, reason: "content_type" }) };
+  }
   const declared = Number(response.headers.get("content-length"));
   if (Number.isFinite(declared) && declared > MAX_DOWNLOAD_BYTES) {
+    await discard();
     return { result: failed("media_too_large", "action_required", { step: "uploads", index, limit: MAX_DOWNLOAD_BYTES }) };
   }
-  let bytes: ArrayBuffer;
+
+  // Streamed with a hard cap: the read stops (and the body is cancelled) as soon as it is exceeded,
+  // so an oversized or endless body never sits in memory.
+  const reader = response.body?.getReader();
+  if (!reader) return { result: failed("media_unreadable", "action_required", { step: "uploads", index }) };
+  const chunks: Uint8Array[] = [];
+  let total = 0;
   try {
-    bytes = await response.arrayBuffer();
+    for (;;) {
+      if (ctx.now() >= ctx.deadline) {
+        await reader.cancel().catch(() => undefined);
+        return { result: transientProcessing("uploads") };
+      }
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_DOWNLOAD_BYTES) {
+        await reader.cancel().catch(() => undefined);
+        return { result: failed("media_too_large", "action_required", { step: "uploads", index, limit: MAX_DOWNLOAD_BYTES }) };
+      }
+      chunks.push(value);
+    }
   } catch {
     return { result: failed("provider_unavailable", "transient", { step: "uploads", index, reason: "image_download" }) };
   }
-  if (bytes.byteLength === 0) return { result: failed("media_unreadable", "action_required", { step: "uploads", index }) };
-  if (bytes.byteLength > MAX_DOWNLOAD_BYTES) {
-    return { result: failed("media_too_large", "action_required", { step: "uploads", index, limit: MAX_DOWNLOAD_BYTES }) };
+  if (total === 0) return { result: failed("media_unreadable", "action_required", { step: "uploads", index }) };
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
   }
-  const type = (response.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
-  return { bytes, contentType: /^image\/[a-z0-9.+-]+$/u.test(type) ? type : "application/octet-stream" };
+  if (!IMAGE_SIGNATURES[type](bytes)) {
+    return { result: failed("media_unreadable", "action_required", { step: "uploads", index, reason: "signature_mismatch" }) };
+  }
+  return { bytes, contentType: type };
 }
 
 async function uploadImage(
@@ -169,7 +215,7 @@ async function uploadImage(
     {
       method: "PUT",
       headers: { Authorization: `Bearer ${ctx.credentials.accessToken}`, "Content-Type": image.contentType },
-      body: image.bytes,
+      body: image.bytes.buffer as ArrayBuffer, // exactly sized: allocated with new Uint8Array(total)
       timeoutMs: UPLOAD_TIMEOUT_MS,
     },
     "uploads",
@@ -208,16 +254,26 @@ async function awaitAvailable(ctx: PublishContext, urns: string[]): Promise<Publ
 
 async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
   const { target, payload } = ctx;
+
+  // First of all: a previous attempt that stopped after the side-effect checkpoint may or may not
+  // have posted, whatever the account or the payload look like now.
+  if (target.step === "publishing") return outcomeUnknown("publishing", { reason: "resumed_after_publish_checkpoint" });
+
   const author = authorUrn(target.accountKind, target.accountExternalId);
   if (!author) return failed("invalid_account", "action_required", { step: "validate" });
-
-  // A previous attempt stopped after the side-effect checkpoint: the post may or may not exist.
-  if (target.step === "publishing") return outcomeUnknown("publishing", { reason: "resumed_after_publish_checkpoint" });
 
   // 1. Validation, before any network call.
   const imageFailure = validateImages("linkedin", payload.images);
   if (imageFailure) return validationResult(imageFailure, "validate");
-  const textFailure = textValidationFailure("linkedin", validateLinkedinCommentary(payload.text));
+  // The limit applies to the text actually posted: the escaped commentary (backslashes included).
+  const commentary = linkedinCommentary(payload.text);
+  const commentaryLength = characterCount(commentary);
+  const textFailure = textValidationFailure(
+    "linkedin",
+    commentaryLength > LINKEDIN_COMMENTARY_MAX
+      ? [{ code: "too_long", limit: LINKEDIN_COMMENTARY_MAX, actual: commentaryLength }]
+      : [],
+  );
   if (textFailure) return validationResult(textFailure, "validate");
   const urls: string[] = [];
   for (const image of payload.images) {
@@ -226,7 +282,6 @@ async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
     urls.push(url);
   }
 
-  const commentary = linkedinCommentary(payload.text);
   const fp = fingerprint(urls);
   const state = readState(target.stepState, fp);
   const resumeProcessing = target.step === "processing" && state.urns.length === urls.length;
@@ -262,14 +317,27 @@ async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
     isReshareDisabledByAuthor: false,
   };
 
+  // It needs its whole timeout: otherwise hand the target back before the guard is set (state stays
+  // as checkpointed, no network call).
+  if (ctx.deadline - ctx.now() < POST_TIMEOUT_MS + PUBLISH_MARGIN_MS) {
+    return failed("processing", "transient", { step: "publishing", reason: "deadline" }, 30);
+  }
   await ctx.checkpoint("publishing", toRecord(state), true);
   flag.sideEffectStarted = true;
   const created = await rest(ctx, "publishing", "POST", "/posts", post, POST_TIMEOUT_MS);
   if (!created.ok) {
-    // Network error, timeout or 5xx: the post may exist. Never retry automatically.
-    if (created.uncertain) return outcomeUnknown("publishing", { reason: "no_reliable_response" });
-    // A definitive provider answer: nothing was published, so a retry is safe.
-    return created.result.outcome === "failed" ? { ...created.result, notPublished: true } : created.result;
+    // Only an allow-listed definitive rejection proves nothing was published; the database then
+    // retries from step 'processing'. Everything else (network error, timeout, 5xx, 404, 409,
+    // 426, empty body) may have posted: never retry automatically.
+    if (created.result.outcome === "failed" && created.reply && isDefinitiveLinkedinRejection(created.reply)) {
+      return { ...created.result, notPublished: true };
+    }
+    const { http, subcode } = created.result.outcome === "failed" ? created.result.diagnostics : {} as Record<string, unknown>;
+    return outcomeUnknown("publishing", {
+      reason: created.reply ? "provider_answer_not_definitive" : "no_reliable_response",
+      http,
+      subcode,
+    });
   }
   const urn = created.reply.headers.get("x-restli-id");
   if (!urn || !POST_URN.test(urn)) {

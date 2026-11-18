@@ -10,6 +10,7 @@
 import { workerAuthorized } from "../_shared/publication-generation-store.ts";
 import { corsHeaders, jsonResponse, logSocialError, SocialError, socialFailure } from "../_shared/social-errors.ts";
 import { type Fetcher, socialFetch } from "../_shared/social-http.ts";
+import { isSupabasePublicStorageUrl } from "../_shared/social-publish-errors.ts";
 import { publishInstagram } from "../_shared/social-publish-instagram.ts";
 import { publishLinkedin } from "../_shared/social-publish-linkedin.ts";
 import {
@@ -144,7 +145,8 @@ function normalize(result: PublishResult, secret: string | null): PublishResult 
     errorKind: KINDS.includes(result.errorKind) ? result.errorKind : "transient",
     retryAfterSeconds: retry,
     diagnostics: trimDiagnostics(result.diagnostics, secret),
-    notPublished: result.notPublished === true,
+    // Only a definitive provider rejection counts; an unknown outcome is never "not published".
+    notPublished: result.notPublished === true && result.errorCode !== "outcome_unknown",
   };
 }
 
@@ -159,6 +161,7 @@ interface Run {
   sleep: (ms: number) => Promise<void>;
   publishers: Record<PublishNetwork, Publisher>;
   budgetEnd: number;
+  supabaseUrl: string;
 }
 
 type Settled = "published" | "retrying" | "needsAction" | "failed" | "leaseLost" | "unfinished";
@@ -192,8 +195,13 @@ async function processTarget(run: Run, target: ClaimedTarget): Promise<Settled> 
       result = failed("lease_expired", "transient", { reason: "worker_budget" }, 30);
     } else {
       const payload = await run.store.payload(target);
-      const resolution = await run.store.credentials(target);
-      if (!resolution.ok) {
+      // Image URLs are fetched by the networks (and by the LinkedIn publisher itself): only public
+      // objects of this Supabase project are accepted, before any credential is resolved.
+      const badImage = payload.images.findIndex((image) => !isSupabasePublicStorageUrl(image.url, run.supabaseUrl));
+      const resolution = badImage >= 0 ? null : await run.store.credentials(target);
+      if (resolution === null) {
+        result = failed("media_url_invalid", "action_required", { reason: "url_not_allowed", index: badImage });
+      } else if (!resolution.ok) {
         result = resolution.result;
       } else {
         secret = resolution.credentials.accessToken;
@@ -259,6 +267,7 @@ export function createHandler(env: Environment, fetcher: Fetcher = fetch, option
       const started = clock();
       const run: Run = {
         store: createPublicationStore(env, fetcher), fetcher, clock, sleep, publishers, budgetEnd: started + BUDGET_MS,
+        supabaseUrl: env("SUPABASE_URL") ?? "",
       };
       const summary: WorkerSummary = {
         claimed: 0, published: 0, retrying: 0, needsAction: 0, failed: 0, leaseLost: 0, unfinished: 0,
