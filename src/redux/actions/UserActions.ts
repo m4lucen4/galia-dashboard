@@ -1,6 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { UserDataProps, SupabaseError } from "../../types";
 import { supabase } from "../../helpers/supabase";
+import { USER_DATA_COLUMNS } from "../../helpers/userDataColumns";
 
 export type CreateUserProps = Omit<
   UserDataProps,
@@ -23,7 +24,7 @@ export const fetchUsers = createAsyncThunk(
     try {
       const { data: users, error } = await supabase
         .from("userData")
-        .select("*")
+        .select(USER_DATA_COLUMNS)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -61,7 +62,7 @@ export const fetchUserByUid = createAsyncThunk(
     try {
       const { data: user, error } = await supabase
         .from("userData")
-        .select("*")
+        .select(USER_DATA_COLUMNS)
         .eq("uid", uid)
         .single();
 
@@ -240,7 +241,7 @@ export const updateUser = createAsyncThunk(
 
       const { data: updatedUser, error: fetchError } = await supabase
         .from("userData")
-        .select("*")
+        .select(USER_DATA_COLUMNS)
         .eq("uid", userData.uid)
         .single();
 
@@ -366,7 +367,7 @@ export const updateProfile = createAsyncThunk(
 
       const { data: updatedUser, error: fetchError } = await supabase
         .from("userData")
-        .select("*")
+        .select(USER_DATA_COLUMNS)
         .eq("uid", userData.uid)
         .single();
 
