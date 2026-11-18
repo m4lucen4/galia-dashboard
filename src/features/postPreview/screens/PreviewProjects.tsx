@@ -51,6 +51,8 @@ export const PreviewProjects = () => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [publishDate, setPublishDate] = useState<string>("");
   const [hasDateValidationError, setHasDateValidationError] = useState(false);
+  // Only set with VITE_SOCIAL_MEDIA_VARIANTS on: why the image variants block the publication.
+  const [mediaBlockReason, setMediaBlockReason] = useState<string | null>(null);
   const [publishNow, setPublishNow] = useState(false);
   const [socialNetworks, setSocialNetworks] = useState<SocialNetworksCheck>({
     instagram: false,
@@ -212,6 +214,7 @@ export const PreviewProjects = () => {
 
     // Reset publishNow when opening modal
     setPublishNow(false);
+    setMediaBlockReason(null);
 
     // Never carry the Instagram page token in browser state; the server fills it for n8n.
     const storedInstagram = project.checkSocialNetworks?.instagram;
@@ -418,18 +421,21 @@ export const PreviewProjects = () => {
           onCancel={closeAlert}
           disabledConfirmButton={
             hasDateValidationError ||
+            !!mediaBlockReason ||
             (!socialNetworks.instagram &&
               !socialNetworks.linkedln &&
               !!publishDate)
           }
         >
           <ConfigPublish
+            project={getSelectedProject()}
             publishDate={publishDate}
             socialNetworks={socialNetworks}
             onDateChange={(newDate) => setPublishDate(newDate)}
             onSocialNetworkChange={handleSocialNetworkChange}
             onValidationChange={setHasDateValidationError}
             onPublishNowChange={setPublishNow}
+            onMediaBlockChange={setMediaBlockReason}
           />
         </Alert>
       )}

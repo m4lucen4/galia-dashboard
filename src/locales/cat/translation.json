@@ -641,7 +641,93 @@
     },
     "goToSettings": "Anar a Configuració",
     "connectionProblem": "Cal tornar a connectar: {{reason}}.",
-    "connectionExpiresBeforePublishing": "La connexió caducarà el {{date}}, abans de la data de publicació."
+    "connectionExpiresBeforePublishing": "La connexió caducarà el {{date}}, abans de la data de publicació.",
+    "mediaChecks": {
+      "title": "Comprovacions per a {{network}}",
+      "networks": {
+        "instagram": "Instagram",
+        "linkedin": "LinkedIn"
+      },
+      "imageLabel": "Imatge {{index}}",
+      "measuring": "comprovant…",
+      "measureError": "no s'ha pogut carregar per comprovar-la; revisa que la imatge continuï disponible",
+      "measureTimeout": "ha trigat més de 15 segons a carregar i no s'ha pogut comprovar",
+      "unknownFacts": "no s'ha pogut llegir el seu format o pes; per seguretat es convertirà a JPEG en publicar",
+      "variantReady": "ajustada per a aquesta xarxa ({{width}} × {{height}} px)",
+      "converting": "preparant la còpia JPEG…",
+      "conversionFailed": "no s'ha pogut preparar la còpia JPEG",
+      "corsBlocked": "el navegador no permet processar aquesta imatge; no es pot retallar ni convertir des d'aquí",
+      "retry": "Torna-ho a provar",
+      "issues": {
+        "unsupportedFormat": {
+          "instagram": "és {{format}}; es convertirà a JPEG en publicar",
+          "linkedin": "és {{format}} i LinkedIn només admet JPG, PNG i GIF; es convertirà a JPEG en publicar"
+        },
+        "tooHeavy": "pesa {{size}} i Instagram admet fins a {{limit}}; es comprimirà en publicar",
+        "widthTooSmall": "fa {{width}} px d'amplada i Instagram demana almenys {{min}} px; s'ampliarà en publicar",
+        "widthTooLarge": "fa {{width}} px d'amplada i Instagram admet fins a {{max}} px; es reduirà en publicar",
+        "tooManyPixels": "té {{pixels}} píxels i LinkedIn exigeix menys de {{limit}}; es reduirà en publicar",
+        "ratioOutOfRange": "Instagram només accepta proporcions entre 4:5 i 1,91:1 (aquesta és {{ratio}})",
+        "ratioMismatch": "en un carrusel d'Instagram totes les imatges es retallen a la proporció de la primera ({{expected}}) i aquesta és {{ratio}}",
+        "tooManyImages": "{{network}} admet com a màxim {{max}} imatges i n'hi ha {{found}}",
+        "noImages": "{{network}} necessita almenys una imatge"
+      },
+      "issuesReport": {
+        "unsupportedFormat": {
+          "instagram": "Instagram només accepta JPEG (aquesta és {{format}})",
+          "linkedin": "LinkedIn només accepta JPG, PNG i GIF (aquesta és {{format}})"
+        },
+        "tooHeavy": "pesa {{size}} i Instagram admet fins a {{limit}}",
+        "widthTooSmall": "fa {{width}} px d'amplada i Instagram demana almenys {{min}} px",
+        "widthTooLarge": "fa {{width}} px d'amplada i Instagram admet fins a {{max}} px",
+        "tooManyPixels": "té {{pixels}} píxels i LinkedIn exigeix menys de {{limit}}"
+      },
+      "imagesOk": "Les imatges compleixen els requisits de la xarxa.",
+      "adjustImages": "Ajustar imatges",
+      "textTitle": "Text",
+      "characters": "{{used}} de {{limit}} caràcters",
+      "hashtags": "{{used}} de {{limit}} hashtags",
+      "mentions": "{{used}} de {{limit}} mencions",
+      "textTooLong": {
+        "instagram": "El text supera el límit de {{limit}} caràcters d'Instagram.",
+        "linkedin": "El text supera els {{limit}} caràcters que admet LinkedIn."
+      },
+      "instagramLimitsProvisional": "Els límits de text d'Instagram són orientatius i es confirmaran abans de publicar.",
+      "blocked": {
+        "variantsLoading": "Carregant els ajustos d'imatge desats…",
+        "variantsError": "No s'han pogut carregar els ajustos d'imatge. Tanca la configuració i torna-ho a provar.",
+        "measuring": "Comprovant les imatges de {{network}}…",
+        "measureError": "No es poden comprovar {{found}} imatge(s) de {{network}}. Revisa que continuïn disponibles i prem «Torna-ho a provar».",
+        "tooManyImages": "{{network}} no admet tantes imatges. Desmarca'n algunes a la publicació.",
+        "noImages": "{{network}} necessita almenys una imatge seleccionada.",
+        "crop": "{{found}} imatge(s) de {{network}} necessiten retall. Prem «Ajustar imatges» per continuar.",
+        "converting": "Preparant {{found}} imatge(s) de {{network}}…",
+        "conversionFailed": "No s'han pogut preparar {{found}} imatge(s) de {{network}}. Prem «Torna-ho a provar» o usa «Ajustar imatges»."
+      },
+      "dialog": {
+        "title": "Ajustar imatges per a {{network}}",
+        "description": {
+          "instagram": "Tria una proporció per a tot el carrusel i enquadra cada imatge. Es desarà una còpia JPEG per a Instagram; l'original no canvia.",
+          "linkedin": "Enquadra cada imatge si ho necessites. Es desarà una còpia JPEG per a LinkedIn; l'original no canvia."
+        },
+        "ratio": "Proporció",
+        "firstRatio": "Primera imatge ({{ratio}})",
+        "original": "Original",
+        "free": "Lliure",
+        "freeRatio": "Proporció lliure ({{ratio}})",
+        "carouselNote": "Totes les imatges del carrusel usen la mateixa proporció.",
+        "zoom": "Zoom",
+        "revert": "Tornar a l'original",
+        "saving": "Desant la imatge {{current}} de {{total}}…",
+        "save": "Desar ajustos",
+        "errors": {
+          "load": "No s'ha pogut carregar una de les imatges.",
+          "render": "No s'ha pogut generar la còpia d'una de les imatges.",
+          "save": "No s'ha pogut desar l'ajust. Torna-ho a provar.",
+          "remove": "No s'ha pogut eliminar l'ajust. Torna-ho a provar."
+        }
+      }
+    }
   },
   "profile": {
     "sections": {

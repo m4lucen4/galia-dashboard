@@ -4,6 +4,7 @@ import {
   InstagramBusinessPage,
   InstagramPageInfo,
   LinkedInPageInfo,
+  PreviewProjectDataProps,
   SocialNetworksCheck,
 } from "../../../../types";
 import { useLinkedInPages } from "../../../../hooks/useLinkedInPages";
@@ -12,8 +13,14 @@ import { useInstagramPages } from "../../../../hooks/useInstagramPages";
 import { CheckSocialNetwork } from "./CheckSocialNetwork";
 import { LinkedlnSelectPage } from "./LinkedlnSelectPage";
 import { InstagramSelectPage } from "./InstagramSelectPage";
+import { NetworkMediaPanel } from "./NetworkMediaPanel";
+import { ImageAdjustDialog } from "./ImageAdjustDialog";
+import { MEDIA_NETWORKS, useMediaChecks, type MediaBlocker } from "./useMediaChecks";
+import type { SocialNetwork } from "../../helpers/socialMediaRules";
 
 interface ConfigPublishProps {
+  /** The publication being configured: its images and text feed the per-network checks. */
+  project?: PreviewProjectDataProps | null;
   publishDate: string;
   socialNetworks: SocialNetworksCheck;
   onDateChange: (newDate: string) => void;
@@ -23,6 +30,11 @@ interface ConfigPublishProps {
   ) => void;
   onValidationChange?: (hasError: boolean) => void;
   onPublishNowChange?: (publishNow: boolean) => void;
+  /**
+   * Only with VITE_SOCIAL_MEDIA_VARIANTS on: why the selected networks cannot be published yet
+   * (images that need a crop, conversions pending...); null when nothing blocks.
+   */
+  onMediaBlockChange?: (reason: string | null) => void;
 }
 
 // The target never carries a token: a DB trigger fills it server-side for n8n.
@@ -35,12 +47,14 @@ const toInstagramTarget = (page: InstagramBusinessPage): InstagramPageInfo => ({
 });
 
 export const ConfigPublish: React.FC<ConfigPublishProps> = ({
+  project = null,
   publishDate,
   socialNetworks,
   onDateChange,
   onSocialNetworkChange,
   onValidationChange,
   onPublishNowChange,
+  onMediaBlockChange,
 }) => {
   const { t } = useTranslation();
   const { linkedin, isFetchingLinkedinPages, isCheckingConnection: isCheckingLinkedin } =
@@ -234,6 +248,45 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
       ? socialNetworks.linkedln.id
       : "";
 
+  const mediaActive = useMemo(
+    () => ({
+      instagram: isInstagramChecked && instagram.isConnected,
+      linkedin: isLinkedInChecked && linkedin.isConnected,
+    }),
+    [isInstagramChecked, instagram.isConnected, isLinkedInChecked, linkedin.isConnected],
+  );
+  const media = useMediaChecks(project, mediaActive);
+  const [adjusting, setAdjusting] = useState<SocialNetwork | null>(null);
+
+  const blockReason = useMemo(() => {
+    for (const network of MEDIA_NETWORKS) {
+      const blocker: MediaBlocker | null = media.networks[network].blocker;
+      if (blocker) {
+        return t(`previewProjects.mediaChecks.blocked.${blocker.code}`, {
+          network: t(`previewProjects.mediaChecks.networks.${network}`),
+          found: blocker.count ?? 0,
+        });
+      }
+    }
+    return null;
+  }, [media.networks, t]);
+
+  useEffect(() => {
+    onMediaBlockChange?.(blockReason);
+  }, [blockReason, onMediaBlockChange]);
+
+  useEffect(() => () => onMediaBlockChange?.(null), [onMediaBlockChange]);
+
+  const renderMediaPanel = (network: SocialNetwork) => (
+    <NetworkMediaPanel
+      media={media.networks[network]}
+      stats={media.stats}
+      variantsEnabled={media.enabled}
+      onAdjust={() => setAdjusting(network)}
+      onRetry={(url) => media.retryRow(network, url)}
+    />
+  );
+
   return (
     <div className="min-w-0 space-y-6 font-[Hanken_Grotesk] text-[#010000]">
       {/* Instant Publish Checkbox */}
@@ -296,6 +349,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
               onChange={handleInstagramPageChange}
             />
           )}
+          {project && mediaActive.instagram && renderMediaPanel("instagram")}
           <CheckSocialNetwork
             id="linkedln"
             network="linkedin"
@@ -316,8 +370,24 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
               onChange={handleLinkedInPageChange}
             />
           )}
+          {project && mediaActive.linkedin && renderMediaPanel("linkedin")}
         </div>
+        {blockReason && (
+          <p role="alert" className="mt-3 px-2 text-xs leading-relaxed text-amber-800">
+            {blockReason}
+          </p>
+        )}
       </div>
+      {media.enabled && project && media.previewId && adjusting && (
+        <ImageAdjustDialog
+          network={adjusting}
+          previewId={media.previewId}
+          rows={media.networks[adjusting].rows}
+          onSaved={media.applyVariant}
+          onRemoveVariant={media.removeVariant}
+          onClose={() => setAdjusting(null)}
+        />
+      )}
     </div>
   );
 };

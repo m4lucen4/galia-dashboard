@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   HeartIcon,
   ChatBubbleLeftIcon,
@@ -8,11 +8,9 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-import {
-  PreviewProjectDataProps,
-  UserDataProps,
-  ProjectImageData,
-} from "../../../types";
+import { PreviewProjectDataProps, UserDataProps } from "../../../types";
+import { publishedImages } from "../helpers/publicationImages";
+import { publishedText } from "../helpers/socialText";
 
 interface IProjectInstagramPostProps {
   project: PreviewProjectDataProps;
@@ -24,16 +22,9 @@ export default function InstagramPost({
   user,
 }: IProjectInstagramPostProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [pendingImages, setPendingImages] = useState<ProjectImageData[]>([]);
-
-  useEffect(() => {
-    if (project?.image_data) {
-      const filteredImages = project.image_data.filter(
-        (image) => image.status === "pending"
-      );
-      setPendingImages(filteredImages);
-    }
-  }, [project]);
+  // Same images and text as the publish payload: what you see is what gets published.
+  const pendingImages = useMemo(() => publishedImages(project), [project]);
+  const text = useMemo(() => publishedText(project), [project]);
 
   const hasMultipleImages = pendingImages.length > 1;
 
@@ -142,7 +133,7 @@ export default function InstagramPost({
             {user?.first_name}
           </a>
           <span className="whitespace-pre-wrap">
-            {project?.description_rich}
+            {text}
           </span>
         </div>
         <a href="#" className="text-sm text-gray-500 block mb-1">

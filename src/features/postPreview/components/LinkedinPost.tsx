@@ -8,12 +8,10 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-import {
-  PreviewProjectDataProps,
-  UserDataProps,
-  ProjectImageData,
-} from "../../../types";
-import { useState, useEffect } from "react";
+import { PreviewProjectDataProps, UserDataProps } from "../../../types";
+import { publishedImages } from "../helpers/publicationImages";
+import { publishedText } from "../helpers/socialText";
+import { useState, useMemo } from "react";
 
 interface IProjectLinkedlnPostProps {
   project: PreviewProjectDataProps;
@@ -25,16 +23,9 @@ export default function LinkedInPost({
   user,
 }: IProjectLinkedlnPostProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [pendingImages, setPendingImages] = useState<ProjectImageData[]>([]);
-
-  useEffect(() => {
-    if (project?.image_data) {
-      const filteredImages = project.image_data.filter(
-        (image) => image.status === "pending"
-      );
-      setPendingImages(filteredImages);
-    }
-  }, [project]);
+  // Same images and text as the publish payload: what you see is what gets published.
+  const pendingImages = useMemo(() => publishedImages(project), [project]);
+  const text = useMemo(() => publishedText(project), [project]);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % pendingImages.length);
@@ -89,7 +80,7 @@ export default function LinkedInPost({
 
       <div className="px-3 pb-2">
         <p className="text-sm text-gray-800 mb-3 whitespace-pre-wrap">
-          {project?.description_rich}
+          {text}
         </p>
       </div>
 
