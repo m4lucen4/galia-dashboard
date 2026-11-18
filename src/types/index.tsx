@@ -100,7 +100,8 @@ export type InstagramPageInfo = {
   id: string;
   name: string;
   type: "BUSINESS";
-  accessToken: string;
+  // Legacy rows may carry it; new selections never do (a DB trigger fills it server-side for n8n).
+  accessToken?: string;
   facebookPageId?: string;
   facebookPageName?: string;
 };
@@ -171,20 +172,59 @@ export type SupabaseError = {
   status?: number;
 };
 
+export type SocialConnectionNetwork = "linkedin" | "instagram";
+
+export type SocialConnectionStatus =
+  | "connected"
+  | "expiring"
+  | "expired"
+  | "revoked"
+  | "error"
+  | "disconnected";
+
+// Publishable page as stored in social_connections.pages (never contains tokens).
+export type SocialConnectionPage = {
+  id: string;
+  name: string;
+  type?: string;
+  vanityName?: string;
+  username?: string;
+  facebookPageId?: string;
+  facebookPageName?: string;
+};
+
+// Connection health read from social_connections or returned by social-connect-* functions.
+export type SocialConnection = {
+  id: string;
+  network: SocialConnectionNetwork;
+  status: SocialConnectionStatus;
+  statusReason: string | null;
+  accountId: string | null;
+  accountName: string | null;
+  pages: SocialConnectionPage[];
+  expiresAt: string | null;
+  accessExpiresAt: string | null;
+  refreshExpiresAt: string | null;
+  dataAccessExpiresAt: string | null;
+  connectedAt: string | null;
+  lastCheckedAt: string | null;
+};
+
 export type LinkedInPage = {
   id: string;
   name: string;
-  vanityName: string;
-  logoUrl: string | null;
+  vanityName?: string;
+  logoUrl?: string | null;
   type: "PERSON" | "ORGANIZATION";
 };
 
 export type LinkedInData = {
   isConnected: boolean;
+  status?: SocialConnectionStatus;
+  statusReason?: string | null;
   personId?: string;
   userName?: string;
   expiresAt?: string;
-  warning?: string;
   adminPages?: LinkedInPage[];
   pagesFetchedAt?: string;
 };
@@ -192,24 +232,26 @@ export type LinkedInData = {
 export type InstagramBusinessPage = {
   facebook_page_id: string;
   facebook_page_name: string;
-  facebook_page_category: string;
+  facebook_page_category?: string;
   instagram_business_account_id: string;
   instagram_username: string;
   instagram_name: string;
-  instagram_profile_picture: string;
-  instagram_followers_count: number;
-  instagram_media_count: number;
-  instagram_biography: string;
-  page_access_token: string;
-  permissions: string[];
+  instagram_profile_picture?: string;
+  instagram_followers_count?: number;
+  instagram_media_count?: number;
+  instagram_biography?: string;
+  // Never sent to the browser anymore; kept optional for legacy shapes.
+  page_access_token?: string;
+  permissions?: string[];
 };
 
 export type InstagramData = {
   isConnected: boolean;
+  status?: SocialConnectionStatus;
+  statusReason?: string | null;
   userId?: string;
   userName?: string;
   expiresAt?: string;
-  warning?: string;
   businessPages?: InstagramBusinessPage[];
   pagesFetchedAt?: string;
 };

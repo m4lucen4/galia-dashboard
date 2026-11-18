@@ -352,6 +352,77 @@
     "managePaymentMethod": "Gestionar método de pago",
     "activateSubscription": "Proceder al pago"
   },
+  "socialConnections": {
+    "status": {
+      "connected": "Conectado",
+      "expiring": "Caduca pronto el {{date}}",
+      "expiringNoDate": "Caduca pronto",
+      "expired": "Caducado",
+      "reconnect": "Hay que volver a conectar: {{reason}}",
+      "disconnected": "Desconectado"
+    },
+    "reconnect": "Volver a conectar",
+    "refreshPages": "Actualizar páginas",
+    "expiredOn": "Caducó el {{date}}",
+    "messages": {
+      "linkedinConnected": "LinkedIn conectado correctamente",
+      "linkedinDisconnected": "LinkedIn desconectado correctamente",
+      "instagramConnected": "Instagram conectado correctamente",
+      "instagramDisconnected": "Instagram desconectado correctamente",
+      "pagesRefreshed": "Páginas actualizadas correctamente"
+    },
+    "callback": {
+      "title": "Autorización de {{network}}",
+      "processing": "Procesando la autorización de {{network}}...",
+      "success": "¡{{network}} conectado correctamente!",
+      "failed": "No se ha podido conectar {{network}}: {{reason}}",
+      "authorizationFailed": "La autorización ha fallado: {{reason}}",
+      "missingParams": "Faltan parámetros obligatorios."
+    },
+    "reasons": {
+      "unknown": "la conexión ya no es válida",
+      "token_expired": "el acceso ha caducado",
+      "token_revoked": "has revocado el acceso desde la red social",
+      "token_invalid": "la red social ha rechazado el acceso",
+      "refresh_failed": "no se ha podido renovar el acceso",
+      "permissions_missing": "faltan permisos",
+      "permission_revoked": "se ha retirado un permiso",
+      "data_access_expired": "ha caducado el acceso a los datos de la cuenta",
+      "password_changed": "se ha cambiado la contraseña de la cuenta",
+      "session_invalidated": "la sesión de la red social se ha cerrado",
+      "app_removed": "se ha eliminado la aplicación de tu cuenta",
+      "check_failed": "no se ha podido comprobar la conexión",
+      "provider_error": "la red social ha devuelto un error",
+      "user_disconnected": "desconectado por ti",
+      "permission_missing": "faltan permisos para publicar"
+    },
+    "errors": {
+      "unknown": "Ha ocurrido un error inesperado. Inténtalo de nuevo.",
+      "retryHint": "Puedes volver a intentarlo.",
+      "initiate": "No se ha podido iniciar la autorización.",
+      "state_mismatch": "La verificación de seguridad ha fallado. Vuelve a conectar desde Ajustes.",
+      "unauthorized": "Tu sesión ha caducado. Vuelve a iniciar sesión.",
+      "invalid_request": "La solicitud no es válida.",
+      "invalid_code": "El código de autorización no es válido o ya se ha usado. Vuelve a conectar.",
+      "redirect_mismatch": "La dirección de retorno no coincide. Vuelve a conectar.",
+      "not_connected": "No hay una cuenta conectada.",
+      "permissions_missing": "Faltan permisos. Acepta todos los permisos al conectar.",
+      "no_pages": "No se han encontrado páginas para publicar.",
+      "provider_error": "La red social ha devuelto un error.",
+      "provider_unavailable": "La red social no está disponible en este momento.",
+      "rate_limited": "Demasiados intentos. Espera unos minutos.",
+      "not_configured": "La conexión no está disponible por un problema de configuración.",
+      "server_error": "Error del servidor.",
+      "network_error": "No se ha podido contactar con el servidor. Revisa tu conexión.",
+      "read_failed": "No se ha podido comprobar el estado de la conexión.",
+      "invalid_response": "Respuesta no válida del servidor.",
+      "forbidden": "No tienes permiso para esta acción.",
+      "provider_rejected": "La red social ha rechazado la autorización. Vuelve a conectar.",
+      "token_invalid": "El acceso a la red social ya no es válido. Vuelve a conectar.",
+      "permission_missing": "Faltan permisos. Acepta todos los permisos al conectar.",
+      "internal_error": "Error del servidor."
+    }
+  },
   "publications": {
     "noPublications": "No hay publicaciones disponibles.",
     "title": "Publicaciones",
@@ -569,7 +640,10 @@
       "week": "Semana",
       "today": "Hoy",
       "noScheduledPosts": "No hay publicaciones programadas ni publicadas para mostrar en el calendario."
-    }
+    },
+    "goToSettings": "Ir a Ajustes",
+    "connectionProblem": "Hay que volver a conectar: {{reason}}.",
+    "connectionExpiresBeforePublishing": "La conexión caducará el {{date}}, antes de la fecha de publicación."
   },
   "profile": {
     "sections": {

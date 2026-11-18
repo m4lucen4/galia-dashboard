@@ -2,9 +2,9 @@ import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
   checkInstagramConnection,
-  fetchInstagramPages,
 } from "../redux/actions/SocialNetworksActions";
 
+// Connection health and pages come from social_connections (no tokens in the browser).
 export const useInstagramPages = () => {
   const dispatch = useAppDispatch();
   const { instagram, checkInstagramRequest, fetchInstagramPagesRequest } =
@@ -13,15 +13,6 @@ export const useInstagramPages = () => {
   useEffect(() => {
     dispatch(checkInstagramConnection());
   }, [dispatch]);
-
-  useEffect(() => {
-    if (
-      instagram.isConnected &&
-      (!instagram.businessPages || instagram.businessPages.length === 0)
-    ) {
-      dispatch(fetchInstagramPages({ isConnected: instagram.isConnected }));
-    }
-  }, [dispatch, instagram.isConnected, instagram.businessPages]);
 
   return {
     instagram,

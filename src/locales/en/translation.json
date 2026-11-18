@@ -349,6 +349,77 @@
     "managePaymentMethod": "Manage payment method",
     "activateSubscription": "Proceed to payment"
   },
+  "socialConnections": {
+    "status": {
+      "connected": "Connected",
+      "expiring": "Expires soon on {{date}}",
+      "expiringNoDate": "Expires soon",
+      "expired": "Expired",
+      "reconnect": "Reconnect needed: {{reason}}",
+      "disconnected": "Disconnected"
+    },
+    "reconnect": "Reconnect",
+    "refreshPages": "Refresh pages",
+    "expiredOn": "Expired on {{date}}",
+    "messages": {
+      "linkedinConnected": "LinkedIn connected successfully",
+      "linkedinDisconnected": "LinkedIn disconnected successfully",
+      "instagramConnected": "Instagram connected successfully",
+      "instagramDisconnected": "Instagram disconnected successfully",
+      "pagesRefreshed": "Pages refreshed successfully"
+    },
+    "callback": {
+      "title": "{{network}} authorization",
+      "processing": "Processing {{network}} authorization...",
+      "success": "{{network}} connected successfully!",
+      "failed": "Could not connect {{network}}: {{reason}}",
+      "authorizationFailed": "Authorization failed: {{reason}}",
+      "missingParams": "Missing required parameters."
+    },
+    "reasons": {
+      "unknown": "the connection is no longer valid",
+      "token_expired": "access has expired",
+      "token_revoked": "you revoked access from the social network",
+      "token_invalid": "the social network rejected the access",
+      "refresh_failed": "access could not be renewed",
+      "permissions_missing": "permissions are missing",
+      "permission_revoked": "a permission was withdrawn",
+      "data_access_expired": "access to the account data has expired",
+      "password_changed": "the account password was changed",
+      "session_invalidated": "the social network session was closed",
+      "app_removed": "the app was removed from your account",
+      "check_failed": "the connection could not be checked",
+      "provider_error": "the social network returned an error",
+      "user_disconnected": "disconnected by you",
+      "permission_missing": "publishing permissions are missing"
+    },
+    "errors": {
+      "unknown": "An unexpected error occurred. Please try again.",
+      "retryHint": "You can try again.",
+      "initiate": "Could not start the authorization.",
+      "state_mismatch": "The security check failed. Reconnect from Settings.",
+      "unauthorized": "Your session has expired. Please sign in again.",
+      "invalid_request": "The request is not valid.",
+      "invalid_code": "The authorization code is invalid or was already used. Reconnect.",
+      "redirect_mismatch": "The return address does not match. Reconnect.",
+      "not_connected": "There is no connected account.",
+      "permissions_missing": "Permissions are missing. Accept all permissions when connecting.",
+      "no_pages": "No pages to publish to were found.",
+      "provider_error": "The social network returned an error.",
+      "provider_unavailable": "The social network is not available right now.",
+      "rate_limited": "Too many attempts. Wait a few minutes.",
+      "not_configured": "The connection is unavailable because of a configuration problem.",
+      "server_error": "Server error.",
+      "network_error": "Could not reach the server. Check your connection.",
+      "read_failed": "Could not check the connection status.",
+      "invalid_response": "Invalid response from the server.",
+      "forbidden": "You are not allowed to do this.",
+      "provider_rejected": "The social network rejected the authorization. Connect again.",
+      "token_invalid": "Access to the social network is no longer valid. Connect again.",
+      "permission_missing": "Missing permissions. Accept every permission when connecting.",
+      "internal_error": "Server error."
+    }
+  },
   "publications": {
     "noPublications": "No publications available.",
     "title": "Publications",
@@ -486,7 +557,6 @@
     "cancel": "Cancel",
     "addSelected": "Add selected",
     "imagesSelected": "images selected",
-    "selectImages": "Select images",
     "viewAnalytics": "View analytics"
   },
   "analytics": {
@@ -567,7 +637,10 @@
       "week": "Week",
       "today": "Today",
       "noScheduledPosts": "There are no scheduled or published posts to show on the calendar."
-    }
+    },
+    "goToSettings": "Go to Settings",
+    "connectionProblem": "Reconnect needed: {{reason}}.",
+    "connectionExpiresBeforePublishing": "The connection will expire on {{date}}, before the publication date."
   },
   "profile": {
     "sections": {

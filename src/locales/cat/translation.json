@@ -350,6 +350,77 @@
     "managePaymentMethod": "Gestionar mètode de pagament",
     "activateSubscription": "Procedir al pagament"
   },
+  "socialConnections": {
+    "status": {
+      "connected": "Connectat",
+      "expiring": "Caduca aviat el {{date}}",
+      "expiringNoDate": "Caduca aviat",
+      "expired": "Caducat",
+      "reconnect": "Cal tornar a connectar: {{reason}}",
+      "disconnected": "Desconnectat"
+    },
+    "reconnect": "Tornar a connectar",
+    "refreshPages": "Actualitzar pàgines",
+    "expiredOn": "Va caducar el {{date}}",
+    "messages": {
+      "linkedinConnected": "LinkedIn connectat correctament",
+      "linkedinDisconnected": "LinkedIn desconnectat correctament",
+      "instagramConnected": "Instagram connectat correctament",
+      "instagramDisconnected": "Instagram desconnectat correctament",
+      "pagesRefreshed": "Pàgines actualitzades correctament"
+    },
+    "callback": {
+      "title": "Autorització de {{network}}",
+      "processing": "Processant l'autorització de {{network}}...",
+      "success": "{{network}} connectat correctament!",
+      "failed": "No s'ha pogut connectar {{network}}: {{reason}}",
+      "authorizationFailed": "L'autorització ha fallat: {{reason}}",
+      "missingParams": "Falten paràmetres obligatoris."
+    },
+    "reasons": {
+      "unknown": "la connexió ja no és vàlida",
+      "token_expired": "l'accés ha caducat",
+      "token_revoked": "has revocat l'accés des de la xarxa social",
+      "token_invalid": "la xarxa social ha rebutjat l'accés",
+      "refresh_failed": "no s'ha pogut renovar l'accés",
+      "permissions_missing": "falten permisos",
+      "permission_revoked": "s'ha retirat un permís",
+      "data_access_expired": "ha caducat l'accés a les dades del compte",
+      "password_changed": "s'ha canviat la contrasenya del compte",
+      "session_invalidated": "la sessió de la xarxa social s'ha tancat",
+      "app_removed": "s'ha eliminat l'aplicació del teu compte",
+      "check_failed": "no s'ha pogut comprovar la connexió",
+      "provider_error": "la xarxa social ha retornat un error",
+      "user_disconnected": "desconnectat per tu",
+      "permission_missing": "falten permisos per publicar"
+    },
+    "errors": {
+      "unknown": "S'ha produït un error inesperat. Torna-ho a provar.",
+      "retryHint": "Pots tornar-ho a provar.",
+      "initiate": "No s'ha pogut iniciar l'autorització.",
+      "state_mismatch": "La verificació de seguretat ha fallat. Torna a connectar des de Configuració.",
+      "unauthorized": "La teva sessió ha caducat. Torna a iniciar sessió.",
+      "invalid_request": "La sol·licitud no és vàlida.",
+      "invalid_code": "El codi d'autorització no és vàlid o ja s'ha fet servir. Torna a connectar.",
+      "redirect_mismatch": "L'adreça de retorn no coincideix. Torna a connectar.",
+      "not_connected": "No hi ha cap compte connectat.",
+      "permissions_missing": "Falten permisos. Accepta tots els permisos en connectar.",
+      "no_pages": "No s'han trobat pàgines per publicar.",
+      "provider_error": "La xarxa social ha retornat un error.",
+      "provider_unavailable": "La xarxa social no està disponible en aquest moment.",
+      "rate_limited": "Massa intents. Espera uns minuts.",
+      "not_configured": "La connexió no està disponible per un problema de configuració.",
+      "server_error": "Error del servidor.",
+      "network_error": "No s'ha pogut contactar amb el servidor. Revisa la teva connexió.",
+      "read_failed": "No s'ha pogut comprovar l'estat de la connexió.",
+      "invalid_response": "Resposta no vàlida del servidor.",
+      "forbidden": "No tens permís per fer aquesta acció.",
+      "provider_rejected": "La xarxa social ha rebutjat l’autorització. Torna a connectar.",
+      "token_invalid": "L’accés a la xarxa social ja no és vàlid. Torna a connectar.",
+      "permission_missing": "Falten permisos. Accepta tots els permisos en connectar.",
+      "internal_error": "Error del servidor."
+    }
+  },
   "publications": {
     "noPublications": "No hi ha publicacions disponibles.",
     "title": "Publicacions",
@@ -487,7 +558,6 @@
     "cancel": "Cancel·lar",
     "addSelected": "Afegir seleccionades",
     "imagesSelected": "imatges seleccionades",
-    "selectImages": "Selecciona imatges",
     "viewAnalytics": "Veure analítiques"
   },
   "analytics": {
@@ -568,7 +638,10 @@
       "week": "Setmana",
       "today": "Avui",
       "noScheduledPosts": "No hi ha publicacions programades ni publicades per mostrar al calendari."
-    }
+    },
+    "goToSettings": "Anar a Configuració",
+    "connectionProblem": "Cal tornar a connectar: {{reason}}.",
+    "connectionExpiresBeforePublishing": "La connexió caducarà el {{date}}, abans de la data de publicació."
   },
   "profile": {
     "sections": {

@@ -46,47 +46,27 @@ export const Settings = () => {
   const [showPagesSection, setShowPagesSection] = useState(false);
   const [showInstagramPagesSection, setShowInstagramPagesSection] =
     useState(false);
-  const [instagramPagesFetched, setInstagramPagesFetched] = useState(false);
 
+  // Health and pages come from social_connections; no tokens are handled here.
   useEffect(() => {
     dispatch(checkLinkedInConnection());
     dispatch(checkInstagramConnection());
   }, [dispatch]);
 
-  useEffect(() => {
-    if (
-      linkedin.isConnected &&
-      showPagesSection &&
-      (!linkedin.adminPages || linkedin.adminPages?.length === 0)
-    ) {
-      dispatch(fetchLinkedInPages({ isConnected: linkedin.isConnected }));
-    }
-  }, [dispatch, linkedin.isConnected, showPagesSection, linkedin.adminPages]);
-
-  useEffect(() => {
-    if (
-      instagram.isConnected &&
-      showInstagramPagesSection &&
-      !instagramPagesFetched &&
-      !fetchInstagramPagesRequest.inProgress
-    ) {
-      setInstagramPagesFetched(true);
-      dispatch(fetchInstagramPages({ isConnected: instagram.isConnected }));
-    }
-  }, [
-    dispatch,
-    instagram.isConnected,
-    showInstagramPagesSection,
-    instagramPagesFetched,
-    fetchInstagramPagesRequest.inProgress,
-  ]);
-
-  // Reset cuando se cierra la sección
-  useEffect(() => {
-    if (!showInstagramPagesSection) {
-      setInstagramPagesFetched(false);
-    }
-  }, [showInstagramPagesSection]);
+  // Server error codes already arrive mapped to localized messages.
+  const socialErrors = Array.from(
+    new Set(
+      [
+        checkLinkedInRequest,
+        disconnectLinkedInRequest,
+        checkInstagramRequest,
+        disconnectInstagramInRequest,
+      ]
+        .filter((request) => !request.inProgress && !request.ok)
+        .map((request) => request.messages)
+        .filter(Boolean)
+    )
+  );
 
   const handleConnectLinkedIn = () => {
     dispatch(initiateLinkedInAuth());
@@ -104,6 +84,14 @@ export const Settings = () => {
   const handleDisconnectInstagram = () => {
     dispatch(disconnectInstagram());
     setShowAlertInstagramDisconneted(false);
+  };
+
+  const handleRefreshLinkedInPages = () => {
+    dispatch(fetchLinkedInPages());
+  };
+
+  const handleRefreshInstagramPages = () => {
+    dispatch(fetchInstagramPages());
   };
 
   const handleTogglePagesSection = () => {
@@ -176,6 +164,17 @@ export const Settings = () => {
             />
           </div>
 
+          {socialErrors.length > 0 && (
+            <div
+              role="alert"
+              className="mt-4 space-y-1 rounded-2xl bg-[#ff522a]/10 p-4 text-sm text-[#9f231b]"
+            >
+              {socialErrors.map((message) => (
+                <p key={message}>{message}</p>
+              ))}
+            </div>
+          )}
+
           {/* Instagram Business Pages Section */}
           {instagram.isConnected && (
             <InstagramPages
@@ -183,6 +182,7 @@ export const Settings = () => {
               fetchRequest={fetchInstagramPagesRequest}
               showPagesSection={showInstagramPagesSection}
               onToggleSection={handleToggleInstagramPagesSection}
+              onRefresh={handleRefreshInstagramPages}
             />
           )}
 
@@ -193,6 +193,7 @@ export const Settings = () => {
               fetchRequest={fetchLinkedInPagesRequest}
               showPagesSection={showPagesSection}
               onToggleSection={handleTogglePagesSection}
+              onRefresh={handleRefreshLinkedInPages}
             />
           )}
         </SettingsSection>
