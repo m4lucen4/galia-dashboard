@@ -1,6 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ChangePasswordProps, LoginProps } from "../../types";
 import { supabase } from "../../helpers/supabase";
+import { USER_DATA_COLUMNS } from "../../helpers/userDataColumns";
 import i18n from "../../i18n";
 
 interface AppError {
@@ -26,7 +27,7 @@ export const login = createAsyncThunk(
 
       const { data: userData, error: userError } = await supabase
         .from("userData")
-        .select("*")
+        .select(USER_DATA_COLUMNS)
         .eq("uid", data.user.id)
         .single();
 
@@ -73,7 +74,7 @@ export const checkAuthState = createAsyncThunk(
 
       const { data: userData, error: userError } = await supabase
         .from("userData")
-        .select("*")
+        .select(USER_DATA_COLUMNS)
         .eq("uid", data.session.user.id)
         .single();
 
