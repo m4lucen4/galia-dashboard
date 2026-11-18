@@ -2,6 +2,8 @@
 // one with its network publisher and records the result through publication_target_finish.
 //
 // Deployed but NOT scheduled until the cutover (S21, T8): nothing calls it yet and n8n still publishes.
+// Cron (20261119000200) and the entry function publish-publication wake it; both authenticate with the
+// worker secret.
 //
 // Safety (S11): a target whose irreversible call may have happened is never retried automatically.
 // The publisher checkpoints side_effect_pending before that call; any failure afterwards becomes
@@ -13,8 +15,9 @@ import { type Fetcher, socialFetch } from "../_shared/social-http.ts";
 import { isSupabasePublicStorageUrl } from "../_shared/social-publish-errors.ts";
 import { publishInstagram } from "../_shared/social-publish-instagram.ts";
 import { publishLinkedin } from "../_shared/social-publish-linkedin.ts";
+import { sendPublicationNotice } from "../_shared/social-publication-notice.ts";
 import {
-  type ClaimedTarget, createPublicationStore, type Environment, type PublicationStore,
+  type ClaimedTarget, createPublicationStore, type Environment, type PublicationStore, type TargetNotice,
 } from "../_shared/social-publication-store.ts";
 import {
   failed, LeaseLostError, type PublishContext, type PublishErrorKind, type PublishNetwork, type Publisher,
@@ -31,6 +34,7 @@ export const LEASE_MARGIN_MS = 20_000;
 // A target that cannot get at least this much time is handed back instead of started.
 export const MIN_TARGET_MS = 15_000;
 const MAX_BATCHES = 10;
+const NOTICE_SWEEP_LIMIT = 20;
 const FETCH_TIMEOUT_MS = 10_000;
 const FINISH_RETRY_MS = 500;
 // publication_target_finish accepts 2048 bytes of jsonb text; stay below with margin.
@@ -40,6 +44,8 @@ export interface WorkerOptions {
   clock?: () => number;
   sleep?: (ms: number) => Promise<void>;
   publishers?: Record<PublishNetwork, Publisher>;
+  /** Sends the failure email (default: Resend). Must resolve false instead of throwing. */
+  sendNotice?: (notice: TargetNotice) => Promise<boolean>;
 }
 
 export interface WorkerSummary {
@@ -52,6 +58,9 @@ export interface WorkerSummary {
   /** Targets whose result could not be recorded (database unreachable); lease recovery handles them. */
   unfinished: number;
   budgetReached: boolean;
+  /** Failure emails (needs_action / failed) sent and not sent (the claim is released and retried later). */
+  emailsSent: number;
+  emailsFailed: number;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -162,6 +171,8 @@ interface Run {
   publishers: Record<PublishNetwork, Publisher>;
   budgetEnd: number;
   supabaseUrl: string;
+  sendNotice: (notice: TargetNotice) => Promise<boolean>;
+  emails: { sent: number; failed: number };
 }
 
 type Settled = "published" | "retrying" | "needsAction" | "failed" | "leaseLost" | "unfinished";
@@ -179,6 +190,53 @@ async function finishWithRetry(run: Run, target: ClaimedTarget, result: PublishR
     // The result (maybe a real post) must be recorded: one more try with the very same value.
     await run.sleep(FINISH_RETRY_MS);
     return await run.store.finish(target, result, diagnostics);
+  }
+}
+
+// Failure email of one target (S1, S10). Never throws: a failure is logged and counted, and the claim is
+// released so the sweep (or the next run) retries it. Nothing is claimed after the time budget: the target
+// stays owed and the next run's sweep sends it.
+async function notifyTarget(run: Run, targetId: string): Promise<"sent" | "failed" | "none"> {
+  if (run.clock() >= run.budgetEnd) return "none";
+  try {
+    const notice = await run.store.claimNotice(targetId);
+    if (!notice) return "none";
+    let sent = false;
+    try {
+      sent = await run.sendNotice(notice);
+    } catch (error) {
+      logSocialError(SCOPE, error);
+    }
+    if (sent) {
+      run.emails.sent++;
+      return "sent";
+    }
+    run.emails.failed++;
+    try {
+      await run.store.releaseNotice(targetId, notice.status);
+    } catch (error) {
+      logSocialError(SCOPE, error);
+    }
+    return "failed";
+  } catch (error) {
+    logSocialError(SCOPE, error);
+    return "none";
+  }
+}
+
+// Targets whose notice is still owed: a send that failed earlier, or a terminal status reached without a
+// finish (lease recovery). Stops at the first failed send (the mail service is down or unconfigured).
+async function sweepNotices(run: Run): Promise<void> {
+  let due: string[];
+  try {
+    due = await run.store.noticesDue(NOTICE_SWEEP_LIMIT);
+  } catch (error) {
+    logSocialError(SCOPE, error);
+    return;
+  }
+  for (const targetId of due) {
+    if (run.clock() >= run.budgetEnd) break;
+    if (await notifyTarget(run, targetId) === "failed") break;
   }
 }
 
@@ -239,6 +297,7 @@ async function processTarget(run: Run, target: ClaimedTarget): Promise<Settled> 
 
   try {
     const outcome = await finishWithRetry(run, target, normalize(result, secret));
+    if (outcome.status === "needs_action" || outcome.status === "failed") await notifyTarget(run, target.targetId);
     return FINISH_COUNTS[outcome.status];
   } catch (error) {
     if (error instanceof LeaseLostError) return "leaseLost";
@@ -255,6 +314,7 @@ export function createHandler(env: Environment, fetcher: Fetcher = fetch, option
   const clock = options.clock ?? Date.now;
   const sleep = options.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
   const publishers = options.publishers ?? { instagram: publishInstagram, linkedin: publishLinkedin };
+  const sendNotice = options.sendNotice ?? ((notice: TargetNotice) => sendPublicationNotice(env, fetcher, notice));
 
   return async (request: Request): Promise<Response> => {
     if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -267,11 +327,11 @@ export function createHandler(env: Environment, fetcher: Fetcher = fetch, option
       const started = clock();
       const run: Run = {
         store: createPublicationStore(env, fetcher), fetcher, clock, sleep, publishers, budgetEnd: started + BUDGET_MS,
-        supabaseUrl: env("SUPABASE_URL") ?? "",
+        supabaseUrl: env("SUPABASE_URL") ?? "", sendNotice, emails: { sent: 0, failed: 0 },
       };
       const summary: WorkerSummary = {
         claimed: 0, published: 0, retrying: 0, needsAction: 0, failed: 0, leaseLost: 0, unfinished: 0,
-        budgetReached: false,
+        budgetReached: false, emailsSent: 0, emailsFailed: 0,
       };
 
       for (let batch = 0; batch < MAX_BATCHES; batch++) {
@@ -294,6 +354,9 @@ export function createHandler(env: Environment, fetcher: Fetcher = fetch, option
         for (const target of targets) summary[await processTarget(run, target)]++;
         if (targets.length < CLAIM_LIMIT) break;
       }
+      await sweepNotices(run);
+      summary.emailsSent = run.emails.sent;
+      summary.emailsFailed = run.emails.failed;
       return jsonResponse(summary);
     } catch (error) {
       logSocialError(SCOPE, error);

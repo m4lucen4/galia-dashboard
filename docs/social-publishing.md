@@ -2,7 +2,7 @@
 
 Publishing a publication (`projectsPreview` row) to the social networks the user connected is moving from n8n to Supabase. This document describes the new pipeline. The migration plan and its status live in `odd/tasks/social-publishing-migration.md`.
 
-> **Status:** phase 1 (database foundation) and phase 4 (publishers, worker). n8n still publishes in production until the cutover phase. The phase 1 migration is not applied to production yet, so nothing calls these RPCs there. The worker `process-publication-targets` is written and deployable, but it is **deployed and not scheduled until the cutover** (no cron, no caller); until then it never runs.
+> **Status:** phase 1 (database foundation), phase 4 (publishers, worker) and phase 5 server (entry function, browser read access, failure emails). n8n still publishes in production until the cutover phase. The phase 1 migration is applied; the worker `process-publication-targets` is deployed and **not scheduled until the cutover** (no cron). The phase 5 migrations are split: `20261119000100` (read access, realtime, notices) is applied **before the client ships**; `20261119000200` (cron) and `20261119000300` (publishDate conversion) are **prepared and applied only at the cutover** (see "Phase 5: entry function, read access, notices and cutover").
 
 ## Model
 
@@ -13,7 +13,7 @@ One publication has **one target per selected network**. Each target is publishe
 | `publication_targets` | One row per publication and network. Only one current row per pair (`archived_at is null`); archived rows are history. |
 | `publication_target_attempts` | Content-free log of each attempt: outcome, error code and kind, bounded diagnostics. |
 
-Both tables are service_role only (RLS on, no `anon`/`authenticated` grants). They never store tokens or credentials.
+Writes are service_role only. Since `20261119000100` the people who may read the publication can also `select` both tables through RLS (see "Browser read access"); `anon` has no access. They never store tokens or credentials.
 
 ### Target states
 
@@ -107,7 +107,7 @@ Every write is fenced by the `leaseToken` returned by `claim`; a stale worker ge
 ### Error codes raised
 
 
-`invalid_request`, `forbidden`, `conflict`, `invalid_project`, `run_at_out_of_range`, `in_progress`, `already_published`, `not_retryable`, `confirmation_required` (retry, schedule and reset over an unknown outcome), `lease_lost`.
+`invalid_request`, `forbidden`, `conflict`, `invalid_project`, `run_at_out_of_range`, `in_progress`, `already_published`, `not_retryable`, `confirmation_required` (retry, schedule and reset over an unknown outcome), `lease_lost`. The entry function maps the first ten to its own closed codes (see below).
 
 ## Legacy projection
 
@@ -176,10 +176,14 @@ Resolved with the service role from `publication_targets.owner_id` and `network`
 1. `social_connection_for_user(ownerId, network)`: no connection or `disconnected` → `not_connected`; `expired`, `revoked` or `error` → `connection_expired` (diagnostics: status and reason code); `connected` and `expiring` continue. Both are `action_required`: the user reconnects in Settings and retries.
 2. `social_credentials_get(connectionId)`: Instagram → the `page_access` credential whose `externalId` = the target's `accountExternalId`; none → `page_not_authorized` (`action_required`: the page is no longer authorized, reconnect and select it again). LinkedIn → the `user_access` credential (none → `not_connected`).
 
+### Failure emails
+
+After each `publication_target_finish` that answers `needs_action` or `failed`, the worker calls `publication_target_claim_notice(target)` and, when it returns a recipient, sends the email through Resend (see "Failure emails" in the phase 5 section). A failed send is logged and counted, the claim is released with `publication_target_release_notice`, and nothing here ever throws or changes the target. After the claim loop the worker also sweeps `publication_targets_notice_due(20)`: notices owed because a send failed earlier or because the terminal status was reached without a finish (lease recovery turning a dead run into `outcome_unknown`). The sweep stops at the first failed send (mail service down or unconfigured) and nothing is claimed after the time budget is spent (the next run sends it). Extra environment: `RESEND_API_KEY`, optional `APP_BASE_URL`.
+
 ### Answer
 
 ```json
-{"claimed": 3, "published": 1, "retrying": 1, "needsAction": 1, "failed": 0, "leaseLost": 0, "unfinished": 0, "budgetReached": false}
+{"claimed": 3, "published": 1, "retrying": 1, "needsAction": 1, "failed": 0, "leaseLost": 0, "unfinished": 0, "budgetReached": false, "emailsSent": 1, "emailsFailed": 0}
 ```
 
 `retrying` = the target went back to `pending` (transient, includes targets handed back for lack of time), `needsAction` = `needs_action` (including `outcome_unknown`), `failed` = `failed`. The count follows the status `publication_target_finish` answered, so a transient failure that the SQL turned into `outcome_unknown` counts as `needsAction`. A claim failure before any work answers 500 `{code: "internal_error"}`.
@@ -215,3 +219,80 @@ Resolved with the service role from `publication_targets.owner_id` and `network`
 | `internal_error` | transient | Unexpected failure inside the worker or a publisher. |
 
 Also emitted by the publishers in their current form (kinds as in the source, `_shared/social-publish-*.ts`; re-sync this table when they change): `provider_rejected` (permanent, the network refused the request without a specific reason), `provider_response_invalid` (transient, unreadable answer), `api_version_unsupported` (permanent, LinkedIn 426), `invalid_account` (action_required, the stored account id is not valid), `media_url_invalid` (action_required, an image URL is not a valid https URL, or the worker refused it because it is not a public object of this Supabase project), `media_too_large` and `media_unreadable` (action_required, LinkedIn image download: over 30 MB, empty, or bytes that do not match the content-type).
+
+## Phase 5: entry function, read access, notices and cutover
+
+Server side of the new client (behind `VITE_SOCIAL_PUBLISHING_EDGE`, S23). Everything here is dormant until that switch is on: nothing in the current client calls it.
+
+### Entry function `publish-publication`
+
+`supabase/functions/publish-publication/index.ts` (support in `_shared/social-publication-entry.ts`). `verify_jwt = false` in `supabase/config.toml`: the handler validates identity itself.
+
+- `POST` only (`OPTIONS` answers CORS like `iterate-publication`, anything else 405). Header `Authorization: Bearer <user JWT>`; the user id comes from Supabase Auth `GET /auth/v1/user` (never a decoded JWT); missing, malformed or rejected token → 401 `unauthorized`.
+- Body JSON of at most **8 KB** (declared length and streamed bytes are both capped, UTF-8 strict). Unknown keys and unknown actions are `invalid_request`.
+- All writes and access decisions are service-role RPCs (`publication_targets_owner`, `_schedule`, `publication_target_retry`, `publication_targets_reset`); the browser never writes the tables.
+
+| `action` | Body | Effect |
+|---|---|---|
+| `schedule` | `previewId` (bigint as string, number accepted), `requestId` (uuid), `runAt` (ISO 8601 instant **with** `Z` or an offset; a wall-clock without offset is refused), `targets` (1-2 of `{network, accountKind, accountExternalId, accountName?}`), `acknowledgeUnknownOutcome?` | `publication_targets_schedule` with `runAt` normalised to UTC; the database enforces the range (5 minutes in the past to 366 days ahead). |
+| `publishNow` | Same without `runAt` | `runAt` = now, then wakes the worker. |
+| `retry` | `targetId` (uuid), `acknowledgeUnknownOutcome?` | `publication_target_retry`, then wakes the worker. |
+| `reset` | `previewId`, `acknowledgeUnknownOutcome?` | `publication_targets_reset` (unschedule / publish again). |
+
+`acknowledgeUnknownOutcome` is `true` only after the user checked the network (outcome_unknown); without it the database answers `confirmation_required`.
+
+**Account checks (`schedule`, `publishNow`).** After `publication_targets_owner(actor, preview)` proved the actor may act on the publication (a stranger gets `forbidden` and learns nothing about connections), the function reads the **publication owner's** connection per requested network (`social_connection_for_user`, no tokens): a missing connection or a status other than `connected`/`expiring` is `account_not_connected`; Instagram needs `accountKind = instagram_business` and `accountExternalId` among the connection's pages; LinkedIn `linkedin_person` needs the connection's own account id (or the member entry of its pages) and `linkedin_organization` an `ORGANIZATION` page; anything else is `account_not_allowed`. The stored account name replaces the one the browser sent.
+
+**Worker wake.** After a successful `publishNow` or `retry` the function posts to `<SUPABASE_URL>/functions/v1/process-publication-targets` with `X-Social-Worker-Secret` = `SOCIAL_WORKER_SECRET` (64 hex), fire and forget (`EdgeRuntime.waitUntil` when available, 145 s timeout like the generation wake, https only). A missing secret, a transport error or a slow worker never changes the answer; the persisted target and the cron job are the recovery path.
+
+**Answer.** `200 {"targets": [...]}` (the `private.publication_targets_summary` shape: `id, network, format, status, runAt, attempts, maxAttempts, errorCode, errorKind, accountKind, accountName, externalPostId, permalink, publishedAt`) or `{code, message, retryable}` with a Spanish message. Provider and database text never cross the boundary; logs carry the code and the error class only, never a token.
+
+| Code | HTTP | Retryable | When |
+|---|---|---|---|
+| `invalid_request` | 400 (405 for a wrong method) | no | Malformed body, ids, `runAt`, targets; unknown action or key; body over 8 KB. |
+| `unauthorized` | 401 | no | No, malformed or rejected bearer token. |
+| `forbidden` | 403 | no | Unknown or foreign publication or target (indistinguishable). |
+| `conflict` | 409 | no | The request id or target belongs to another publication. |
+| `invalid_project` | 422 | no | The publication has no owner. |
+| `run_at_out_of_range` | 422 | no | `runAt` outside the allowed window. |
+| `in_progress` | 409 | yes | A target is running right now. |
+| `already_published` | 409 | no | Scheduling over a published target (reset first). |
+| `not_retryable` | 409 | no | The target is not `failed`/`needs_action`, or is archived. |
+| `confirmation_required` | 409 | no | An `outcome_unknown` target needs `acknowledgeUnknownOutcome`. |
+| `account_not_connected` | 409 | no | The owner has no usable connection for that network. |
+| `account_not_allowed` | 422 | no | The account is not one of the connection's pages. |
+| `internal_error` | 500 | yes | Anything else (Auth or database unavailable, unexpected SQL error, malformed answer). |
+
+Environment: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY` (Auth `/user`), `SOCIAL_WORKER_SECRET` (wake).
+
+### Browser read access
+
+Migration `20261119000100_publication_targets_read_and_notices.sql` (apply **before the client ships**; it changes nothing n8n reads or writes).
+
+- `authenticated` gets `select` on `publication_targets` and `publication_target_attempts` under RLS policies that reuse the `projectsPreview` rule: `private.preview_access_allowed(owner, project)` evaluated on the target's preview (admin, publication owner, project owner or assigned editor; `coalesce(..., false)`, so no NULL leaks). Strangers, users without a session and `anon` read nothing; every write stays service_role only.
+- Table-level `select` is deliberate. No secret is stored: tokens live in `social_credentials`; `step_state` holds container ids and image URNs; `diagnostics` hold HTTP status, provider codes and trace ids; `lease_token` is a fencing token that only works through service_role RPCs. The client should still select explicit columns and ignore `lease_token`, `lease_expires_at`, `step`, `step_state` and `diagnostics`, and filter `archived_at is null` for the current targets.
+- The RPC `publication_targets_owner(actor, preview)` (service_role only, used by the entry function) authorizes the actor with the same rule as the other actor RPCs and returns the publication owner: `forbidden` for unknown or foreign publications, `invalid_project` without owner.
+
+### Realtime
+
+The same migration adds both tables to the `supabase_realtime` publication when it exists and is not `FOR ALL TABLES` (plain Postgres in tests has none; a `FOR ALL TABLES` publication already includes them). Subscribers receive changes only for rows their RLS policy allows. UPDATE and DELETE carry the default replica identity (primary key); a status change arrives as the new row. `lease_token` is part of the row (see above).
+
+### Failure emails
+
+Columns `notified_status` / `notified_at` on `publication_targets` (check: null or `needs_action`/`failed`, both set or both null). A trigger clears them whenever the target's status is not `needs_action`/`failed` (retry, running, published, new schedule), so a later failure notifies again. Failures that existed when the migration ran are marked notified (no email for history).
+
+| RPC (service_role) | Behaviour |
+|---|---|
+| `publication_target_claim_notice(target)` | Returns `{email, firstName, language, network, status, errorCode, previewId, title}` once per terminal problem status of a **current** (not archived) target and marks it notified; `null` otherwise (not terminal, archived, already notified). The recipient is the **publication owner** (they own the connection to fix). An owner without email is closed as notified and returns `null`. |
+| `publication_target_release_notice(target, status)` | Clears the claim when it still equals `status` (the send failed); returns whether it did. |
+| `publication_targets_notice_due(limit)` | Ids of current targets in `needs_action`/`failed` with no matching notice, updated in the last 3 days (older problems are history). Used by the worker sweep. |
+
+Email: Resend, `Mocklab <noreply@mocklab.app>` (`_shared/social-publication-notice.ts`), Spanish by default, English when `userData.language` starts with `en`, Catalan with `ca`/`cat`. Subject and body name the network, the publication title (escaped, single line) and the reason in plain words with what to do, grouped from the error code (connection, account no longer authorized, permission, restriction, images, text, unknown outcome, network busy, rejected, generic fallback for unknown codes), and link to `${APP_BASE_URL}/preview-projects` (`https://app.mocklab.app` when unset). Failures (missing `RESEND_API_KEY`, Resend error, exception) are logged by status or error class only and never throw.
+
+### Cutover-only migrations (prepared, not applied)
+
+Applied by the cutover (T8), in this order, after n8n is stopped and `process-publication-targets` and `publish-publication` are deployed with their secrets:
+
+1. **`20261119000300_publish_date_real_instant.sql` (S9).** Converts `projectsPreview."publishDate"` of rows in state `scheduled` or `preview` with a non-null date and **no** `publication_targets` row from "Madrid wall-clock labelled +00" to the real instant: `(publishDate at time zone 'UTC')::timestamp at time zone 'Europe/Madrid'` (winter `10:00+00` becomes `09:00Z`, summer `10:00+00` becomes `08:00Z`; a non-existent spring-forward time moves forward one hour and an ambiguous autumn time resolves to the standard-time occurrence). Rows with targets already hold a real instant (written by `publication_targets_schedule`) and `published` rows keep their historical value. `publication_targets.run_at` needs no conversion: targets are only created from a real instant, and no target exists before the cutover besides tests. **Run it once**, right after n8n is stopped and **before** the client switch is turned on. Idempotent: each converted row is recorded in `private.publish_date_conversions` with its previous value (also the rollback record); a second run converts nothing.
+2. **Client switch on** (`VITE_SOCIAL_PUBLISHING_EDGE`).
+3. **`20261119000200_publication_targets_cron.sql`.** Cron job `publication-targets-worker` every minute (`* * * * *`) calling `process-publication-targets` through `pg_net` with the Vault secret `social_worker_secret` (reused, created only if missing) and the Vault secret `publication_worker_url` (created if missing), same pattern and guards as `20261118000400`. Overlapping runs are safe (leases with `SKIP LOCKED`). Rollback: `select cron.unschedule('publication-targets-worker');`.

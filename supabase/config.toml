@@ -34,3 +34,8 @@ entrypoint = "./functions/social-credentials-check/index.ts"
 [functions.process-publication-targets]
 verify_jwt = false
 entrypoint = "./functions/process-publication-targets/index.ts"
+
+# Entry of the new publishing pipeline: validates the user session through Auth /user itself.
+[functions.publish-publication]
+verify_jwt = false
+entrypoint = "./functions/publish-publication/index.ts"
