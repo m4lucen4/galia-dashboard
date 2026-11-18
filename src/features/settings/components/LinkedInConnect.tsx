@@ -2,13 +2,15 @@ import { AddIcon, CancelIcon, LinkedInIcon } from "../../../components/icons";
 import { truncateText } from "../../../helpers";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { LinkedInData } from "../../../types";
+import { SocialConnectionStatusBadge } from "./SocialConnectionStatusBadge";
+import {
+  formatMadridDate,
+  needsReconnect,
+} from "../helpers/socialConnectionStatus";
 
 interface LinkedInConnectProps {
-  linkedin: {
-    isConnected: boolean;
-    userName?: string;
-    expiresAt?: string;
-  };
+  linkedin: LinkedInData;
   checkLinkedInRequest: {
     inProgress: boolean;
   };
@@ -77,26 +79,42 @@ export const LinkedInConnect: React.FC<LinkedInConnectProps> = ({
         )}
       </div>
       <p className="mt-4 text-base font-medium">LinkedIn</p>
-      <p className="text-xs text-[#010000]/65">
-        {checkLinkedInRequest.inProgress ? (
-          <span className="text-[#010000]/60">
-            {" "}
-            {t("settings.checkingConnection")}
-          </span>
-        ) : linkedin.isConnected ? (
-          <span className="text-[#365640]">
-            {t("settings.connectedAs")}{" "}
-            {linkedin.userName ? truncateText(linkedin.userName, 15) : ""}
-          </span>
-        ) : (
-          <span className="text-[#9f231b]">{t("settings.notConnected")}</span>
-        )}
-      </p>
-      {linkedin.isConnected && linkedin.expiresAt && (
-        <p className="text-xs text-[#010000]/60 mt-1">
-          {t("settings.validUntil")}{" "}
-          {new Date(linkedin.expiresAt).toLocaleDateString()}
+      {checkLinkedInRequest.inProgress ? (
+        <p className="text-xs text-[#010000]/60">
+          {t("settings.checkingConnection")}
         </p>
+      ) : (
+        <SocialConnectionStatusBadge
+          status={linkedin.status}
+          statusReason={linkedin.statusReason}
+          expiresAt={linkedin.expiresAt}
+        />
+      )}
+      {!checkLinkedInRequest.inProgress && linkedin.isConnected && linkedin.userName && (
+        <p className="text-xs text-[#010000]/65">
+          {t("settings.connectedAs")} {truncateText(linkedin.userName, 15)}
+        </p>
+      )}
+      {!checkLinkedInRequest.inProgress && linkedin.status === "connected" && linkedin.expiresAt && (
+        <p className="mt-1 text-xs text-[#010000]/60">
+          {t("settings.validUntil")} {formatMadridDate(linkedin.expiresAt)}
+        </p>
+      )}
+      {!checkLinkedInRequest.inProgress && linkedin.status === "expired" && linkedin.expiresAt && (
+        <p className="mt-1 text-xs text-[#010000]/60">
+          {t("socialConnections.expiredOn", {
+            date: formatMadridDate(linkedin.expiresAt),
+          })}
+        </p>
+      )}
+      {!checkLinkedInRequest.inProgress && needsReconnect(linkedin.status) && (
+        <button
+          type="button"
+          onClick={onConnect}
+          className="mt-3 rounded-full border border-[#010000]/30 px-4 py-1.5 text-xs font-medium text-[#010000] hover:bg-[#010000]/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#010000]"
+        >
+          {t("socialConnections.reconnect")}
+        </button>
       )}
     </div>
   );

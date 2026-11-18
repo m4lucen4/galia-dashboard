@@ -1,6 +1,14 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { InstagramIcon, LinkedInIcon } from "../../../../components/icons";
+import { SocialConnectionStatus } from "../../../../types";
+import {
+  formatMadridDate,
+  isBrokenConnection,
+  parsePublishDate,
+  reasonTranslationKey,
+} from "../../../settings/helpers/socialConnectionStatus";
 
 interface CheckSocialNetworkProps {
   id: string;
@@ -10,6 +18,9 @@ interface CheckSocialNetworkProps {
   isDateValid: boolean;
   publishDate: string;
   loading: boolean;
+  status?: SocialConnectionStatus;
+  statusReason?: string | null;
+  expiresAt?: string;
   onChange: (checked: boolean) => void;
 }
 
@@ -21,6 +32,9 @@ export const CheckSocialNetwork: React.FC<CheckSocialNetworkProps> = ({
   isDateValid,
   publishDate,
   loading,
+  status,
+  statusReason,
+  expiresAt,
   onChange,
 }) => {
   const { t } = useTranslation();
@@ -29,6 +43,16 @@ export const CheckSocialNetwork: React.FC<CheckSocialNetworkProps> = ({
   const networkName = network === "instagram" ? "Instagram" : "LinkedIn";
   const connectionKey =
     network === "instagram" ? "noInstagramConnection" : "noLinkedlnConnection";
+
+  const isBroken = isBrokenConnection(status);
+
+  // The connection stops working before the selected publication date.
+  const expiresBeforePublishing = (() => {
+    if (status !== "expiring" || !expiresAt) return false;
+    const expiry = new Date(expiresAt);
+    const publishAt = parsePublishDate(publishDate);
+    return !!publishAt && !Number.isNaN(expiry.getTime()) && expiry < publishAt;
+  })();
 
   return (
     <div
@@ -48,7 +72,7 @@ export const CheckSocialNetwork: React.FC<CheckSocialNetworkProps> = ({
         }`}
         checked={isChecked}
         onChange={(e) => onChange(e.target.checked)}
-        disabled={!isDateValid || !isConnected || loading}
+        disabled={!isDateValid || (!isConnected && !isChecked) || loading}
       />
       <label
         htmlFor={id}
@@ -63,9 +87,29 @@ export const CheckSocialNetwork: React.FC<CheckSocialNetworkProps> = ({
         />
         {networkName}
       </label>
-      {!isConnected && !!publishDate && (
+      {!isConnected && !!publishDate && !loading && (
         <span className="ml-7 min-w-0 text-xs leading-relaxed text-red-700 sm:ml-auto sm:pl-3">
-          {t(`previewProjects.${connectionKey}`)}
+          {isBroken
+            ? t("previewProjects.connectionProblem", {
+                reason: t(reasonTranslationKey(statusReason)),
+              })
+            : t(`previewProjects.${connectionKey}`)}{" "}
+          <Link to="/settings" className="font-medium underline">
+            {t("previewProjects.goToSettings")}
+          </Link>
+        </span>
+      )}
+      {isConnected && isChecked && expiresBeforePublishing && (
+        <span
+          role="alert"
+          className="ml-7 min-w-0 text-xs leading-relaxed text-[#8a5a00] sm:ml-auto sm:pl-3"
+        >
+          {t("previewProjects.connectionExpiresBeforePublishing", {
+            date: formatMadridDate(expiresAt),
+          })}{" "}
+          <Link to="/settings" className="font-medium underline">
+            {t("previewProjects.goToSettings")}
+          </Link>
         </span>
       )}
     </div>

@@ -1,6 +1,7 @@
 import React, { useMemo, useEffect, ChangeEvent, useState } from "react";
 import { InputField } from "../../../../components/shared/ui/InputField";
 import {
+  InstagramBusinessPage,
   InstagramPageInfo,
   LinkedInPageInfo,
   SocialNetworksCheck,
@@ -24,6 +25,15 @@ interface ConfigPublishProps {
   onPublishNowChange?: (publishNow: boolean) => void;
 }
 
+// The target never carries a token: a DB trigger fills it server-side for n8n.
+const toInstagramTarget = (page: InstagramBusinessPage): InstagramPageInfo => ({
+  id: page.instagram_business_account_id,
+  name: page.instagram_username,
+  type: "BUSINESS",
+  facebookPageId: page.facebook_page_id,
+  facebookPageName: page.facebook_page_name,
+});
+
 export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   publishDate,
   socialNetworks,
@@ -33,8 +43,13 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   onPublishNowChange,
 }) => {
   const { t } = useTranslation();
-  const { linkedin, isFetchingLinkedinPages } = useLinkedInPages();
-  const { instagram, isFetchingInstagramPages } = useInstagramPages();
+  const { linkedin, isFetchingLinkedinPages, isCheckingConnection: isCheckingLinkedin } =
+    useLinkedInPages();
+  const {
+    instagram,
+    isFetchingInstagramPages,
+    isCheckingConnection: isCheckingInstagram,
+  } = useInstagramPages();
 
   const [publishNow, setPublishNow] = useState(false);
 
@@ -153,14 +168,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
     if (checked) {
       if (instagram.businessPages && instagram.businessPages.length > 0) {
         const defaultPage = instagram.businessPages[0];
-        onSocialNetworkChange("instagram", {
-          id: defaultPage.instagram_business_account_id,
-          name: defaultPage.instagram_username,
-          type: "BUSINESS",
-          accessToken: defaultPage.page_access_token,
-          facebookPageId: defaultPage.facebook_page_id,
-          facebookPageName: defaultPage.facebook_page_name,
-        } as InstagramPageInfo);
+        onSocialNetworkChange("instagram", toInstagramTarget(defaultPage));
       } else {
         onSocialNetworkChange("instagram");
       }
@@ -176,14 +184,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
     );
 
     if (selectedPage) {
-      onSocialNetworkChange("instagram", {
-        id: selectedPage.instagram_business_account_id,
-        name: selectedPage.instagram_username,
-        type: "BUSINESS",
-        accessToken: selectedPage.page_access_token,
-        facebookPageId: selectedPage.facebook_page_id,
-        facebookPageName: selectedPage.facebook_page_name,
-      } as InstagramPageInfo);
+      onSocialNetworkChange("instagram", toInstagramTarget(selectedPage));
     }
   };
 
@@ -283,7 +284,10 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
             isDateValid={isDateValid}
             publishDate={publishDate}
             onChange={handleInstagramChange}
-            loading={isFetchingInstagramPages}
+            loading={isFetchingInstagramPages || isCheckingInstagram}
+            status={instagram.status}
+            statusReason={instagram.statusReason}
+            expiresAt={instagram.expiresAt}
           />
           {isInstagramChecked && instagram.isConnected && (
             <InstagramSelectPage
@@ -300,7 +304,10 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
             isDateValid={isDateValid}
             publishDate={publishDate}
             onChange={handleLinkedInChange}
-            loading={isFetchingLinkedinPages}
+            loading={isFetchingLinkedinPages || isCheckingLinkedin}
+            status={linkedin.status}
+            statusReason={linkedin.statusReason}
+            expiresAt={linkedin.expiresAt}
           />
           {isLinkedInChecked && linkedin.isConnected && (
             <LinkedlnSelectPage

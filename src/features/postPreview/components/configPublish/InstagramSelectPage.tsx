@@ -5,7 +5,6 @@ interface InstagramPage {
   instagram_business_account_id: string;
   instagram_username: string;
   facebook_page_name: string;
-  page_access_token: string;
   facebook_page_id: string;
 }
 

@@ -12,6 +12,7 @@ interface InstagramPagesProps {
   };
   showPagesSection: boolean;
   onToggleSection: () => void;
+  onRefresh: () => void;
 }
 
 export const InstagramPages: React.FC<InstagramPagesProps> = ({
@@ -19,6 +20,7 @@ export const InstagramPages: React.FC<InstagramPagesProps> = ({
   fetchRequest,
   showPagesSection,
   onToggleSection,
+  onRefresh,
 }) => {
   const { t } = useTranslation();
 
@@ -48,6 +50,14 @@ export const InstagramPages: React.FC<InstagramPagesProps> = ({
             <span className="text-xs text-[#010000]/65">
               {t("settings.whereCanPublishInstagramPages")}
             </span>
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={fetchRequest.inProgress}
+              className="text-xs font-medium text-[#010000]/80 underline underline-offset-2 hover:text-[#010000] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#010000]"
+            >
+              {t("socialConnections.refreshPages")}
+            </button>
           </div>
 
           {fetchRequest.inProgress ? (
@@ -64,11 +74,17 @@ export const InstagramPages: React.FC<InstagramPagesProps> = ({
                   key={page.instagram_business_account_id}
                   className="flex flex-wrap items-center gap-y-3 p-3 bg-[#d8e4d6]/50 rounded-2xl border border-[#010000]/15"
                 >
-                  <img
-                    src={page.instagram_profile_picture}
-                    alt={page.instagram_name}
-                    className="h-8 w-8 rounded-full mr-3"
-                  />
+                  {page.instagram_profile_picture ? (
+                    <img
+                      src={page.instagram_profile_picture}
+                      alt={page.instagram_name}
+                      className="h-8 w-8 rounded-full mr-3"
+                    />
+                  ) : (
+                    <div className="h-8 w-8 rounded-full flex items-center justify-center mr-3 bg-[#010000]/10 text-[#010000]/80">
+                      {page.instagram_name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1 break-words">
                     <p className="text-sm font-medium text-[#010000]">
                       @{page.instagram_username}
@@ -76,15 +92,22 @@ export const InstagramPages: React.FC<InstagramPagesProps> = ({
                     <p className="text-xs text-[#010000]/65">
                       {page.instagram_name}
                     </p>
-                    <div className="flex items-center space-x-3 text-xs text-[#010000]/60 mt-1">
-                      <span>
-                        {page.instagram_followers_count?.toLocaleString()}{" "}
-                        {t("settings.followers")}
-                      </span>
-                      <span>
-                        {page.instagram_media_count} {t("settings.posts")}
-                      </span>
-                    </div>
+                    {(page.instagram_followers_count !== undefined ||
+                      page.instagram_media_count !== undefined) && (
+                      <div className="flex items-center space-x-3 text-xs text-[#010000]/60 mt-1">
+                        {page.instagram_followers_count !== undefined && (
+                          <span>
+                            {page.instagram_followers_count.toLocaleString()}{" "}
+                            {t("settings.followers")}
+                          </span>
+                        )}
+                        {page.instagram_media_count !== undefined && (
+                          <span>
+                            {page.instagram_media_count} {t("settings.posts")}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-[#010000]/65">

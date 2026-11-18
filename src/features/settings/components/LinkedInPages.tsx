@@ -12,6 +12,7 @@ interface LinkedInPagesProps {
   };
   showPagesSection: boolean;
   onToggleSection: () => void;
+  onRefresh: () => void;
 }
 
 export const LinkedInPages: React.FC<LinkedInPagesProps> = ({
@@ -19,6 +20,7 @@ export const LinkedInPages: React.FC<LinkedInPagesProps> = ({
   fetchRequest,
   showPagesSection,
   onToggleSection,
+  onRefresh,
 }) => {
   const { t } = useTranslation();
 
@@ -48,6 +50,14 @@ export const LinkedInPages: React.FC<LinkedInPagesProps> = ({
             <span className="text-xs text-[#010000]/65">
               {t("settings.whereCanPublishPages")}
             </span>
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={fetchRequest.inProgress}
+              className="text-xs font-medium text-[#010000]/80 underline underline-offset-2 hover:text-[#010000] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#010000]"
+            >
+              {t("socialConnections.refreshPages")}
+            </button>
           </div>
 
           {fetchRequest.inProgress ? (

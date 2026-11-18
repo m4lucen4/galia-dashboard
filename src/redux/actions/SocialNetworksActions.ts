@@ -1,5 +1,15 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { FunctionsHttpError } from "@supabase/supabase-js";
+import i18n from "../../i18n";
 import { supabase } from "../../helpers/supabase";
+import {
+  InstagramBusinessPage,
+  LinkedInPage,
+  SocialConnection,
+  SocialConnectionNetwork,
+  SocialConnectionPage,
+  SocialConnectionStatus,
+} from "../../types";
 
 const LINKEDIN_CLIENT_ID = import.meta.env.VITE_LINKEDIN_CLIENT_ID;
 const LINKEDIN_REDIRECT_URI =
@@ -12,6 +22,234 @@ const INSTAGRAM_APP_ID = import.meta.env.VITE_INSTAGRAM_APP_ID;
 const INSTAGRAM_REDIRECT_URI =
   import.meta.env.VITE_INSTAGRAM_REDIRECT_URI ||
   `${window.location.origin}/auth/instagram/callback`;
+
+// ---------------------------------------------------------------------------
+// Server contract (docs/social-connections.md): the browser never sees tokens.
+// Edge Functions social-connect-linkedin / social-connect-instagram answer
+// { connection } or { code, message, retryable }. Health is read from the
+// social_connections table (owner RLS).
+// ---------------------------------------------------------------------------
+
+type SocialConnectAction = "exchange" | "pages" | "status" | "disconnect";
+
+const CONNECT_FUNCTIONS: Record<SocialConnectionNetwork, string> = {
+  linkedin: "social-connect-linkedin",
+  instagram: "social-connect-instagram",
+};
+
+const CONNECTION_COLUMNS =
+  "id, network, status, status_reason, account_id, account_name, pages, expires_at, access_expires_at, refresh_expires_at, data_access_expires_at, connected_at, last_checked_at";
+
+const CONNECTION_STATUSES: SocialConnectionStatus[] = [
+  "connected",
+  "expiring",
+  "expired",
+  "revoked",
+  "error",
+  "disconnected",
+];
+
+class SocialConnectError extends Error {
+  readonly code: string;
+  readonly retryable: boolean;
+
+  constructor(code: string, message = "", retryable = false) {
+    super(message || code);
+    this.code = code;
+    this.retryable = retryable;
+  }
+}
+
+type RawRecord = Record<string, unknown>;
+
+const isRecord = (value: unknown): value is RawRecord =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const asString = (value: unknown): string | null =>
+  typeof value === "string" && value.length > 0 ? value : null;
+
+// Accepts both the table row (snake_case) and the function summary (camelCase).
+const pick = (raw: RawRecord, snake: string, camel: string): unknown =>
+  raw[snake] ?? raw[camel];
+
+const normalizePages = (value: unknown): SocialConnectionPage[] => {
+  if (!Array.isArray(value)) return [];
+  return value.filter(isRecord).flatMap((page) => {
+    const id = asString(page.id);
+    if (!id) return [];
+    return [
+      {
+        id,
+        name: asString(page.name) ?? "",
+        type: asString(page.type) ?? undefined,
+        vanityName: asString(page.vanityName) ?? undefined,
+        username: asString(page.username) ?? undefined,
+        facebookPageId: asString(page.facebookPageId) ?? undefined,
+        facebookPageName: asString(page.facebookPageName) ?? undefined,
+      },
+    ];
+  });
+};
+
+export const normalizeSocialConnection = (
+  raw: unknown
+): SocialConnection | null => {
+  if (!isRecord(raw)) return null;
+  const network = raw.network;
+  const status = raw.status;
+  if (network !== "linkedin" && network !== "instagram") return null;
+  if (!CONNECTION_STATUSES.includes(status as SocialConnectionStatus)) {
+    return null;
+  }
+
+  return {
+    id: asString(raw.id) ?? "",
+    network,
+    status: status as SocialConnectionStatus,
+    statusReason: asString(pick(raw, "status_reason", "statusReason")),
+    accountId: asString(pick(raw, "account_id", "accountId")),
+    accountName: asString(pick(raw, "account_name", "accountName")),
+    pages: normalizePages(raw.pages),
+    expiresAt: asString(pick(raw, "expires_at", "expiresAt")),
+    accessExpiresAt: asString(
+      pick(raw, "access_expires_at", "accessExpiresAt")
+    ),
+    refreshExpiresAt: asString(
+      pick(raw, "refresh_expires_at", "refreshExpiresAt")
+    ),
+    dataAccessExpiresAt: asString(
+      pick(raw, "data_access_expires_at", "dataAccessExpiresAt")
+    ),
+    connectedAt: asString(pick(raw, "connected_at", "connectedAt")),
+    lastCheckedAt: asString(pick(raw, "last_checked_at", "lastCheckedAt")),
+  };
+};
+
+export const isConnectionActive = (
+  connection: SocialConnection | null
+): boolean =>
+  connection?.status === "connected" || connection?.status === "expiring";
+
+export const toLinkedInPages = (
+  connection: SocialConnection | null
+): LinkedInPage[] =>
+  (connection?.pages ?? []).map((page) => ({
+    id: page.id,
+    name: page.name,
+    type: page.type === "ORGANIZATION" ? "ORGANIZATION" : "PERSON",
+    vanityName: page.vanityName,
+    logoUrl: null,
+  }));
+
+// Instagram pages map to the legacy shape WITHOUT page_access_token.
+export const toInstagramPages = (
+  connection: SocialConnection | null
+): InstagramBusinessPage[] =>
+  (connection?.pages ?? []).map((page) => ({
+    instagram_business_account_id: page.id,
+    instagram_username: page.username ?? page.name,
+    instagram_name: page.name,
+    facebook_page_id: page.facebookPageId ?? "",
+    facebook_page_name: page.facebookPageName ?? "",
+  }));
+
+const parseFunctionFailure = async (
+  error: unknown
+): Promise<SocialConnectError> => {
+  if (error instanceof FunctionsHttpError) {
+    try {
+      const body: unknown = await error.context.json();
+      if (isRecord(body) && typeof body.code === "string") {
+        return new SocialConnectError(
+          body.code,
+          typeof body.message === "string" ? body.message : "",
+          body.retryable === true
+        );
+      }
+    } catch {
+      // Body is not JSON: fall through to the generic server error.
+    }
+    return new SocialConnectError("server_error", "", true);
+  }
+  return new SocialConnectError("network_error", "", true);
+};
+
+// Maps a server { code } to a localized, user-facing message.
+export const socialErrorMessage = (error: unknown): string => {
+  if (error instanceof SocialConnectError) {
+    const message = i18n.t(`socialConnections.errors.${error.code}`, {
+      defaultValue: i18n.t("socialConnections.errors.unknown"),
+    });
+    return error.retryable
+      ? `${message} ${i18n.t("socialConnections.errors.retryHint")}`
+      : message;
+  }
+  return i18n.t("socialConnections.errors.unknown");
+};
+
+const invokeSocialConnect = async (
+  network: SocialConnectionNetwork,
+  action: SocialConnectAction,
+  params: Record<string, unknown> = {}
+): Promise<SocialConnection> => {
+  const { data, error } = await supabase.functions.invoke(
+    CONNECT_FUNCTIONS[network],
+    { body: { action, ...params } }
+  );
+
+  if (error) throw await parseFunctionFailure(error);
+
+  if (isRecord(data) && typeof data.code === "string") {
+    throw new SocialConnectError(
+      data.code,
+      typeof data.message === "string" ? data.message : "",
+      data.retryable === true
+    );
+  }
+
+  const connection = isRecord(data)
+    ? normalizeSocialConnection(data.connection)
+    : null;
+  if (!connection) throw new SocialConnectError("invalid_response");
+  return connection;
+};
+
+const readSocialConnection = async (
+  network: SocialConnectionNetwork
+): Promise<SocialConnection | null> => {
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) return null;
+
+  const { data, error } = await supabase
+    .from("social_connections")
+    .select(CONNECTION_COLUMNS)
+    .eq("user_id", authData.user.id)
+    .eq("network", network)
+    .maybeSingle();
+
+  if (error) throw new SocialConnectError("read_failed", error.message, true);
+  return normalizeSocialConnection(data);
+};
+
+// After the exchange the page list may still be empty (LinkedIn): ask the server once.
+const exchangeAndLoadPages = async (
+  network: SocialConnectionNetwork,
+  code: string,
+  redirectUri: string
+): Promise<SocialConnection> => {
+  const connection = await invokeSocialConnect(network, "exchange", {
+    code,
+    redirectUri,
+  });
+  if (connection.pages.length > 0) return connection;
+
+  try {
+    return await invokeSocialConnect(network, "pages");
+  } catch (pagesError) {
+    console.error(`Error loading ${network} pages after connecting:`, pagesError);
+    return connection;
+  }
+};
 
 export const initiateLinkedInAuth = createAsyncThunk(
   "socialNetworks/initiateLinkedInAuth",
@@ -34,7 +272,7 @@ export const initiateLinkedInAuth = createAsyncThunk(
       return true;
     } catch (error) {
       console.error("Error initiating LinkedIn auth:", error);
-      return rejectWithValue("Failed to initiate LinkedIn authorization");
+      return rejectWithValue(i18n.t("socialConnections.errors.initiate"));
     }
   }
 );
@@ -45,110 +283,22 @@ export const processLinkedInCallback = createAsyncThunk(
     { code, state }: { code: string; state: string },
     { rejectWithValue }
   ) => {
+    // Verify the state parameter to prevent CSRF attacks
+    const savedState = localStorage.getItem("linkedln_auth_state");
+    if (state !== savedState) {
+      return rejectWithValue(i18n.t("socialConnections.errors.state_mismatch"));
+    }
+    localStorage.removeItem("linkedln_auth_state");
+
     try {
-      // Verify the state parameter to prevent CSRF attacks
-      const savedState = localStorage.getItem("linkedln_auth_state");
-      if (state !== savedState) {
-        return rejectWithValue("State mismatch. Possible CSRF attack.");
-      }
-
-      // Clean up the state from localStorage
-      localStorage.removeItem("linkedln_auth_state");
-
-      // Call the serverless function to exchange the code for an access token
-      const { data, error } = await supabase.functions.invoke(
-        "linkedin-exchange-code",
-        {
-          body: { code, redirect_uri: LINKEDIN_REDIRECT_URI },
-        }
+      return await exchangeAndLoadPages(
+        "linkedin",
+        code,
+        LINKEDIN_REDIRECT_URI
       );
-
-      if (error) {
-        console.error("Edge function error:", error);
-        throw new Error(error.message || "Error calling edge function");
-      }
-
-      if (!data) {
-        throw new Error("No data received from edge function");
-      }
-
-      // Extract the access token and other data from the response
-      const {
-        access_token,
-        refresh_token,
-        expires_in = 3600,
-        person_id,
-        user_name = "LinkedIn User",
-        id_token,
-      } = data;
-
-      if (!access_token) {
-        throw new Error("No access token received");
-      }
-
-      if (!person_id) {
-        console.warn("No LinkedIn person ID received, using fallback value");
-      }
-
-      // Get the current user ID
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
-
-      if (!userId) {
-        return rejectWithValue("User not authenticated");
-      }
-
-      // Create the LinkedIn data object
-      const linkedln_data = {
-        linkedin_person_id: person_id || "unknown",
-        access_token,
-        refresh_token,
-        id_token,
-        token_expires_at: new Date(
-          Date.now() + expires_in * 1000
-        ).toISOString(),
-        is_connected: true,
-        permissions_granted: [
-          "openid",
-          "profile",
-          "w_member_social",
-          "email",
-          "r_organization_admin",
-          "w_organization_social",
-          "r_basicprofile",
-          "rw_organization_admin",
-          "r_organization_social",
-        ],
-        user_name,
-        connected_at: new Date().toISOString(),
-      };
-
-      // Update the user_linkedin_connections table
-      const { error: updateError } = await supabase
-        .from("userData")
-        .update({
-          linkedln_data,
-        })
-        .eq("uid", userId);
-
-      if (updateError) {
-        console.error("Error updating user data:", updateError);
-        throw new Error(updateError.message || "Failed to update user data");
-      }
-
-      return {
-        isConnected: true,
-        personId: person_id || "unknown",
-        userName: user_name,
-        expiresAt: new Date(Date.now() + expires_in * 1000).toISOString(),
-      };
     } catch (error) {
       console.error("Error processing LinkedIn callback:", error);
-      return rejectWithValue(
-        error instanceof Error
-          ? error.message
-          : "Failed to process LinkedIn authorization"
-      );
+      return rejectWithValue(socialErrorMessage(error));
     }
   }
 );
@@ -157,41 +307,10 @@ export const disconnectLinkedIn = createAsyncThunk(
   "socialNetworks/disconnectLinkedIn",
   async (_, { rejectWithValue }) => {
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
-
-      if (!userId) {
-        return rejectWithValue("User not authenticated");
-      }
-
-      // Get the current LinkedIn data
-      const { data: user, error: fetchError } = await supabase
-        .from("userData")
-        .select("linkedln_data")
-        .eq("uid", userId)
-        .single();
-
-      if (fetchError) throw new Error(fetchError.message);
-
-      // Modificamos solo el campo is_connected
-      const updatedLinkedInData = user.linkedln_data
-        ? { ...user.linkedln_data, is_connected: false }
-        : null;
-
-      // Update the user_linkedin_connections table
-      const { error } = await supabase
-        .from("userData")
-        .update({
-          linkedln_data: updatedLinkedInData,
-        })
-        .eq("uid", userId);
-
-      if (error) throw new Error(error.message);
-
-      return true;
+      return await invokeSocialConnect("linkedin", "disconnect");
     } catch (error) {
       console.error("Error disconnecting LinkedIn:", error);
-      return rejectWithValue("Failed to disconnect LinkedIn");
+      return rejectWithValue(socialErrorMessage(error));
     }
   }
 );
@@ -200,145 +319,23 @@ export const checkLinkedInConnection = createAsyncThunk(
   "socialNetworks/checkLinkedInConnection",
   async (_, { rejectWithValue }) => {
     try {
-      // 1. Getting the current user
-      const { data: authData } = await supabase.auth.getUser();
-      if (!authData.user) return { isConnected: false };
-
-      const { data, error } = await supabase
-        .from("userData")
-        .select("linkedln_data")
-        .eq("uid", authData.user.id)
-        .single();
-
-      if (error) throw new Error(error.message);
-
-      // 2. Verifying if the user has LinkedIn data
-      if (!data || !data.linkedln_data || !data.linkedln_data.is_connected) {
-        return { isConnected: false };
-      }
-
-      // 3. Verifying if the token is expired
-      const tokenExpired =
-        new Date(data.linkedln_data.token_expires_at) < new Date();
-
-      if (tokenExpired) {
-        return { isConnected: false };
-      }
-
-      // 4. Verifying the token with LinkedIn API through Edge Function
-      try {
-        const { data: verifyData, error: verifyError } =
-          await supabase.functions.invoke("linkedin-verify-token", {
-            body: { access_token: data.linkedln_data.access_token },
-          });
-
-        if (verifyError) {
-          console.error("Error calling verify token function:", verifyError);
-          return {
-            isConnected: true,
-            personId: data.linkedln_data.linkedin_person_id,
-            userName: data.linkedln_data.user_name,
-            expiresAt: data.linkedln_data.token_expires_at,
-            warning: "Connection could not be verified due to server issues",
-          };
-        }
-
-        if (!verifyData.isValid) {
-          // Token not valid, update database
-          await supabase
-            .from("userData")
-            .update({
-              linkedln_data: {
-                ...data.linkedln_data,
-                is_connected: false,
-              },
-            })
-            .eq("uid", authData.user.id);
-
-          return { isConnected: false };
-        }
-
-        return {
-          isConnected: true,
-          personId: data.linkedln_data.linkedin_person_id,
-          userName: data.linkedln_data.user_name,
-          expiresAt: data.linkedln_data.token_expires_at,
-        };
-      } catch (apiError) {
-        console.error("Error verifying LinkedIn token:", apiError);
-
-        return {
-          isConnected: true,
-          personId: data.linkedln_data.linkedin_person_id,
-          userName: data.linkedln_data.user_name,
-          expiresAt: data.linkedln_data.token_expires_at,
-          warning: "Connection could not be verified due to network issues",
-        };
-      }
+      return await readSocialConnection("linkedin");
     } catch (error) {
       console.error("Error checking LinkedIn connection:", error);
-      return rejectWithValue("Failed to check LinkedIn connection status");
+      return rejectWithValue(socialErrorMessage(error));
     }
   }
 );
 
+// Asks the server to refresh the publishable pages (action "pages").
 export const fetchLinkedInPages = createAsyncThunk(
   "socialNetworks/fetchLinkedInPages",
-  async ({ isConnected }: { isConnected: boolean }, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      if (!isConnected) {
-        return rejectWithValue("User not connected to LinkedIn");
-      }
-
-      const { data: authData } = await supabase.auth.getUser();
-      if (!authData.user) return rejectWithValue("User not authenticated");
-
-      const { data, error } = await supabase
-        .from("userData")
-        .select("linkedln_data")
-        .eq("uid", authData.user.id)
-        .single();
-
-      if (error) throw new Error(error.message);
-      if (!data || !data.linkedln_data) {
-        return rejectWithValue("LinkedIn data not found");
-      }
-
-      const { data: pagesData, error: pagesError } =
-        await supabase.functions.invoke("linkedin-fetch-admin-pages", {
-          body: { access_token: data.linkedln_data.access_token },
-        });
-
-      if (pagesError) {
-        throw new Error(pagesError.message);
-      }
-
-      const updatedLinkedInData = {
-        ...data.linkedln_data,
-        admin_pages: pagesData.pages,
-        pages_fetched_at: new Date().toISOString(),
-      };
-
-      const { error: updateError } = await supabase
-        .from("userData")
-        .update({
-          linkedln_data: updatedLinkedInData,
-        })
-        .eq("uid", authData.user.id);
-
-      if (updateError) throw new Error(updateError.message);
-
-      return {
-        adminPages: pagesData.pages,
-        fetchedAt: new Date().toISOString(),
-      };
+      return await invokeSocialConnect("linkedin", "pages");
     } catch (error) {
       console.error("Error fetching LinkedIn admin pages:", error);
-      return rejectWithValue(
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch LinkedIn admin pages"
-      );
+      return rejectWithValue(socialErrorMessage(error));
     }
   }
 );
@@ -350,7 +347,7 @@ export const initiateInstagramAuth = createAsyncThunk(
       const state = Math.random().toString(36).substring(2, 15);
       localStorage.setItem("instagram_auth_state", state);
 
-      const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${INSTAGRAM_APP_ID}&redirect_uri=${encodeURIComponent(
+      const authUrl = `https://www.facebook.com/v27.0/dialog/oauth?client_id=${INSTAGRAM_APP_ID}&redirect_uri=${encodeURIComponent(
         INSTAGRAM_REDIRECT_URI
       )}&state=${state}&response_type=code&scope=pages_show_list,instagram_basic,instagram_content_publish,business_management,pages_read_engagement`;
 
@@ -358,7 +355,7 @@ export const initiateInstagramAuth = createAsyncThunk(
       return true;
     } catch (error) {
       console.error("Error initiating Instagram auth:", error);
-      return rejectWithValue("Failed to initiate Instagram authorization");
+      return rejectWithValue(i18n.t("socialConnections.errors.initiate"));
     }
   }
 );
@@ -369,108 +366,21 @@ export const processInstagramCallback = createAsyncThunk(
     { code, state }: { code: string; state: string },
     { rejectWithValue }
   ) => {
+    const savedState = localStorage.getItem("instagram_auth_state");
+    if (state !== savedState) {
+      return rejectWithValue(i18n.t("socialConnections.errors.state_mismatch"));
+    }
+    localStorage.removeItem("instagram_auth_state");
+
     try {
-      // Verify state parameter
-      const savedState = localStorage.getItem("instagram_auth_state");
-      if (state !== savedState) {
-        return rejectWithValue("State mismatch. Possible CSRF attack.");
-      }
-
-      // Clean up state
-      localStorage.removeItem("instagram_auth_state");
-
-      // Exchange code for access token via Edge Function
-      const { data, error } = await supabase.functions.invoke(
-        "instagram-exchange-code",
-        {
-          body: { code, redirect_uri: INSTAGRAM_REDIRECT_URI },
-        }
+      return await exchangeAndLoadPages(
+        "instagram",
+        code,
+        INSTAGRAM_REDIRECT_URI
       );
-
-      if (error) {
-        console.error("Edge function error:", error);
-        throw new Error(error.message || "Error calling edge function");
-      }
-
-      if (!data) {
-        throw new Error("No data received from edge function");
-      }
-
-      const { access_token, expires_in = 3600 } = data;
-
-      if (!access_token) {
-        throw new Error("No access token received");
-      }
-
-      // Verify token and get user information using the verify token function
-      const { data: verifyData, error: verifyError } =
-        await supabase.functions.invoke("instagram-verify-token", {
-          body: { access_token },
-        });
-
-      if (verifyError || !verifyData || !verifyData.isValid) {
-        throw new Error("Failed to verify token or get user information");
-      }
-
-      // Get current user
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
-
-      if (!userId) {
-        return rejectWithValue("User not authenticated");
-      }
-
-      // Extract user information from verify response
-      const { tokenData, userData: instagramUserData } = verifyData;
-
-      // Create Instagram data object with complete information
-      const instagram_data = {
-        instagram_user_id: instagramUserData.id,
-        access_token,
-        token_expires_at: tokenData.expires_at
-          ? new Date(tokenData.expires_at * 1000).toISOString()
-          : new Date(Date.now() + expires_in * 1000).toISOString(),
-        data_access_expires_at: new Date(
-          tokenData.data_access_expires_at * 1000
-        ).toISOString(),
-        is_connected: true,
-        username: instagramUserData.name,
-        user_id: instagramUserData.id,
-        app_id: tokenData.app_id,
-        connected_at: new Date().toISOString(),
-        permissions_granted: tokenData.scopes,
-        granular_scopes: tokenData.granular_scopes,
-        token_type: tokenData.type,
-        application: tokenData.application,
-        issued_at: new Date(tokenData.issued_at * 1000).toISOString(),
-      };
-
-      // Update user data
-      const { error: updateError } = await supabase
-        .from("userData")
-        .update({
-          instagram_data,
-        })
-        .eq("uid", userId);
-
-      if (updateError) {
-        console.error("Error updating user data:", updateError);
-        throw new Error(updateError.message || "Failed to update user data");
-      }
-
-      return {
-        isConnected: true,
-        userId: instagramUserData.id,
-        username: instagramUserData.name,
-        expiresAt: new Date(tokenData.expires_at * 1000).toISOString(),
-      };
     } catch (error) {
       console.error("Error processing Instagram callback:", error);
-      return rejectWithValue(
-        error instanceof Error
-          ? error.message
-          : "Failed to process Instagram authorization"
-      );
+      return rejectWithValue(socialErrorMessage(error));
     }
   }
 );
@@ -479,41 +389,10 @@ export const disconnectInstagram = createAsyncThunk(
   "socialNetworks/disconnectInstagram",
   async (_, { rejectWithValue }) => {
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
-
-      if (!userId) {
-        return rejectWithValue("User not authenticated");
-      }
-
-      // Get current Instagram data
-      const { data: user, error: fetchError } = await supabase
-        .from("userData")
-        .select("instagram_data")
-        .eq("uid", userId)
-        .single();
-
-      if (fetchError) throw new Error(fetchError.message);
-
-      // Update is_connected to false
-      const updatedInstagramData = user.instagram_data
-        ? { ...user.instagram_data, is_connected: false }
-        : null;
-
-      // Update database
-      const { error } = await supabase
-        .from("userData")
-        .update({
-          instagram_data: updatedInstagramData,
-        })
-        .eq("uid", userId);
-
-      if (error) throw new Error(error.message);
-
-      return true;
+      return await invokeSocialConnect("instagram", "disconnect");
     } catch (error) {
       console.error("Error disconnecting Instagram:", error);
-      return rejectWithValue("Failed to disconnect Instagram");
+      return rejectWithValue(socialErrorMessage(error));
     }
   }
 );
@@ -522,146 +401,22 @@ export const checkInstagramConnection = createAsyncThunk(
   "socialNetworks/checkInstagramConnection",
   async (_, { rejectWithValue }) => {
     try {
-      // Get current user
-      const { data: authData } = await supabase.auth.getUser();
-      if (!authData.user) return { isConnected: false };
-
-      const { data, error } = await supabase
-        .from("userData")
-        .select("instagram_data")
-        .eq("uid", authData.user.id)
-        .single();
-
-      if (error) throw new Error(error.message);
-
-      // Check if user has Instagram data
-      if (!data || !data.instagram_data || !data.instagram_data.is_connected) {
-        return { isConnected: false };
-      }
-
-      // Check if token is expired
-      const tokenExpired =
-        new Date(data.instagram_data.token_expires_at) < new Date();
-
-      if (tokenExpired) {
-        return { isConnected: false };
-      }
-
-      // Verify token with Instagram API through Edge Function
-      try {
-        const { data: verifyData, error: verifyError } =
-          await supabase.functions.invoke("instagram-verify-token", {
-            body: { access_token: data.instagram_data.access_token },
-          });
-
-        if (verifyError) {
-          console.error("Error calling verify token function:", verifyError);
-          return {
-            isConnected: true,
-            userId: data.instagram_data.instagram_user_id,
-            username: data.instagram_data.username,
-            expiresAt: data.instagram_data.token_expires_at,
-            warning: "Connection could not be verified due to server issues",
-          };
-        }
-
-        if (!verifyData.isValid) {
-          // Token not valid, update database
-          await supabase
-            .from("userData")
-            .update({
-              instagram_data: {
-                ...data.instagram_data,
-                is_connected: false,
-              },
-            })
-            .eq("uid", authData.user.id);
-
-          return { isConnected: false };
-        }
-
-        return {
-          isConnected: true,
-          userId: data.instagram_data.instagram_user_id,
-          username: data.instagram_data.username,
-          expiresAt: data.instagram_data.token_expires_at,
-        };
-      } catch (apiError) {
-        console.error("Error verifying Instagram token:", apiError);
-
-        return {
-          isConnected: true,
-          userId: data.instagram_data.instagram_user_id,
-          username: data.instagram_data.username,
-          expiresAt: data.instagram_data.token_expires_at,
-          warning: "Connection could not be verified due to network issues",
-        };
-      }
+      return await readSocialConnection("instagram");
     } catch (error) {
       console.error("Error checking Instagram connection:", error);
-      return rejectWithValue("Failed to check Instagram connection status");
+      return rejectWithValue(socialErrorMessage(error));
     }
   }
 );
 
 export const fetchInstagramPages = createAsyncThunk(
   "socialNetworks/fetchInstagramPages",
-  async ({ isConnected }: { isConnected: boolean }, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      if (!isConnected) {
-        return rejectWithValue("User not connected to Instagram");
-      }
-
-      const { data: authData } = await supabase.auth.getUser();
-      if (!authData.user) return rejectWithValue("User not authenticated");
-
-      const { data, error } = await supabase
-        .from("userData")
-        .select("instagram_data")
-        .eq("uid", authData.user.id)
-        .single();
-
-      if (error) throw new Error(error.message);
-      if (!data || !data.instagram_data) {
-        return rejectWithValue("Instagram data not found");
-      }
-
-      const { data: pagesData, error: pagesError } =
-        await supabase.functions.invoke("instagram-fetch-admin-pages", {
-          body: { access_token: data.instagram_data.access_token },
-        });
-
-      if (pagesError) {
-        throw new Error(pagesError.message);
-      }
-
-      const updatedInstagramData = {
-        ...data.instagram_data,
-        business_pages: pagesData.pages,
-        pages_fetched_at: new Date().toISOString(),
-      };
-
-      const { error: updateError } = await supabase
-        .from("userData")
-        .update({
-          instagram_data: updatedInstagramData,
-        })
-        .eq("uid", authData.user.id);
-
-      if (updateError) throw new Error(updateError.message);
-
-      return {
-        businessPages: pagesData.pages,
-        totalPages: pagesData.total_pages,
-        fetchedAt: new Date().toISOString(),
-      };
+      return await invokeSocialConnect("instagram", "pages");
     } catch (error) {
       console.error("Error fetching Instagram business pages:", error);
-      return rejectWithValue(
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch Instagram business pages"
-      );
+      return rejectWithValue(socialErrorMessage(error));
     }
   }
 );

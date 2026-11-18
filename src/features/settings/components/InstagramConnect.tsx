@@ -2,13 +2,15 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { InstagramIcon, AddIcon, CancelIcon } from "../../../components/icons";
 import { truncateText } from "../../../helpers";
+import { InstagramData } from "../../../types";
+import { SocialConnectionStatusBadge } from "./SocialConnectionStatusBadge";
+import {
+  formatMadridDate,
+  needsReconnect,
+} from "../helpers/socialConnectionStatus";
 
 interface InstagramConnectProps {
-  instagram: {
-    isConnected: boolean;
-    userName?: string;
-    expiresAt?: string;
-  };
+  instagram: InstagramData;
   checkInstagramRequest: {
     inProgress: boolean;
   };
@@ -77,26 +79,42 @@ export const InstagramConnect: React.FC<InstagramConnectProps> = ({
         )}
       </div>
       <p className="mt-4 text-base font-medium">Instagram</p>
-      <p className="text-xs text-[#010000]/65">
-        {checkInstagramRequest.inProgress ? (
-          <span className="text-[#010000]/60">
-            {" "}
-            {t("settings.checkingConnection")}
-          </span>
-        ) : instagram.isConnected ? (
-          <span className="text-[#365640]">
-            {t("settings.connectedAs")}{" "}
-            {instagram.userName ? truncateText(instagram.userName, 15) : ""}
-          </span>
-        ) : (
-          <span className="text-[#9f231b]">{t("settings.notConnected")}</span>
-        )}
-      </p>
-      {instagram.isConnected && instagram.expiresAt && (
-        <p className="text-xs text-[#010000]/60 mt-1">
-          {t("settings.validUntil")}{" "}
-          {new Date(instagram.expiresAt).toLocaleDateString()}
+      {checkInstagramRequest.inProgress ? (
+        <p className="text-xs text-[#010000]/60">
+          {t("settings.checkingConnection")}
         </p>
+      ) : (
+        <SocialConnectionStatusBadge
+          status={instagram.status}
+          statusReason={instagram.statusReason}
+          expiresAt={instagram.expiresAt}
+        />
+      )}
+      {!checkInstagramRequest.inProgress && instagram.isConnected && instagram.userName && (
+        <p className="text-xs text-[#010000]/65">
+          {t("settings.connectedAs")} {truncateText(instagram.userName, 15)}
+        </p>
+      )}
+      {!checkInstagramRequest.inProgress && instagram.status === "connected" && instagram.expiresAt && (
+        <p className="mt-1 text-xs text-[#010000]/60">
+          {t("settings.validUntil")} {formatMadridDate(instagram.expiresAt)}
+        </p>
+      )}
+      {!checkInstagramRequest.inProgress && instagram.status === "expired" && instagram.expiresAt && (
+        <p className="mt-1 text-xs text-[#010000]/60">
+          {t("socialConnections.expiredOn", {
+            date: formatMadridDate(instagram.expiresAt),
+          })}
+        </p>
+      )}
+      {!checkInstagramRequest.inProgress && needsReconnect(instagram.status) && (
+        <button
+          type="button"
+          onClick={onConnect}
+          className="mt-3 rounded-full border border-[#010000]/30 px-4 py-1.5 text-xs font-medium text-[#010000] hover:bg-[#010000]/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#010000]"
+        >
+          {t("socialConnections.reconnect")}
+        </button>
       )}
     </div>
   );
