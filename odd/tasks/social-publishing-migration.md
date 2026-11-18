@@ -14,6 +14,9 @@ S8. Video and Instagram Reels are phase 2 ("Quiero también evolucionar y poder 
 S9. "Para el punto 1, guardamos el momento real tal y como recomiendas" — store the real instant (Madrid wall-clock converted to UTC) and display in Europe/Madrid; convert existing rows once at cutover.
 S10. "los avisos por email podemos usar resend (es lo que ahora mismo está implementado)"
 S11. Never publish the same target twice: an uncertain outcome becomes needs_action, never an automatic repeat.
+S13. "prefiero solventar ahora los problemas de seguridad" — fix now: projectsPreview RLS lets any authenticated user read/edit/delete any row; publication_iteration_authorized returns NULL for ownerless previews.
+S14. The 5 scheduled publications must not break: "en efecto hay 5 publicaciones programadas (esas programadas corren riesgo tras los cambios que se rompan)". Until cutover, n8n keeps reading projectsPreview, userData tokens and checkSocialNetworks.accessToken; no change may remove what n8n reads.
+S15. "Esperamos a que el procesador exista" — do not apply the phase 1 migration to production yet.
 S12. Keep the legacy projection (state, instagramResult, linkedlnResult with "true"/"false"/"notSelected", "scheduled"/"published") until the client is migrated.
 
 ## Tasks
@@ -27,6 +30,8 @@ S12. Keep the legacy projection (state, instagramResult, linkedlnResult with "tr
 - T8 | S9,S11 | - | pending | Phase 6: cutover from n8n (stop n8n first, convert scheduled rows and publishDate, back up deployed functions).
 - T9 | - | - | pending | Phase 7: cleanup of webhooks, env vars and proxy functions.
 - T10 | S8 | - | pending | Phase 2 product: video and Reels.
+- T11 | S13,S14 | parent | in_progress | Security: projectsPreview RLS restricted to authorized users without breaking n8n or the dashboard; null-safe publication authorization helper (iteration).
+- T12 | S14 | - | pending | Phase 1 migration applied to production only once the worker exists (S15).
 
 ## Log
 L1. User: "En las últimas tareas de este proyecto lo que se ha hecho principalmente es eliminar los flujos de n8n para que todo pase por edge functions de supabase ya que bajo mi punto de vista todo es más seguro, ahora queda la parte más importante a migrar desde n8n y es la publicación de esas publicaciones en las redes sociales que cada usuario configura. Este proyecto actua como intermediario entre el usuario y las redes sociales que vincule, ahora mismo publica en linkedin e instagram. Como primer paso para los cambios que quiero hacer quiero que cojas todo el contexto posible y entiendas lo que se hace, ahora mismo el flujo de publicación es instantaneo (el usuario indica que quiere publicar en ese momento) o programando la publicación. Dime cuando tngas todo claro y te paso los json de cada flujo de n8n"
