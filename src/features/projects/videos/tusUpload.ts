@@ -14,7 +14,17 @@ export interface TusUploadOptions {
   signal?: AbortSignal;
 }
 
-const RESUMABLE_ENDPOINT = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/upload/resumable`;
+/**
+ * Supabase recommends the direct storage host (<ref>.storage.supabase.co) for
+ * resumable uploads; other URLs (custom domains, local stacks) are kept as is.
+ */
+const storageBaseUrl = (projectUrl: string): string => {
+  const trimmed = projectUrl.replace(/\/+$/, "");
+  const match = /^https:\/\/([a-z0-9]+)\.supabase\.co$/.exec(trimmed);
+  return match ? `https://${match[1]}.storage.supabase.co` : trimmed;
+};
+
+const RESUMABLE_ENDPOINT = `${storageBaseUrl(import.meta.env.VITE_SUPABASE_URL)}/storage/v1/upload/resumable`;
 
 const getAccessToken = async (): Promise<string> => {
   const { data, error } = await supabase.auth.getSession();
@@ -66,9 +76,10 @@ export const uploadWithTus = async ({
       endpoint: RESUMABLE_ENDPOINT,
       retryDelays: [0, 3000, 5000, 10000, 20000],
       chunkSize: TUS_CHUNK_SIZE,
+      // Only the user's access token, as in Supabase's resumable upload guide.
+      // Sending the project key as apikey made Storage answer "Invalid Compact JWS".
       headers: {
         authorization: `Bearer ${initialToken}`,
-        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         "x-upsert": "false",
       },
       // Object names are unique per upload, so resuming across page loads is not used.
