@@ -1,17 +1,44 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import type { PublicationTarget } from "../../../../types";
+import { SOCIAL_PUBLISHING_EDGE_ENABLED } from "../../../../helpers/publishDate";
+import { visibleTargets } from "../../helpers/publicationTargets";
+import { PublicationTargetsStatus } from "../publicationStatus/PublicationTargetsStatus";
 
 interface SocialMediaResultsProps {
   instagramResult?: string;
   linkedlnResult?: string;
+  /** Edge pipeline only: current publication_targets; they win over the legacy columns. */
+  targets?: PublicationTarget[];
+  busy?: boolean;
+  onRetry?: (target: PublicationTarget) => void;
+  onReschedule?: () => void;
 }
 
 export const SocialMediaResults: React.FC<SocialMediaResultsProps> = ({
   instagramResult,
   linkedlnResult,
+  targets,
+  busy,
+  onRetry,
+  onReschedule,
 }) => {
   const { t } = useTranslation();
+
+  // Publications without targets (history, or the switch off) keep the legacy columns.
+  if (SOCIAL_PUBLISHING_EDGE_ENABLED && visibleTargets(targets).length > 0) {
+    return (
+      <div className="px-5 pb-2">
+        <PublicationTargetsStatus
+          targets={targets}
+          busy={busy}
+          onRetry={onRetry}
+          onReschedule={onReschedule}
+        />
+      </div>
+    );
+  }
 
   if (
     instagramResult !== "true" &&

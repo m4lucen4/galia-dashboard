@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { PreviewProjectDataProps } from "../../../../types";
+import type { TargetsByPreview } from "../../helpers/publicationTargets";
 import {
   addMonths,
   addWeeks,
@@ -17,6 +18,8 @@ import { WeekView } from "./WeekView";
 interface CalendarViewProps {
   projects: PreviewProjectDataProps[];
   onSelectProject: (project: PreviewProjectDataProps) => void;
+  /** Edge pipeline only: current publication_targets by publication id. */
+  targetsByPreview?: TargetsByPreview;
 }
 
 type CalendarMode = "month" | "week";
@@ -24,6 +27,7 @@ type CalendarMode = "month" | "week";
 export const CalendarView: React.FC<CalendarViewProps> = ({
   projects,
   onSelectProject,
+  targetsByPreview,
 }) => {
   const { t } = useTranslation();
   const [calendarMode, setCalendarMode] = useState<CalendarMode>("month");
@@ -115,12 +119,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             weeks={weeks}
             grouped={grouped}
             onSelectProject={onSelectProject}
+            targetsByPreview={targetsByPreview}
           />
         ) : (
           <WeekView
             days={weekDays}
             grouped={grouped}
             onSelectProject={onSelectProject}
+            targetsByPreview={targetsByPreview}
           />
         )
       ) : (

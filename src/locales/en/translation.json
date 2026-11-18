@@ -750,6 +750,197 @@
           "remove": "The adjustment could not be removed. Try again."
         }
       }
+    },
+    "publication": {
+      "panelTitle": "Publication status",
+      "reasonLabel": "Reason:",
+      "viewPost": "View post",
+      "networks": {
+        "instagram": "Instagram",
+        "linkedin": "LinkedIn",
+        "generic": "the social network"
+      },
+      "status": {
+        "scheduled": "Scheduled · {{date}}",
+        "publishing": "Publishing…",
+        "published": "Published",
+        "publishedAt": "Published · {{date}}",
+        "retrying": "Retrying",
+        "needsAction": "Action required",
+        "failed": "Error",
+        "scheduledShort": "Scheduled",
+        "publishingShort": "Publishing…",
+        "publishedShort": "Published",
+        "retryingShort": "Retrying",
+        "needsActionShort": "Action required",
+        "failedShort": "Error",
+        "nextAttemptAt": "Next attempt at {{time}}.",
+        "nextAttemptOn": "Next attempt on {{date}}.",
+        "attempt": "(attempt {{attempts}} of {{max}})"
+      },
+      "actions": {
+        "retry": "Retry",
+        "working": "One moment…",
+        "reschedule": "Reschedule",
+        "dismiss": "Dismiss message"
+      },
+      "unknownOutcome": {
+        "title": "Check the post before retrying",
+        "description": "Check on {{network}} that the post was not already published before retrying. If it exists, retrying would publish it twice.",
+        "confirm": "I have checked on {{network}} that the post does not exist"
+      },
+      "notices": {
+        "scheduled": "Publication scheduled for {{date}} (Madrid time).",
+        "publishingNow": "Publishing now. You will see the result for each social network here.",
+        "retried": "Retry started on {{network}}. You will see the result here.",
+        "reset": "The publication is ready to be scheduled again."
+      },
+      "requestErrors": {
+        "invalid_request": "The publication data is not valid. Check the date and the selected accounts.",
+        "forbidden": "You do not have permission to publish this publication.",
+        "conflict": "The publication changed while you were configuring it. Refresh the page and try again.",
+        "invalid_project": "The project of this publication is no longer valid.",
+        "run_at_out_of_range": "The chosen date is out of range: it cannot be in the past or more than a year ahead.",
+        "in_progress": "The publication is being published right now. Wait for it to finish.",
+        "already_published": "This publication is already published. Use “Publish again” to start over.",
+        "not_retryable": "This publication can no longer be retried; it may already be in progress.",
+        "confirmation_required": "Before continuing, check on the social network that the post was not already published.",
+        "account_not_connected": "The selected social network is not connected. Connect it in Settings.",
+        "account_not_allowed": "The selected account or page is not authorised. Reconnect it in Settings and select it again.",
+        "unauthorized": "Your session has expired. Sign in again.",
+        "internal_error": "A server error occurred. Try again in a few minutes.",
+        "account_missing": "Select an account or page for each chosen social network.",
+        "no_networks": "Select at least one social network.",
+        "invalid_date": "The date or time is not valid.",
+        "uncertain": "We could not confirm the result. Check the publication status before repeating the action.",
+        "default": "The action could not be completed. Try again."
+      },
+      "targetErrors": {
+        "no_images": {
+          "reason": "The publication has no selected image.",
+          "fix": "Select at least one image and schedule the publication again."
+        },
+        "too_many_images": {
+          "reason": "There are more images than {{network}} accepts.",
+          "fix": "Remove the extra images (the maximum is 20) and schedule the publication again."
+        },
+        "media_needs_crop": {
+          "reason": "An image has a ratio that {{network}} does not accept.",
+          "fix": "Crop the image for {{network}} in “Configure publication” and schedule it again."
+        },
+        "media_format": {
+          "reason": "The format, weight or size of an image is not valid for {{network}}.",
+          "fix": "Adjust the images in “Configure publication” to generate a valid copy and schedule it again."
+        },
+        "media_rejected": {
+          "reason": "{{network}} rejected one of the images.",
+          "fix": "Try another image or adjust it again and schedule the publication again."
+        },
+        "caption_too_long": {
+          "reason": "The text is over Instagram's character limit.",
+          "fix": "Shorten the publication text and schedule it again."
+        },
+        "commentary_too_long": {
+          "reason": "The text is over LinkedIn's 3,000 character limit.",
+          "fix": "Shorten the publication text and schedule it again."
+        },
+        "too_many_hashtags": {
+          "reason": "The text has more than 30 hashtags, Instagram's maximum.",
+          "fix": "Remove some hashtags and schedule the publication again."
+        },
+        "too_many_mentions": {
+          "reason": "The text has more than 20 mentions, Instagram's maximum.",
+          "fix": "Remove some mentions and schedule the publication again."
+        },
+        "rate_limited": {
+          "reason": "{{network}} has temporarily limited the account's publishing.",
+          "fix": "You do not need to do anything: it will be retried automatically."
+        },
+        "processing": {
+          "reason": "{{network}} is still processing the images.",
+          "fix": "You do not need to do anything: it will be retried automatically in a few minutes."
+        },
+        "container_expired": {
+          "reason": "The preparation of the post on Instagram expired.",
+          "fix": "You do not need to do anything: it will be prepared again automatically."
+        },
+        "token_invalid": {
+          "reason": "{{network}} rejected the access: the connection has expired or is no longer valid.",
+          "fix": "Reconnect {{network}} in Settings and press Retry."
+        },
+        "permission_missing": {
+          "reason": "A permission needed to publish on {{network}} is missing.",
+          "fix": "Reconnect {{network}} in Settings accepting all permissions and press Retry."
+        },
+        "account_restricted": {
+          "reason": "The {{network}} account cannot publish right now (restriction or pending verification).",
+          "fix": "Check the account status on {{network}} and press Retry once it is solved."
+        },
+        "provider_unavailable": {
+          "reason": "{{network}} did not answer or had a temporary failure.",
+          "fix": "It will be retried automatically; if the attempts run out, press Retry."
+        },
+        "invalid_request": {
+          "reason": "{{network}} rejected the publication.",
+          "fix": "Check the text and images and schedule it again, or press Retry if you think it was a one-off failure."
+        },
+        "not_connected": {
+          "reason": "There is no active connection with {{network}}.",
+          "fix": "Connect {{network}} in Settings and press Retry."
+        },
+        "connection_expired": {
+          "reason": "The connection with {{network}} has expired or was revoked.",
+          "fix": "Reconnect {{network}} in Settings and press Retry."
+        },
+        "page_not_authorized": {
+          "reason": "The selected account or page is no longer authorised on {{network}}.",
+          "fix": "Reconnect {{network}} in Settings, select the account again and press Retry."
+        },
+        "outcome_unknown": {
+          "reason": "We do not know whether the post was published on {{network}}.",
+          "fix": "Check on {{network}} whether the post already exists before retrying, so it is not published twice."
+        },
+        "lease_expired": {
+          "reason": "The publishing process was interrupted.",
+          "fix": "You do not need to do anything: it will be retried automatically."
+        },
+        "internal_error": {
+          "reason": "An internal error occurred while publishing.",
+          "fix": "Press Retry; if it happens again, contact support."
+        },
+        "provider_rejected": {
+          "reason": "{{network}} rejected the publication without giving a reason.",
+          "fix": "Check the content and press Retry."
+        },
+        "provider_response_invalid": {
+          "reason": "{{network}} sent an answer we could not interpret.",
+          "fix": "Press Retry; if it happens again, contact support."
+        },
+        "api_version_unsupported": {
+          "reason": "The {{network}} API version is no longer supported.",
+          "fix": "This is on our side: contact support."
+        },
+        "invalid_account": {
+          "reason": "The account selected on {{network}} is not valid.",
+          "fix": "Schedule the publication again choosing the account again."
+        },
+        "media_url_invalid": {
+          "reason": "An image is not in a storage location valid for publishing.",
+          "fix": "Select or upload the image again and schedule the publication again."
+        },
+        "media_too_large": {
+          "reason": "An image is too heavy (over 30 MB).",
+          "fix": "Use a lighter image and schedule the publication again."
+        },
+        "media_unreadable": {
+          "reason": "One of the images could not be read.",
+          "fix": "Replace the image with another one and schedule the publication again."
+        },
+        "unknown": {
+          "reason": "The post could not be published on {{network}}.",
+          "fix": "Press Retry; if it happens again, contact support."
+        }
+      }
     }
   },
   "profile": {

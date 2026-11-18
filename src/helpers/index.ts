@@ -1,4 +1,14 @@
-import { LoginProps, PreviewProjectDataProps } from "../types";
+import {
+  LoginProps,
+  PreviewProjectDataProps,
+  PublicationTarget,
+} from "../types";
+import {
+  SOCIAL_PUBLISHING_EDGE_ENABLED,
+  formatInstantInMadrid,
+  madridDayKeyOf,
+  madridToday,
+} from "./publishDate";
 
 interface ProjectStateInfo {
   displayState: string;
@@ -82,6 +92,11 @@ export const formatDateToDDMMYYYY = (dateString: string): string => {
  */
 export const formatDateTimeToDisplay = (dateString: string): string => {
   try {
+    // Publishing through the Edge pipeline stores real instants (S9): show them in Europe/Madrid.
+    if (SOCIAL_PUBLISHING_EDGE_ENABLED) {
+      const madrid = formatInstantInMadrid(dateString);
+      if (madrid) return madrid;
+    }
     // Handle both formats:
     // - Timestampz: "YYYY-MM-DD HH:mm:ss+00"
     // - ISO: "YYYY-MM-DDTHH:mm:ss+00:00"
@@ -143,6 +158,12 @@ export const formatDate = (
  */
 export const isDateInPast = (dateString: string | undefined): boolean => {
   if (!dateString) return false;
+
+  // Real instants: compare the Madrid calendar day with today in Madrid.
+  if (SOCIAL_PUBLISHING_EDGE_ENABLED) {
+    const day = madridDayKeyOf(dateString);
+    if (day) return day <= madridToday();
+  }
 
   const publishDate = new Date(dateString);
   const today = new Date();
@@ -206,9 +227,51 @@ export const getCategoryLabel = (categoryValue: string | undefined): string => {
  * - Default state (green/gray) - When no publication results exist
  */
 export const getProjectStateInfo = (
-  project: PreviewProjectDataProps
+  project: PreviewProjectDataProps,
+  targets?: PublicationTarget[]
 ): ProjectStateInfo => {
   const { instagramResult, linkedlnResult, state } = project;
+
+  // With the Edge pipeline the per-network targets are the source of truth; publications without
+  // targets (history, or the switch off) keep using the legacy columns below.
+  const live = SOCIAL_PUBLISHING_EDGE_ENABLED
+    ? (targets ?? []).filter((target) => target.status !== "cancelled")
+    : [];
+  if (live.length > 0) {
+    // Running, or due now and waiting for the worker to pick it up.
+    const running = live.some(
+      (target) =>
+        target.status === "running" ||
+        (target.status === "pending" &&
+          target.attempts === 0 &&
+          Date.parse(target.runAt) <= Date.now())
+    );
+    const open = live.some(
+      (target) => target.status === "pending" || target.status === "running"
+    );
+    const published = live.filter((target) => target.status === "published").length;
+    // Failed or waiting for the user (nothing is pending or running at this point).
+    const broken = live.length - published;
+    if (running) {
+      return { displayState: "publicando", className: "bg-blue-100 text-blue-800" };
+    }
+    if (open) {
+      return { displayState: "scheduled", className: "bg-blue-100 text-blue-800" };
+    }
+    if (broken === 0) {
+      return { displayState: "published", className: "bg-green-100 text-green-800" };
+    }
+    if (published === 0) {
+      return {
+        displayState: "error en publicación",
+        className: "bg-red-100 text-red-800",
+      };
+    }
+    return {
+      displayState: "publicado con errores",
+      className: "bg-yellow-100 text-yellow-800",
+    };
+  }
 
   if (state === "scheduled") {
     return {

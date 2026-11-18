@@ -17,6 +17,11 @@ import { NetworkMediaPanel } from "./NetworkMediaPanel";
 import { ImageAdjustDialog } from "./ImageAdjustDialog";
 import { MEDIA_NETWORKS, useMediaChecks, type MediaBlocker } from "./useMediaChecks";
 import type { SocialNetwork } from "../../helpers/socialMediaRules";
+import {
+  SOCIAL_PUBLISHING_EDGE_ENABLED,
+  madridToday,
+  madridWallClockToInstant,
+} from "../../../../helpers/publishDate";
 
 interface ConfigPublishProps {
   /** The publication being configured: its images and text feed the per-network checks. */
@@ -68,6 +73,8 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   const [publishNow, setPublishNow] = useState(false);
 
   const currentDate = useMemo(() => {
+    // With the Edge pipeline the user works in Europe/Madrid, whatever the browser's time zone is.
+    if (SOCIAL_PUBLISHING_EDGE_ENABLED) return madridToday();
     const today = new Date();
     return today.toISOString().split("T")[0];
   }, []);
@@ -83,6 +90,13 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   // Check if datetime is at least 1 hour in the future
   const isAtLeastOneHourInFuture = useMemo(() => {
     if (!publishDate || publishNow) return true; // Skip validation if publishNow is checked
+
+    // The picked date and time are Madrid wall-clock: compare the real instant they stand for.
+    if (SOCIAL_PUBLISHING_EDGE_ENABLED) {
+      const selectedInstant = madridWallClockToInstant(publishDate);
+      if (!selectedInstant) return true;
+      return selectedInstant.getTime() >= Date.now() + 60 * 60 * 1000;
+    }
 
     // Parse timestampz format: "YYYY-MM-DD HH:mm:ss+00"
     const match = new RegExp(/^(\d{4})-(\d{2})-(\d{2})\s(\d{2}):(\d{2})/).exec(publishDate);

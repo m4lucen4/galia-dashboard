@@ -1,6 +1,6 @@
 import React from "react";
 import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
-import { PreviewProjectDataProps } from "../../../../types";
+import { PreviewProjectDataProps, PublicationTarget } from "../../../../types";
 import { DocumentTextIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { Button } from "../../../../components/shared/ui/Button";
 import { InstagramIcon, LinkedInIcon } from "../../../../components/icons";
@@ -12,6 +12,8 @@ import { ProjectInfo } from "./ProjectInfo";
 import { ProjectMenu } from "./ProjectMenu";
 import { Pagination } from "@/components/shared/ui/Pagination";
 import { useHasValidSubscription } from "../../../../hooks/useHasValidSubscription";
+import { sortPreviewProjects } from "../../helpers/sortProjects";
+import { isRunning, type TargetsByPreview } from "../../helpers/publicationTargets";
 
 interface CardsListProps {
   projects: PreviewProjectDataProps[];
@@ -29,6 +31,11 @@ interface CardsListProps {
   handleOpenInstagram: (project: PreviewProjectDataProps) => void;
   handleOpenLinkedln: (project: PreviewProjectDataProps) => void;
   handlePublishAgain: (project: PreviewProjectDataProps) => void;
+  /** Edge pipeline only: current publication_targets by publication id. */
+  targetsByPreview?: TargetsByPreview;
+  isPublicationBusy?: (previewId: string) => boolean;
+  onRetryTarget?: (target: PublicationTarget) => void;
+  onReschedule?: (project: PreviewProjectDataProps) => void;
 }
 
 export const CardsList: React.FC<CardsListProps> = ({
@@ -47,22 +54,32 @@ export const CardsList: React.FC<CardsListProps> = ({
   handleOpenInstagram,
   handleOpenLinkedln,
   handlePublishAgain,
+  targetsByPreview,
+  isPublicationBusy,
+  onRetryTarget,
+  onReschedule,
 }) => {
   const { t } = useTranslation();
   const hasValidSubscription = useHasValidSubscription();
 
-  const sortedProjects = [...projects].sort((a, b) => {
-    if (a.state !== b.state) {
-      if (a.state === "preview") return -1;
-      if (b.state === "preview") return 1;
-    }
+  const sortedProjects = sortPreviewProjects(projects);
 
-    if (!a.publishDate) return 1;
-    if (!b.publishDate) return -1;
-    return (
-      new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()
-    );
-  });
+  const targetsOf = (project: PreviewProjectDataProps) =>
+    targetsByPreview?.[String(project.id)];
+  const publishBlocked = (project: PreviewProjectDataProps) =>
+    isDateInPast(project.publishDate) ||
+    !hasValidSubscription ||
+    (targetsOf(project) ?? []).some(isRunning);
+  const results = (project: PreviewProjectDataProps) => (
+    <SocialMediaResults
+      instagramResult={project.instagramResult}
+      linkedlnResult={project.linkedlnResult}
+      targets={targetsOf(project)}
+      busy={isPublicationBusy?.(String(project.id))}
+      onRetry={onRetryTarget}
+      onReschedule={onReschedule ? () => onReschedule(project) : undefined}
+    />
+  );
 
   const totalItems = sortedProjects.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -156,7 +173,7 @@ export const CardsList: React.FC<CardsListProps> = ({
                       onPublishAgain={handlePublishAgain}
                     />
                   </div>
-                  <ProjectInfo project={project} />
+                  <ProjectInfo project={project} targets={targetsOf(project)} />
                 </div>
 
                 {project.state !== "published" && (
@@ -175,16 +192,13 @@ export const CardsList: React.FC<CardsListProps> = ({
                     </div>
                     <Button
                       title={t("previewProjects.publish")}
-                      disabled={isDateInPast(project.publishDate) || !hasValidSubscription}
+                      disabled={publishBlocked(project)}
                       icon={!hasValidSubscription ? <LockClosedIcon className="h-3.5 w-3.5" /> : undefined}
                       onClick={() => handleOpenPublishConfig(project)}
                     />
                   </div>
                 )}
-                <SocialMediaResults
-                  instagramResult={project.instagramResult}
-                  linkedlnResult={project.linkedlnResult}
-                />
+                {results(project)}
                 {project.publishDate && (
                   <PublishStatusMessage publishDate={project.publishDate} />
                 )}
@@ -242,7 +256,7 @@ export const CardsList: React.FC<CardsListProps> = ({
                       onPublishAgain={handlePublishAgain}
                     />
                   </div>
-                  <ProjectInfo project={project} />
+                  <ProjectInfo project={project} targets={targetsOf(project)} />
                 </div>
 
                 {/* Actions and publication results */}
@@ -263,16 +277,13 @@ export const CardsList: React.FC<CardsListProps> = ({
                       </div>
                       <Button
                         title={t("previewProjects.publish")}
-                        disabled={isDateInPast(project.publishDate) || !hasValidSubscription}
+                        disabled={publishBlocked(project)}
                         icon={!hasValidSubscription ? <LockClosedIcon className="h-3.5 w-3.5" /> : undefined}                 
                         onClick={() => handleOpenPublishConfig(project)}
                       />
                     </div>
                   )}
-                  <SocialMediaResults
-                    instagramResult={project.instagramResult}
-                    linkedlnResult={project.linkedlnResult}
-                  />
+                  {results(project)}
                   {project.publishDate && (
                     <PublishStatusMessage publishDate={project.publishDate} />
                   )}

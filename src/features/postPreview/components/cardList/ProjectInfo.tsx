@@ -5,16 +5,18 @@ import {
   formatDateTimeToDisplay,
   getProjectStateInfo,
 } from "../../../../helpers";
-import { PreviewProjectDataProps } from "../../../../types";
+import { PreviewProjectDataProps, PublicationTarget } from "../../../../types";
 
 interface ProjectInfoProps {
   project: PreviewProjectDataProps;
+  /** Edge pipeline only: the state badge prefers the per-network targets. */
+  targets?: PublicationTarget[];
 }
 
-export const ProjectInfo: React.FC<ProjectInfoProps> = ({ project }) => {
+export const ProjectInfo: React.FC<ProjectInfoProps> = ({ project, targets }) => {
   const { t } = useTranslation();
 
-  const stateInfo = getProjectStateInfo(project);
+  const stateInfo = getProjectStateInfo(project, targets);
 
   return (
     <div className="mt-4 mb-3 min-w-0">

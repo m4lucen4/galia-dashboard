@@ -127,7 +127,12 @@ export const InputField: React.FC<InputFieldProps> = ({
     }
   };
 
+  // A stored time off the 15-minute grid (for example a rescheduled retry) stays selectable.
   const timeSlots = generateTimeSlots();
+  if (type === "dateTime" && /^\d{2}:\d{2}$/.test(timeValue) && !timeSlots.includes(timeValue)) {
+    timeSlots.push(timeValue);
+    timeSlots.sort();
+  }
 
   return (
     <div>

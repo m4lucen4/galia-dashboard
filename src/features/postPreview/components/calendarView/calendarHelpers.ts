@@ -1,4 +1,10 @@
 import { PreviewProjectDataProps } from "../../../../types";
+import {
+  SOCIAL_PUBLISHING_EDGE_ENABLED,
+  madridDayKeyOf,
+  madridTimeOf,
+  madridToday,
+} from "../../../../helpers/publishDate";
 
 export interface CalendarDayCell {
   date: Date;
@@ -91,6 +97,11 @@ export const getDayKeyFromPublishDate = (
   dateString: string | undefined,
 ): string | null => {
   if (!dateString) return null;
+  // Real instants (Edge pipeline, S9): the day is the Europe/Madrid one.
+  if (SOCIAL_PUBLISHING_EDGE_ENABLED) {
+    const madrid = madridDayKeyOf(dateString);
+    if (madrid) return madrid;
+  }
   const match = dateString.match(PUBLISH_DATE_REGEX);
   if (!match) return null;
   const [, year, month, day] = match;
@@ -104,13 +115,18 @@ export const formatTimeOnly = (
   dateString: string | undefined,
 ): string | null => {
   if (!dateString) return null;
+  if (SOCIAL_PUBLISHING_EDGE_ENABLED) {
+    const madrid = madridTimeOf(dateString);
+    if (madrid) return madrid;
+  }
   const match = dateString.match(PUBLISH_DATE_REGEX);
   if (!match) return null;
   const [, , , , hours, minutes] = match;
   return `${hours}:${minutes}`;
 };
 
-export const getTodayDayKey = (): string => toDayKey(new Date());
+export const getTodayDayKey = (): string =>
+  SOCIAL_PUBLISHING_EDGE_ENABLED ? madridToday() : toDayKey(new Date());
 
 /**
  * Groups projects by day key, excluding any project without a publishDate

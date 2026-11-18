@@ -751,6 +751,197 @@
           "remove": "No s'ha pogut eliminar l'ajust. Torna-ho a provar."
         }
       }
+    },
+    "publication": {
+      "panelTitle": "Estat de la publicació",
+      "reasonLabel": "Motiu:",
+      "viewPost": "Veure publicació",
+      "networks": {
+        "instagram": "Instagram",
+        "linkedin": "LinkedIn",
+        "generic": "la xarxa social"
+      },
+      "status": {
+        "scheduled": "Programat · {{date}}",
+        "publishing": "Publicant…",
+        "published": "Publicat",
+        "publishedAt": "Publicat · {{date}}",
+        "retrying": "Reintentant",
+        "needsAction": "Requereix acció",
+        "failed": "Error",
+        "scheduledShort": "Programat",
+        "publishingShort": "Publicant…",
+        "publishedShort": "Publicat",
+        "retryingShort": "Reintentant",
+        "needsActionShort": "Requereix acció",
+        "failedShort": "Error",
+        "nextAttemptAt": "Proper intent a les {{time}}.",
+        "nextAttemptOn": "Proper intent el {{date}}.",
+        "attempt": "(intent {{attempts}} de {{max}})"
+      },
+      "actions": {
+        "retry": "Reintentar",
+        "working": "Un moment…",
+        "reschedule": "Tornar a programar",
+        "dismiss": "Tancar avís"
+      },
+      "unknownOutcome": {
+        "title": "Comprova la publicació abans de reintentar",
+        "description": "Comprova a {{network}} que la publicació no s'hagi fet abans de reintentar. Si ja existeix, reintentar-ho la publicaria dues vegades.",
+        "confirm": "He comprovat a {{network}} que la publicació no existeix"
+      },
+      "notices": {
+        "scheduled": "Publicació programada per al {{date}} (hora de Madrid).",
+        "publishingNow": "Publicant ara. Veuràs aquí el resultat a cada xarxa social.",
+        "retried": "Reintent en marxa a {{network}}. Veuràs aquí el resultat.",
+        "reset": "La publicació està llesta per tornar a programar-se."
+      },
+      "requestErrors": {
+        "invalid_request": "Les dades de la publicació no són vàlides. Revisa la data i els comptes triats.",
+        "forbidden": "No tens permís per publicar aquesta publicació.",
+        "conflict": "La publicació ha canviat mentre la configuraves. Actualitza la pàgina i torna-ho a provar.",
+        "invalid_project": "El projecte d'aquesta publicació ja no és vàlid.",
+        "run_at_out_of_range": "La data triada està fora del rang permès: no pot ser anterior a ara ni superar un any.",
+        "in_progress": "La publicació s'està publicant ara mateix. Espera que acabi.",
+        "already_published": "Aquesta publicació ja està publicada. Fes servir «Publicar de nou» per començar una altra vegada.",
+        "not_retryable": "Aquesta publicació ja no es pot reintentar; potser ja està en marxa.",
+        "confirmation_required": "Abans de continuar cal comprovar a la xarxa social que la publicació no s'ha fet ja.",
+        "account_not_connected": "La xarxa social triada no està connectada. Connecta-la a Configuració.",
+        "account_not_allowed": "El compte o la pàgina triats no estan autoritzats. Torna a connectar-los a Configuració i selecciona'ls de nou.",
+        "unauthorized": "La teva sessió ha caducat. Torna a iniciar sessió.",
+        "internal_error": "S'ha produït un error al servidor. Torna-ho a provar d'aquí a uns minuts.",
+        "account_missing": "Selecciona un compte o una pàgina per a cada xarxa social triada.",
+        "no_networks": "Selecciona almenys una xarxa social.",
+        "invalid_date": "La data o l'hora no són vàlides.",
+        "uncertain": "No hem pogut confirmar el resultat. Comprova l'estat de la publicació abans de repetir l'acció.",
+        "default": "No s'ha pogut completar l'acció. Torna-ho a provar."
+      },
+      "targetErrors": {
+        "no_images": {
+          "reason": "La publicació no té cap imatge seleccionada.",
+          "fix": "Selecciona almenys una imatge i torna a programar la publicació."
+        },
+        "too_many_images": {
+          "reason": "Hi ha més imatges de les que admet {{network}}.",
+          "fix": "Treu les imatges que sobrin (el màxim és 20) i torna a programar la publicació."
+        },
+        "media_needs_crop": {
+          "reason": "Una imatge té una proporció que {{network}} no admet.",
+          "fix": "Retalla la imatge per a {{network}} a «Configurar publicació» i torna a programar-la."
+        },
+        "media_format": {
+          "reason": "El format, el pes o la mida d'una imatge no és vàlid per a {{network}}.",
+          "fix": "Ajusta les imatges a «Configurar publicació» per generar una còpia vàlida i torna a programar-la."
+        },
+        "media_rejected": {
+          "reason": "{{network}} ha rebutjat una de les imatges.",
+          "fix": "Prova amb una altra imatge o ajusta-la de nou i torna a programar la publicació."
+        },
+        "caption_too_long": {
+          "reason": "El text supera el límit de caràcters d'Instagram.",
+          "fix": "Escurça el text de la publicació i torna a programar-la."
+        },
+        "commentary_too_long": {
+          "reason": "El text supera el límit de 3.000 caràcters de LinkedIn.",
+          "fix": "Escurça el text de la publicació i torna a programar-la."
+        },
+        "too_many_hashtags": {
+          "reason": "El text porta més de 30 hashtags, el màxim d'Instagram.",
+          "fix": "Treu alguns hashtags i torna a programar la publicació."
+        },
+        "too_many_mentions": {
+          "reason": "El text porta més de 20 mencions, el màxim d'Instagram.",
+          "fix": "Treu algunes mencions i torna a programar la publicació."
+        },
+        "rate_limited": {
+          "reason": "{{network}} ha limitat temporalment les publicacions del compte.",
+          "fix": "No cal que facis res: es reintentarà automàticament."
+        },
+        "processing": {
+          "reason": "{{network}} encara està processant les imatges.",
+          "fix": "No cal que facis res: es reintentarà automàticament d'aquí a uns minuts."
+        },
+        "container_expired": {
+          "reason": "La preparació de la publicació a Instagram ha caducat.",
+          "fix": "No cal que facis res: es tornarà a preparar automàticament."
+        },
+        "token_invalid": {
+          "reason": "{{network}} ha rebutjat l'accés: la connexió ha caducat o ja no és vàlida.",
+          "fix": "Torna a connectar {{network}} a Configuració i prem Reintentar."
+        },
+        "permission_missing": {
+          "reason": "Falta un permís per publicar a {{network}}.",
+          "fix": "Torna a connectar {{network}} a Configuració acceptant tots els permisos i prem Reintentar."
+        },
+        "account_restricted": {
+          "reason": "El compte de {{network}} no pot publicar ara (restricció o verificació pendent).",
+          "fix": "Revisa l'estat del compte a {{network}} i prem Reintentar quan es resolgui."
+        },
+        "provider_unavailable": {
+          "reason": "{{network}} no ha respost o ha tingut una fallada temporal.",
+          "fix": "Es reintentarà automàticament; si s'esgoten els intents, prem Reintentar."
+        },
+        "invalid_request": {
+          "reason": "{{network}} ha rebutjat la publicació.",
+          "fix": "Revisa el text i les imatges i torna a programar-la, o prem Reintentar si creus que ha estat una fallada puntual."
+        },
+        "not_connected": {
+          "reason": "No hi ha cap connexió activa amb {{network}}.",
+          "fix": "Connecta {{network}} a Configuració i prem Reintentar."
+        },
+        "connection_expired": {
+          "reason": "La connexió amb {{network}} ha caducat o s'ha revocat.",
+          "fix": "Torna a connectar {{network}} a Configuració i prem Reintentar."
+        },
+        "page_not_authorized": {
+          "reason": "El compte o la pàgina triats ja no estan autoritzats a {{network}}.",
+          "fix": "Torna a connectar {{network}} a Configuració, selecciona el compte de nou i prem Reintentar."
+        },
+        "outcome_unknown": {
+          "reason": "No sabem si la publicació s'ha arribat a fer a {{network}}.",
+          "fix": "Comprova a {{network}} si la publicació ja existeix abans de reintentar, per no publicar-la dues vegades."
+        },
+        "lease_expired": {
+          "reason": "El procés de publicació s'ha interromput.",
+          "fix": "No cal que facis res: es reintentarà automàticament."
+        },
+        "internal_error": {
+          "reason": "S'ha produït un error intern en publicar.",
+          "fix": "Prem Reintentar; si es repeteix, contacta amb suport."
+        },
+        "provider_rejected": {
+          "reason": "{{network}} ha rebutjat la publicació sense indicar el motiu.",
+          "fix": "Revisa el contingut i prem Reintentar."
+        },
+        "provider_response_invalid": {
+          "reason": "{{network}} ha donat una resposta que no hem pogut interpretar.",
+          "fix": "Prem Reintentar; si es repeteix, contacta amb suport."
+        },
+        "api_version_unsupported": {
+          "reason": "La versió de l'API de {{network}} ja no s'admet.",
+          "fix": "És un problema nostre: contacta amb suport."
+        },
+        "invalid_account": {
+          "reason": "El compte triat a {{network}} no és vàlid.",
+          "fix": "Torna a programar la publicació triant el compte de nou."
+        },
+        "media_url_invalid": {
+          "reason": "Una imatge no és en un emmagatzematge vàlid per publicar.",
+          "fix": "Torna a seleccionar o pujar la imatge i programa la publicació de nou."
+        },
+        "media_too_large": {
+          "reason": "Una imatge pesa massa (més de 30 MB).",
+          "fix": "Fes servir una imatge més lleugera i torna a programar la publicació."
+        },
+        "media_unreadable": {
+          "reason": "No s'ha pogut llegir una de les imatges.",
+          "fix": "Substitueix la imatge per una altra i torna a programar la publicació."
+        },
+        "unknown": {
+          "reason": "No s'ha pogut publicar a {{network}}.",
+          "fix": "Prem Reintentar; si es repeteix, contacta amb suport."
+        }
+      }
     }
   },
   "profile": {

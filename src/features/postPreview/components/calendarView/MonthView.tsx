@@ -1,4 +1,5 @@
 import { PreviewProjectDataProps } from "../../../../types";
+import type { TargetsByPreview } from "../../helpers/publicationTargets";
 import {
   CalendarDayCell,
   WEEKDAY_LABELS_ES,
@@ -11,6 +12,7 @@ interface MonthViewProps {
   weeks: CalendarDayCell[][];
   grouped: Map<string, PreviewProjectDataProps[]>;
   onSelectProject: (project: PreviewProjectDataProps) => void;
+  targetsByPreview?: TargetsByPreview;
 }
 
 const MAX_VISIBLE_CHIPS = 2;
@@ -19,6 +21,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
   weeks,
   grouped,
   onSelectProject,
+  targetsByPreview,
 }) => {
   return (
     <div
@@ -69,6 +72,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
                     key={project.id}
                     project={project}
                     onClick={() => onSelectProject(project)}
+                    targets={targetsByPreview?.[String(project.id)]}
                   />
                 ))}
                 {hiddenCount > 0 && (
@@ -77,6 +81,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
                     projects={dayProjects}
                     hiddenCount={hiddenCount}
                     onSelectProject={onSelectProject}
+                    targetsByPreview={targetsByPreview}
                   />
                 )}
               </div>

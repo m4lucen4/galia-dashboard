@@ -111,6 +111,44 @@ export type SocialNetworksCheck = {
   instagram?: boolean | InstagramPageInfo;
 };
 
+// Per-network publication target (public.publication_targets), as the publish-publication Edge
+// Function returns it and the dashboard reads it (S23). Never carries tokens.
+export type PublicationTargetStatus =
+  | "pending"
+  | "running"
+  | "published"
+  | "failed"
+  | "needs_action"
+  | "cancelled";
+
+export type PublicationTargetErrorKind =
+  | "transient"
+  | "action_required"
+  | "permanent";
+
+export type PublicationTargetAccountKind =
+  | "instagram_business"
+  | "linkedin_person"
+  | "linkedin_organization";
+
+export type PublicationTarget = {
+  id: string;
+  previewId: string;
+  network: "instagram" | "linkedin";
+  status: PublicationTargetStatus;
+  /** Real instant (ISO) of the scheduled run, or of the next automatic attempt. */
+  runAt: string;
+  attempts: number;
+  maxAttempts: number;
+  errorCode: string | null;
+  errorKind: PublicationTargetErrorKind | null;
+  accountKind: PublicationTargetAccountKind;
+  accountName: string | null;
+  externalPostId: string | null;
+  permalink: string | null;
+  publishedAt: string | null;
+};
+
 export type PublishVersions = {
   id: string;
   description: string;
