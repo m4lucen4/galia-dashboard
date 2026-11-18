@@ -30,3 +30,7 @@ entrypoint = "./functions/social-connect-instagram/index.ts"
 [functions.social-credentials-check]
 verify_jwt = false
 entrypoint = "./functions/social-credentials-check/index.ts"
+
+[functions.process-publication-targets]
+verify_jwt = false
+entrypoint = "./functions/process-publication-targets/index.ts"

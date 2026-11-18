@@ -419,7 +419,13 @@ end;
 $$;
 
 -- Worker: content to publish for a leased target, read at publish time as n8n does.
--- Text: main version, else description_rich. Images: image_data entries not marked not_selected.
+-- Text: main version, else description_rich.
+-- Images: image_data entries not marked not_selected, in order, as objects
+--   {url, sourceUrl, isVariant, width, height}. When publication_media_variants has a row of the
+--   same preview, network and source_url, url is its public_url (width/height from the row);
+--   otherwise url is the original (width/height null: the original is never measured here).
+-- publication_media_variants comes from the phase 3 migration (20261118000600), which is applied
+-- before this one reaches production; the function body is only resolved when it runs.
 create function public.publication_target_payload(p_target uuid, p_lease uuid)
 returns jsonb language plpgsql stable security definer set search_path = '' as $$
 declare
@@ -443,11 +449,19 @@ begin
   end if;
   v_text := coalesce(v_text, v_preview.description_rich);
 
-  select coalesce(jsonb_agg(i->>'url' order by n), '[]'::jsonb) into v_images
+  select coalesce(jsonb_agg(jsonb_build_object(
+      'url', coalesce(mv.public_url, e.i->>'url'),
+      'sourceUrl', e.i->>'url',
+      'isVariant', mv.id is not null,
+      'width', mv.width,
+      'height', mv.height) order by e.n), '[]'::jsonb) into v_images
     from jsonb_array_elements(case when jsonb_typeof(v_preview.image_data) = 'array'
       then v_preview.image_data else '[]'::jsonb end) with ordinality e(i, n)
-    where jsonb_typeof(i) = 'object' and coalesce(i->>'status', '') <> 'not_selected'
-      and coalesce(i->>'url', '') <> '';
+    left join public.publication_media_variants mv
+      on mv.preview_id = v_target.preview_id and mv.network = v_target.network
+      and mv.source_url = e.i->>'url'
+    where jsonb_typeof(e.i) = 'object' and coalesce(e.i->>'status', '') <> 'not_selected'
+      and coalesce(e.i->>'url', '') <> '';
 
   return jsonb_build_object('targetId', v_target.id, 'previewId', v_target.preview_id,
     'ownerId', v_target.owner_id, 'network', v_target.network, 'format', v_target.format,
@@ -493,7 +507,8 @@ $$;
 --   failed + permanent           -> failed
 create function public.publication_target_finish(
   p_target uuid, p_lease uuid, p_outcome text, p_external_post_id text, p_permalink text,
-  p_error_code text, p_error_kind text, p_retry_after_seconds integer, p_diagnostics jsonb
+  p_error_code text, p_error_kind text, p_retry_after_seconds integer, p_diagnostics jsonb,
+  p_not_published boolean default false
 ) returns jsonb language plpgsql security definer set search_path = '' as $$
 declare
   v_preview_id bigint;
@@ -525,8 +540,10 @@ begin
   end if;
 
   -- A transient failure after the irreversible call started (timeout, 5xx) may have
-  -- published anyway: never retry it automatically.
-  if p_outcome = 'failed' and p_error_kind = 'transient' and v_target.side_effect_pending then
+  -- published anyway: never retry it automatically. p_not_published is set only when the
+  -- provider answered with a definitive rejection (nothing was published).
+  if p_outcome = 'failed' and p_error_kind = 'transient' and v_target.side_effect_pending
+    and not coalesce(p_not_published, false) then
     p_error_code := 'outcome_unknown'; p_error_kind := 'action_required';
   end if;
 
@@ -575,7 +592,7 @@ begin
     'public.publication_targets_claim(integer,integer)',
     'public.publication_target_payload(uuid,uuid)',
     'public.publication_target_checkpoint(uuid,uuid,text,jsonb,boolean,integer)',
-    'public.publication_target_finish(uuid,uuid,text,text,text,text,text,integer,jsonb)'
+    'public.publication_target_finish(uuid,uuid,text,text,text,text,text,integer,jsonb,boolean)'
   ] loop
     execute format('alter function %s owner to postgres', v_fn);
     execute format('revoke all on function %s from public, anon, authenticated, service_role', v_fn);
