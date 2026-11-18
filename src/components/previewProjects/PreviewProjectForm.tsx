@@ -21,6 +21,7 @@ import {
   type PublicationIterationError,
 } from "@/features/postPreview/services/publicationIteration";
 import { LoadingSpinner } from "../shared/ui/LoadingSpinner";
+import { PublicationVideoPicker } from "./PublicationVideoPicker";
 import { MediaGallerySelector } from "../../features/projects/components/MediaGallerySelector";
 import {
   projectControlClassName,
@@ -71,6 +72,14 @@ export const PreviewProjectForm = ({
   // Initialize images from project data
   const [images, setImages] = useState<ProjectImageData[]>(
     () => project?.image_data || [],
+  );
+  // One video of the publication's project, or none (null).
+  const [videoId, setVideoId] = useState<string | null>(
+    () => project?.video_id ?? null,
+  );
+  // Last value stored in the database (the prop can be stale until the list refreshes).
+  const [savedVideoId, setSavedVideoId] = useState<string | null>(
+    () => project?.video_id ?? null,
   );
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   // Initialize currentVersionIndex by finding the main version
@@ -223,6 +232,8 @@ export const PreviewProjectForm = ({
   };
 
   const handleSave = async () => {
+    // Only sent when it changed, so saving the rest of the form never depends on it.
+    const videoChange = videoId !== savedVideoId ? { video_id: videoId } : {};
     // If versions exist, update the versions array
     if (versions.length > 0) {
       const updatedVersions = versions.map((version, index) => {
@@ -240,6 +251,7 @@ export const PreviewProjectForm = ({
           projectId: project.id,
           image_data: images,
           versions: updatedVersions,
+          ...videoChange,
         }),
       ).unwrap();
     } else {
@@ -249,9 +261,11 @@ export const PreviewProjectForm = ({
           projectId: project.id,
           description_rich: description,
           image_data: images,
+          ...videoChange,
         }),
       ).unwrap();
     }
+    setSavedVideoId(videoId);
     onSave();
   };
 
@@ -639,6 +653,17 @@ export const PreviewProjectForm = ({
           ))}
         </div>
       </div>
+
+      <PublicationVideoPicker
+        projectId={
+          project?.project_id === null || project?.project_id === undefined
+            ? null
+            : String(project.project_id)
+        }
+        value={videoId}
+        onChange={setVideoId}
+        disabled={readOnly || isIterating}
+      />
 
       {!readOnly && (
         <div className={sharedButtonClassName}>

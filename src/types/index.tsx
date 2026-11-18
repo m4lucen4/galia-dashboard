@@ -176,11 +176,15 @@ export type PreviewProjectDataProps = {
   created_at?: string;
   updated_at?: string;
   user: string;
+  /** Project the publication was generated from; null for legacy rows. */
+  project_id?: string | number | null;
   title: string;
   state: string;
   description_rich: string;
   weblink?: string;
   image_data?: ProjectImageData[];
+  /** One video of the same project (public.project_videos.id), or none. */
+  video_id?: string | null;
   publishDate?: string;
   checkSocialNetworks?: SocialNetworksCheck;
   instagramResult?: string;
@@ -213,6 +217,8 @@ export type UpdatePreviewProjectProps = {
     };
   }>;
   versions?: PublishVersions[];
+  /** `null` clears the video; `undefined` leaves it untouched. */
+  video_id?: string | null;
 };
 
 export type IRequest = {

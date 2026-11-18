@@ -1,7 +1,7 @@
 import React from "react";
 import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { PreviewProjectDataProps, PublicationTarget } from "../../../../types";
-import { DocumentTextIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+import { LockClosedIcon } from "@heroicons/react/24/outline";
 import { Button } from "../../../../components/shared/ui/Button";
 import { InstagramIcon, LinkedInIcon } from "../../../../components/icons";
 import { isDateInPast, truncateText } from "../../../../helpers";
@@ -9,6 +9,8 @@ import { useTranslation } from "react-i18next";
 import { PublishStatusMessage } from "./PublishStatusMessage";
 import { SocialMediaResults } from "./SocialMediaResults";
 import { ProjectInfo } from "./ProjectInfo";
+import { CardThumbnail } from "./CardThumbnail";
+import { useVideoPosterUrls } from "@/features/projects/videos/useVideoPosterUrls";
 import { ProjectMenu } from "./ProjectMenu";
 import { Pagination } from "@/components/shared/ui/Pagination";
 import { useHasValidSubscription } from "../../../../hooks/useHasValidSubscription";
@@ -86,6 +88,7 @@ export const CardsList: React.FC<CardsListProps> = ({
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentProjects = sortedProjects.slice(startIndex, endIndex);
+  const posters = useVideoPosterUrls(currentProjects.map((p) => p.video_id));
   const paginationState = {
     pageIndex: currentPage - 1,
     pageSize: itemsPerPage,
@@ -140,23 +143,12 @@ export const CardsList: React.FC<CardsListProps> = ({
                 key={project.id}
                 className="min-w-0 rounded-[28px] border border-[#010000]/25 bg-white/35"
               >
-                {project.image_data && project.image_data.length > 0 ? (
-                  <div className="w-full h-52 overflow-hidden rounded-t-[27px] border-b border-[#010000]/15">
-                    <img
-                      src={
-                        project.image_data.find(
-                          (image) => image.status !== "not_selected",
-                        )?.url || project.image_data[0].url
-                      }
-                      alt={project.title}
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full h-52 rounded-t-[27px] border-b border-[#010000]/15 bg-[#d8e4d6] flex items-center justify-center">
-                    <DocumentTextIcon className="w-12 h-12 text-gray-400" />
-                  </div>
-                )}
+                <CardThumbnail
+                  project={project}
+                  posterUrl={project.video_id ? posters[project.video_id] : undefined}
+                  imageClassName="w-full h-52 overflow-hidden rounded-t-[27px] border-b border-[#010000]/15"
+                  placeholderClassName="w-full h-52 rounded-t-[27px] border-b border-[#010000]/15 bg-[#d8e4d6] flex items-center justify-center"
+                />
 
                 <div className="p-5">
                   <div className="flex justify-between items-start gap-3">
@@ -221,23 +213,12 @@ export const CardsList: React.FC<CardsListProps> = ({
               className="min-w-0 rounded-[28px] border border-[#010000]/25 bg-white/35 flex flex-col lg:flex-row"
             >
               {/* Image panel */}
-              {project.image_data && project.image_data.length > 0 ? (
-                <div className="w-full lg:w-56 xl:w-64 h-52 lg:h-auto lg:min-h-52 overflow-hidden rounded-t-[27px] lg:rounded-tr-none lg:rounded-l-[27px] shrink-0">
-                  <img
-                    src={
-                      project.image_data.find(
-                        (image) => image.status !== "not_selected",
-                      )?.url || project.image_data[0].url
-                    }
-                    alt={project.title}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                  />
-                </div>
-              ) : (
-                <div className="w-full lg:w-56 xl:w-64 h-52 lg:h-auto lg:min-h-52 rounded-t-[27px] lg:rounded-tr-none lg:rounded-l-[27px] bg-[#d8e4d6] flex items-center justify-center shrink-0">
-                  <DocumentTextIcon className="w-12 h-12 text-gray-400" />
-                </div>
-              )}
+              <CardThumbnail
+                project={project}
+                posterUrl={project.video_id ? posters[project.video_id] : undefined}
+                imageClassName="w-full lg:w-56 xl:w-64 h-52 lg:h-auto lg:min-h-52 overflow-hidden rounded-t-[27px] lg:rounded-tr-none lg:rounded-l-[27px] shrink-0"
+                placeholderClassName="w-full lg:w-56 xl:w-64 h-52 lg:h-auto lg:min-h-52 rounded-t-[27px] lg:rounded-tr-none lg:rounded-l-[27px] bg-[#d8e4d6] flex items-center justify-center shrink-0"
+              />
 
               {/* Project details */}
               <div className="min-w-0 flex-1 flex flex-col">
