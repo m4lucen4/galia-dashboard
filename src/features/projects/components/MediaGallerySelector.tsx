@@ -47,7 +47,7 @@ export const MediaGallerySelector: React.FC<MediaGallerySelectorProps> = ({
   isOpen,
   onClose,
   onSelect,
-  maxSelection = 10,
+  maxSelection = 20,
   currentSelectionCount = 0,
   variant = "default",
 }) => {
