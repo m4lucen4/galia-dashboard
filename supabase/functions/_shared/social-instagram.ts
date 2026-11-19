@@ -12,6 +12,7 @@ import type { InstagramMirrorPage } from "./social-n8n-mirror.ts";
 export const GRAPH_VERSION = "v27.0";
 export const GRAPH_BASE = `https://graph.facebook.com/${GRAPH_VERSION}`;
 export const PUBLISH_SCOPE = "instagram_content_publish";
+export const FACEBOOK_PUBLISH_SCOPE = "pages_manage_posts";
 const MAX_PAGES = 100;
 const PAGE_FIELDS = "id,name,category,tasks,access_token,instagram_business_account" +
   "{id,username,name,profile_picture_url,followers_count,media_count,biography}";
@@ -111,23 +112,37 @@ export async function instagramMe(fetcher: Fetcher, token: string): Promise<{ id
   return { id, name: (asString(data.name) ?? "Instagram").slice(0, 200) };
 }
 
+const ID_PATTERN = /^[A-Za-z0-9:_.-]{1,100}$/u;
+
+// /me/accounts, one batch of raw page records per Graph page. `isFull` is checked before each request.
+async function* accountBatches(
+  fetcher: Fetcher, userToken: string, isFull: () => boolean,
+): AsyncGenerator<unknown[]> {
+  let next: string | null = `${GRAPH_BASE}/me/accounts?${new URLSearchParams({
+    fields: PAGE_FIELDS, limit: "50", access_token: userToken,
+  }).toString()}`;
+  for (let guard = 0; next && guard < 10 && !isFull(); guard++) {
+    const data = await graphGet(fetcher, next, {});
+    yield Array.isArray(data.data) ? data.data : [];
+    // paging.next embeds the token: only follow it on the Graph host.
+    const nextUrl = asString(asRecord(data.paging)?.next);
+    next = nextUrl && nextUrl.startsWith("https://graph.facebook.com/") ? nextUrl : null;
+  }
+}
+
 // Facebook pages of the user that have an Instagram business account, with the page token that
 // publishing needs. One entry per Instagram account.
 export async function instagramPages(fetcher: Fetcher, userToken: string): Promise<InstagramMirrorPage[]> {
   const pages: InstagramMirrorPage[] = [];
-  let next: string | null = `${GRAPH_BASE}/me/accounts?${new URLSearchParams({
-    fields: PAGE_FIELDS, limit: "50", access_token: userToken,
-  }).toString()}`;
-  for (let guard = 0; next && guard < 10 && pages.length < MAX_PAGES; guard++) {
-    const data = await graphGet(fetcher, next, {});
-    for (const item of Array.isArray(data.data) ? data.data : []) {
+  for await (const batch of accountBatches(fetcher, userToken, () => pages.length >= MAX_PAGES)) {
+    for (const item of batch) {
       const page = asRecord(item);
       const ig = asRecord(page?.instagram_business_account);
       const igId = asString(ig?.id);
       const pageId = asString(page?.id);
       const token = asString(page?.access_token);
       if (!page || !ig || !igId || !pageId || !token || token.length > 4096) continue;
-      if (!/^[A-Za-z0-9:_.-]{1,100}$/u.test(igId) || !/^[A-Za-z0-9:_.-]{1,100}$/u.test(pageId)) continue;
+      if (!ID_PATTERN.test(igId) || !ID_PATTERN.test(pageId)) continue;
       if (pages.some((p) => p.instagram_business_account_id === igId)) continue;
       pages.push({
         facebook_page_id: pageId,
@@ -144,9 +159,40 @@ export async function instagramPages(fetcher: Fetcher, userToken: string): Promi
         permissions: Array.isArray(page.tasks) ? page.tasks.filter((t): t is string => typeof t === "string") : [],
       });
     }
-    // paging.next embeds the token: only follow it on the Graph host.
-    const nextUrl = asString(asRecord(data.paging)?.next);
-    next = nextUrl && nextUrl.startsWith("https://graph.facebook.com/") ? nextUrl : null;
+  }
+  return pages;
+}
+
+export interface FacebookPage {
+  id: string;
+  name: string;
+  instagramId: string | null;
+  instagramUsername: string | null;
+  pageAccessToken: string;
+}
+
+// Facebook Pages of the user the app can publish to: the user can perform CREATE_CONTENT on the Page
+// and Graph returned a page token. Pages without a linked Instagram account are kept.
+export async function facebookPages(fetcher: Fetcher, userToken: string): Promise<FacebookPage[]> {
+  const pages: FacebookPage[] = [];
+  for await (const batch of accountBatches(fetcher, userToken, () => pages.length >= MAX_PAGES)) {
+    for (const item of batch) {
+      const page = asRecord(item);
+      const pageId = asString(page?.id);
+      const token = asString(page?.access_token);
+      if (!page || !pageId || !token || token.length > 4096 || !ID_PATTERN.test(pageId)) continue;
+      if (!Array.isArray(page.tasks) || !page.tasks.includes("CREATE_CONTENT")) continue;
+      if (pages.some((p) => p.id === pageId)) continue;
+      const ig = asRecord(page.instagram_business_account);
+      const igId = asString(ig?.id);
+      pages.push({
+        id: pageId,
+        name: (asString(page.name) ?? pageId).slice(0, 200),
+        instagramId: igId && ID_PATTERN.test(igId) ? igId : null,
+        instagramUsername: asString(ig?.username),
+        pageAccessToken: token,
+      });
+    }
   }
   return pages;
 }
@@ -164,6 +210,23 @@ export function instagramPageRecords(pages: InstagramMirrorPage[]) {
     })),
     credentials: pages.map((p) => ({
       kind: "page_access" as const, externalId: p.instagram_business_account_id, token: p.page_access_token,
+    })),
+  };
+}
+
+// Safe projection for the facebook social_connections.pages (no tokens) and the page credentials
+// keyed by facebook page id.
+export function facebookPageRecords(pages: FacebookPage[]) {
+  return {
+    pages: pages.map((p) => ({
+      id: p.id,
+      name: p.name,
+      type: "PAGE",
+      ...(p.instagramId ? { instagramId: p.instagramId } : {}),
+      ...(p.instagramId && p.instagramUsername ? { instagramUsername: p.instagramUsername.slice(0, 100) } : {}),
+    })),
+    credentials: pages.map((p) => ({
+      kind: "page_access" as const, externalId: p.id, token: p.pageAccessToken,
     })),
   };
 }
