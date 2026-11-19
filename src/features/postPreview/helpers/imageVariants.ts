@@ -12,6 +12,7 @@ import {
   correctedCanvas,
   normalizeAdjustments,
   rotatedCanvas,
+  rotatedSize,
   type ImageAdjustments,
 } from "./imageAdjustments";
 
@@ -19,6 +20,15 @@ export type { ImageAdjustments } from "./imageAdjustments";
 
 /** Longest side of the working copy when the image is straightened or its perspective corrected. */
 export const TRANSFORM_MAX_SIDE = 4096;
+/** Area cap of the rotated working canvas (iOS Safari refuses canvases over ~16.7 M px). */
+const TRANSFORM_MAX_PIXELS = 16_000_000;
+
+/** Longest side of the working copy so that its rotated bounding box stays under the area cap. */
+function workingMaxSide(width: number, height: number, rotation: number): number {
+  const box = rotatedSize(width, height, rotation);
+  const areaScale = Math.sqrt(TRANSFORM_MAX_PIXELS / (box.width * box.height));
+  return Math.min(TRANSFORM_MAX_SIDE, Math.floor(Math.max(width, height) * Math.min(1, areaScale)));
+}
 
 /** Crop rectangle in pixels of the original image. */
 export interface CropArea {
@@ -132,7 +142,11 @@ export async function renderVariant(
   let stageHeight = image.naturalHeight;
   let stageScale = 1;
   if (vertical !== 0 || rotation !== 0) {
-    const corrected = correctedCanvas(image, vertical, TRANSFORM_MAX_SIDE);
+    const corrected = correctedCanvas(
+      image,
+      vertical,
+      workingMaxSide(image.naturalWidth, image.naturalHeight, rotation),
+    );
     const rotated = rotatedCanvas(corrected.canvas, rotation);
     stage = rotated;
     stageWidth = rotated.width;
@@ -164,9 +178,9 @@ export async function renderVariant(
           width: source.width / stageScale,
           height: source.height / stageScale,
         };
-  // Output size from the crop in original pixels: a reduced working copy does not shrink the plan.
-  const planWidth = storedCrop.width;
-  const planHeight = storedCrop.height;
+  // Output size from the crop in the stage: a reduced working copy is never upsampled.
+  const planWidth = source.width;
+  const planHeight = source.height;
 
   let scale = 1;
   for (let round = 0; round < MAX_SCALE_ROUNDS; round += 1) {

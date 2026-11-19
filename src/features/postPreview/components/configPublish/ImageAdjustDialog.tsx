@@ -127,13 +127,18 @@ const aspectOf = (choice: RatioChoice, natural: number, free: number) => {
 };
 
 const AREA_TOLERANCE = 3;
-const areaDiffers = (a: Area | null, b: Area | null) =>
-  a !== null &&
-  b !== null &&
-  (Math.abs(a.x - b.x) > AREA_TOLERANCE ||
-    Math.abs(a.y - b.y) > AREA_TOLERANCE ||
-    Math.abs(a.width - b.width) > AREA_TOLERANCE ||
-    Math.abs(a.height - b.height) > AREA_TOLERANCE);
+/** `scale`: size of the image shown in the cropper relative to the original (one shown pixel = 1/scale). */
+const areaDiffers = (a: Area | null, b: Area | null, scale = 1) => {
+  const tolerance = AREA_TOLERANCE / scale;
+  return (
+    a !== null &&
+    b !== null &&
+    (Math.abs(a.x - b.x) > tolerance ||
+      Math.abs(a.y - b.y) > tolerance ||
+      Math.abs(a.width - b.width) > tolerance ||
+      Math.abs(a.height - b.height) > tolerance)
+  );
+};
 
 /** Editor of an image: restored from its applied variant, else the natural starting point. */
 function initialEditor(
@@ -399,7 +404,7 @@ export const ImageAdjustDialog: React.FC<ImageAdjustDialogProps> = ({
       (editor.choice !== editor.baseline.choice ||
         (editor.choice === "free" &&
           Math.abs(editor.freeRatio - editor.baseline.freeRatio) > 0.005))) ||
-      areaDiffers(editor.area, editor.baseline.area) ||
+      areaDiffers(editor.area, editor.baseline.area, cropperScale) ||
       !sameAdjustments(editor.adjustments, editor.baseline.adjustments));
 
   // Perspective-corrected copy for the cropper, rebuilt (debounced) when the image or the value changes.
@@ -852,9 +857,11 @@ export const ImageAdjustDialog: React.FC<ImageAdjustDialogProps> = ({
                         />
                       ) : (
                         <p role="status" className="flex h-full items-center justify-center p-4 text-center text-xs text-[#d8e4d6]">
-                          {previewFailed === previewKey
-                            ? t(`${DIALOG}.errors.load`)
-                            : t(`${ADJUST}.preparing`)}
+                          {corsBlocked
+                            ? t(`${PREFIX}.corsBlocked`)
+                            : previewFailed === previewKey
+                              ? t(`${DIALOG}.errors.load`)
+                              : t(`${ADJUST}.preparing`)}
                         </p>
                       )}
                     </div>
