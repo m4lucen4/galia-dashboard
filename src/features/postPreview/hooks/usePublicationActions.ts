@@ -20,6 +20,8 @@ import {
   schedulePublication,
 } from "../services/publicationPublishing";
 import { isUnknownOutcome } from "../helpers/publicationTargets";
+import { SOCIAL_VIDEO_ENABLED, type NetworkFormats } from "../helpers/socialVideo";
+import { VIDEO_REQUEST_ERROR_TEXTS } from "../helpers/socialVideoTexts";
 
 export interface PublicationNotice {
   kind: "success" | "error";
@@ -52,6 +54,8 @@ export interface PublishParams {
   publishDate: string;
   publishNow: boolean;
   socialNetworks: SocialNetworksCheck;
+  /** Format per selected network; only used with VITE_SOCIAL_VIDEO on (ignored otherwise). */
+  formats?: NetworkFormats;
 }
 
 /**
@@ -70,7 +74,9 @@ export function usePublicationActions({ targetsFor, applyTargets, onRefresh }: O
     (error: unknown): string => {
       const code = isPublicationPublishingError(error) ? error.code : "default";
       return t(`previewProjects.publication.requestErrors.${code}`, {
-        defaultValue: t("previewProjects.publication.requestErrors.default"),
+        defaultValue:
+          VIDEO_REQUEST_ERROR_TEXTS[code] ??
+          t("previewProjects.publication.requestErrors.default"),
       });
     },
     [t],
@@ -143,7 +149,11 @@ export function usePublicationActions({ targetsFor, applyTargets, onRefresh }: O
       const previewId = String(params.project.id);
       let targets: PublicationTargetRequest[];
       try {
-        targets = buildPublicationTargets(params.socialNetworks);
+        // With the video switch off no format is passed: the request body is the one of today.
+        targets = buildPublicationTargets(
+          params.socialNetworks,
+          SOCIAL_VIDEO_ENABLED ? params.formats : undefined,
+        );
       } catch (error) {
         handlers.onError(errorMessage(error));
         return;

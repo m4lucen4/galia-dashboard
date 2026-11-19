@@ -8,20 +8,34 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-import { PreviewProjectDataProps, UserDataProps } from "../../../types";
+import {
+  PreviewProjectDataProps,
+  PublicationFormat,
+  UserDataProps,
+} from "../../../types";
 import { usePreviewImages } from "../helpers/usePreviewImages";
 import { publishedText } from "../helpers/socialText";
+import { SOCIAL_VIDEO_ENABLED } from "../helpers/socialVideo";
+import { usePublicationVideo } from "../hooks/usePublicationVideo";
+import { InstagramVerticalPreview } from "./InstagramVerticalPreview";
+import { PreviewFormatTabs } from "./PreviewFormatTabs";
 
 interface IProjectInstagramPostProps {
   project: PreviewProjectDataProps;
   user: UserDataProps;
+  /** Only with VITE_SOCIAL_VIDEO on: the format the preview opens on. */
+  initialFormat?: PublicationFormat;
 }
 
 export default function InstagramPost({
   project,
   user,
+  initialFormat,
 }: IProjectInstagramPostProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  // Video formats (VITE_SOCIAL_VIDEO): Reel and Stories are previewed in a 9:16 frame.
+  const [format, setFormat] = useState<PublicationFormat>(initialFormat ?? "image");
+  const video = usePublicationVideo(project);
   // Same images and text as the publish payload: what you see is what gets published,
   // including the Instagram-adjusted copies when the adjuster is on.
   const pendingImages = usePreviewImages(project, "instagram");
@@ -44,7 +58,34 @@ export default function InstagramPost({
     );
   };
 
+  const tabs = SOCIAL_VIDEO_ENABLED ? (
+    <PreviewFormatTabs
+      network="instagram"
+      project={project}
+      video={video}
+      value={format}
+      onChange={setFormat}
+    />
+  ) : null;
+
+  if (SOCIAL_VIDEO_ENABLED && format !== "image" && format !== "video") {
+    return (
+      <>
+        {tabs}
+        <InstagramVerticalPreview
+          format={format}
+          project={project}
+          user={user}
+          video={video}
+          text={text}
+        />
+      </>
+    );
+  }
+
   return (
+    <>
+    {tabs}
     <div className="max-w-md mx-auto bg-white border border-gray-200 rounded-sm">
       {/* Header with user information */}
       <div className="flex items-center justify-between p-3 border-b border-gray-100">
@@ -150,5 +191,6 @@ export default function InstagramPost({
         </button>
       </div>
     </div>
+    </>
   );
 }

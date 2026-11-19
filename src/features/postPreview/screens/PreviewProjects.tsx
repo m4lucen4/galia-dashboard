@@ -47,6 +47,11 @@ import { usePublicationTargets } from "../hooks/usePublicationTargets";
 import { usePublicationActions } from "../hooks/usePublicationActions";
 import { sortPreviewProjects } from "../helpers/sortProjects";
 import { mayHaveTargets, visibleTargets } from "../helpers/publicationTargets";
+import {
+  SOCIAL_VIDEO_ENABLED,
+  initialPreviewFormat,
+  type NetworkFormats,
+} from "../helpers/socialVideo";
 
 export const PreviewProjects = () => {
   const dispatch = useAppDispatch();
@@ -65,6 +70,8 @@ export const PreviewProjects = () => {
   // Only set with VITE_SOCIAL_MEDIA_VARIANTS on: why the image variants block the publication.
   const [mediaBlockReason, setMediaBlockReason] = useState<string | null>(null);
   const [publishNow, setPublishNow] = useState(false);
+  // Only set with VITE_SOCIAL_VIDEO on: the format that will be published in each network.
+  const [formats, setFormats] = useState<NetworkFormats>({});
   // Edge pipeline only: message of the last failed confirm, shown inside the configuration dialog.
   const [publishError, setPublishError] = useState<string | null>(null);
   const [socialNetworks, setSocialNetworks] = useState<SocialNetworksCheck>({
@@ -269,6 +276,7 @@ export const PreviewProjects = () => {
     setPublishNow(false);
     setPublishError(null);
     setMediaBlockReason(null);
+    setFormats({});
 
     // Never carry the Instagram page token in browser state; the server fills it for n8n.
     const storedInstagram = project.checkSocialNetworks?.instagram;
@@ -335,7 +343,13 @@ export const PreviewProjects = () => {
     if (selectedProject && SOCIAL_PUBLISHING_EDGE_ENABLED) {
       setPublishError(null);
       publicationActions.publish(
-        { project: selectedProject, publishDate, publishNow, socialNetworks },
+        {
+          project: selectedProject,
+          publishDate,
+          publishNow,
+          socialNetworks,
+          formats: SOCIAL_VIDEO_ENABLED ? formats : undefined,
+        },
         { onSuccess: closeAlert, onError: setPublishError },
       );
       return;
@@ -455,10 +469,28 @@ export const PreviewProjects = () => {
             </div>
           )}
         {seeInstagram && project && userData && (
-          <InstagramPost key={project.id} project={project} user={userData} />
+          <InstagramPost
+            key={project.id}
+            project={project}
+            user={userData}
+            initialFormat={
+              SOCIAL_VIDEO_ENABLED
+                ? initialPreviewFormat("instagram", project, targetsFor(String(project.id)))
+                : undefined
+            }
+          />
         )}
         {seeLinkedln && project && userData && (
-          <LinkedInPost key={project.id} project={project} user={userData} />
+          <LinkedInPost
+            key={project.id}
+            project={project}
+            user={userData}
+            initialFormat={
+              SOCIAL_VIDEO_ENABLED
+                ? initialPreviewFormat("linkedin", project, targetsFor(String(project.id)))
+                : undefined
+            }
+          />
         )}
         {SOCIAL_PUBLISHING_EDGE_ENABLED &&
           seeEditPreview &&
@@ -548,6 +580,7 @@ export const PreviewProjects = () => {
             onValidationChange={setHasDateValidationError}
             onPublishNowChange={setPublishNow}
             onMediaBlockChange={setMediaBlockReason}
+            onFormatsChange={setFormats}
           />
           {publishError && (
             <p role="alert" className="mt-4 rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900">

@@ -4,11 +4,17 @@ import type { TFunction } from "i18next";
 import { PillButton } from "@/components/shared/ui/PillButton";
 import { formatBytes, formatLabel } from "../../helpers/publicationImages";
 import {
+  formatVideoDuration,
+  formatVideoSize,
+} from "@/features/projects/videos/videoFormat";
+import { PANEL_TEXTS } from "../../helpers/socialVideoTexts";
+import {
   INSTAGRAM_MEDIA,
   LINKEDIN_MEDIA,
   ratioLabel,
   type ImageIssue,
   type SocialNetwork,
+  type VideoIssue,
 } from "../../helpers/socialMediaRules";
 import {
   INSTAGRAM_CAPTION_MAX,
@@ -84,6 +90,19 @@ function issueMessage(
   }
 }
 
+function videoIssueMessage(locale: string, issue: VideoIssue): string {
+  switch (issue.code) {
+    case "story_too_long":
+      return PANEL_TEXTS.storyTooLong(formatVideoDuration(issue.actual ?? 0));
+    case "story_too_heavy":
+      return PANEL_TEXTS.storyTooHeavy(formatVideoSize(issue.actual ?? 0));
+    case "not_faststart":
+      return PANEL_TEXTS.faststart;
+    case "not_vertical":
+      return PANEL_TEXTS.notVertical(ratioLabel(issue.actual ?? 0, locale));
+  }
+}
+
 function collectionMessage(t: TFunction, network: SocialNetwork, issue: ImageIssue): string {
   const name = t(`${PREFIX}.networks.${network}`);
   if (issue.code === "too_many_items") {
@@ -104,6 +123,9 @@ export const NetworkMediaPanel: React.FC<NetworkMediaPanelProps> = ({
   const locale = i18n.language;
   const { network, rows, collectionIssues } = media;
   const isInstagram = network === "instagram";
+  // Video formats (VITE_SOCIAL_VIDEO): the checks are about the video, not about images.
+  const videoCheck = media.video;
+  const story = media.format === "story_image" || media.format === "story_video";
 
   const lines: { key: string; tone: "warn" | "info" | "ok"; text: string; retryUrl?: string }[] =
     [];
@@ -163,8 +185,55 @@ export const NetworkMediaPanel: React.FC<NetworkMediaPanelProps> = ({
     lines.push({ key: issue.code, tone: "warn", text: collectionMessage(t, network, issue) });
   });
 
+  if (videoCheck) {
+    switch (videoCheck.state) {
+      case "loading":
+        lines.push({ key: "video-loading", tone: "info", text: PANEL_TEXTS.videoLoading });
+        break;
+      case "error":
+        lines.push({ key: "video-error", tone: "warn", text: PANEL_TEXTS.videoError });
+        break;
+      case "none":
+      case "missing":
+        lines.push({ key: "video-missing", tone: "warn", text: PANEL_TEXTS.videoMissing });
+        break;
+      case "ready":
+        if (videoCheck.facts) {
+          lines.push({
+            key: "video-info",
+            tone: "info",
+            text: PANEL_TEXTS.videoInfo(
+              formatVideoDuration(videoCheck.facts.durationMs),
+              formatVideoSize(videoCheck.facts.bytes),
+              `${videoCheck.facts.width}×${videoCheck.facts.height}`,
+            ),
+          });
+        }
+        videoCheck.issues.forEach((issue) => {
+          lines.push({
+            key: `video-${issue.code}`,
+            tone: "warn",
+            text: videoIssueMessage(locale, issue),
+          });
+        });
+        break;
+    }
+  } else if (media.format === "story_image") {
+    // The server publishes the first original image as is; the feed rules do not apply.
+    lines.push({ key: "story-image", tone: "info", text: PANEL_TEXTS.storyImageInfo });
+    const mime = rows[0]?.facts?.mime;
+    if (mime && mime !== "image/jpeg") {
+      lines.push({
+        key: "story-image-format",
+        tone: "warn",
+        text: PANEL_TEXTS.storyImageNotJpeg(formatLabel(mime)),
+      });
+    }
+  }
+
   const measured = rows.every((row) => row.state === "ok");
-  const clean = measured && rows.length > 0 && lines.every((line) => line.tone === "ok");
+  const clean =
+    !videoCheck && measured && rows.length > 0 && lines.every((line) => line.tone === "ok");
   const limit = isInstagram ? INSTAGRAM_CAPTION_MAX : LINKEDIN_COMMENTARY_MAX;
   const format = (value: number) => new Intl.NumberFormat(locale).format(value);
 
@@ -186,7 +255,7 @@ export const NetworkMediaPanel: React.FC<NetworkMediaPanelProps> = ({
         <p className="font-medium text-[#010000]">
           {t(`${PREFIX}.title`, { network: t(`${PREFIX}.networks.${network}`) })}
         </p>
-        {variantsEnabled && (
+        {variantsEnabled && !videoCheck && !story && (
           <PillButton
             variant="outline"
             className="min-h-9 px-4 py-2 text-xs"
@@ -227,6 +296,11 @@ export const NetworkMediaPanel: React.FC<NetworkMediaPanelProps> = ({
       )}
       {clean && <p className="text-emerald-800">{t(`${PREFIX}.imagesOk`)}</p>}
 
+      {story ? (
+        <p className="border-t border-[#010000]/10 pt-2 text-[#010000]/65">
+          {PANEL_TEXTS.storyNoCaption}
+        </p>
+      ) : (
       <div className="border-t border-[#010000]/10 pt-2">
         <p className="mb-1 font-medium text-[#010000]">{t(`${PREFIX}.textTitle`)}</p>
         <ul className="space-y-0.5">
@@ -257,6 +331,7 @@ export const NetworkMediaPanel: React.FC<NetworkMediaPanelProps> = ({
           <p className="mt-1 text-[#010000]/50">{t(`${PREFIX}.instagramLimitsProvisional`)}</p>
         )}
       </div>
+      )}
     </section>
   );
 };

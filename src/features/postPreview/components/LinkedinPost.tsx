@@ -8,21 +8,37 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-import { PreviewProjectDataProps, UserDataProps } from "../../../types";
+import {
+  PreviewProjectDataProps,
+  PublicationFormat,
+  UserDataProps,
+} from "../../../types";
 import { usePreviewImages } from "../helpers/usePreviewImages";
 import { publishedText } from "../helpers/socialText";
+import { SOCIAL_VIDEO_ENABLED } from "../helpers/socialVideo";
+import { PREVIEW_TEXTS } from "../helpers/socialVideoTexts";
+import { usePublicationVideo } from "../hooks/usePublicationVideo";
+import { PreviewFormatTabs } from "./PreviewFormatTabs";
+import { VideoPreviewFrame } from "./VideoPreviewFrame";
 import { useState, useMemo } from "react";
 
 interface IProjectLinkedlnPostProps {
   project: PreviewProjectDataProps;
   user: UserDataProps;
+  /** Only with VITE_SOCIAL_VIDEO on: the format the preview opens on. */
+  initialFormat?: PublicationFormat;
 }
 
 export default function LinkedInPost({
   project,
   user,
+  initialFormat,
 }: IProjectLinkedlnPostProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  // Video format (VITE_SOCIAL_VIDEO): the poster of the video, played on demand, instead of the images.
+  const [format, setFormat] = useState<PublicationFormat>(initialFormat ?? "image");
+  const video = usePublicationVideo(project);
+  const showVideo = SOCIAL_VIDEO_ENABLED && format === "video";
   // Same images and text as the publish payload: what you see is what gets published,
   // including the LinkedIn-adjusted copies when the adjuster is on.
   const pendingImages = usePreviewImages(project, "linkedin");
@@ -39,6 +55,16 @@ export default function LinkedInPost({
   };
 
   return (
+    <>
+    {SOCIAL_VIDEO_ENABLED && (
+      <PreviewFormatTabs
+        network="linkedin"
+        project={project}
+        video={video}
+        value={format}
+        onChange={setFormat}
+      />
+    )}
     <div className="max-w-md mx-auto bg-white border border-gray-200 rounded-lg shadow-sm">
       <div className="flex items-start p-3">
         <div className="mr-2">
@@ -86,7 +112,20 @@ export default function LinkedInPost({
       </div>
 
       <div className="relative mb-2">
-        {pendingImages.length > 0 && (
+        {showVideo &&
+          (video.status === "ready" ? (
+            <VideoPreviewFrame
+              videoUrl={video.videoUrl}
+              posterUrl={video.posterUrl}
+              aspectRatio={`${video.video.width} / ${video.video.height}`}
+              className="max-h-[70vh]"
+            />
+          ) : (
+            <p className="px-3 py-6 text-center text-sm text-gray-500">
+              {video.status === "loading" ? "Cargando vídeo…" : PREVIEW_TEXTS.videoUnavailable}
+            </p>
+          ))}
+        {!showVideo && pendingImages.length > 0 && (
           <div className="relative">
             <img
               src={pendingImages[currentImageIndex]?.url}
@@ -206,5 +245,6 @@ export default function LinkedInPost({
         </div>
       </div>
     </div>
+    </>
   );
 }

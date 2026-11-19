@@ -67,6 +67,12 @@ export const KNOWN_TARGET_ERROR_CODES = new Set([
   "media_url_invalid",
   "media_too_large",
   "media_unreadable",
+  // Video formats (docs/social-publishing.md): texts in socialVideoTexts.ts.
+  "video_missing",
+  "media_processing_timeout",
+  "format_unsupported",
+  "video_required",
+  "video_limits",
 ]);
 
 /** Errors solved by reconnecting the network in Settings (the fix text links there). */
@@ -105,6 +111,18 @@ export const visibleTargets = (targets?: PublicationTarget[]): PublicationTarget
 
 export type TargetsByPreview = Record<string, PublicationTarget[]>;
 
+/**
+ * A table read or a realtime row may not carry `format` (the browser cannot read that column until
+ * it is granted); the function answer does. Keep the format already known for the same target.
+ */
+function keepFormat(
+  target: PublicationTarget,
+  known: ReadonlyMap<string, PublicationTarget["format"]>,
+): PublicationTarget {
+  const format = target.format ?? known.get(target.id);
+  return format && !target.format ? { ...target, format } : target;
+}
+
 /** Replaces the targets of the given publications with a fresh read (other publications untouched). */
 export function replaceTargets(
   current: TargetsByPreview,
@@ -112,9 +130,13 @@ export function replaceTargets(
   fresh: PublicationTarget[],
 ): TargetsByPreview {
   const next: TargetsByPreview = { ...current };
-  for (const id of previewIds) delete next[id];
+  const known = new Map<string, PublicationTarget["format"]>();
+  for (const id of previewIds) {
+    for (const target of current[id] ?? []) known.set(target.id, target.format);
+    delete next[id];
+  }
   for (const target of fresh) {
-    (next[target.previewId] ??= []).push(target);
+    (next[target.previewId] ??= []).push(keepFormat(target, known));
   }
   return next;
 }
@@ -137,10 +159,10 @@ export function applyTargetEvent(
     return changed ? next : current;
   }
   const { target } = event;
-  const list = (current[target.previewId] ?? []).filter(
-    (existing) => existing.id !== target.id,
-  );
-  return { ...current, [target.previewId]: [...list, target] };
+  const previous = current[target.previewId] ?? [];
+  const known = new Map(previous.map((existing) => [existing.id, existing.format] as const));
+  const list = previous.filter((existing) => existing.id !== target.id);
+  return { ...current, [target.previewId]: [...list, keepFormat(target, known)] };
 }
 
 /** Sets the whole current list of one publication (a function answer is authoritative). */

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { PreviewProjectDataProps } from "@/types";
+import type { PreviewProjectDataProps, PublicationFormat } from "@/types";
 import {
   failureKind,
   forgetMeasurement,
@@ -12,11 +12,17 @@ import {
 import { clampInstagramRatio, renderVariant } from "../../helpers/imageVariants";
 import {
   evaluateCarousel,
+  evaluateVideo,
+  INSTAGRAM_STORY_VIDEO,
+  isVideoFormat,
   SOCIAL_MEDIA_VARIANTS_ENABLED,
   type ImageFacts,
   type ImageIssue,
   type SocialNetwork,
+  type VideoFacts,
+  type VideoIssue,
 } from "../../helpers/socialMediaRules";
+import type { NetworkFormats, PublicationVideoState } from "../../helpers/socialVideo";
 import { publishedText, textStats, type TextStats } from "../../helpers/socialText";
 import {
   listPublicationMediaVariants,
@@ -66,7 +72,12 @@ export type MediaBlockerCode =
   | "noImages"
   | "crop"
   | "converting"
-  | "conversionFailed";
+  | "conversionFailed"
+  // Video formats (VITE_SOCIAL_VIDEO)
+  | "videoLoading"
+  | "videoError"
+  | "videoMissing"
+  | "storyVideoLimits";
 
 export interface MediaBlocker {
   code: MediaBlockerCode;
@@ -101,8 +112,27 @@ export function imageStatus(row: MediaRow): ImageStatus {
   return { kind: "ok", ratioChanged: false, needsCrop };
 }
 
+/** What the video formats check about the publication's video (VITE_SOCIAL_VIDEO). */
+export interface VideoCheck {
+  state: PublicationVideoState["status"];
+  /** null until the video information is loaded. */
+  facts: VideoFacts | null;
+  issues: VideoIssue[];
+}
+
+/** Video formats of the publish configuration; absent with VITE_SOCIAL_VIDEO off. */
+export interface VideoMediaOptions {
+  /** Format that will be published per network. */
+  formats: NetworkFormats;
+  video: PublicationVideoState;
+}
+
 export interface NetworkMedia {
   network: SocialNetwork;
+  /** Format the checks are for ("image" with VITE_SOCIAL_VIDEO off). */
+  format: PublicationFormat;
+  /** Video checks; null for the photo formats. */
+  video: VideoCheck | null;
   rows: MediaRow[];
   /**
    * Instagram with 2+ images: the one ratio every item of the carousel is cropped to (the user's
@@ -145,7 +175,10 @@ const isConvertOnly = (issues: ImageIssue[]) =>
 export function useMediaChecks(
   project: PreviewProjectDataProps | null,
   active: Record<SocialNetwork, boolean>,
+  videoOptions?: VideoMediaOptions,
 ) {
+  const formats = videoOptions?.formats;
+  const video = videoOptions?.video;
   const enabled = SOCIAL_MEDIA_VARIANTS_ENABLED;
   const previewId = project ? String(project.id) : null;
   const images = useMemo(() => publishedImages(project), [project]);
@@ -153,7 +186,10 @@ export function useMediaChecks(
 
   // Images are measured only for networks that are checked and connected (D2): with no active
   // network no HEAD / image load happens at all.
-  const anyActive = MEDIA_NETWORKS.some((network) => active[network]);
+  // A network that publishes the video needs no image measured.
+  const anyActive = MEDIA_NETWORKS.some(
+    (network) => active[network] && !isVideoFormat(formats?.[network]),
+  );
   const [measures, setMeasures] = useState<Record<string, MeasureState>>({});
   const [retryTick, setRetryTick] = useState(0);
   const requested = useRef(new Set<string>());
@@ -230,11 +266,39 @@ export function useMediaChecks(
 
   const networks = useMemo(() => {
     const build = (network: SocialNetwork): NetworkMedia => {
-      const rows: MediaRow[] = images.map((image, index) => {
+      const format: PublicationFormat = formats?.[network] ?? "image";
+      if (video && (format === "reel" || format === "story_video" || format === "video")) {
+        const facts: VideoFacts | null =
+          video.status === "ready"
+            ? {
+                durationMs: video.video.duration_ms,
+                bytes: video.video.bytes,
+                width: video.video.width,
+                height: video.video.height,
+                faststart: video.video.faststart,
+              }
+            : null;
+        return {
+          network,
+          format,
+          video: {
+            state: video.status,
+            facts,
+            issues: facts ? evaluateVideo(network, format, facts) : [],
+          },
+          rows: [],
+          commonRatio: null,
+          collectionIssues: [],
+          blocker: active[network] ? videoBlockerFor(format, video) : null,
+        };
+      }
+      // Historia (imagen): the first original image, no feed ratio rules, no variant, no conversion.
+      const story = format === "story_image";
+      const rows: MediaRow[] = (story ? images.slice(0, 1) : images).map((image, index) => {
         const measured = measures[image.url];
         const source = measured?.status === "ok" ? measured.measurement : null;
         const variant =
-          enabled && previewId
+          !story && enabled && previewId
             ? (variants.find(
                 (item) =>
                   item.network === network &&
@@ -261,6 +325,18 @@ export function useMediaChecks(
 
       // Instagram carousel: every item is compared against one common ratio, the chosen one or the
       // first image's (clamped into the accepted range).
+      if (story) {
+        return {
+          network,
+          format,
+          video: null,
+          rows,
+          commonRatio: null,
+          collectionIssues: rows.length === 0 ? [{ code: "no_images" }] : [],
+          blocker: active[network] && rows.length === 0 ? { code: "noImages" } : null,
+        };
+      }
+
       const firstFacts = rows[0]?.facts ?? null;
       const commonRatio =
         network === "instagram" && rows.length > 1
@@ -292,6 +368,8 @@ export function useMediaChecks(
 
       return {
         network,
+        format,
+        video: null,
         rows,
         commonRatio,
         collectionIssues,
@@ -299,7 +377,19 @@ export function useMediaChecks(
       };
     };
     return { instagram: build("instagram"), linkedin: build("linkedin") };
-  }, [images, measures, variants, variantsState, conversions, enabled, previewId, active, chosenRatio]);
+  }, [
+    images,
+    measures,
+    variants,
+    variantsState,
+    conversions,
+    enabled,
+    previewId,
+    active,
+    chosenRatio,
+    formats,
+    video,
+  ]);
 
   // Automatic conversion (S19): the ratio fits but format / weight / pixels / width do not.
   useEffect(() => {
@@ -394,4 +484,29 @@ function blockerFor(
   }
   if (pending.length > 0) return { code: "converting", count: pending.length };
   return null;
+}
+
+/** Why a network cannot publish the video yet; null when it can. */
+function videoBlockerFor(
+  format: "reel" | "story_video" | "video",
+  video: PublicationVideoState,
+): MediaBlocker | null {
+  switch (video.status) {
+    case "loading":
+      return { code: "videoLoading" };
+    case "error":
+      return { code: "videoError" };
+    case "none":
+    case "missing":
+      return { code: "videoMissing" };
+    case "ready":
+      if (
+        format === "story_video" &&
+        (video.video.duration_ms > INSTAGRAM_STORY_VIDEO.maxDurationMs ||
+          video.video.bytes > INSTAGRAM_STORY_VIDEO.maxBytes)
+      ) {
+        return { code: "storyVideoLimits" };
+      }
+      return null;
+  }
 }
