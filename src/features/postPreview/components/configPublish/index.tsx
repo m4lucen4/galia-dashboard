@@ -14,6 +14,7 @@ import { useLinkedInPages } from "../../../../hooks/useLinkedInPages";
 import { useTranslation } from "react-i18next";
 import { useInstagramPages } from "../../../../hooks/useInstagramPages";
 import { FACEBOOK_PUBLISH_SCOPE } from "../../../../redux/actions/SocialNetworksActions";
+import { useFacebookPagesEnabled } from "../../../../hooks/useFacebookPagesEnabled";
 import { CheckSocialNetwork } from "./CheckSocialNetwork";
 import { LinkedlnSelectPage } from "./LinkedlnSelectPage";
 import { InstagramSelectPage } from "./InstagramSelectPage";
@@ -120,6 +121,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
     isFetchingInstagramPages,
     isCheckingConnection: isCheckingInstagram,
   } = useInstagramPages();
+  const facebookEnabled = useFacebookPagesEnabled();
 
   // Facebook Pages publish through publication_targets only (Edge pipeline) and need the Meta
   // connection to be active with pages_manage_posts and at least one Page (S3).
@@ -127,6 +129,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   const facebookHasScope = (facebook.scopes ?? []).includes(FACEBOOK_PUBLISH_SCOPE);
   const facebookUsable =
     SOCIAL_PUBLISHING_EDGE_ENABLED &&
+    facebookEnabled &&
     facebook.isConnected &&
     facebookHasScope &&
     facebookPages.length > 0;
@@ -593,7 +596,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
           )}
           {mediaActive.linkedin && renderFormatSelector("linkedin")}
           {project && mediaActive.linkedin && renderMediaPanel("linkedin")}
-          {SOCIAL_PUBLISHING_EDGE_ENABLED && (
+          {SOCIAL_PUBLISHING_EDGE_ENABLED && facebookEnabled && (
             <>
               <CheckSocialNetwork
                 id="facebook"

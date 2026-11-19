@@ -3,6 +3,7 @@ import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { PreviewProjectDataProps, PublicationTarget } from "../../../../types";
 import { LockClosedIcon } from "@heroicons/react/24/outline";
 import { Button } from "../../../../components/shared/ui/Button";
+import { useFacebookPagesEnabled } from "../../../../hooks/useFacebookPagesEnabled";
 import { FacebookIcon, InstagramIcon, LinkedInIcon } from "../../../../components/icons";
 import { isDateInPast, truncateText } from "../../../../helpers";
 import { SOCIAL_PUBLISHING_EDGE_ENABLED } from "../../../../helpers/publishDate";
@@ -66,6 +67,7 @@ export const CardsList: React.FC<CardsListProps> = ({
 }) => {
   const { t } = useTranslation();
   const hasValidSubscription = useHasValidSubscription();
+  const facebookEnabled = useFacebookPagesEnabled();
 
   const sortedProjects = sortPreviewProjects(projects);
 
@@ -184,7 +186,7 @@ export const CardsList: React.FC<CardsListProps> = ({
                         secondary
                         onClick={() => handleOpenLinkedln(project)}
                       />
-                      {SOCIAL_PUBLISHING_EDGE_ENABLED && (
+                      {SOCIAL_PUBLISHING_EDGE_ENABLED && facebookEnabled && (
                         <Button
                           icon={<FacebookIcon />}
                           secondary
@@ -265,7 +267,7 @@ export const CardsList: React.FC<CardsListProps> = ({
                           secondary
                           onClick={() => handleOpenLinkedln(project)}
                         />
-                        {SOCIAL_PUBLISHING_EDGE_ENABLED && (
+                        {SOCIAL_PUBLISHING_EDGE_ENABLED && facebookEnabled && (
                           <Button
                             icon={<FacebookIcon />}
                             secondary

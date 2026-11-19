@@ -1,6 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import i18n from "../../i18n";
+import type { RootState } from "../store";
 import { supabase } from "../../helpers/supabase";
 import {
   FacebookPage,
@@ -403,14 +404,24 @@ export const fetchLinkedInPages = createAsyncThunk(
 
 export const initiateInstagramAuth = createAsyncThunk(
   "socialNetworks/initiateInstagramAuth",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
       const state = generateOAuthState();
       localStorage.setItem("instagram_auth_state", state);
+      // Admin-only until Meta grants Advanced Access (see useFacebookPagesEnabled).
+      const isAdmin = (getState() as RootState).auth.user?.role === "admin";
+      const scopes = [
+        "pages_show_list",
+        "instagram_basic",
+        "instagram_content_publish",
+        "business_management",
+        "pages_read_engagement",
+        ...(isAdmin ? [FACEBOOK_PUBLISH_SCOPE] : []),
+      ].join(",");
 
       const authUrl = `https://www.facebook.com/v27.0/dialog/oauth?client_id=${INSTAGRAM_APP_ID}&redirect_uri=${encodeURIComponent(
         INSTAGRAM_REDIRECT_URI
-      )}&state=${state}&response_type=code&scope=pages_show_list,instagram_basic,instagram_content_publish,business_management,pages_read_engagement,pages_manage_posts`;
+      )}&state=${state}&response_type=code&scope=${scopes}`;
 
       window.location.href = authUrl;
       return true;

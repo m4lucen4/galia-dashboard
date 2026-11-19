@@ -9,6 +9,7 @@ import {
   needsFacebookReconnect,
   needsReconnect,
 } from "../helpers/socialConnectionStatus";
+import { useFacebookPagesEnabled } from "../../../hooks/useFacebookPagesEnabled";
 
 interface InstagramConnectProps {
   instagram: InstagramData;
@@ -32,7 +33,9 @@ export const InstagramConnect: React.FC<InstagramConnectProps> = ({
   onDisconnect,
 }) => {
   const { t } = useTranslation();
+  const facebookEnabled = useFacebookPagesEnabled();
   const reconnectForFacebook =
+    facebookEnabled &&
     !checkInstagramRequest.inProgress &&
     needsFacebookReconnect(instagram, facebook);
   const showReconnectButton =
