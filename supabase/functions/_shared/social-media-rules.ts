@@ -31,9 +31,9 @@ export const LINKEDIN_MEDIA = {
 // table checks of project_videos and the bucket limit; the database enforces the story limits at schedule time.
 export const VIDEO_MEDIA = {
   projectMinBytes: 75_000,
-  projectMaxBytes: 300_000_000,
+  projectMaxBytes: 100_000_000,
   projectMinDurationMs: 3_000,
-  projectMaxDurationMs: 900_000,
+  projectMaxDurationMs: 300_000,
   // Instagram video Stories (story_video).
   storyMaxBytes: 100_000_000,
   storyMaxDurationMs: 60_000,

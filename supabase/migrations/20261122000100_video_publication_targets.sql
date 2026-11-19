@@ -16,7 +16,7 @@
 -- 3. publication_targets_schedule(...) (same signature) validates the per-network formats, requires the
 --    publication to reference a video of its own project for video formats (video_required), and enforces
 --    the schedule-time limits (video_limits): story_video <= 60 s and <= 100000000 bytes; reel and video use
---    the project limits (3 s - 15 min, 75000 - 300000000 bytes). Image targets are validated exactly as before.
+--    the project limits (3 s - 5 min, 75000 - 100000000 bytes). Image targets are validated exactly as before.
 -- 4. publication_target_payload(...) adds `video` for video formats (null otherwise or when the video is gone):
 --    {storagePath, posterPath, bytes, durationMs, width, height, faststart}. The database does not know the
 --    public host, so the Edge Function builds the public URLs of bucket project-videos from SUPABASE_URL.
@@ -190,7 +190,7 @@ begin
       if not v_has_video then raise exception 'video_required'; end if;
       if v_format = 'story_video' then
         if v_video.duration_ms > 60000 or v_video.bytes > 100000000 then raise exception 'video_limits'; end if;
-      elsif v_video.duration_ms not between 3000 and 900000 or v_video.bytes not between 75000 and 300000000 then
+      elsif v_video.duration_ms not between 3000 and 300000 or v_video.bytes not between 75000 and 100000000 then
         raise exception 'video_limits';
       end if;
     end if;

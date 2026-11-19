@@ -138,7 +138,7 @@ Migration `20261122000100_video_publication_targets.sql` (task `odd/tasks/social
 | Error | When |
 |---|---|
 | `video_required` | A video format and the publication has no video (or the video is not of its project). |
-| `video_limits` | `story_video`: duration over 60000 ms or size over 100000000 bytes. `reel` and `video`: outside the project limits (3 s - 15 min, 75000 - 300000000 bytes). |
+| `video_limits` | `story_video`: duration over 60000 ms or size over 100000000 bytes. `reel` and `video`: outside the project limits (3 s - 5 min, 75000 - 100000000 bytes). |
 
 Deleting the video afterwards (or its project) sets `video_id` to null: the target keeps its format, the payload carries `video: null`, and the publisher answers `video_missing` (`action_required`, diagnostics `{step: "validate", format}`) before any network call. Image targets never reference a video, even when the publication has one.
 
