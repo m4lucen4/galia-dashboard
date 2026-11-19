@@ -720,9 +720,9 @@
       "dialog": {
         "title": "Ajustar imatges per a {{network}}",
         "description": {
-          "instagram": "Tria una imatge, ajusta'n el zoom i l'enquadrament i prem «Aplicar»: es desa una còpia JPEG només d'aquesta imatge. En un carrusel totes usen la mateixa proporció. L'original no canvia.",
-          "linkedin": "Tria una imatge, ajusta'n la proporció, el zoom i l'enquadrament i prem «Aplicar»: es desa una còpia JPEG només d'aquesta imatge. L'original no canvia.",
-          "facebook": "Tria una imatge, ajusta'n la proporció, el zoom i l'enquadrament i prem «Aplicar»: es desa una còpia JPEG només d'aquesta imatge. L'original no canvia."
+          "instagram": "Tria una imatge, ajusta'n el zoom, l'enquadrament, el to i les verticals i prem «Aplicar»: es desa una còpia JPEG només d'aquesta imatge. En un carrusel totes usen la mateixa proporció. L'original no canvia.",
+          "linkedin": "Tria una imatge, ajusta'n la proporció, el zoom, l'enquadrament, el to i les verticals i prem «Aplicar»: es desa una còpia JPEG només d'aquesta imatge. L'original no canvia.",
+          "facebook": "Tria una imatge, ajusta'n la proporció, el zoom, l'enquadrament, el to i les verticals i prem «Aplicar»: es desa una còpia JPEG només d'aquesta imatge. L'original no canvia."
         },
         "images": "Imatges",
         "ratio": "Proporció",
@@ -745,6 +745,21 @@
           "willConvert": "es convertirà a JPEG automàticament"
         },
         "zoom": "Zoom",
+        "adjustments": {
+          "title": "Ajustos d'imatge",
+          "tone": "To",
+          "geometry": "Geometria",
+          "brightness": "Lluminositat",
+          "contrast": "Contrast",
+          "saturation": "Saturació",
+          "warmth": "Calidesa",
+          "rotation": "Redreçar",
+          "vertical": "Correcció de verticals",
+          "verticalHint": "Cap a la dreta obre la part superior (verticals que convergeixen cap amunt); cap a l'esquerra, la inferior.",
+          "preparing": "Preparant la previsualització…",
+          "reset": "Restableix els ajustos",
+          "resetOne": "Restableix {{label}}"
+        },
         "apply": "Aplicar",
         "applying": "Aplicant…",
         "revert": "Tornar a l'original",
