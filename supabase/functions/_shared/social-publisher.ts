@@ -71,7 +71,9 @@ export interface PublishPayload {
   /**
    * For reel, story_video and video; null for the other formats, and for a video format whose video was
    * deleted after scheduling (the publisher then answers video_missing before any network call).
-   * For story_image, images[0] is the ORIGINAL first published image (never a feed-cropped variant).
+   * For story_image, images holds one ORIGINAL photo (never a feed-cropped variant): the chosen
+   * story_image_url while it is still published, empty when it is not; legacy targets without a
+   * choice get the first published photo.
    */
   video: PublishVideo | null;
 }

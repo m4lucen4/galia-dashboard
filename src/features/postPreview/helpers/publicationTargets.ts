@@ -73,6 +73,9 @@ export const KNOWN_TARGET_ERROR_CODES = new Set([
   "format_unsupported",
   "video_required",
   "video_limits",
+  // Historia (imagen) (T7): the chosen photo is no longer a selected photo.
+  "story_image_invalid",
+  "story_image_missing",
 ]);
 
 /** Errors solved by reconnecting the network in Settings (the fix text links there). */
@@ -111,16 +114,28 @@ export const visibleTargets = (targets?: PublicationTarget[]): PublicationTarget
 
 export type TargetsByPreview = Record<string, PublicationTarget[]>;
 
+/** What a table read or a realtime row may not carry until the browser can read the column. */
+type KnownTargetFields = Pick<PublicationTarget, "format" | "storyImageUrl">;
+
 /**
- * A table read or a realtime row may not carry `format` (the browser cannot read that column until
- * it is granted); the function answer does. Keep the format already known for the same target.
+ * A table read or a realtime row may not carry `format` or `story_image_url` (the browser cannot
+ * read a column until it is granted); the function answer does. Keep what is already known for the
+ * same target.
  */
-function keepFormat(
+function keepKnown(
   target: PublicationTarget,
-  known: ReadonlyMap<string, PublicationTarget["format"]>,
+  known: ReadonlyMap<string, KnownTargetFields>,
 ): PublicationTarget {
-  const format = target.format ?? known.get(target.id);
-  return format && !target.format ? { ...target, format } : target;
+  const before = known.get(target.id);
+  if (!before) return target;
+  const keepFormat = target.format === undefined && before.format !== undefined;
+  const keepStoryImage = target.storyImageUrl === undefined && before.storyImageUrl !== undefined;
+  if (!keepFormat && !keepStoryImage) return target;
+  return {
+    ...target,
+    ...(keepFormat ? { format: before.format } : {}),
+    ...(keepStoryImage ? { storyImageUrl: before.storyImageUrl } : {}),
+  };
 }
 
 /** Replaces the targets of the given publications with a fresh read (other publications untouched). */
@@ -130,13 +145,15 @@ export function replaceTargets(
   fresh: PublicationTarget[],
 ): TargetsByPreview {
   const next: TargetsByPreview = { ...current };
-  const known = new Map<string, PublicationTarget["format"]>();
+  const known = new Map<string, KnownTargetFields>();
   for (const id of previewIds) {
-    for (const target of current[id] ?? []) known.set(target.id, target.format);
+    for (const target of current[id] ?? []) {
+      known.set(target.id, { format: target.format, storyImageUrl: target.storyImageUrl });
+    }
     delete next[id];
   }
   for (const target of fresh) {
-    (next[target.previewId] ??= []).push(keepFormat(target, known));
+    (next[target.previewId] ??= []).push(keepKnown(target, known));
   }
   return next;
 }
@@ -160,9 +177,14 @@ export function applyTargetEvent(
   }
   const { target } = event;
   const previous = current[target.previewId] ?? [];
-  const known = new Map(previous.map((existing) => [existing.id, existing.format] as const));
+  const known = new Map(
+    previous.map(
+      (existing) =>
+        [existing.id, { format: existing.format, storyImageUrl: existing.storyImageUrl }] as const,
+    ),
+  );
   const list = previous.filter((existing) => existing.id !== target.id);
-  return { ...current, [target.previewId]: [...list, keepFormat(target, known)] };
+  return { ...current, [target.previewId]: [...list, keepKnown(target, known)] };
 }
 
 /** Sets the whole current list of one publication (a function answer is authoritative). */

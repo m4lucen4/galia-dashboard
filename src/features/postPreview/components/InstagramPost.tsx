@@ -25,12 +25,15 @@ interface IProjectInstagramPostProps {
   user: UserDataProps;
   /** Only with VITE_SOCIAL_VIDEO on: the format the preview opens on. */
   initialFormat?: PublicationFormat;
+  /** Only with VITE_SOCIAL_VIDEO on: photo stored in the scheduled "Historia (imagen)" target. */
+  scheduledStoryImageUrl?: string | null;
 }
 
 export default function InstagramPost({
   project,
   user,
   initialFormat,
+  scheduledStoryImageUrl = null,
 }: IProjectInstagramPostProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   // Video formats (VITE_SOCIAL_VIDEO): Reel and Stories are previewed in a 9:16 frame.
@@ -78,6 +81,7 @@ export default function InstagramPost({
           user={user}
           video={video}
           text={text}
+          scheduledStoryImageUrl={scheduledStoryImageUrl}
         />
       </>
     );

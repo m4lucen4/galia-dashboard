@@ -4,7 +4,9 @@
 //               every created id is checkpointed, so a retry never creates the same one twice.
 //               Video formats (T3) create a single container: reel (REELS + video_url + caption +
 //               share_to_feed + cover_url), story_video (STORIES + video_url), story_image (STORIES +
-//               image_url of the first image). Stories carry no caption.
+//               image_url of the first image, which is the photo the user chose: the payload carries only that
+//               one, and without it the target fails story_image_missing before any network call). Stories
+//               carry no caption.
 //   processing  poll status_code every 3 s (5 s for video) until FINISHED. A video can take minutes:
 //               when it is still IN_PROGRESS and the in-run window (or the deadline) is over, the target
 //               is handed back as transient "processing" (60 s) and the next run resumes at this step
@@ -249,8 +251,9 @@ async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
     coverUrl = format === "reel" && video.posterUrl ? asciiHttpsUrl(video.posterUrl) : null;
   } else if (format === "story_image") {
     // The story is the first image; the feed ratio rules of validateImages do not apply to 9:16.
+    // The payload carries exactly the chosen photo; none means it was removed or deselected after scheduling.
     const first = payload.images[0];
-    if (!first) return validationResult({ code: "no_images", diagnostics: { network: "instagram" } }, "validate");
+    if (!first) return failed("story_image_missing", "action_required", { step: "validate", format });
     const url = asciiHttpsUrl(first.url);
     if (!url) return failed("media_url_invalid", "action_required", { step: "validate" });
     urls.push(url);

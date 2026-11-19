@@ -52,6 +52,7 @@ import {
   initialPreviewFormat,
   type NetworkFormats,
 } from "../helpers/socialVideo";
+import { scheduledStoryImageUrl } from "../helpers/storyImage";
 
 export const PreviewProjects = () => {
   const dispatch = useAppDispatch();
@@ -72,6 +73,8 @@ export const PreviewProjects = () => {
   const [publishNow, setPublishNow] = useState(false);
   // Only set with VITE_SOCIAL_VIDEO on: the format that will be published in each network.
   const [formats, setFormats] = useState<NetworkFormats>({});
+  // Only set with VITE_SOCIAL_VIDEO on: the photo "Historia (imagen)" publishes.
+  const [storyImageUrl, setStoryImageUrl] = useState<string | null>(null);
   // Edge pipeline only: message of the last failed confirm, shown inside the configuration dialog.
   const [publishError, setPublishError] = useState<string | null>(null);
   const [socialNetworks, setSocialNetworks] = useState<SocialNetworksCheck>({
@@ -349,6 +352,7 @@ export const PreviewProjects = () => {
           publishNow,
           socialNetworks,
           formats: SOCIAL_VIDEO_ENABLED ? formats : undefined,
+          storyImageUrl: SOCIAL_VIDEO_ENABLED ? storyImageUrl : undefined,
         },
         { onSuccess: closeAlert, onError: setPublishError },
       );
@@ -478,6 +482,9 @@ export const PreviewProjects = () => {
                 ? initialPreviewFormat("instagram", project, targetsFor(String(project.id)))
                 : undefined
             }
+            scheduledStoryImageUrl={
+              SOCIAL_VIDEO_ENABLED ? scheduledStoryImageUrl(targetsFor(String(project.id))) : null
+            }
           />
         )}
         {seeLinkedln && project && userData && (
@@ -581,6 +588,12 @@ export const PreviewProjects = () => {
             onPublishNowChange={setPublishNow}
             onMediaBlockChange={setMediaBlockReason}
             onFormatsChange={setFormats}
+            onStoryImageChange={setStoryImageUrl}
+            scheduledStoryImageUrl={
+              SOCIAL_VIDEO_ENABLED
+                ? scheduledStoryImageUrl(targetsFor(String(getSelectedProject()?.id)))
+                : null
+            }
           />
           {publishError && (
             <p role="alert" className="mt-4 rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900">

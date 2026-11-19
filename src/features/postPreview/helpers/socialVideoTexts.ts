@@ -49,10 +49,18 @@ export const PANEL_TEXTS = {
   storyTooHeavy: (size: string) =>
     `Las historias de Instagram admiten vídeos de hasta 100 MB: este pesa ${size}.`,
   storyNoCaption: "Las historias no llevan texto.",
-  storyImageInfo: "La historia usa la primera imagen original, sin recorte.",
+  storyImageInfo: "La historia usa la imagen elegida, original y sin recorte.",
   storyImageNotJpeg: (format: string) =>
     `Instagram solo garantiza imágenes JPEG en historias; esta es ${format}.`,
   linkedinVideoInfo: "LinkedIn publica el vídeo con el texto de la publicación.",
+};
+
+export const STORY_TEXTS = {
+  imageLegend: "Imagen de la historia",
+  imageHint: "Elige la foto que se publica en la historia. El orden del carrusel no cambia.",
+  imageAlt: (position: number) => `Foto ${position}`,
+  videoLegend: "Vídeo de la historia",
+  videoNoPoster: "Sin miniatura",
 };
 
 export const BLOCKED_TEXTS = {
@@ -70,6 +78,8 @@ export const PREVIEW_TEXTS = {
   videoUnavailable: "Esta publicación no tiene vídeo.",
   noImage: "Esta publicación no tiene imágenes.",
   storyHint: "Las historias no llevan texto.",
+  storyImageAlt: (position: number, title: string) =>
+    `Imagen de la historia (foto ${position}) de ${title}`,
 };
 
 type ErrorText = { reason: string; fix: string };
@@ -96,6 +106,15 @@ export const VIDEO_TARGET_ERROR_TEXTS: Record<string, ErrorText> = {
     reason: "El vídeo no cumple los límites del formato elegido.",
     fix: "Elige un vídeo más corto o más ligero, o publica con fotos.",
   },
+  // Historia (imagen): the chosen photo is no longer among the selected photos of the publication.
+  story_image_invalid: {
+    reason: "La imagen elegida para la historia ya no está entre las fotos seleccionadas.",
+    fix: "Elige otra.",
+  },
+  story_image_missing: {
+    reason: "La imagen elegida para la historia ya no está entre las fotos seleccionadas.",
+    fix: "Elige otra y vuelve a programar la historia.",
+  },
 };
 
 /** Messages of the publish request errors added with the video formats. */
@@ -103,4 +122,6 @@ export const VIDEO_REQUEST_ERROR_TEXTS: Record<string, string> = {
   video_required: "Elige un vídeo de la publicación antes de programarla en este formato.",
   video_limits:
     "El vídeo no cumple los límites de este formato (las historias admiten hasta 60 s y 100 MB).",
+  story_image_invalid:
+    "La imagen elegida para la historia ya no está entre las fotos seleccionadas. Elige otra.",
 };

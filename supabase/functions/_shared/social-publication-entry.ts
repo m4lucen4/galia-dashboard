@@ -31,6 +31,7 @@ export const entryFailures = {
   already_published: [409, "Esta publicación ya se ha publicado. Vuelve a programarla para publicarla otra vez.", false],
   video_required: [422, "Elige un vídeo de la publicación antes de programarla en este formato.", false],
   video_limits: [422, "El vídeo no cumple los límites de este formato (las historias admiten hasta 60 s y 100 MB).", false],
+  story_image_invalid: [422, "La imagen elegida para la historia no es válida. Elige una de las fotos seleccionadas de la publicación.", false],
   not_retryable: [409, "Esta red social no se puede reintentar en su estado actual.", false],
   confirmation_required: [409, "Comprueba en la red social que no se publicó antes de reintentar y confirma.", false],
   account_not_connected: [409, "La cuenta de la red social no está conectada. Vuelve a conectarla en Ajustes.", false],
@@ -80,6 +81,11 @@ export interface RequestedTarget {
   accountName: string | null;
   /** Defaults to "image" when the request does not say (the client sends only image until T4). */
   format: PublishFormat;
+  /**
+   * The photo chosen for a story_image target: the image_data url (the original) of a published photo of the
+   * publication; the database checks that. Absent = the first published photo. Only with format story_image.
+   */
+  storyImageUrl?: string;
 }
 
 export type EntryRequest =
@@ -91,6 +97,7 @@ export type EntryRequest =
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 const PREVIEW_ID = /^[1-9]\d{0,18}$/u;
 const EXTERNAL_ID = /^[A-Za-z0-9:_-]{1,100}$/u;
+export const MAX_STORY_IMAGE_URL_LENGTH = 2000;
 const KINDS_BY_NETWORK: Record<Network, readonly AccountKind[]> = {
   instagram: ["instagram_business"],
   linkedin: ["linkedin_person", "linkedin_organization"],
@@ -147,13 +154,27 @@ export function parseRunAt(value: unknown): string {
   return new Date(ms).toISOString();
 }
 
+// An https url without whitespace or control characters, bounded. The value is not normalised: it must stay
+// byte for byte equal to the url stored in image_data, which the database compares.
+function parseStoryImageUrl(value: unknown): string {
+  if (typeof value !== "string" || value.length > MAX_STORY_IMAGE_URL_LENGTH) throw new EntryError("story_image_invalid");
+  if (!/^https:\/\/[^\s/\u0000-\u001f\u007f][^\s\u0000-\u001f\u007f]*$/u.test(value)) throw new EntryError("story_image_invalid");
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" || !url.hostname || url.username || url.password) throw new Error("url");
+  } catch {
+    throw new EntryError("story_image_invalid");
+  }
+  return value;
+}
+
 function parseTargets(value: unknown): RequestedTarget[] {
   if (!Array.isArray(value) || value.length < 1 || value.length > 2) throw invalid();
   const seen = new Set<string>();
   return value.map((item) => {
     const row = asRecord(item);
     if (!row) throw invalid();
-    exactKeys(row, ["network", "accountKind", "accountExternalId", "accountName", "format"]);
+    exactKeys(row, ["network", "accountKind", "accountExternalId", "accountName", "format", "storyImageUrl"]);
     const network = row.network;
     if (network !== "instagram" && network !== "linkedin") throw invalid();
     const kind = row.accountKind as AccountKind;
@@ -170,7 +191,13 @@ function parseTargets(value: unknown): RequestedTarget[] {
       if (typeof row.format !== "string" || !FORMATS_BY_NETWORK[network].includes(row.format as PublishFormat)) throw invalid();
       format = row.format as PublishFormat;
     }
-    return { network, accountKind: kind, accountExternalId: row.accountExternalId, accountName, format };
+    const target: RequestedTarget = { network, accountKind: kind, accountExternalId: row.accountExternalId, accountName, format };
+    // null counts as absent. A choice is only meaningful for a story image.
+    if (row.storyImageUrl !== undefined && row.storyImageUrl !== null) {
+      if (format !== "story_image") throw new EntryError("story_image_invalid");
+      target.storyImageUrl = parseStoryImageUrl(row.storyImageUrl);
+    }
+    return target;
   });
 }
 
@@ -273,6 +300,8 @@ export interface ValidatedTarget {
   accountExternalId: string;
   accountName: string | null;
   format: PublishFormat;
+  /** Only present for a story_image target that chose its photo (kept out of the body otherwise). */
+  storyImageUrl?: string;
 }
 
 const cleanName = (value: string | null) => value ? value.slice(0, 200) : null;
@@ -307,6 +336,7 @@ export function validateTargets(
     return {
       network: target.network, accountKind: target.accountKind, accountExternalId: id,
       accountName: cleanName(name) ?? target.accountName, format: target.format,
+      ...(target.storyImageUrl !== undefined ? { storyImageUrl: target.storyImageUrl } : {}),
     };
   });
 }
