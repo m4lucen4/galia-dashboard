@@ -23,7 +23,8 @@ export interface PublicationNoticeRecipient {
 // Groups of error codes (docs/social-publishing.md, "Error codes of a target").
 type Reason =
   | "connection" | "page" | "permission" | "restricted" | "images" | "text" | "unknown_outcome"
-  | "network_busy" | "rejected" | "generic";
+  | "network_busy" | "rejected" | "video_missing" | "video_limits" | "processing_timeout" | "format"
+  | "generic";
 
 const REASON_BY_CODE: Record<string, Reason> = {
   token_invalid: "connection", not_connected: "connection", connection_expired: "connection",
@@ -37,6 +38,9 @@ const REASON_BY_CODE: Record<string, Reason> = {
   provider_unavailable: "network_busy", provider_response_invalid: "network_busy", lease_expired: "network_busy",
   internal_error: "network_busy",
   invalid_request: "rejected", provider_rejected: "rejected", api_version_unsupported: "rejected",
+  // Video formats (docs/social-publishing.md, "Formats and video").
+  video_missing: "video_missing", video_required: "video_missing", video_limits: "video_limits",
+  media_processing_timeout: "processing_timeout", format_unsupported: "format",
 };
 
 export function reasonFor(errorCode: string | null | undefined): Reason {
@@ -76,6 +80,10 @@ const texts: Record<Language, Texts> = {
       unknown_outcome: ["No hemos podido confirmar si la publicación llegó a publicarse.", "Comprueba en la red social que no se haya publicado antes de reintentar, para no duplicarla."],
       network_busy: ["La red social no ha respondido correctamente tras varios intentos.", "Reintenta la publicación en unos minutos."],
       rejected: ["La red social ha rechazado la publicación.", "Revisa el contenido y reintenta. Si se repite, contacta con soporte."],
+      video_missing: ["El vídeo de esta publicación ya no existe.", "Elige otro vídeo o publica con fotos."],
+      video_limits: ["El vídeo no cumple los límites del formato elegido.", "Elige un vídeo más corto o más ligero, o publica con fotos."],
+      processing_timeout: ["La red tardó demasiado en procesar el vídeo.", "Vuelve a intentarlo."],
+      format: ["La red social no admite el formato elegido.", "Vuelve a programar la publicación con otro formato."],
       generic: ["No hemos podido completar la publicación.", "Reintenta desde Mocklab. Si se repite, contacta con soporte."],
     },
     cta: "Ver mi publicación",
@@ -102,6 +110,10 @@ const texts: Record<Language, Texts> = {
       unknown_outcome: ["We could not confirm whether the post was published.", "Check on the network that it was not published before retrying, to avoid a duplicate."],
       network_busy: ["The network did not answer correctly after several attempts.", "Retry the post in a few minutes."],
       rejected: ["The network rejected the post.", "Review the content and retry. If it happens again, contact support."],
+      video_missing: ["The video of this post no longer exists.", "Choose another video or publish with photos."],
+      video_limits: ["The video does not meet the limits of the chosen format.", "Choose a shorter or lighter video, or publish with photos."],
+      processing_timeout: ["The network took too long to process the video.", "Please try again."],
+      format: ["The network does not support the chosen format.", "Schedule the post again with another format."],
       generic: ["We could not complete the post.", "Retry from Mocklab. If it happens again, contact support."],
     },
     cta: "View my post",
@@ -128,6 +140,10 @@ const texts: Record<Language, Texts> = {
       unknown_outcome: ["No hem pogut confirmar si la publicació s'ha arribat a publicar.", "Comprova a la xarxa social que no s'hagi publicat abans de reintentar, per no duplicar-la."],
       network_busy: ["La xarxa social no ha respost correctament després de diversos intents.", "Reintenta la publicació d'aquí a uns minuts."],
       rejected: ["La xarxa social ha rebutjat la publicació.", "Revisa el contingut i reintenta. Si es repeteix, contacta amb suport."],
+      video_missing: ["El vídeo d'aquesta publicació ja no existeix.", "Tria un altre vídeo o publica amb fotos."],
+      video_limits: ["El vídeo no compleix els límits del format escollit.", "Tria un vídeo més curt o més lleuger, o publica amb fotos."],
+      processing_timeout: ["La xarxa ha trigat massa a processar el vídeo.", "Torna-ho a provar."],
+      format: ["La xarxa social no admet el format escollit.", "Torna a programar la publicació amb un altre format."],
       generic: ["No hem pogut completar la publicació.", "Reintenta des de Mocklab. Si es repeteix, contacta amb suport."],
     },
     cta: "Veure la meva publicació",

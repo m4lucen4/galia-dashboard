@@ -254,3 +254,75 @@ export function aspectKeyFor(ratio: number): CropAspectKey {
   }
   return "original";
 }
+
+// --- Video formats (VITE_SOCIAL_VIDEO, task odd/tasks/social-video-publishing.md T4) ---------------
+// Client-only checks of the publication's video for the format chosen in a network. Limits mirror
+// the schedule-time limits of publication_targets_schedule (docs/social-publishing.md): the
+// project limits (3 s - 5 min, 100 MB) are already enforced when the video is uploaded.
+
+/** Instagram video Stories (`story_video`): at most 60 s and 100 MB. */
+export const INSTAGRAM_STORY_VIDEO = { maxDurationMs: 60_000, maxBytes: 100_000_000 } as const;
+
+/** Reels and Stories are 9:16; a ratio within this distance of 9/16 counts as vertical. */
+export const VERTICAL_RATIO = 9 / 16;
+export const VERTICAL_RATIO_TOLERANCE = 0.02;
+
+export type VideoIssueCode = "story_too_long" | "story_too_heavy" | "not_faststart" | "not_vertical";
+
+export interface VideoIssue {
+  code: VideoIssueCode;
+  actual?: number;
+  limit?: number;
+}
+
+/** What the browser knows about the publication's video (columns of public.project_videos). */
+export interface VideoFacts {
+  durationMs: number;
+  bytes: number;
+  width: number;
+  height: number;
+  faststart: boolean;
+}
+
+/** The video formats of the publication targets. */
+export const isVideoFormat = (format: string | null | undefined): boolean =>
+  format === "reel" || format === "story_video" || format === "video";
+
+/**
+ * Issues of the video for one network and format. All of them are warnings except the story limits,
+ * which the server refuses (`video_limits`) and the format selector therefore disables.
+ */
+export function evaluateVideo(
+  network: SocialNetwork,
+  format: "reel" | "story_video" | "video",
+  facts: VideoFacts,
+): VideoIssue[] {
+  const issues: VideoIssue[] = [];
+  if (format === "story_video") {
+    if (facts.durationMs > INSTAGRAM_STORY_VIDEO.maxDurationMs) {
+      issues.push({
+        code: "story_too_long",
+        actual: facts.durationMs,
+        limit: INSTAGRAM_STORY_VIDEO.maxDurationMs,
+      });
+    }
+    if (facts.bytes > INSTAGRAM_STORY_VIDEO.maxBytes) {
+      issues.push({
+        code: "story_too_heavy",
+        actual: facts.bytes,
+        limit: INSTAGRAM_STORY_VIDEO.maxBytes,
+      });
+    }
+  }
+  // Instagram downloads the file itself and needs the moov atom first; LinkedIn uploads it in parts.
+  if (network === "instagram" && !facts.faststart) issues.push({ code: "not_faststart" });
+  if (
+    (format === "reel" || format === "story_video") &&
+    facts.width > 0 &&
+    facts.height > 0 &&
+    Math.abs(facts.width / facts.height - VERTICAL_RATIO) > VERTICAL_RATIO_TOLERANCE
+  ) {
+    issues.push({ code: "not_vertical", actual: Number((facts.width / facts.height).toFixed(4)) });
+  }
+  return issues;
+}

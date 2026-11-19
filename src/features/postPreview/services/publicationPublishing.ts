@@ -2,12 +2,14 @@ import { supabase } from "@/helpers/supabase";
 import type {
   InstagramPageInfo,
   LinkedInPageInfo,
+  PublicationFormat,
   PublicationTarget,
   PublicationTargetAccountKind,
   PublicationTargetErrorKind,
   PublicationTargetStatus,
   SocialNetworksCheck,
 } from "@/types";
+import { SOCIAL_VIDEO_ENABLED, type NetworkFormats } from "../helpers/socialVideo";
 
 // Client of the Edge Function publish-publication and of the publication_targets reads (S23).
 // Only used with VITE_SOCIAL_PUBLISHING_EDGE on. Nothing here carries or reads tokens.
@@ -35,6 +37,10 @@ const errorCodes = new Set([
   "account_not_allowed",
   "internal_error",
   "unauthorized",
+  // Video formats (422 from publish-publication); the server never answers them to a client that
+  // sends no format, so they only appear with VITE_SOCIAL_VIDEO on.
+  "video_required",
+  "video_limits",
 ]);
 
 export type PublicationPublishingErrorCode =
@@ -51,6 +57,8 @@ export type PublicationPublishingErrorCode =
   | "account_not_allowed"
   | "internal_error"
   | "unauthorized"
+  | "video_required"
+  | "video_limits"
   // Client-side only: the account selected in the form cannot be turned into a target.
   | "account_missing"
   // Client-side only: the outcome is unknown (network failure, timeout, gateway error).
@@ -66,6 +74,8 @@ export type PublicationTargetRequest = {
   accountKind: PublicationTargetAccountKind;
   accountExternalId: string;
   accountName: string;
+  /** Only with VITE_SOCIAL_VIDEO on; absent otherwise (the server then publishes `image`). */
+  format?: PublicationFormat;
 };
 
 const failure = (
@@ -95,6 +105,7 @@ export const newPublishRequestId = () => crypto.randomUUID();
  */
 export function buildPublicationTargets(
   networks: SocialNetworksCheck,
+  formats?: NetworkFormats,
 ): PublicationTargetRequest[] {
   const targets: PublicationTargetRequest[] = [];
   const { instagram, linkedln } = networks;
@@ -108,6 +119,7 @@ export function buildPublicationTargets(
       accountKind: "instagram_business",
       accountExternalId: String(page.id),
       accountName: String(page.name ?? "").slice(0, 200),
+      ...(formats?.instagram ? { format: formats.instagram } : {}),
     });
   }
   if (linkedln) {
@@ -123,6 +135,7 @@ export function buildPublicationTargets(
           : "linkedin_person",
       accountExternalId: String(page.id),
       accountName: String(page.name ?? "").slice(0, 200),
+      ...(formats?.linkedin ? { format: formats.linkedin } : {}),
     });
   }
   return targets;
@@ -145,6 +158,14 @@ const accountKinds = new Set<PublicationTargetAccountKind>([
   "instagram_business",
   "linkedin_person",
   "linkedin_organization",
+]);
+
+const targetFormats = new Set<PublicationFormat>([
+  "image",
+  "reel",
+  "story_image",
+  "story_video",
+  "video",
 ]);
 
 const text = (value: unknown): string | null =>
@@ -179,6 +200,7 @@ function parseTarget(
     return null;
   }
   const errorKind = pick("errorKind", "error_kind");
+  const format = row.format;
   return {
     id,
     previewId: preview,
@@ -197,6 +219,9 @@ function parseTarget(
     externalPostId: text(pick("externalPostId", "external_post_id")),
     permalink: text(pick("permalink", "permalink")),
     publishedAt: text(pick("publishedAt", "published_at")),
+    ...(typeof format === "string" && targetFormats.has(format as PublicationFormat)
+      ? { format: format as PublicationFormat }
+      : {}),
   };
 }
 
@@ -348,6 +373,12 @@ export const resetPublicationTargets = (params: {
 const TARGET_COLUMNS =
   "id, preview_id, network, status, run_at, attempts, max_attempts, error_code, error_kind, account_kind, account_name, external_post_id, permalink, published_at";
 
+// `format` is not in the browser column grants of publication_targets (docs/social-publishing.md,
+// "Browser read access"). With VITE_SOCIAL_VIDEO on it is requested too; when the database refuses
+// the column the read falls back to TARGET_COLUMNS for the rest of the session. With the switch off
+// the query is exactly TARGET_COLUMNS.
+let formatReadable = SOCIAL_VIDEO_ENABLED;
+
 /** Current targets (archived_at is null) of the given publications. One query for a normal page. */
 export async function listPublicationTargets(
   previewIds: string[],
@@ -355,11 +386,18 @@ export async function listPublicationTargets(
   const ids = [...new Set(previewIds.map(String).filter((id) => digits.test(id)))];
   const result: PublicationTarget[] = [];
   for (let start = 0; start < ids.length; start += QUERY_CHUNK) {
-    const { data, error } = await supabase
-      .from("publication_targets")
-      .select(TARGET_COLUMNS)
-      .in("preview_id", ids.slice(start, start + QUERY_CHUNK))
-      .is("archived_at", null);
+    const chunk = ids.slice(start, start + QUERY_CHUNK);
+    const read = (columns: string) =>
+      supabase
+        .from("publication_targets")
+        .select(columns)
+        .in("preview_id", chunk)
+        .is("archived_at", null);
+    let { data, error } = await read(formatReadable ? `${TARGET_COLUMNS}, format` : TARGET_COLUMNS);
+    if (error && formatReadable) {
+      formatReadable = false;
+      ({ data, error } = await read(TARGET_COLUMNS));
+    }
     if (error) throw new Error("publication_targets_read_failed");
     for (const row of (data ?? []) as unknown[]) {
       const target = parseTarget(row, null);

@@ -26,6 +26,8 @@ import {
 } from "../../helpers/publicationTargets";
 import { PHASE_STYLES } from "../../helpers/targetPhaseStyles";
 import { useNow } from "../../hooks/useNow";
+import { SOCIAL_VIDEO_ENABLED } from "../../helpers/socialVideo";
+import { VIDEO_TARGET_ERROR_TEXTS, formatLabel } from "../../helpers/socialVideoTexts";
 
 interface PublicationTargetsStatusProps {
   targets?: PublicationTarget[];
@@ -78,8 +80,18 @@ export const PublicationTargetsStatus: React.FC<PublicationTargetsStatusProps> =
           const NetworkIcon = target.network === "instagram" ? InstagramIcon : LinkedInIcon;
           const network = t(`previewProjects.publication.networks.${target.network}`);
           const errorKey = targetErrorKey(target.errorCode);
-          const reason = t(`previewProjects.publication.targetErrors.${errorKey}.reason`, { network });
-          const fix = t(`previewProjects.publication.targetErrors.${errorKey}.fix`, { network });
+          // Codes of the video formats carry their Spanish text as default (a locale may override it).
+          const videoText = Object.prototype.hasOwnProperty.call(VIDEO_TARGET_ERROR_TEXTS, errorKey)
+            ? VIDEO_TARGET_ERROR_TEXTS[errorKey]
+            : null;
+          const reason = t(`previewProjects.publication.targetErrors.${errorKey}.reason`, {
+            network,
+            defaultValue: videoText?.reason,
+          });
+          const fix = t(`previewProjects.publication.targetErrors.${errorKey}.fix`, {
+            network,
+            defaultValue: videoText?.fix,
+          });
           const runAtDay = madridDayKeyOf(target.runAt);
           const today = madridDayKeyOf(new Date(now));
           const showError = phase === "retrying" || phase === "needsAction" || phase === "failed";
@@ -113,6 +125,11 @@ export const PublicationTargetsStatus: React.FC<PublicationTargetsStatusProps> =
                   {network}
                   {target.accountName ? ` · ${target.accountName}` : ""}
                 </span>
+                {SOCIAL_VIDEO_ENABLED && target.format && (
+                  <span className="rounded-full border border-current/30 px-2 py-0.5 font-medium">
+                    {formatLabel(target.network, target.format)}
+                  </span>
+                )}
                 <span className="flex items-center gap-1 font-medium">
                   <Icon
                     aria-hidden="true"

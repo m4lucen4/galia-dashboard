@@ -2,6 +2,7 @@ import React, { useMemo, useEffect, ChangeEvent, useState } from "react";
 import { InputField } from "../../../../components/shared/ui/InputField";
 import {
   InstagramBusinessPage,
+  PublicationFormat,
   InstagramPageInfo,
   LinkedInPageInfo,
   PreviewProjectDataProps,
@@ -14,9 +15,19 @@ import { CheckSocialNetwork } from "./CheckSocialNetwork";
 import { LinkedlnSelectPage } from "./LinkedlnSelectPage";
 import { InstagramSelectPage } from "./InstagramSelectPage";
 import { NetworkMediaPanel } from "./NetworkMediaPanel";
+import { NetworkFormatSelector } from "./NetworkFormatSelector";
 import { ImageAdjustDialog } from "./ImageAdjustDialog";
 import { MEDIA_NETWORKS, useMediaChecks, type MediaBlocker } from "./useMediaChecks";
 import type { SocialNetwork } from "../../helpers/socialMediaRules";
+import {
+  SOCIAL_VIDEO_ENABLED,
+  formatContextOf,
+  formatOptions,
+  resolveFormat,
+  type NetworkFormats,
+} from "../../helpers/socialVideo";
+import { BLOCKED_TEXTS, NETWORK_NAMES } from "../../helpers/socialVideoTexts";
+import { usePublicationVideo } from "../../hooks/usePublicationVideo";
 import {
   SOCIAL_PUBLISHING_EDGE_ENABLED,
   madridToday,
@@ -40,6 +51,11 @@ interface ConfigPublishProps {
    * (images that need a crop, conversions pending...); null when nothing blocks.
    */
   onMediaBlockChange?: (reason: string | null) => void;
+  /**
+   * Only with VITE_SOCIAL_VIDEO on: the format that will be published in each network (the user's
+   * choice, else the default), reported whenever it changes.
+   */
+  onFormatsChange?: (formats: NetworkFormats) => void;
 }
 
 // The target never carries a token: a DB trigger fills it server-side for n8n.
@@ -60,6 +76,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   onValidationChange,
   onPublishNowChange,
   onMediaBlockChange,
+  onFormatsChange,
 }) => {
   const { t } = useTranslation();
   const { linkedin, isFetchingLinkedinPages, isCheckingConnection: isCheckingLinkedin } =
@@ -269,13 +286,54 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
     }),
     [isInstagramChecked, instagram.isConnected, isLinkedInChecked, linkedin.isConnected],
   );
-  const media = useMediaChecks(project, mediaActive);
+
+  // Video formats (VITE_SOCIAL_VIDEO): the publication's video, the format per network (the user's
+  // choice when it can still work, else the default of L29) and the options to show.
+  const video = usePublicationVideo(project);
+  const [chosenFormats, setChosenFormats] = useState<NetworkFormats>({});
+  const formatContext = useMemo(() => formatContextOf(project, video), [project, video]);
+  const formatsKey = SOCIAL_VIDEO_ENABLED
+    ? MEDIA_NETWORKS.map((network) =>
+        resolveFormat(network, chosenFormats[network], formatContext),
+      ).join(",")
+    : "";
+  const formats = useMemo<NetworkFormats | undefined>(() => {
+    if (!formatsKey) return undefined;
+    const [instagramFormat, linkedinFormat] = formatsKey.split(",") as PublicationFormat[];
+    return { instagram: instagramFormat, linkedin: linkedinFormat };
+  }, [formatsKey]);
+  useEffect(() => {
+    if (formats) onFormatsChange?.(formats);
+  }, [formats, onFormatsChange]);
+  const videoOptions = useMemo(
+    () => (formats ? { formats, video } : undefined),
+    [formats, video],
+  );
+  const media = useMediaChecks(project, mediaActive, videoOptions);
   const [adjusting, setAdjusting] = useState<SocialNetwork | null>(null);
 
   const blockReason = useMemo(() => {
+    // The video information decides which formats can be offered: wait for it before confirming.
+    if (
+      SOCIAL_VIDEO_ENABLED &&
+      video.status === "loading" &&
+      (mediaActive.instagram || mediaActive.linkedin)
+    ) {
+      return BLOCKED_TEXTS.videoLoading;
+    }
     for (const network of MEDIA_NETWORKS) {
       const blocker: MediaBlocker | null = media.networks[network].blocker;
       if (blocker) {
+        switch (blocker.code) {
+          case "videoLoading":
+            return BLOCKED_TEXTS.videoLoading;
+          case "videoError":
+            return BLOCKED_TEXTS.videoError(NETWORK_NAMES[network]);
+          case "videoMissing":
+            return BLOCKED_TEXTS.videoMissing(NETWORK_NAMES[network]);
+          case "storyVideoLimits":
+            return BLOCKED_TEXTS.storyVideoLimits;
+        }
         return t(`previewProjects.mediaChecks.blocked.${blocker.code}`, {
           network: t(`previewProjects.mediaChecks.networks.${network}`),
           found: blocker.count ?? 0,
@@ -283,13 +341,23 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
       }
     }
     return null;
-  }, [media.networks, t]);
+  }, [media.networks, t, video.status, mediaActive]);
 
   useEffect(() => {
     onMediaBlockChange?.(blockReason);
   }, [blockReason, onMediaBlockChange]);
 
   useEffect(() => () => onMediaBlockChange?.(null), [onMediaBlockChange]);
+
+  const renderFormatSelector = (network: SocialNetwork) =>
+    SOCIAL_VIDEO_ENABLED && project ? (
+      <NetworkFormatSelector
+        network={network}
+        options={formatOptions(network, formatContext)}
+        value={resolveFormat(network, chosenFormats[network], formatContext)}
+        onChange={(format) => setChosenFormats((previous) => ({ ...previous, [network]: format }))}
+      />
+    ) : null;
 
   const renderMediaPanel = (network: SocialNetwork) => (
     <NetworkMediaPanel
@@ -363,6 +431,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
               onChange={handleInstagramPageChange}
             />
           )}
+          {mediaActive.instagram && renderFormatSelector("instagram")}
           {project && mediaActive.instagram && renderMediaPanel("instagram")}
           <CheckSocialNetwork
             id="linkedln"
@@ -384,6 +453,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
               onChange={handleLinkedInPageChange}
             />
           )}
+          {mediaActive.linkedin && renderFormatSelector("linkedin")}
           {project && mediaActive.linkedin && renderMediaPanel("linkedin")}
         </div>
         {blockReason && (

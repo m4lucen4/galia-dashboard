@@ -147,6 +147,14 @@ export type PublicationTargetAccountKind =
   | "linkedin_person"
   | "linkedin_organization";
 
+/** public.publication_targets.format; Instagram: image, reel, story_image, story_video; LinkedIn: image, video. */
+export type PublicationFormat =
+  | "image"
+  | "reel"
+  | "story_image"
+  | "story_video"
+  | "video";
+
 export type PublicationTarget = {
   id: string;
   previewId: string;
@@ -163,6 +171,11 @@ export type PublicationTarget = {
   externalPostId: string | null;
   permalink: string | null;
   publishedAt: string | null;
+  /**
+   * Format the target was scheduled with. Only known when the function answer or the table read
+   * carries it (VITE_SOCIAL_VIDEO on); absent otherwise.
+   */
+  format?: PublicationFormat;
 };
 
 export type PublishVersions = {
