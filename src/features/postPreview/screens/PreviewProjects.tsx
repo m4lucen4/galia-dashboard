@@ -12,6 +12,7 @@ import { RootState } from "../../../redux/store";
 import { usePreviewProjectsData } from "../../../hooks/usePreviewProjectsData";
 import { useAlertManager } from "../../../hooks/useAlertManager";
 import {
+  FacebookPageInfo,
   InstagramPageInfo,
   LinkedInPageInfo,
   PreviewProjectDataProps,
@@ -20,6 +21,7 @@ import {
 import { Drawer } from "../../../components/shared/ui/Drawer";
 import InstagramPost from "../components/InstagramPost";
 import LinkedInPost from "../components//LinkedinPost";
+import FacebookPost from "../components/FacebookPost";
 import {
   fetchPreviewProjectById,
   updateProjectPublishing,
@@ -64,6 +66,7 @@ export const PreviewProjects = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [seeInstagram, setSeeInstagram] = useState(false);
   const [seeLinkedln, setSeeLinkedln] = useState(false);
+  const [seeFacebook, setSeeFacebook] = useState(false);
   const [seeEditPreview, setEditSeePreview] = useState(false);
   const [isReadOnlyPreview, setIsReadOnlyPreview] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -83,6 +86,7 @@ export const PreviewProjects = () => {
   const [socialNetworks, setSocialNetworks] = useState<SocialNetworksCheck>({
     instagram: false,
     linkedln: false,
+    facebook: false,
   });
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -236,9 +240,17 @@ export const PreviewProjects = () => {
     setDrawerOpen(true);
   };
 
+  const handleOpenFacebook = (project: PreviewProjectDataProps) => {
+    dispatch(clearSelectedProject());
+    dispatch(fetchPreviewProjectById(project.id));
+    setSeeFacebook(true);
+    setDrawerOpen(true);
+  };
+
   const handleCloseDrawer = () => {
     setSeeInstagram(false);
     setSeeLinkedln(false);
+    setSeeFacebook(false);
     setEditSeePreview(false);
     setIsReadOnlyPreview(false);
     setDrawerOpen(false);
@@ -259,6 +271,7 @@ export const PreviewProjects = () => {
   const getDrawerTitle = () => {
     if (seeInstagram) return t("previewProjects.instagramPreview");
     if (seeLinkedln) return t("previewProjects.linkedlnPreview");
+    if (seeFacebook) return t("previewProjects.facebookPreview");
     if (seeEditPreview && isReadOnlyPreview)
       return t("previewProjects.viewPreviewProject");
     if (seeEditPreview) return t("previewProjects.editPreviewProject");
@@ -292,16 +305,22 @@ export const PreviewProjects = () => {
           ? { ...storedInstagram, accessToken: undefined }
           : storedInstagram || false,
       linkedln: project.checkSocialNetworks?.linkedln || false,
+      facebook: project.checkSocialNetworks?.facebook || false,
     });
 
     openAlert("publishConfig", project);
   };
 
   const handleSocialNetworkChange = (
-    network: "instagram" | "linkedln",
-    pageInfo?: LinkedInPageInfo | InstagramPageInfo,
+    network: "instagram" | "linkedln" | "facebook",
+    pageInfo?: LinkedInPageInfo | InstagramPageInfo | FacebookPageInfo,
   ) => {
-    if (network === "instagram") {
+    if (network === "facebook") {
+      setSocialNetworks((prev) => ({
+        ...prev,
+        facebook: pageInfo ? (pageInfo as FacebookPageInfo) : false,
+      }));
+    } else if (network === "instagram") {
       if (pageInfo) {
         setSocialNetworks((prev) => ({
           ...prev,
@@ -367,7 +386,11 @@ export const PreviewProjects = () => {
         updateProjectPublishing({
           projectId: selectedProject.id,
           publishDate,
-          checkSocialNetworks: socialNetworks,
+          // The legacy n8n pipeline only knows Instagram and LinkedIn: keep its stored value unchanged.
+          checkSocialNetworks: {
+            instagram: socialNetworks.instagram,
+            linkedln: socialNetworks.linkedln,
+          },
           publishNow,
         }),
       )
@@ -469,7 +492,7 @@ export const PreviewProjects = () => {
         isOpen={drawerOpen}
         onClose={handleCloseDrawer}
       >
-        {(seeInstagram || seeLinkedln || seeEditPreview) &&
+        {(seeInstagram || seeLinkedln || seeFacebook || seeEditPreview) &&
           !project &&
           previewProjectFetchByIdRequest.inProgress && (
             <div className="flex justify-center py-12">
@@ -502,6 +525,18 @@ export const PreviewProjects = () => {
             initialFormat={
               SOCIAL_VIDEO_ENABLED
                 ? initialPreviewFormat("linkedin", project, targetsFor(String(project.id)))
+                : undefined
+            }
+          />
+        )}
+        {seeFacebook && project && userData && (
+          <FacebookPost
+            key={project.id}
+            project={project}
+            user={userData}
+            initialFormat={
+              SOCIAL_VIDEO_ENABLED
+                ? initialPreviewFormat("facebook", project, targetsFor(String(project.id)))
                 : undefined
             }
           />
@@ -560,6 +595,7 @@ export const PreviewProjects = () => {
           handleOpenPublishConfig={handleOpenPublishConfig}
           handleOpenInstagram={handleOpenInstagram}
           handleOpenLinkedln={handleOpenLinkedln}
+          handleOpenFacebook={handleOpenFacebook}
           handlePublishAgain={handlePublishAgain}
           targetsByPreview={targetsByPreview}
           isPublicationBusy={publicationActions.isBusy}
@@ -582,6 +618,7 @@ export const PreviewProjects = () => {
             !!mediaBlockReason ||
             (!socialNetworks.instagram &&
               !socialNetworks.linkedln &&
+              !socialNetworks.facebook &&
               !!publishDate)
           }
         >

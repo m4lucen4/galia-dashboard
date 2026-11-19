@@ -1,14 +1,16 @@
-# Social publishing (LinkedIn and Instagram)
+# Social publishing (LinkedIn, Instagram and Facebook Pages)
 
 Publishing a publication (`projectsPreview` row) to the social networks the user connected is moving from n8n to Supabase. This document describes the new pipeline. The migration plan and its status live in `odd/tasks/social-publishing-migration.md`.
 
 > **Video:** Instagram Reels and Stories and LinkedIn video (formats, `video_id`, processing polls, upload progress) are described in "Formats and video". The client half (format selector, video checks and previews) is behind the switch `VITE_SOCIAL_VIDEO=true` (see `docs/social-publishing-ui.md`, "Video formats"); with it off the client sends no `format` and publishes `image` exactly as before.
 >
+> **Facebook Pages:** a third network on the same queue (`network = 'facebook'`, `account_kind = 'facebook_page'`, formats `image` and `video`), described in "Facebook Pages". The Edge pipeline only; n8n never publishes to Facebook.
+>
 > **Status:** phase 1 (database foundation), phase 4 (publishers, worker) and phase 5 server (entry function, browser read access, failure emails). n8n still publishes in production until the cutover phase. The phase 1 migration is applied; the worker `process-publication-targets` is deployed and **not scheduled until the cutover** (no cron). The phase 5 migrations are split: `20261119000100` (read access, realtime, notices) is applied **before the client ships**; `20261119000200` (cron) and `20261119000300` (publishDate conversion) are **prepared and applied only at the cutover** (see "Phase 5: entry function, read access, notices and cutover").
 
 ## Model
 
-One publication has **one target per selected network**. Each target is published by its own network publisher and keeps its own state, attempts, error and post id. A failure on Instagram never blocks or repeats LinkedIn, and the other way round.
+One publication has **one target per selected network**. Each target is published by its own network publisher and keeps its own state, attempts, error and post id. A failure on one network never blocks or repeats another.
 
 | Table | Purpose |
 |---|---|
@@ -39,20 +41,21 @@ Writes are service_role only. Since `20261119000100` the people who may read the
 
 ### Never publish twice
 
-Before an irreversible call (for example Instagram `media_publish` or LinkedIn `POST /rest/posts`), the publisher calls `publication_target_checkpoint` with `side_effect_pending = true`. If the worker dies before `publication_target_finish`, the expired lease turns the target into `needs_action` with `error_code = 'outcome_unknown'` instead of retrying. A `transient` failure reported after that checkpoint (timeout, 5xx) is turned into the same `outcome_unknown`, and a later checkpoint cannot clear the flag; only finish or recovery does. A manual retry of that target requires `p_acknowledge_unknown_outcome = true`, which the UI asks for after the user has checked the network.
+Before an irreversible call (for example Instagram `media_publish`, LinkedIn `POST /rest/posts` or the Facebook published photo, feed or video call), the publisher calls `publication_target_checkpoint` with `side_effect_pending = true`. If the worker dies before `publication_target_finish`, the expired lease turns the target into `needs_action` with `error_code = 'outcome_unknown'` instead of retrying. A `transient` failure reported after that checkpoint (timeout, 5xx) is turned into the same `outcome_unknown`, and a later checkpoint cannot clear the flag; only finish or recovery does. A manual retry of that target requires `p_acknowledge_unknown_outcome = true`, which the UI asks for after the user has checked the network.
 
 **`notPublished` (`p_not_published`).** The only way to retry automatically after the guard is a definitive provider answer to the irreversible call, which proves nothing was published. The publisher sets `notPublished = true` only for this explicit allow-list:
 
 | Network | Definitive answers (allow-list) |
 |---|---|
 | Instagram (Graph) | error code 4, 17, 32, 613 or 9, or HTTP 429 (rate limit); 190 (token); 10 and 200-299 (permission); 100 (invalid parameter); 368 (restricted) |
+| Facebook (Graph) | the same list as Instagram |
 | LinkedIn | HTTP 400, 401, 403, 422 or 429 with a JSON body |
 
 Never `notPublished` (checked first, they win over the list): Graph code 1 or 2, `is_transient = true`, subcodes 2207xxx, HTTP 408 and 5xx, network errors and timeouts, an answer without `id` / `x-restli-id`, a body that is not JSON, and every answer not on the list. All of those after the publishing checkpoint are `outcome_unknown` (`action_required`). The worker forwards the flag as `p_not_published` and drops it when the code is `outcome_unknown`; `publication_target_finish` only honours it when the target had `side_effect_pending`.
 
-When honoured, `finish` does not convert a transient failure to `outcome_unknown` (so it goes back to `pending` with the provider's retry hint) and it **resets `step` to `'processing'`, keeping `step_state`**. The next attempt therefore re-polls readiness (containers / images) and publishes again, with the same containers or image URNs, instead of resuming at `'publishing'`, which both publishers always treat as an unknown outcome (`outcome_unknown`, no network call to publish). That check runs first, before account and payload validation.
+When honoured, `finish` does not convert a transient failure to `outcome_unknown` (so it goes back to `pending` with the provider's retry hint) and it **resets `step` to `'processing'`, keeping `step_state`**. The next attempt therefore re-polls readiness (containers / images) and publishes again, with the same containers, image URNs or Facebook photo ids, instead of resuming at `'publishing'`, which both publishers always treat as an unknown outcome (`outcome_unknown`, no network call to publish). That check runs first, before account and payload validation.
 
-**Publish window.** Before setting the guard, a publisher checks `deadline - now` against the 30 s publish timeout plus a 5 s margin. If less remains it returns transient `processing` (retry after 30 s) keeping the checkpointed state: no checkpoint with the guard and no network call.
+**Publish window.** Before setting the guard, a publisher checks `deadline - now` against the timeout of its irreversible call plus a 5 s margin (30 s for Instagram and LinkedIn; Facebook 30 s for photos and 60 s for a video). If less remains it returns transient `processing` (retry after 30 s) keeping the checkpointed state: no checkpoint with the guard and no network call.
 
 **Starting over.** Publishing again after a success requires `publication_targets_reset` first; `publication_targets_schedule` refuses with `already_published`. Both `publication_targets_schedule` and `publication_targets_reset` also refuse with `confirmation_required` while any current target has `error_code = 'outcome_unknown'`, unless the last parameter `p_acknowledge_unknown_outcome` (default `false`) is `true`: replacing or clearing a target whose post may exist is as risky as retrying it.
 
@@ -66,7 +69,7 @@ Called by an Edge Function after it resolves the actor through Supabase Auth. Au
 
 | RPC | Purpose |
 |---|---|
-| `publication_targets_schedule(actor, preview, request, run_at, targets, acknowledge_unknown_outcome default false)` | Schedule (`run_at` in the future) or publish now (`run_at` = now). `targets` is `[{network, accountKind, accountExternalId, accountName?, format?, storyImageUrl?, videoPosition?}]`, one per network; `format` defaults to `image` and must be allowed for the network, video formats need the publication's video, `storyImageUrl` (only with `story_image`) chooses the story photo and `videoPosition` (only with `carousel_video`) places the video in the carousel (see "Formats and video"). Idempotent per `(actor, request)`: a replay returns the current targets, even after a reset (send a new request id for a new action). Replaces current unpublished targets; `confirmation_required` over an `outcome_unknown` target unless acknowledged. |
+| `publication_targets_schedule(actor, preview, request, run_at, targets, acknowledge_unknown_outcome default false)` | Schedule (`run_at` in the future) or publish now (`run_at` = now). `targets` is `[{network, accountKind, accountExternalId, accountName?, format?, storyImageUrl?, videoPosition?}]`, one per network (up to three; Facebook: `facebook` / `facebook_page`, the Facebook Page id, formats `image` and `video`); `format` defaults to `image` and must be allowed for the network, video formats need the publication's video, `storyImageUrl` (only with `story_image`) chooses the story photo and `videoPosition` (only with `carousel_video`) places the video in the carousel (see "Formats and video"). Idempotent per `(actor, request)`: a replay returns the current targets, even after a reset (send a new request id for a new action). Replaces current unpublished targets; `confirmation_required` over an `outcome_unknown` target unless acknowledged. |
 | `publication_target_retry(actor, target, acknowledge_unknown_outcome)` | Retry one `failed` or `needs_action` target now. Resets its attempts. |
 | `publication_targets_reset(actor, preview, acknowledge_unknown_outcome default false)` | Unschedule, or prepare to publish again. Archives current targets and clears the legacy columns; `confirmation_required` over an `outcome_unknown` target unless acknowledged. |
 
@@ -106,7 +109,7 @@ Every write is fenced by the `leaseToken` returned by `claim`; a stale worker ge
 - `video` is `null` for `image` and `story_image`, and for a video format whose video no longer exists (see "Formats and video"). For `reel`, `story_video`, `video` and `carousel_video` it is `{"storagePath": "<project_id>/<id>.mp4", "posterPath": "<project_id>/<id>.jpg" | null, "bytes", "durationMs", "width", "height", "faststart"}`. The database does not know the public host: the worker builds the public URLs of bucket `project-videos` from `SUPABASE_URL` (see `PublishVideo` below).
 - `videoPosition` is `null` for every format except `carousel_video`, where it is the resolved 0-based index of the video among the carousel items (see "Mixed carousel").
 - `images` keeps the order of `image_data` and skips entries with status `not_selected`, without url, or that are not objects.
-- For each entry the function looks for a `publication_media_variants` row with the **same preview, the same network and `source_url` = the entry url** (phase 3, `docs/social-media-variants.md`). When there is one, `url` is its `public_url`, `isVariant` is `true` and `width`/`height` come from the row. A variant is used only for its own network: the other network receives the original. `story_image` never uses variants: stories are 9:16, so its `images` is the one original the user chose (`isVariant` false, `width`/`height` null; see "Story image choice") and the publisher takes `images[0]`. Without a variant, `url` = `sourceUrl`, `isVariant` is `false` and `width`/`height` are `null` (originals are never measured on the server; the publishers let the network judge them).
+- For each entry the function looks for a `publication_media_variants` row with the **same preview, the same network and `source_url` = the entry url** (phase 3, `docs/social-media-variants.md`). When there is one, `url` is its `public_url`, `isVariant` is `true` and `width`/`height` come from the row. A variant is used only for its own network: the other network receives the original. `story_image` never uses variants: stories are 9:16, so its `images` is the one original the user chose (`isVariant` false, `width`/`height` null; see "Story image choice") and the publisher takes `images[0]`. Without a variant, `url` = `sourceUrl`, `isVariant` is `false` and `width`/`height` are `null` (original dimensions are never measured on the server; the publishers let the network judge them, and the Facebook publisher only reads the weight of originals, see "Facebook Pages").
 - `ownerId`, `network` and `accountExternalId` are what the worker needs to fetch the owner's credentials (see below). The payload never contains tokens.
 - The migration reads `publication_media_variants` at run time only (created by `20261118000600`, applied before this one in production); it is `SECURITY DEFINER`, `stable`, `service_role` only.
 
@@ -117,7 +120,7 @@ Every write is fenced by the `leaseToken` returned by `claim`; a stale worker ge
 
 ## Formats and video
 
-Migration `20261122000100_video_publication_targets.sql` (task `odd/tasks/social-video-publishing.md`, T3; apply after `20261120000100` and `20261121000100`). The publishers are `_shared/social-publish-instagram.ts` and `_shared/social-publish-linkedin.ts`; the client sends a `format` per target only with `VITE_SOCIAL_VIDEO=true` (task T4), otherwise none (`image`).
+Migration `20261122000100_video_publication_targets.sql` (task `odd/tasks/social-video-publishing.md`, T3; apply after `20261120000100` and `20261121000100`). The publishers are `_shared/social-publish-instagram.ts`, `_shared/social-publish-linkedin.ts` and, since Facebook Pages, `_shared/social-publish-facebook.ts`; the client sends a `format` per target only with `VITE_SOCIAL_VIDEO=true` (task T4), otherwise none (`image`).
 
 ### Formats
 
@@ -127,6 +130,7 @@ Migration `20261122000100_video_publication_targets.sql` (task `odd/tasks/social
 |---|---|
 | Instagram | `image` (post or carousel), `reel`, `story_image`, `story_video`, `carousel_video` |
 | LinkedIn | `image`, `video` |
+| Facebook | `image` (one or several photos), `video` |
 
 `isVideoFormat(format)` (same file) is true for the formats that carry a video: `reel`, `story_video`, `video` and `carousel_video`.
 
@@ -211,6 +215,43 @@ A publisher of a non-`image` format whose network is still processing the media 
 
 `(target_id uuid primary key references publication_targets(id) on delete cascade, state jsonb not null, updated_at timestamptz)`: progress that does not fit the 4 KB `step_state` (LinkedIn upload token, video URN, instructions, ETags in order). `state` is a JSON object of at most 256 KB; `updated_at` is set on every update. RLS is on, there are no policies and `anon` and `authenticated` have no grants, so only `service_role` reads or writes it. The state contains signed upload URLs: never log it. It is deleted when the target is published (inside `publication_target_finish`) and with the target; it is kept on failures so a retry can resume. The publishers reach it through `PublishContext.uploads` (`load`, `save`, `remove`, from `_shared/social-upload-state.ts`).
 
+## Facebook Pages
+
+Migration `20261127000100_facebook_publication_targets.sql` (task `odd/tasks/facebook-page-publishing.md`, T2; specs S4, S5; apply after `20261125000100` and `20261126000100`, the connection migration in `docs/social-connections.md`). Additive and idempotent; Instagram and LinkedIn rules are untouched. Publisher: `_shared/social-publish-facebook.ts` (`publishFacebook`), registered in `process-publication-targets`. It publishes to the Page feed with the Page access token (Graph v27.0, `graph.facebook.com`) immediately from our own queue: never with Meta's `scheduled_publish_time`.
+
+### Target and database
+
+| Item | Value |
+|---|---|
+| `network` | `facebook` (the table check, the `publication_media_variants` check and the schedule RPC accept it) |
+| `account_kind` | `facebook_page`; a new table check pairs every network with its own kinds |
+| `account_external_id` | the Facebook Page id (an `id` of the facebook connection `pages`); `account_name` the Page name |
+| `format` | `image` or `video` (the network/format check allows `video` for facebook) |
+
+`publication_targets_schedule` (same signature, copy of the live body of `20261125000100`) accepts up to three targets, one per network. A facebook `video` target needs the publication video within the project limits (`video_required`, `video_limits`), like LinkedIn video. `publication_target_payload` and the other RPCs are not recreated: they are network-agnostic (the variants join uses the target's network). Facebook has no legacy n8n shape: `instagramResult` / `linkedlnResult` ignore it (the legacy `state` counts every current target), and `checkSocialNetworks` keeps its `instagram` / `linkedln` keys and gains a `facebook` key `{id, name, type: 'PAGE'}` only when a facebook target is scheduled, which the dashboard reads to restore the Page selection (`publication_targets_reset` clears it as before). The entry function (`publish-publication`) refuses any other network/kind/format pair with `invalid_request` and checks the Page against the owner's facebook connection (see "Account checks").
+
+### Formats and Graph calls
+
+| Format | Content | Calls |
+|---|---|---|
+| `image`, 1 photo | the selected photo | `POST /{page-id}/photos` with `url`, `message`, `published=true` → `{id, post_id}`; the irreversible call |
+| `image`, 2-20 photos | the selected photos in order | each `POST /{page-id}/photos` with `url` and `published=false` (reversible: Facebook keeps the photo unpublished about 24 h), then `POST /{page-id}/feed` with `message` and `attached_media[i]={"media_fbid":"<id>"}`; the `feed` call is the irreversible one |
+| `video` | the publication video | `POST /{page-id}/videos` with `file_url` (public URL) and `description` → video id; the irreversible call. Meta processes it afterwards: the target is `published` once Graph answers the id, with no polling |
+
+The text is the publication text, only normalised (no escaping, no hashtag or mention cap); the message limit is 63,206 characters (`commentary_too_long`, shared with LinkedIn). The token travels in the `Authorization` header (GET) or the POST body, never in a URL. After publishing, the permalink is read best effort (`GET /{id}?fields=permalink_url`; a failure leaves it null and never fails the target). `external_post_id` is the `post_id` of a single photo, the post id of `feed`, or the video id.
+
+### Validation before any Graph call
+
+- Order: a target already at `step = 'publishing'` is `outcome_unknown`; then the Page id (`invalid_account`), the format (`format_unsupported`), the text, and the media.
+- Photos: 1-20 (`no_images`, `too_many_images`), every URL an ASCII `https` URL (`media_url_invalid`). The size rule (Meta: 10 MB per photo, `media_too_large`, `action_required`, diagnostics `{network, index, actual, limit}`) cannot use the payload, which carries no byte size, so the worker reads each **original** photo with a `HEAD` request to its public Supabase Storage URL (`Content-Length`, 8 s timeout, all photos in parallel, and only while a photo of the target is still to be uploaded). Per-network variants are skipped: they are JPEGs of at most 8 MB by table check. When the size cannot be read (no header, request failed) the photo is not blocked: Meta decides and a rejection becomes `media_rejected` / `provider_rejected`. Original dimensions and format are never measured on the server, so there is no ratio, format or pixel rule (`media_needs_crop` / `media_format` do not apply).
+- Video: the payload video must exist (`video_missing`) with a valid URL (`media_url_invalid`); the project limits were checked at schedule time.
+
+### Progress and never publishing twice
+
+- `step_state` (4 KB limit) holds `{fp, photos, at}`: a fingerprint of the format, Page, message and URLs, the ids of the unpublished photos uploaded so far in publication order, and when the first one was uploaded. Each photo id is checkpointed (`step = 'uploading'`, `side_effect_pending = false`) as soon as it is uploaded, so a retry never uploads the same photo twice. State with another fingerprint (the publication changed) or older than 20 hours (before Facebook drops the photos) is discarded and the photos are uploaded again. Sizes are only checked while photos remain to be sent. A single photo and a video upload nothing, so the only checkpoint is the irreversible one.
+- Before the irreversible call (published photo, `feed` or `videos`) the publisher checkpoints `step = 'publishing'` with `side_effect_pending = true` (see "Never publish twice"); the call timeouts are 30 s (photos) and 60 s (video), each with the 5 s margin of the publish window. Only an allow-listed definitive Graph rejection is `notPublished`: the database then resets the step to `processing` keeping `step_state`, and the retry publishes again with the uploaded photo ids. Everything else (timeout, network error, 5xx, code 1 or 2, an answer without a valid id) is `outcome_unknown`. An unexpected exception after the guard is also `outcome_unknown`.
+- The uploading loop returns transient `processing` (retry after 30 s, step `uploading`) when the lease deadline is reached; any other upload failure is classified like an Instagram Graph error (`token_invalid`, `permission_missing`, `rate_limited`, `provider_unavailable`, `invalid_request` ...).
+
 ## Legacy projection
 
 Until the client is migrated, every change writes the values the current UI and n8n use on `projectsPreview`:
@@ -220,7 +261,7 @@ Until the client is migrated, every change writes the values the current UI and 
 | `state` | `scheduled` while any current target is `pending` or `running`; `published` when all are settled; `preview` after reset. |
 | `instagramResult` / `linkedlnResult` | `true` (published), `false` (`failed` or `needs_action`), `notSelected` (no target or cancelled), `null` (pending or running). |
 | `publishDate` | `run_at`. |
-| `checkSocialNetworks` | `{instagram, linkedln}` with `{id, name, type}` or `false`. **No access tokens.** |
+| `checkSocialNetworks` | `{instagram, linkedln}` with `{id, name, type}` or `false`; a scheduled Facebook target adds `facebook: {id, name, type: 'PAGE'}` (no legacy result column exists for it, see "Facebook Pages"). **No access tokens.** |
 
 ## Locking
 
@@ -228,7 +269,7 @@ Every RPC that touches a publication locks the `projectsPreview` row first and i
 
 ## Worker `process-publication-targets`
 
-Edge Function `supabase/functions/process-publication-targets/index.ts` (`verify_jwt = false` in `supabase/config.toml`; the secret is the only gate). Pieces: the publishers `_shared/social-publish-instagram.ts` (`publishInstagram`) and `_shared/social-publish-linkedin.ts` (`publishLinkedin`) implement the contract in `_shared/social-publisher.ts`; `_shared/social-publication-store.ts` wraps the RPCs and resolves credentials.
+Edge Function `supabase/functions/process-publication-targets/index.ts` (`verify_jwt = false` in `supabase/config.toml`; the secret is the only gate). Pieces: the publishers `_shared/social-publish-instagram.ts` (`publishInstagram`) `_shared/social-publish-linkedin.ts` (`publishLinkedin`) and `_shared/social-publish-facebook.ts` (`publishFacebook`) implement the contract in `_shared/social-publisher.ts`; `_shared/social-publication-store.ts` wraps the RPCs and resolves credentials.
 
 > **Deployed but not scheduled until the cutover (T8).** Nothing calls it: no cron entry and no trigger exist. n8n publishes until then. Do not schedule it before the cutover steps (stop n8n first, convert the scheduled rows).
 
@@ -261,7 +302,7 @@ Environment: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SOCIAL_WORKER_SECRET`
 
 ### Image and video URLs
 
-The worker validates `payload.images[].url` before running any publisher (LinkedIn downloads it, Instagram makes Meta fetch it): `https`, host equal to the host of `SUPABASE_URL`, default port only, no userinfo, and a normalised path starting with `/storage/v1/object/public/` (any bucket: user-media, projects-images, publication-variants). Anything else (other hosts, `http`, `@` tricks, signed or authenticated paths, `..` segments) finishes the target as `media_url_invalid` / `action_required` with diagnostics `{reason: "url_not_allowed", index}` (the URL is never stored).
+The worker validates `payload.images[].url` before running any publisher (LinkedIn downloads it; Instagram and Facebook make Meta fetch it): `https`, host equal to the host of `SUPABASE_URL`, default port only, no userinfo, and a normalised path starting with `/storage/v1/object/public/` (any bucket: user-media, projects-images, publication-variants). Anything else (other hosts, `http`, `@` tricks, signed or authenticated paths, `..` segments) finishes the target as `media_url_invalid` / `action_required` with diagnostics `{reason: "url_not_allowed", index}` (the URL is never stored).
 
 The same guard runs on `payload.video.url` and `payload.video.posterUrl`, with one more rule: the path must start with `/storage/v1/object/public/project-videos/` (`isProjectVideoPublicUrl`). Anything else finishes the target as `media_url_invalid` / `action_required` with diagnostics `{reason: "url_not_allowed", field: "video" | "poster"}`, before credentials are resolved.
 
@@ -278,7 +319,7 @@ The LinkedIn publisher then downloads each image with these rules: content-type 
 Resolved with the service role from `publication_targets.owner_id` and `network`; tokens are passed to the publisher in memory only and are never logged or stored.
 
 1. `social_connection_for_user(ownerId, network)`: no connection or `disconnected` → `not_connected`; `expired`, `revoked` or `error` → `connection_expired` (diagnostics: status and reason code); `connected` and `expiring` continue. Both are `action_required`: the user reconnects in Settings and retries.
-2. `social_credentials_get(connectionId)`: Instagram → the `page_access` credential whose `externalId` = the target's `accountExternalId`; none → `page_not_authorized` (`action_required`: the page is no longer authorized, reconnect and select it again). LinkedIn → the `user_access` credential (none → `not_connected`).
+2. `social_credentials_get(connectionId)`: Instagram → the `page_access` credential whose `externalId` = the target's `accountExternalId`; none → `page_not_authorized` (`action_required`: the page is no longer authorized, reconnect and select it again). Facebook → the same, on the facebook connection (the `page_access` credential whose `externalId` = the Facebook Page id). LinkedIn → the `user_access` credential (none → `not_connected`).
 
 ### Failure emails
 
@@ -299,12 +340,12 @@ After each `publication_target_finish` that answers `needs_action` or `failed`, 
 | Code | Kind | Meaning |
 |---|---|---|
 | `no_images` | action_required | The publication has no selected image. |
-| `too_many_images` | action_required | More images than the network accepts (Instagram carousel 20, LinkedIn multi-image 20). |
+| `too_many_images` | action_required | More images than the network accepts (Instagram carousel 20, LinkedIn multi-image 20, Facebook photos 20). |
 | `media_needs_crop` | action_required | An original image has a ratio the network rejects; crop it in the publish configuration. |
 | `media_format` | action_required | Format, weight, pixels or width are not valid for the network and no converted copy exists; also a LinkedIn download whose content-type is not JPEG, PNG or GIF. |
 | `media_rejected` | action_required | The network refused the image (Instagram container `ERROR`, LinkedIn image processing failed, invalid media code). |
 | `caption_too_long` | action_required | Instagram caption over the limit (also when the text has too many characters). |
-| `commentary_too_long` | action_required | LinkedIn commentary over 3000 characters, measured on the escaped text actually posted. *(emitted by the publishers' validation; not in the original list)* |
+| `commentary_too_long` | action_required | LinkedIn commentary over 3000 characters, measured on the escaped text actually posted; Facebook message or video description over 63,206 characters. *(emitted by the publishers' validation; not in the original list)* |
 | `too_many_hashtags` | action_required | Instagram: more than 30 hashtags. |
 | `too_many_mentions` | action_required | Instagram: more than 20 mentions. |
 | `rate_limited` | transient | Provider rate or publishing quota; retried with the provider's hint. |
@@ -312,7 +353,7 @@ After each `publication_target_finish` that answers `needs_action` or `failed`, 
 | `media_processing_timeout` | permanent | The network was still processing the media (or the upload still in progress) after 60 minutes. Nothing was published; retry. |
 | `video_missing` | action_required | The publication's video was deleted after scheduling; pick one again and reschedule. |
 | `story_image_missing` | action_required | The photo chosen for a `story_image` target is no longer a published photo of the publication (deselected or removed after scheduling): choose another photo and reschedule. |
-| `format_unsupported` | action_required | The publisher does not know the target's format for that network (LinkedIn publisher; the entry function already refuses invalid pairs with `invalid_request`). |
+| `format_unsupported` | action_required | The publisher does not know the target's format for that network (LinkedIn and Facebook publishers; the entry function already refuses invalid pairs with `invalid_request`). |
 | `container_expired` | transient | Instagram container expired or was lost; created again on the next attempt. |
 | `token_invalid` | action_required | Expired or invalid token (HTTP 401 / Graph code 190): reconnect. |
 | `permission_missing` | action_required | A required permission was not granted or was removed (Graph 10 / 200-299 / HTTP 403, LinkedIn 403). |
@@ -321,12 +362,12 @@ After each `publication_target_finish` that answers `needs_action` or `failed`, 
 | `invalid_request` | permanent | The network rejected the request itself (HTTP 400 / 422 on LinkedIn). |
 | `not_connected` | action_required | No connection, disconnected, or no stored token (worker). |
 | `connection_expired` | action_required | The connection expired, was revoked or errored (worker). |
-| `page_not_authorized` | action_required | Instagram: no page token for the selected business account (worker). |
+| `page_not_authorized` | action_required | Instagram: no page token for the selected business account; Facebook: no page token for the selected Page (worker). |
 | `outcome_unknown` | action_required | The irreversible call may have happened (anything after the publishing checkpoint that is not an allow-listed definitive rejection); never retried automatically, manual retry, schedule and reset need acknowledgement. |
 | `lease_expired` | transient | The lease ran out (SQL recovery) or the worker handed the target back for lack of time. |
 | `internal_error` | transient | Unexpected failure inside the worker or a publisher. |
 
-Also emitted by the publishers in their current form (kinds as in the source, `_shared/social-publish-*.ts`; re-sync this table when they change): `provider_rejected` (permanent, the network refused the request without a specific reason), `provider_response_invalid` (transient, unreadable answer), `api_version_unsupported` (permanent, LinkedIn 426), `invalid_account` (action_required, the stored account id is not valid), `media_url_invalid` (action_required, an image URL is not a valid https URL, or the worker refused it because it is not a public object of this Supabase project), `media_too_large` and `media_unreadable` (action_required, LinkedIn image download: over 30 MB, empty, or bytes that do not match the content-type).
+Also emitted by the publishers in their current form (kinds as in the source, `_shared/social-publish-*.ts`; re-sync this table when they change): `provider_rejected` (permanent, the network refused the request without a specific reason), `provider_response_invalid` (transient, unreadable answer), `api_version_unsupported` (permanent, LinkedIn 426), `invalid_account` (action_required, the stored account id is not valid), `media_url_invalid` (action_required, an image URL is not a valid https URL, or the worker refused it because it is not a public object of this Supabase project), `media_too_large` and `media_unreadable` (action_required, LinkedIn image download: over 30 MB, empty, or bytes that do not match the content-type; `media_too_large` is also the Facebook photo over 10 MB found by the `HEAD` size check, see "Facebook Pages").
 
 ## Phase 5: entry function, read access, notices and cutover
 
@@ -342,14 +383,14 @@ Server side of the new client (behind `VITE_SOCIAL_PUBLISHING_EDGE`, S23). Every
 
 | `action` | Body | Effect |
 |---|---|---|
-| `schedule` | `previewId` (bigint as string, number accepted), `requestId` (uuid), `runAt` (strict ISO 8601 instant **with** `Z` or an offset `±hh:mm`; a wall-clock without offset, and impossible dates or times such as `2026-02-30`, `T24:00` or `T10:60`, are refused), `targets` (1-2 of `{network, accountKind, accountExternalId, accountName?, format?, storyImageUrl?, videoPosition?}`; `format` is one of the formats of the network, default `image`, otherwise `invalid_request`; `storyImageUrl` is only accepted with `story_image` and must be a plain `https` url of at most 2000 characters without whitespace, otherwise `story_image_invalid`; `videoPosition` is only accepted with `carousel_video` and must be a JSON integer `0..19`, otherwise `video_position_invalid`; `null` counts as absent for both; the url is forwarded unchanged and the database checks it against the publication's published photos, and checks the position against their number), `acknowledgeUnknownOutcome?` | `publication_targets_schedule` with `runAt` normalised to UTC; the database enforces the range (5 minutes in the past to 366 days ahead). |
+| `schedule` | `previewId` (bigint as string, number accepted), `requestId` (uuid), `runAt` (strict ISO 8601 instant **with** `Z` or an offset `±hh:mm`; a wall-clock without offset, and impossible dates or times such as `2026-02-30`, `T24:00` or `T10:60`, are refused), `targets` (1-3 of `{network, accountKind, accountExternalId, accountName?, format?, storyImageUrl?, videoPosition?}`; `format` is one of the formats of the network, default `image`, otherwise `invalid_request`; `storyImageUrl` is only accepted with `story_image` and must be a plain `https` url of at most 2000 characters without whitespace, otherwise `story_image_invalid`; `videoPosition` is only accepted with `carousel_video` and must be a JSON integer `0..19`, otherwise `video_position_invalid`; `null` counts as absent for both; the url is forwarded unchanged and the database checks it against the publication's published photos, and checks the position against their number), `acknowledgeUnknownOutcome?` | `publication_targets_schedule` with `runAt` normalised to UTC; the database enforces the range (5 minutes in the past to 366 days ahead). |
 | `publishNow` | Same without `runAt` | `runAt` = now, then wakes the worker. |
 | `retry` | `targetId` (uuid), `acknowledgeUnknownOutcome?` | `publication_target_retry`, then wakes the worker. |
 | `reset` | `previewId`, `acknowledgeUnknownOutcome?` | `publication_targets_reset` (unschedule / publish again). |
 
 `acknowledgeUnknownOutcome` is `true` only after the user checked the network (outcome_unknown); without it the database answers `confirmation_required`.
 
-**Account checks (`schedule`, `publishNow`).** After `publication_targets_owner(actor, preview)` proved the actor may act on the publication (a stranger gets `forbidden` and learns nothing about connections), the function reads the **publication owner's** connection per requested network (`social_connection_for_user`, no tokens): a missing connection or a status other than `connected`/`expiring` is `account_not_connected`; Instagram needs `accountKind = instagram_business` and `accountExternalId` among the connection's pages; LinkedIn `linkedin_person` needs the connection's own account id (or the member entry of its pages) and `linkedin_organization` an `ORGANIZATION` page; anything else is `account_not_allowed`. The stored account name replaces the one the browser sent.
+**Account checks (`schedule`, `publishNow`).** After `publication_targets_owner(actor, preview)` proved the actor may act on the publication (a stranger gets `forbidden` and learns nothing about connections), the function reads the **publication owner's** connection per requested network (`social_connection_for_user`, no tokens): a missing connection or a status other than `connected`/`expiring` is `account_not_connected`; Instagram needs `accountKind = instagram_business` and `accountExternalId` among the connection's pages; LinkedIn `linkedin_person` needs the connection's own account id (or the member entry of its pages) and `linkedin_organization` an `ORGANIZATION` page; Facebook needs `accountKind = facebook_page` and `accountExternalId` among the pages (Facebook Page ids) of the owner's facebook connection (a missing, disconnected or expired facebook row is `account_not_connected`); anything else is `account_not_allowed`. The stored account name replaces the one the browser sent.
 
 **Worker wake.** After a successful `publishNow` or `retry` the function posts to `<SUPABASE_URL>/functions/v1/process-publication-targets` with `X-Social-Worker-Secret` = `SOCIAL_WORKER_SECRET` (64 hex), fire and forget (`EdgeRuntime.waitUntil` when available, 145 s timeout like the generation wake, https only). A missing secret, a transport error or a slow worker never changes the answer; the persisted target and the cron job are the recovery path.
 

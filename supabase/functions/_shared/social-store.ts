@@ -3,7 +3,7 @@ import { isSocialFailureCode, SocialError } from "./social-errors.ts";
 import { type Fetcher, requiredEnv, socialFetch } from "./social-http.ts";
 
 export type { Environment };
-export type Network = "linkedin" | "instagram";
+export type Network = "linkedin" | "instagram" | "facebook";
 
 // What social_connection_summary returns (never tokens).
 export interface ConnectionSummary {

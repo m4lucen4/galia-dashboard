@@ -11,6 +11,9 @@ export const INSTAGRAM_MAX_MENTIONS = 20;
 // LinkedIn Posts API commentary limit.
 export const LINKEDIN_COMMENTARY_MAX = 3000;
 
+// Facebook Page post message limit (Graph API).
+export const FACEBOOK_MESSAGE_MAX = 63206;
+
 const INVISIBLE = /[\u00ad\u180e\u200b\u200c\u200e\u200f\u202a-\u202e\u2060-\u2064\u2066-\u206f\ufeff]/g;
 // eslint-disable-next-line no-control-regex
 const CONTROLS = /[\u0000-\u0008\u000B-\u001F\u007F-\u009F]/g;

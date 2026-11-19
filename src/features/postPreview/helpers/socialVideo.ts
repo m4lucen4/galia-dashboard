@@ -13,7 +13,7 @@ import {
 import { SELECTOR_TEXTS, formatLabel } from "./socialVideoTexts";
 
 /**
- * Switch for the video formats (Instagram Reel and Stories, LinkedIn video): format selector in the
+ * Switch for the video formats (Instagram Reel and Stories, LinkedIn and Facebook video): format selector in the
  * publish configuration, video checks, video previews and the `format` sent per target. Off by
  * default: with it off the client behaves exactly as before and never sends a format.
  *
@@ -61,6 +61,7 @@ const FORMATS: Record<
     video: ["reel", "story_video"],
   },
   linkedin: { photo: ["image"], mixed: [], video: ["video"] },
+  facebook: { photo: ["image"], mixed: [], video: ["video"] },
 };
 
 export const formatContextOf = (
@@ -131,7 +132,7 @@ export function formatOptions(network: SocialNetwork, context: FormatContext): F
 
 /**
  * Default rule (L29): a publication with selected photos starts on the photo format in every
- * network; with no photos but a video it starts on the video format (Reel, LinkedIn video).
+ * network; with no photos but a video it starts on the video format (Reel, LinkedIn / Facebook video).
  */
 export function defaultFormat(network: SocialNetwork, context: FormatContext): PublicationFormat {
   if (context.photos > 0 || !context.hasVideo) return "image";

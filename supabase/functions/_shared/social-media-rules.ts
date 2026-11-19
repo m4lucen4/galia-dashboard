@@ -6,7 +6,7 @@
 //   ratio does not fit            -> needsCrop       (the user must crop)
 //   format / weight / pixels / width -> needsConversion (a JPEG / resized copy is generated automatically)
 
-export type SocialNetwork = "instagram" | "linkedin";
+export type SocialNetwork = "instagram" | "linkedin" | "facebook";
 
 export const INSTAGRAM_MEDIA = {
   mimeTypes: ["image/jpeg"],
@@ -24,6 +24,16 @@ export const LINKEDIN_MEDIA = {
   mimeTypes: ["image/jpeg", "image/png", "image/gif"],
   pixelsLimit: 36_152_320, // exclusive: width * height must be < this
   multiImageMin: 2,
+  multiImageMax: 20,
+} as const;
+
+// Facebook Page photos (Graph API Page photos reference, T0 of odd/tasks/facebook-page-publishing.md): up to
+// 10 MB each, no ratio or pixel rule. Meta also lists BMP and TIFF; the project accepts native JPEG, PNG and GIF
+// only (same as the client rules): anything else is converted to a JPEG variant by the dashboard. The maximum number of photos of one post is
+// not documented; 20 is the project-wide cap (the same as Instagram carousels and LinkedIn multi-image).
+export const FACEBOOK_MEDIA = {
+  mimeTypes: ["image/jpeg", "image/png", "image/gif"],
+  maxBytes: 10 * 1024 * 1024, // 10 MB, inclusive
   multiImageMax: 20,
 } as const;
 
@@ -133,6 +143,14 @@ export function evaluateImage(network: SocialNetwork, image: ImageFacts): ImageE
     return finalize(issues);
   }
 
+  if (network === "facebook") {
+    if (!(FACEBOOK_MEDIA.mimeTypes as readonly string[]).includes(mime)) issues.push({ code: "unsupported_format" });
+    if (image.bytes > FACEBOOK_MEDIA.maxBytes) {
+      issues.push({ code: "too_heavy", actual: image.bytes, limit: FACEBOOK_MEDIA.maxBytes });
+    }
+    return finalize(issues);
+  }
+
   if (!(LINKEDIN_MEDIA.mimeTypes as readonly string[]).includes(mime)) issues.push({ code: "unsupported_format" });
   const pixels = image.width * image.height;
   if (pixels >= LINKEDIN_MEDIA.pixelsLimit) {
@@ -147,6 +165,7 @@ export function evaluateImage(network: SocialNetwork, image: ImageFacts): ImageE
  * Instagram: more than 20 items is an issue, and every item whose ratio differs from the first
  * one by more than 0.01 needs a crop to the first item's ratio. A single image is a plain post,
  * not a carousel. LinkedIn: 1 image uses the Images API, 2..20 MultiImage, more than 20 is an issue.
+ * Facebook: 1 photo or 2..20 attached photos; each up to 10 MB, no ratio rule.
  */
 export function evaluateCarousel(network: SocialNetwork, images: ImageFacts[]): CarouselEvaluation {
   const items = images.map((image) => evaluateImage(network, image));
@@ -155,7 +174,8 @@ export function evaluateCarousel(network: SocialNetwork, images: ImageFacts[]): 
     for (const issue of item.issues) issues.push({ ...issue, index });
   });
 
-  const max = network === "instagram" ? INSTAGRAM_MEDIA.carouselMax : LINKEDIN_MEDIA.multiImageMax;
+  const max = network === "instagram" ? INSTAGRAM_MEDIA.carouselMax
+    : network === "facebook" ? FACEBOOK_MEDIA.multiImageMax : LINKEDIN_MEDIA.multiImageMax;
   if (images.length > max) issues.push({ code: "too_many_items", actual: images.length, limit: max });
   if (network === "instagram" && images.length === 0) issues.push({ code: "no_images" });
 

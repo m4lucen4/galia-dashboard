@@ -7,7 +7,7 @@ import {
 // Connection health and pages come from social_connections (no tokens in the browser).
 export const useInstagramPages = () => {
   const dispatch = useAppDispatch();
-  const { instagram, checkInstagramRequest, fetchInstagramPagesRequest } =
+  const { instagram, facebook, checkInstagramRequest, fetchInstagramPagesRequest } =
     useAppSelector((state) => state.socialNetworks);
 
   useEffect(() => {
@@ -16,6 +16,7 @@ export const useInstagramPages = () => {
 
   return {
     instagram,
+    facebook,
     isCheckingConnection: checkInstagramRequest.inProgress,
     isFetchingInstagramPages: fetchInstagramPagesRequest.inProgress,
     connectionError: checkInstagramRequest.messages,

@@ -61,7 +61,7 @@ interface Texts {
 
 const texts: Record<Language, Texts> = {
   es: {
-    networks: { linkedin: "LinkedIn", instagram: "Instagram" },
+    networks: { linkedin: "LinkedIn", instagram: "Instagram", facebook: "Facebook" },
     greeting: (name) => `Hola ${name},`,
     subject: {
       needs_action: (n) => `Tu publicación en ${n} necesita tu atención`,
@@ -92,7 +92,7 @@ const texts: Record<Language, Texts> = {
     footer: "Cuando la publicación se resuelva no te avisaremos de nuevo por este motivo.",
   },
   en: {
-    networks: { linkedin: "LinkedIn", instagram: "Instagram" },
+    networks: { linkedin: "LinkedIn", instagram: "Instagram", facebook: "Facebook" },
     greeting: (name) => `Hi ${name},`,
     subject: {
       needs_action: (n) => `Your ${n} post needs your attention`,
@@ -123,7 +123,7 @@ const texts: Record<Language, Texts> = {
     footer: "Once the post is resolved we will not email you again about this.",
   },
   ca: {
-    networks: { linkedin: "LinkedIn", instagram: "Instagram" },
+    networks: { linkedin: "LinkedIn", instagram: "Instagram", facebook: "Facebook" },
     greeting: (name) => `Hola ${name},`,
     subject: {
       needs_action: (n) => `La teva publicació a ${n} necessita la teva atenció`,

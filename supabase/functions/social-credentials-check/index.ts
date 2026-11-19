@@ -1,6 +1,6 @@
 import { workerAuthorized } from "../_shared/publication-generation-store.ts";
 import { corsHeaders, jsonResponse, logSocialError, SocialError, socialFailure } from "../_shared/social-errors.ts";
-import { instagramDebugToken, PUBLISH_SCOPE, type TokenDebug } from "../_shared/social-instagram.ts";
+import { FACEBOOK_PUBLISH_SCOPE, instagramDebugToken, PUBLISH_SCOPE, type TokenDebug } from "../_shared/social-instagram.ts";
 import { linkedinRefresh, type LinkedInTokens } from "../_shared/social-linkedin.ts";
 import { safeMirror, syncLinkedInMirror } from "../_shared/social-n8n-mirror.ts";
 import { sendNotice } from "../_shared/social-notice.ts";
@@ -74,14 +74,17 @@ async function decideLinkedIn(connection: ConnectionSummary, ctx: Context): Prom
   };
 }
 
-// Instagram health is decided from the page tokens, the ones that publish. An invalid or expired user
+// Meta (Instagram and Facebook) health is decided from the page tokens, the ones that publish. An invalid or expired user
 // token alone is not a revocation: page tokens are long-lived and outlive it, so the dates decide
 // (expiring / expired) through data_access_expires_at.
 //   revoked token_invalid     every page token is invalid (or no page tokens and the user token is invalid)
-//   revoked permission_missing no valid page token carries instagram_content_publish (a page token that
+//   revoked permission_missing no valid page token carries the required scope (instagram_content_publish for
+//                              the instagram row, pages_manage_posts for the facebook row; a page token that
 //                              reports no scopes at all is not judged; with no page tokens, the user token)
 //   otherwise                  status null: dates drive the status
-async function decideInstagram(connection: ConnectionSummary, ctx: Context): Promise<Decision | null> {
+async function decideMeta(
+  connection: ConnectionSummary, ctx: Context, requiredScope: string,
+): Promise<Decision | null> {
   const credentials = await ctx.store.credentials(connection.id);
   const user = credentials.find((c) => c.kind === "user_access");
   if (!user) return { report: NO_CHANGE };
@@ -94,10 +97,10 @@ async function decideInstagram(connection: ConnectionSummary, ctx: Context): Pro
 
     if (pageTokens.length === 0) {
       if (!userDebug.isValid) return { report: { status: "revoked", reason: "token_invalid" } };
-      if (!userDebug.scopes.includes(PUBLISH_SCOPE)) return { report: { status: "revoked", reason: "permission_missing" } };
+      if (!userDebug.scopes.includes(requiredScope)) return { report: { status: "revoked", reason: "permission_missing" } };
     } else {
       if (validPages.length === 0) return { report: { status: "revoked", reason: "token_invalid" } };
-      if (validPages.every((d) => d.scopes.length > 0 && !d.scopes.includes(PUBLISH_SCOPE))) {
+      if (validPages.every((d) => d.scopes.length > 0 && !d.scopes.includes(requiredScope))) {
         return { report: { status: "revoked", reason: "permission_missing" } };
       }
     }
@@ -116,7 +119,7 @@ async function decideInstagram(connection: ConnectionSummary, ctx: Context): Pro
 }
 
 // Daily worker (cron + worker secret, no user session): refreshes LinkedIn tokens that expire within
-// 7 days, validates Instagram tokens with debug_token, reports the health to social_connections and
+// 7 days, validates Instagram and Facebook tokens with debug_token, reports the health to social_connections and
 // emails the user once per bad status (Resend).
 export function createHandler(env: Environment, fetcher: typeof fetch = fetch, clock: () => number = Date.now) {
   return async (request: Request): Promise<Response> => {
@@ -152,7 +155,9 @@ export function createHandler(env: Environment, fetcher: typeof fetch = fetch, c
             if (connection.status !== "revoked") {
               const decision = connection.network === "linkedin"
                 ? await decideLinkedIn(connection, ctx)
-                : await decideInstagram(connection, ctx);
+                : await decideMeta(
+                  connection, ctx, connection.network === "facebook" ? FACEBOOK_PUBLISH_SCOPE : PUBLISH_SCOPE,
+                );
               if (!decision) {
                 summary.skipped++;
                 continue;

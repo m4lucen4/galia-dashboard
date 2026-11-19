@@ -8,12 +8,14 @@ import type { SocialNetwork } from "./socialMediaRules";
 export const NETWORK_NAMES: Record<SocialNetwork, string> = {
   instagram: "Instagram",
   linkedin: "LinkedIn",
+  facebook: "Facebook",
 };
 
 export const formatLabel = (network: SocialNetwork, format: PublicationFormat): string => {
   switch (format) {
     case "image":
-      return network === "instagram" ? "Post" : "Imagen(es)";
+      if (network === "instagram") return "Post";
+      return network === "facebook" ? "Post (fotos)" : "Imagen(es)";
     case "story_image":
       return "Historia (imagen)";
     case "reel":

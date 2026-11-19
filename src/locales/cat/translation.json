@@ -323,6 +323,12 @@
     "followers": "Seguidors",
     "posts": "Publicacions",
     "viaFacebookPage": "Via pàgina de Facebook",
+    "reconnectForFacebookPages": "Torna a connectar el teu compte de Meta per publicar també a les teves Pàgines de Facebook.",
+    "publishFacebookPages": "Pàgines de Facebook per publicar",
+    "whereCanPublishFacebookPages": "Pots realitzar publicacions a...",
+    "loadingFacebookPages": "Carregant pàgines de Facebook...",
+    "notFoundFacebookPages": "No s'han trobat pàgines de Facebook, si administres alguna pàgina apareixerà aquí.",
+    "linkedInstagram": "Instagram vinculat",
     "instagramDescription": "Per publicar a Instagram, has de connectar el teu compte de Facebook i tenir una pàgina d'empresa.",
     "noInstagramConnection": "No hi ha connexió amb Instagram",
     "myWeb": "La meva Web",
@@ -646,7 +652,8 @@
       "title": "Comprovacions per a {{network}}",
       "networks": {
         "instagram": "Instagram",
-        "linkedin": "LinkedIn"
+        "linkedin": "LinkedIn",
+        "facebook": "Facebook"
       },
       "imageLabel": "Imatge {{index}}",
       "measuring": "comprovant…",
@@ -661,9 +668,10 @@
       "issues": {
         "unsupportedFormat": {
           "instagram": "és {{format}}; es convertirà a JPEG en publicar",
-          "linkedin": "és {{format}} i LinkedIn només admet JPG, PNG i GIF; es convertirà a JPEG en publicar"
+          "linkedin": "és {{format}} i LinkedIn només admet JPG, PNG i GIF; es convertirà a JPEG en publicar",
+          "facebook": "és {{format}} i Facebook només admet JPG, PNG i GIF; es convertirà a JPEG en publicar"
         },
-        "tooHeavy": "pesa {{size}} i Instagram admet fins a {{limit}}; es comprimirà en publicar",
+        "tooHeavy": "pesa {{size}} i {{network}} admet fins a {{limit}}; es comprimirà en publicar",
         "widthTooSmall": "fa {{width}} px d'amplada i Instagram demana almenys {{min}} px; s'ampliarà en publicar",
         "widthTooLarge": "fa {{width}} px d'amplada i Instagram admet fins a {{max}} px; es reduirà en publicar",
         "tooManyPixels": "té {{pixels}} píxels i LinkedIn exigeix menys de {{limit}}; es reduirà en publicar",
@@ -675,9 +683,10 @@
       "issuesReport": {
         "unsupportedFormat": {
           "instagram": "Instagram només accepta JPEG (aquesta és {{format}})",
-          "linkedin": "LinkedIn només accepta JPG, PNG i GIF (aquesta és {{format}})"
+          "linkedin": "LinkedIn només accepta JPG, PNG i GIF (aquesta és {{format}})",
+          "facebook": "Facebook només accepta JPG, PNG i GIF (aquesta és {{format}})"
         },
-        "tooHeavy": "pesa {{size}} i Instagram admet fins a {{limit}}",
+        "tooHeavy": "pesa {{size}} i {{network}} admet fins a {{limit}}",
         "widthTooSmall": "fa {{width}} px d'amplada i Instagram demana almenys {{min}} px",
         "widthTooLarge": "fa {{width}} px d'amplada i Instagram admet fins a {{max}} px",
         "tooManyPixels": "té {{pixels}} píxels i LinkedIn exigeix menys de {{limit}}"
@@ -690,7 +699,8 @@
       "mentions": "{{used}} de {{limit}} mencions",
       "textTooLong": {
         "instagram": "El text supera el límit de {{limit}} caràcters d'Instagram.",
-        "linkedin": "El text supera els {{limit}} caràcters que admet LinkedIn."
+        "linkedin": "El text supera els {{limit}} caràcters que admet LinkedIn.",
+        "facebook": "El text supera els {{limit}} caràcters que admet Facebook."
       },
       "instagramLimitsProvisional": "Els límits de text d'Instagram són orientatius i es confirmaran abans de publicar.",
       "blocked": {
@@ -708,7 +718,8 @@
         "title": "Ajustar imatges per a {{network}}",
         "description": {
           "instagram": "Tria una imatge, ajusta'n el zoom i l'enquadrament i prem «Aplicar»: es desa una còpia JPEG només d'aquesta imatge. En un carrusel totes usen la mateixa proporció. L'original no canvia.",
-          "linkedin": "Tria una imatge, ajusta'n la proporció, el zoom i l'enquadrament i prem «Aplicar»: es desa una còpia JPEG només d'aquesta imatge. L'original no canvia."
+          "linkedin": "Tria una imatge, ajusta'n la proporció, el zoom i l'enquadrament i prem «Aplicar»: es desa una còpia JPEG només d'aquesta imatge. L'original no canvia.",
+          "facebook": "Tria una imatge, ajusta'n la proporció, el zoom i l'enquadrament i prem «Aplicar»: es desa una còpia JPEG només d'aquesta imatge. L'original no canvia."
         },
         "images": "Imatges",
         "ratio": "Proporció",
@@ -759,7 +770,8 @@
       "networks": {
         "instagram": "Instagram",
         "linkedin": "LinkedIn",
-        "generic": "la xarxa social"
+        "generic": "la xarxa social",
+        "facebook": "Facebook"
       },
       "status": {
         "scheduled": "Programat · {{date}}",
@@ -842,7 +854,7 @@
           "fix": "Escurça el text de la publicació i torna a programar-la."
         },
         "commentary_too_long": {
-          "reason": "El text supera el límit de 3.000 caràcters de LinkedIn.",
+          "reason": "El text supera el límit de caràcters de {{network}} (LinkedIn: 3.000; Facebook: 63.206).",
           "fix": "Escurça el text de la publicació i torna a programar-la."
         },
         "too_many_hashtags": {
@@ -930,7 +942,7 @@
           "fix": "Torna a seleccionar o pujar la imatge i programa la publicació de nou."
         },
         "media_too_large": {
-          "reason": "Una imatge pesa massa (més de 30 MB).",
+          "reason": "Una imatge pesa massa per a {{network}} (màxim 30 MB a LinkedIn i 10 MB a Facebook).",
           "fix": "Fes servir una imatge més lleugera i torna a programar la publicació."
         },
         "media_unreadable": {
@@ -942,7 +954,12 @@
           "fix": "Prem Reintentar; si es repeteix, contacta amb suport."
         }
       }
-    }
+    },
+    "facebookPreview": "Vista prèvia de Facebook",
+    "noFacebookConnection": "No hi ha connexió amb Facebook",
+    "noFacebookPages": "No hi ha Pàgines de Facebook disponibles per publicar. Comprova que gestiones alguna Pàgina.",
+    "facebookReconnect": "Torna a connectar el teu compte de Meta per publicar també a les teves Pàgines de Facebook.",
+    "selectFacebookPage": "Selecciona la Pàgina de Facebook on vols publicar"
   },
   "profile": {
     "sections": {

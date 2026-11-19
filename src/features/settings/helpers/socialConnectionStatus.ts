@@ -1,4 +1,9 @@
-import { SocialConnectionStatus } from "../../../types";
+import { FACEBOOK_PUBLISH_SCOPE } from "../../../redux/actions/SocialNetworksActions";
+import {
+  FacebookData,
+  InstagramData,
+  SocialConnectionStatus,
+} from "../../../types";
 
 const MADRID_DATE_FORMAT = new Intl.DateTimeFormat("es-ES", {
   timeZone: "Europe/Madrid",
@@ -30,3 +35,13 @@ export const reasonTranslationKey = (reason?: string | null): string =>
   reason && /^[a-z_]{1,60}$/.test(reason)
     ? `socialConnections.reasons.${reason}`
     : "socialConnections.reasons.unknown";
+
+// Instagram is connected but the Facebook Pages are not usable yet (missing,
+// disconnected, or the connection predates the pages_manage_posts scope).
+export const needsFacebookReconnect = (
+  instagram: InstagramData,
+  facebook: FacebookData
+): boolean =>
+  instagram.isConnected &&
+  (!facebook.isConnected ||
+    !(facebook.scopes ?? []).includes(FACEBOOK_PUBLISH_SCOPE));

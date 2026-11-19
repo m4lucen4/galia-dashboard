@@ -72,8 +72,8 @@ export function logEntryError(error: unknown): void {
 // Request
 // ---------------------------------------------------------------------------------------------
 
-export type Network = "instagram" | "linkedin";
-export type AccountKind = "instagram_business" | "linkedin_person" | "linkedin_organization";
+export type Network = "instagram" | "linkedin" | "facebook";
+export type AccountKind = "instagram_business" | "linkedin_person" | "linkedin_organization" | "facebook_page";
 
 export interface RequestedTarget {
   network: Network;
@@ -109,12 +109,14 @@ export const MAX_VIDEO_POSITION = 19;
 const KINDS_BY_NETWORK: Record<Network, readonly AccountKind[]> = {
   instagram: ["instagram_business"],
   linkedin: ["linkedin_person", "linkedin_organization"],
+  facebook: ["facebook_page"],
 };
 
 // Allowed formats per network (the database enforces the same pairs).
 const FORMATS_BY_NETWORK: Record<Network, readonly PublishFormat[]> = {
   instagram: ["image", "reel", "story_image", "story_video", "carousel_video"],
   linkedin: ["image", "video"],
+  facebook: ["image", "video"],
 };
 
 const invalid = () => new EntryError("invalid_request");
@@ -185,14 +187,14 @@ function parseVideoPosition(value: unknown): number {
 }
 
 function parseTargets(value: unknown): RequestedTarget[] {
-  if (!Array.isArray(value) || value.length < 1 || value.length > 2) throw invalid();
+  if (!Array.isArray(value) || value.length < 1 || value.length > 3) throw invalid();
   const seen = new Set<string>();
   return value.map((item) => {
     const row = asRecord(item);
     if (!row) throw invalid();
     exactKeys(row, ["network", "accountKind", "accountExternalId", "accountName", "format", "storyImageUrl", "videoPosition"]);
     const network = row.network;
-    if (network !== "instagram" && network !== "linkedin") throw invalid();
+    if (network !== "instagram" && network !== "linkedin" && network !== "facebook") throw invalid();
     const kind = row.accountKind as AccountKind;
     if (!KINDS_BY_NETWORK[network].includes(kind) || seen.has(network)) throw invalid();
     seen.add(network);
@@ -343,6 +345,11 @@ export function validateTargets(
     const id = target.accountExternalId;
     let name: string | null;
     if (target.accountKind === "instagram_business") {
+      const page = connection.pages.find((p) => p.id === id);
+      if (!page) throw new EntryError("account_not_allowed");
+      name = page.name;
+    } else if (target.accountKind === "facebook_page") {
+      // The Pages of the facebook connection, by Facebook Page id.
       const page = connection.pages.find((p) => p.id === id);
       if (!page) throw new EntryError("account_not_allowed");
       name = page.name;

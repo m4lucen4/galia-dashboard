@@ -19,7 +19,7 @@ interface Texts {
 const texts: Record<Language, Texts> = {
   es: {
     locale: "es-ES",
-    networks: { linkedin: "LinkedIn", instagram: "Instagram" },
+    networks: { linkedin: "LinkedIn", instagram: "Instagram", facebook: "Facebook" },
     greeting: (name) => `Hola ${name},`,
     subject: {
       expiring: (n) => `Tu conexión con ${n} caduca pronto`,
@@ -41,7 +41,7 @@ const texts: Record<Language, Texts> = {
   },
   en: {
     locale: "en-GB",
-    networks: { linkedin: "LinkedIn", instagram: "Instagram" },
+    networks: { linkedin: "LinkedIn", instagram: "Instagram", facebook: "Facebook" },
     greeting: (name) => `Hi ${name},`,
     subject: {
       expiring: (n) => `Your ${n} connection expires soon`,
@@ -63,7 +63,7 @@ const texts: Record<Language, Texts> = {
   },
   ca: {
     locale: "ca-ES",
-    networks: { linkedin: "LinkedIn", instagram: "Instagram" },
+    networks: { linkedin: "LinkedIn", instagram: "Instagram", facebook: "Facebook" },
     greeting: (name) => `Hola ${name},`,
     subject: {
       expiring: (n) => `La teva connexió amb ${n} caduca aviat`,

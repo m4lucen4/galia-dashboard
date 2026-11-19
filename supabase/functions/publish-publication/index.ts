@@ -55,7 +55,7 @@ export function createHandler(env: Environment, fetcher: Fetcher = fetch, waitUn
       // resolved only after the actor proved access, so a stranger learns nothing about connections.
       const owner = await store.owner(actor, input.previewId);
       const networks = [...new Set(input.targets.map((target) => target.network))];
-      const connections = { instagram: null, linkedin: null } as Parameters<typeof validateTargets>[0];
+      const connections = { instagram: null, linkedin: null, facebook: null } as Parameters<typeof validateTargets>[0];
       for (const network of networks) connections[network] = await store.connection(owner, network);
       const targets = validateTargets(connections, input.targets);
 

@@ -3,8 +3,10 @@ import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { PreviewProjectDataProps, PublicationTarget } from "../../../../types";
 import { LockClosedIcon } from "@heroicons/react/24/outline";
 import { Button } from "../../../../components/shared/ui/Button";
-import { InstagramIcon, LinkedInIcon } from "../../../../components/icons";
+import { useFacebookPagesEnabled } from "../../../../hooks/useFacebookPagesEnabled";
+import { FacebookIcon, InstagramIcon, LinkedInIcon } from "../../../../components/icons";
 import { isDateInPast, truncateText } from "../../../../helpers";
+import { SOCIAL_PUBLISHING_EDGE_ENABLED } from "../../../../helpers/publishDate";
 import { useTranslation } from "react-i18next";
 import { PublishStatusMessage } from "./PublishStatusMessage";
 import { SocialMediaResults } from "./SocialMediaResults";
@@ -32,6 +34,7 @@ interface CardsListProps {
   handleOpenPublishConfig: (project: PreviewProjectDataProps) => void;
   handleOpenInstagram: (project: PreviewProjectDataProps) => void;
   handleOpenLinkedln: (project: PreviewProjectDataProps) => void;
+  handleOpenFacebook: (project: PreviewProjectDataProps) => void;
   handlePublishAgain: (project: PreviewProjectDataProps) => void;
   /** Edge pipeline only: current publication_targets by publication id. */
   targetsByPreview?: TargetsByPreview;
@@ -55,6 +58,7 @@ export const CardsList: React.FC<CardsListProps> = ({
   handleOpenPublishConfig,
   handleOpenInstagram,
   handleOpenLinkedln,
+  handleOpenFacebook,
   handlePublishAgain,
   targetsByPreview,
   isPublicationBusy,
@@ -63,6 +67,7 @@ export const CardsList: React.FC<CardsListProps> = ({
 }) => {
   const { t } = useTranslation();
   const hasValidSubscription = useHasValidSubscription();
+  const facebookEnabled = useFacebookPagesEnabled();
 
   const sortedProjects = sortPreviewProjects(projects);
 
@@ -181,6 +186,13 @@ export const CardsList: React.FC<CardsListProps> = ({
                         secondary
                         onClick={() => handleOpenLinkedln(project)}
                       />
+                      {SOCIAL_PUBLISHING_EDGE_ENABLED && facebookEnabled && (
+                        <Button
+                          icon={<FacebookIcon />}
+                          secondary
+                          onClick={() => handleOpenFacebook(project)}
+                        />
+                      )}
                     </div>
                     <Button
                       title={t("previewProjects.publish")}
@@ -255,6 +267,13 @@ export const CardsList: React.FC<CardsListProps> = ({
                           secondary
                           onClick={() => handleOpenLinkedln(project)}
                         />
+                        {SOCIAL_PUBLISHING_EDGE_ENABLED && facebookEnabled && (
+                          <Button
+                            icon={<FacebookIcon />}
+                            secondary
+                            onClick={() => handleOpenFacebook(project)}
+                          />
+                        )}
                       </div>
                       <Button
                         title={t("previewProjects.publish")}

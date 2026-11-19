@@ -1,8 +1,10 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import i18n from "../../i18n";
+import type { RootState } from "../store";
 import { supabase } from "../../helpers/supabase";
 import {
+  FacebookPage,
   InstagramBusinessPage,
   LinkedInPage,
   SocialConnection,
@@ -35,10 +37,14 @@ type SocialConnectAction = "exchange" | "pages" | "status" | "disconnect";
 const CONNECT_FUNCTIONS: Record<SocialConnectionNetwork, string> = {
   linkedin: "social-connect-linkedin",
   instagram: "social-connect-instagram",
+  // Facebook Pages share the Meta login: same Edge Function as Instagram.
+  facebook: "social-connect-instagram",
 };
 
+export const FACEBOOK_PUBLISH_SCOPE = "pages_manage_posts";
+
 const CONNECTION_COLUMNS =
-  "id, network, status, status_reason, account_id, account_name, pages, expires_at, access_expires_at, refresh_expires_at, data_access_expires_at, connected_at, last_checked_at";
+  "id, network, status, status_reason, account_id, account_name, pages, scopes, expires_at, access_expires_at, refresh_expires_at, data_access_expires_at, connected_at, last_checked_at";
 
 const CONNECTION_STATUSES: SocialConnectionStatus[] = [
   "connected",
@@ -86,10 +92,17 @@ const normalizePages = (value: unknown): SocialConnectionPage[] => {
         username: asString(page.username) ?? undefined,
         facebookPageId: asString(page.facebookPageId) ?? undefined,
         facebookPageName: asString(page.facebookPageName) ?? undefined,
+        instagramId: asString(page.instagramId) ?? undefined,
+        instagramUsername: asString(page.instagramUsername) ?? undefined,
       },
     ];
   });
 };
+
+const normalizeScopes = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.filter((scope): scope is string => typeof scope === "string")
+    : [];
 
 export const normalizeSocialConnection = (
   raw: unknown
@@ -97,7 +110,13 @@ export const normalizeSocialConnection = (
   if (!isRecord(raw)) return null;
   const network = raw.network;
   const status = raw.status;
-  if (network !== "linkedin" && network !== "instagram") return null;
+  if (
+    network !== "linkedin" &&
+    network !== "instagram" &&
+    network !== "facebook"
+  ) {
+    return null;
+  }
   if (!CONNECTION_STATUSES.includes(status as SocialConnectionStatus)) {
     return null;
   }
@@ -110,6 +129,7 @@ export const normalizeSocialConnection = (
     accountId: asString(pick(raw, "account_id", "accountId")),
     accountName: asString(pick(raw, "account_name", "accountName")),
     pages: normalizePages(raw.pages),
+    scopes: normalizeScopes(raw.scopes),
     expiresAt: asString(pick(raw, "expires_at", "expiresAt")),
     accessExpiresAt: asString(
       pick(raw, "access_expires_at", "accessExpiresAt")
@@ -152,6 +172,21 @@ export const toInstagramPages = (
     facebook_page_id: page.facebookPageId ?? "",
     facebook_page_name: page.facebookPageName ?? "",
   }));
+
+export const toFacebookPages = (
+  connection: SocialConnection | null
+): FacebookPage[] =>
+  (connection?.pages ?? []).map((page) => ({
+    id: page.id,
+    name: page.name,
+    type: "PAGE",
+    instagramId: page.instagramId,
+    instagramUsername: page.instagramUsername,
+  }));
+
+export const hasFacebookPublishScope = (
+  connection: SocialConnection | null
+): boolean => connection?.scopes.includes(FACEBOOK_PUBLISH_SCOPE) ?? false;
 
 // OAuth `state` (CSRF): 32 random bytes from the Web Crypto CSPRNG, hex encoded.
 const generateOAuthState = (): string => {
@@ -260,6 +295,24 @@ const exchangeAndLoadPages = async (
   }
 };
 
+// The Facebook row is written by the same Meta login. The browser reads it from
+// social_connections like the Instagram one. undefined = could not be read: keep what the UI has.
+export type MetaConnections = {
+  connection: SocialConnection | null;
+  facebook: SocialConnection | null | undefined;
+};
+
+const readFacebookSafely = async (): Promise<
+  SocialConnection | null | undefined
+> => {
+  try {
+    return await readSocialConnection("facebook");
+  } catch (error) {
+    console.error("Error reading Facebook connection:", error);
+    return undefined;
+  }
+};
+
 export const initiateLinkedInAuth = createAsyncThunk(
   "socialNetworks/initiateLinkedInAuth",
   async (_, { rejectWithValue }) => {
@@ -351,14 +404,24 @@ export const fetchLinkedInPages = createAsyncThunk(
 
 export const initiateInstagramAuth = createAsyncThunk(
   "socialNetworks/initiateInstagramAuth",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
       const state = generateOAuthState();
       localStorage.setItem("instagram_auth_state", state);
+      // Admin-only until Meta grants Advanced Access (see useFacebookPagesEnabled).
+      const isAdmin = (getState() as RootState).auth.user?.role === "admin";
+      const scopes = [
+        "pages_show_list",
+        "instagram_basic",
+        "instagram_content_publish",
+        "business_management",
+        "pages_read_engagement",
+        ...(isAdmin ? [FACEBOOK_PUBLISH_SCOPE] : []),
+      ].join(",");
 
       const authUrl = `https://www.facebook.com/v27.0/dialog/oauth?client_id=${INSTAGRAM_APP_ID}&redirect_uri=${encodeURIComponent(
         INSTAGRAM_REDIRECT_URI
-      )}&state=${state}&response_type=code&scope=pages_show_list,instagram_basic,instagram_content_publish,business_management,pages_read_engagement`;
+      )}&state=${state}&response_type=code&scope=${scopes}`;
 
       window.location.href = authUrl;
       return true;
@@ -382,11 +445,13 @@ export const processInstagramCallback = createAsyncThunk(
     localStorage.removeItem("instagram_auth_state");
 
     try {
-      return await exchangeAndLoadPages(
+      const connection = await exchangeAndLoadPages(
         "instagram",
         code,
         INSTAGRAM_REDIRECT_URI
       );
+      const facebook = await readFacebookSafely();
+      return { connection, facebook } satisfies MetaConnections;
     } catch (error) {
       console.error("Error processing Instagram callback:", error);
       return rejectWithValue(socialErrorMessage(error));
@@ -398,7 +463,9 @@ export const disconnectInstagram = createAsyncThunk(
   "socialNetworks/disconnectInstagram",
   async (_, { rejectWithValue }) => {
     try {
-      return await invokeSocialConnect("instagram", "disconnect");
+      // The server disconnects the Instagram and Facebook rows (one Meta login).
+      const connection = await invokeSocialConnect("instagram", "disconnect");
+      return { connection, facebook: null } satisfies MetaConnections;
     } catch (error) {
       console.error("Error disconnecting Instagram:", error);
       return rejectWithValue(socialErrorMessage(error));
@@ -410,7 +477,11 @@ export const checkInstagramConnection = createAsyncThunk(
   "socialNetworks/checkInstagramConnection",
   async (_, { rejectWithValue }) => {
     try {
-      return await readSocialConnection("instagram");
+      const [connection, facebook] = await Promise.all([
+        readSocialConnection("instagram"),
+        readSocialConnection("facebook"),
+      ]);
+      return { connection, facebook } satisfies MetaConnections;
     } catch (error) {
       console.error("Error checking Instagram connection:", error);
       return rejectWithValue(socialErrorMessage(error));
@@ -422,7 +493,9 @@ export const fetchInstagramPages = createAsyncThunk(
   "socialNetworks/fetchInstagramPages",
   async (_, { rejectWithValue }) => {
     try {
-      return await invokeSocialConnect("instagram", "pages");
+      const connection = await invokeSocialConnect("instagram", "pages");
+      const facebook = await readFacebookSafely();
+      return { connection, facebook } satisfies MetaConnections;
     } catch (error) {
       console.error("Error fetching Instagram business pages:", error);
       return rejectWithValue(socialErrorMessage(error));

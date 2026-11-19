@@ -1,13 +1,17 @@
 // Contract between the publication worker (process-publication-targets) and the
-// per-network publishers (social-publish-instagram.ts, social-publish-linkedin.ts).
+// per-network publishers (social-publish-instagram.ts, social-publish-linkedin.ts, social-publish-facebook.ts).
 // Pure types plus small helpers: no Deno APIs, so it can be type-checked and run in Node.
 import type { UploadStateStore } from "./social-upload-state.ts";
 
-export type PublishNetwork = "instagram" | "linkedin";
-export type PublishAccountKind = "instagram_business" | "linkedin_person" | "linkedin_organization";
+export type PublishNetwork = "instagram" | "linkedin" | "facebook";
+export type PublishAccountKind =
+  | "instagram_business"
+  | "linkedin_person"
+  | "linkedin_organization"
+  | "facebook_page";
 export type PublishErrorKind = "transient" | "action_required" | "permanent";
 /**
- * Instagram: image, reel, story_image, story_video, carousel_video. LinkedIn: image, video. `image` is the original
+ * Instagram: image, reel, story_image, story_video, carousel_video. LinkedIn and Facebook: image, video. `image` is the original
  * behaviour (one or many images). Video formats carry PublishPayload.video; carousel_video (Instagram only) carries
  * the photos AND the video in one carousel (PublishPayload.images + video + videoPosition).
  */
@@ -87,7 +91,7 @@ export interface PublishPayload {
 
 /** Server-side credentials of the publication owner for this target's network. Never logged. */
 export interface PublishCredentials {
-  /** Instagram: page access token of accountExternalId. LinkedIn: member access token. */
+  /** Instagram: page access token of accountExternalId. Facebook: page access token of the Page id. LinkedIn: member access token. */
   accessToken: string;
 }
 
@@ -97,7 +101,7 @@ export interface PublishContext {
   credentials: PublishCredentials;
   /**
    * Saves progress and extends the lease. Call with sideEffectPending = true immediately
-   * before the irreversible call (Instagram media_publish, LinkedIn POST /rest/posts).
+   * before the irreversible call (Instagram media_publish, LinkedIn POST /rest/posts, Facebook published photo, feed or video).
    * Throws when the lease was lost: the publisher must stop without calling the network again.
    */
   checkpoint(step: string, stepState: Record<string, unknown>, sideEffectPending: boolean): Promise<void>;

@@ -323,6 +323,12 @@
     "followers": "Seguidores",
     "posts": "Publicaciones",
     "viaFacebookPage": "Vía página de Facebook",
+    "reconnectForFacebookPages": "Vuelve a conectar tu cuenta de Meta para publicar también en tus Páginas de Facebook.",
+    "publishFacebookPages": "Páginas de Facebook para publicar",
+    "whereCanPublishFacebookPages": "Puedes realizar publicaciones en...",
+    "loadingFacebookPages": "Cargando páginas de Facebook...",
+    "notFoundFacebookPages": "No se encontraron páginas de Facebook, si administras alguna página aparecerá aquí.",
+    "linkedInstagram": "Instagram vinculado",
     "instagramDescription": "Para publicar en Instagram, debes conectar tu cuenta de Facebook y tener una página de empresa.",
     "noInstagramConnection": "No hay conexión con Instagram",
     "connectedSince": "Conectado desde",
@@ -648,7 +654,8 @@
       "title": "Comprobaciones para {{network}}",
       "networks": {
         "instagram": "Instagram",
-        "linkedin": "LinkedIn"
+        "linkedin": "LinkedIn",
+        "facebook": "Facebook"
       },
       "imageLabel": "Imagen {{index}}",
       "measuring": "comprobando…",
@@ -663,9 +670,10 @@
       "issues": {
         "unsupportedFormat": {
           "instagram": "es {{format}}; se convertirá a JPEG al publicar",
-          "linkedin": "es {{format}} y LinkedIn solo admite JPG, PNG y GIF; se convertirá a JPEG al publicar"
+          "linkedin": "es {{format}} y LinkedIn solo admite JPG, PNG y GIF; se convertirá a JPEG al publicar",
+          "facebook": "es {{format}} y Facebook solo admite JPG, PNG y GIF; se convertirá a JPEG al publicar"
         },
-        "tooHeavy": "pesa {{size}} y Instagram admite hasta {{limit}}; se comprimirá al publicar",
+        "tooHeavy": "pesa {{size}} y {{network}} admite hasta {{limit}}; se comprimirá al publicar",
         "widthTooSmall": "mide {{width}} px de ancho y Instagram pide al menos {{min}} px; se ampliará al publicar",
         "widthTooLarge": "mide {{width}} px de ancho y Instagram admite hasta {{max}} px; se reducirá al publicar",
         "tooManyPixels": "tiene {{pixels}} píxeles y LinkedIn exige menos de {{limit}}; se reducirá al publicar",
@@ -677,9 +685,10 @@
       "issuesReport": {
         "unsupportedFormat": {
           "instagram": "Instagram solo acepta JPEG (esta es {{format}})",
-          "linkedin": "LinkedIn solo acepta JPG, PNG y GIF (esta es {{format}})"
+          "linkedin": "LinkedIn solo acepta JPG, PNG y GIF (esta es {{format}})",
+          "facebook": "Facebook solo acepta JPG, PNG y GIF (esta es {{format}})"
         },
-        "tooHeavy": "pesa {{size}} y Instagram admite hasta {{limit}}",
+        "tooHeavy": "pesa {{size}} y {{network}} admite hasta {{limit}}",
         "widthTooSmall": "mide {{width}} px de ancho y Instagram pide al menos {{min}} px",
         "widthTooLarge": "mide {{width}} px de ancho y Instagram admite hasta {{max}} px",
         "tooManyPixels": "tiene {{pixels}} píxeles y LinkedIn exige menos de {{limit}}"
@@ -692,7 +701,8 @@
       "mentions": "{{used}} de {{limit}} menciones",
       "textTooLong": {
         "instagram": "El texto supera el límite de {{limit}} caracteres de Instagram.",
-        "linkedin": "El texto supera los {{limit}} caracteres que admite LinkedIn."
+        "linkedin": "El texto supera los {{limit}} caracteres que admite LinkedIn.",
+        "facebook": "El texto supera los {{limit}} caracteres que admite Facebook."
       },
       "instagramLimitsProvisional": "Los límites de texto de Instagram son orientativos y se confirmarán antes de publicar.",
       "blocked": {
@@ -710,7 +720,8 @@
         "title": "Ajustar imágenes para {{network}}",
         "description": {
           "instagram": "Elige una imagen, ajusta su zoom y encuadre y pulsa «Aplicar»: queda guardada una copia JPEG solo de esa imagen. En un carrusel todas usan la misma proporción. El original no cambia.",
-          "linkedin": "Elige una imagen, ajusta su proporción, zoom y encuadre y pulsa «Aplicar»: queda guardada una copia JPEG solo de esa imagen. El original no cambia."
+          "linkedin": "Elige una imagen, ajusta su proporción, zoom y encuadre y pulsa «Aplicar»: queda guardada una copia JPEG solo de esa imagen. El original no cambia.",
+          "facebook": "Elige una imagen, ajusta su proporción, zoom y encuadre y pulsa «Aplicar»: queda guardada una copia JPEG solo de esa imagen. El original no cambia."
         },
         "images": "Imágenes",
         "ratio": "Proporción",
@@ -761,7 +772,8 @@
       "networks": {
         "instagram": "Instagram",
         "linkedin": "LinkedIn",
-        "generic": "la red social"
+        "generic": "la red social",
+        "facebook": "Facebook"
       },
       "status": {
         "scheduled": "Programado · {{date}}",
@@ -844,7 +856,7 @@
           "fix": "Acorta el texto de la publicación y vuelve a programarla."
         },
         "commentary_too_long": {
-          "reason": "El texto supera el límite de 3.000 caracteres de LinkedIn.",
+          "reason": "El texto supera el límite de caracteres de {{network}} (LinkedIn: 3.000; Facebook: 63.206).",
           "fix": "Acorta el texto de la publicación y vuelve a programarla."
         },
         "too_many_hashtags": {
@@ -932,7 +944,7 @@
           "fix": "Vuelve a seleccionar o subir la imagen y programa la publicación de nuevo."
         },
         "media_too_large": {
-          "reason": "Una imagen pesa demasiado (más de 30 MB).",
+          "reason": "Una imagen pesa demasiado para {{network}} (máximo 30 MB en LinkedIn y 10 MB en Facebook).",
           "fix": "Usa una imagen más ligera y vuelve a programar la publicación."
         },
         "media_unreadable": {
@@ -944,7 +956,12 @@
           "fix": "Pulsa Reintentar; si se repite, contacta con soporte."
         }
       }
-    }
+    },
+    "facebookPreview": "Vista previa de Facebook",
+    "noFacebookConnection": "No hay conexión con Facebook",
+    "noFacebookPages": "No hay Páginas de Facebook disponibles para publicar. Comprueba que gestionas alguna Página.",
+    "facebookReconnect": "Vuelve a conectar tu cuenta de Meta para publicar también en tus Páginas de Facebook.",
+    "selectFacebookPage": "Selecciona la Página de Facebook donde quieres publicar"
   },
   "profile": {
     "sections": {

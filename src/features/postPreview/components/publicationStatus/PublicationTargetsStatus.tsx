@@ -8,7 +8,7 @@ import {
   ExclamationTriangleIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
-import { InstagramIcon, LinkedInIcon } from "../../../../components/icons";
+import { NETWORK_ICONS } from "../networkIcons";
 import type { PublicationTarget } from "../../../../types";
 import {
   formatInstantInMadrid,
@@ -77,7 +77,7 @@ export const PublicationTargetsStatus: React.FC<PublicationTargetsStatusProps> =
         {shown.map((target) => {
           const phase = targetPhase(target, now) as TargetPhase;
           const Icon = PHASE_ICONS[phase];
-          const NetworkIcon = target.network === "instagram" ? InstagramIcon : LinkedInIcon;
+          const NetworkIcon = NETWORK_ICONS[target.network];
           const network = t(`previewProjects.publication.networks.${target.network}`);
           const errorKey = targetErrorKey(target.errorCode);
           // Codes of the video formats carry their Spanish text as default (a locale may override it).

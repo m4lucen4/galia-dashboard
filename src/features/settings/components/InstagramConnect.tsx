@@ -2,15 +2,18 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { InstagramIcon, AddIcon, CancelIcon } from "../../../components/icons";
 import { truncateText } from "../../../helpers";
-import { InstagramData } from "../../../types";
+import { FacebookData, InstagramData } from "../../../types";
 import { SocialConnectionStatusBadge } from "./SocialConnectionStatusBadge";
 import {
   formatMadridDate,
+  needsFacebookReconnect,
   needsReconnect,
 } from "../helpers/socialConnectionStatus";
+import { useFacebookPagesEnabled } from "../../../hooks/useFacebookPagesEnabled";
 
 interface InstagramConnectProps {
   instagram: InstagramData;
+  facebook: FacebookData;
   checkInstagramRequest: {
     inProgress: boolean;
   };
@@ -23,12 +26,20 @@ interface InstagramConnectProps {
 
 export const InstagramConnect: React.FC<InstagramConnectProps> = ({
   instagram,
+  facebook,
   checkInstagramRequest,
   disconnectInstagramInRequest,
   onConnect,
   onDisconnect,
 }) => {
   const { t } = useTranslation();
+  const facebookEnabled = useFacebookPagesEnabled();
+  const reconnectForFacebook =
+    facebookEnabled &&
+    !checkInstagramRequest.inProgress &&
+    needsFacebookReconnect(instagram, facebook);
+  const showReconnectButton =
+    !checkInstagramRequest.inProgress && needsReconnect(instagram.status);
 
   return (
     <div className="flex min-w-0 flex-col items-center rounded-3xl border border-[#010000]/15 p-5 text-center">
@@ -107,7 +118,15 @@ export const InstagramConnect: React.FC<InstagramConnectProps> = ({
           })}
         </p>
       )}
-      {!checkInstagramRequest.inProgress && needsReconnect(instagram.status) && (
+      {reconnectForFacebook && (
+        <p
+          role="status"
+          className="mt-3 rounded-2xl bg-[#fbea71]/40 p-3 text-xs text-[#010000]/80"
+        >
+          {t("settings.reconnectForFacebookPages")}
+        </p>
+      )}
+      {(showReconnectButton || reconnectForFacebook) && (
         <button
           type="button"
           onClick={onConnect}

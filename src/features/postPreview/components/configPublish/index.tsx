@@ -1,6 +1,8 @@
 import React, { useMemo, useEffect, ChangeEvent, useState } from "react";
 import { InputField } from "../../../../components/shared/ui/InputField";
 import {
+  FacebookPage,
+  FacebookPageInfo,
   InstagramBusinessPage,
   PublicationFormat,
   InstagramPageInfo,
@@ -11,9 +13,12 @@ import {
 import { useLinkedInPages } from "../../../../hooks/useLinkedInPages";
 import { useTranslation } from "react-i18next";
 import { useInstagramPages } from "../../../../hooks/useInstagramPages";
+import { FACEBOOK_PUBLISH_SCOPE } from "../../../../redux/actions/SocialNetworksActions";
+import { useFacebookPagesEnabled } from "../../../../hooks/useFacebookPagesEnabled";
 import { CheckSocialNetwork } from "./CheckSocialNetwork";
 import { LinkedlnSelectPage } from "./LinkedlnSelectPage";
 import { InstagramSelectPage } from "./InstagramSelectPage";
+import { FacebookSelectPage } from "./FacebookSelectPage";
 import { NetworkMediaPanel } from "./NetworkMediaPanel";
 import { NetworkFormatSelector } from "./NetworkFormatSelector";
 import { StoryMediaPicker } from "./StoryMediaPicker";
@@ -46,8 +51,8 @@ interface ConfigPublishProps {
   socialNetworks: SocialNetworksCheck;
   onDateChange: (newDate: string) => void;
   onSocialNetworkChange: (
-    network: "instagram" | "linkedln",
-    pageInfo?: LinkedInPageInfo | InstagramPageInfo
+    network: "instagram" | "linkedln" | "facebook",
+    pageInfo?: LinkedInPageInfo | InstagramPageInfo | FacebookPageInfo
   ) => void;
   onValidationChange?: (hasError: boolean) => void;
   onPublishNowChange?: (publishNow: boolean) => void;
@@ -78,6 +83,12 @@ interface ConfigPublishProps {
 }
 
 // The target never carries a token: a DB trigger fills it server-side for n8n.
+const toFacebookTarget = (page: FacebookPage): FacebookPageInfo => ({
+  id: page.id,
+  name: page.name,
+  type: "PAGE",
+});
+
 const toInstagramTarget = (page: InstagramBusinessPage): InstagramPageInfo => ({
   id: page.instagram_business_account_id,
   name: page.instagram_username,
@@ -106,9 +117,31 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
     useLinkedInPages();
   const {
     instagram,
+    facebook,
     isFetchingInstagramPages,
     isCheckingConnection: isCheckingInstagram,
   } = useInstagramPages();
+  const facebookEnabled = useFacebookPagesEnabled();
+
+  // Facebook Pages publish through publication_targets only (Edge pipeline) and need the Meta
+  // connection to be active with pages_manage_posts and at least one Page (S3).
+  const facebookPages = facebook.pages ?? [];
+  const facebookHasScope = (facebook.scopes ?? []).includes(FACEBOOK_PUBLISH_SCOPE);
+  const facebookUsable =
+    SOCIAL_PUBLISHING_EDGE_ENABLED &&
+    facebookEnabled &&
+    facebook.isConnected &&
+    facebookHasScope &&
+    facebookPages.length > 0;
+  let facebookHint: string | undefined;
+  if (!facebookUsable) {
+    if (facebook.isConnected && facebookHasScope) {
+      facebookHint = t("previewProjects.noFacebookPages");
+    } else if (instagram.isConnected) {
+      // Meta connected before Facebook Pages existed (or the Page permission was not granted).
+      facebookHint = t("previewProjects.facebookReconnect");
+    }
+  }
 
   const [publishNow, setPublishNow] = useState(false);
 
@@ -201,11 +234,15 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
       if (socialNetworks.linkedln) {
         onSocialNetworkChange("linkedln");
       }
+      if (socialNetworks.facebook) {
+        onSocialNetworkChange("facebook");
+      }
     }
   }, [
     publishDateOnly,
     socialNetworks.instagram,
     socialNetworks.linkedln,
+    socialNetworks.facebook,
     onSocialNetworkChange,
     currentDate,
   ]);
@@ -288,6 +325,21 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
     }
   };
 
+  const handleFacebookChange = (checked: boolean) => {
+    if (checked && facebookPages.length > 0) {
+      onSocialNetworkChange("facebook", toFacebookTarget(facebookPages[0]));
+    } else {
+      onSocialNetworkChange("facebook");
+    }
+  };
+
+  const handleFacebookPageChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const selectedPage = facebookPages.find((page) => page.id === e.target.value);
+    if (selectedPage) {
+      onSocialNetworkChange("facebook", toFacebookTarget(selectedPage));
+    }
+  };
+
   const isInstagramChecked = !!socialNetworks.instagram;
   const isLinkedInChecked = !!socialNetworks.linkedln;
 
@@ -302,12 +354,24 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
       ? socialNetworks.linkedln.id
       : "";
 
+  const isFacebookChecked = !!socialNetworks.facebook;
+  const selectedFacebookId =
+    typeof socialNetworks.facebook === "object" ? socialNetworks.facebook.id : "";
+
   const mediaActive = useMemo(
     () => ({
       instagram: isInstagramChecked && instagram.isConnected,
       linkedin: isLinkedInChecked && linkedin.isConnected,
+      facebook: isFacebookChecked && facebookUsable,
     }),
-    [isInstagramChecked, instagram.isConnected, isLinkedInChecked, linkedin.isConnected],
+    [
+      isInstagramChecked,
+      instagram.isConnected,
+      isLinkedInChecked,
+      linkedin.isConnected,
+      isFacebookChecked,
+      facebookUsable,
+    ],
   );
 
   // Video formats (VITE_SOCIAL_VIDEO): the publication's video, the format per network (the user's
@@ -322,8 +386,10 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
     : "";
   const formats = useMemo<NetworkFormats | undefined>(() => {
     if (!formatsKey) return undefined;
-    const [instagramFormat, linkedinFormat] = formatsKey.split(",") as PublicationFormat[];
-    return { instagram: instagramFormat, linkedin: linkedinFormat };
+    const [instagramFormat, linkedinFormat, facebookFormat] = formatsKey.split(
+      ",",
+    ) as PublicationFormat[];
+    return { instagram: instagramFormat, linkedin: linkedinFormat, facebook: facebookFormat };
   }, [formatsKey]);
   useEffect(() => {
     if (formats) onFormatsChange?.(formats);
@@ -360,7 +426,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
     if (
       SOCIAL_VIDEO_ENABLED &&
       video.status === "loading" &&
-      (mediaActive.instagram || mediaActive.linkedin)
+      (mediaActive.instagram || mediaActive.linkedin || mediaActive.facebook)
     ) {
       return BLOCKED_TEXTS.videoLoading;
     }
@@ -530,6 +596,33 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
           )}
           {mediaActive.linkedin && renderFormatSelector("linkedin")}
           {project && mediaActive.linkedin && renderMediaPanel("linkedin")}
+          {SOCIAL_PUBLISHING_EDGE_ENABLED && facebookEnabled && (
+            <>
+              <CheckSocialNetwork
+                id="facebook"
+                network="facebook"
+                isConnected={facebookUsable}
+                isChecked={isFacebookChecked}
+                isDateValid={isDateValid}
+                publishDate={publishDate}
+                onChange={handleFacebookChange}
+                loading={isFetchingInstagramPages || isCheckingInstagram}
+                status={facebook.status}
+                statusReason={facebook.statusReason}
+                expiresAt={facebook.expiresAt}
+                unavailableHint={facebookHint}
+              />
+              {isFacebookChecked && facebookUsable && (
+                <FacebookSelectPage
+                  pages={facebookPages}
+                  selectedPageId={selectedFacebookId}
+                  onChange={handleFacebookPageChange}
+                />
+              )}
+              {mediaActive.facebook && renderFormatSelector("facebook")}
+              {project && mediaActive.facebook && renderMediaPanel("facebook")}
+            </>
+          )}
         </div>
         {blockReason && (
           <p role="alert" className="mt-3 px-2 text-xs leading-relaxed text-amber-800">

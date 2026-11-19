@@ -14,7 +14,7 @@ Files:
 ## Bucket `publication-variants`
 
 - Public (the networks download the image by URL), `image/jpeg` only, 8 MB (`8388608`) per object.
-- Object path: `<previewId>/<instagram|linkedin>/<uuid>.jpg`. Exactly three segments; the file name is
+- Object path: `<previewId>/<instagram|linkedin|facebook>/<uuid>.jpg` (Facebook: `<previewId>/facebook/<uuid>.jpg`, accepted since migration `20261127000100_facebook_publication_targets.sql`). Exactly three segments; the file name is
   a lowercase UUID (`^[0-9a-f-]{36}\.jpg$`). Anything else is rejected by the storage policies.
 - Public read goes through the public URL and needs no policy.
 
@@ -43,7 +43,7 @@ One row says "for this network, use this derivative instead of this original".
 |---|---|
 | `id` | uuid pk |
 | `preview_id` | `projectsPreview.id`, `on delete cascade` |
-| `network` | `instagram` or `linkedin` |
+| `network` | `instagram`, `linkedin` or `facebook` |
 | `source_url` | the original as in `image_data[].url`; https, <= 2000 chars |
 | `position` | >= 0, order inside the publication |
 | `storage_path` | must start with `<preview_id>/<network>/` and follow the file-name rule |
@@ -56,7 +56,7 @@ One row says "for this network, use this derivative instead of this original".
 Unique `(preview_id, network, source_url)`, and unique `(storage_path)` (index `publication_media_variants_storage_path_key`): an object backs at most one row, so deleting a row's object can never remove another row's image.
 
 CHECKs: `public_url` ends with `/storage/v1/object/public/publication-variants/<storage_path>`; `bytes` 1..8388608; Instagram: `width` 320..1440 and `round(width/height, 2)` between 0.8 and 1.91;
-LinkedIn: `width * height < 36152320`.
+LinkedIn: `width * height < 36152320`; Facebook has no rule of its own (a Facebook variant is still a JPEG of at most 8 MB, below the 10 MB Facebook accepts).
 
 RLS: `authenticated` select / insert / update / delete through `private.preview_id_access_allowed(preview_id)`
 (update checks the new `preview_id` too, so a row cannot be moved to a publication the caller cannot edit).
@@ -65,13 +65,13 @@ publication; reading is the same people.
 
 ## Rules (`social-media-rules.ts`)
 
-| | Instagram | LinkedIn |
-|---|---|---|
-| Format | JPEG only | JPG, PNG, GIF |
-| Weight | <= 8 MB | no limit |
-| Ratio | 0.8 (4:5) .. 1.91 (compared at two decimals, as the CHECK) | any |
-| Size | width 320..1440 | width x height < 36,152,320 px |
-| Several images | carousel <= 20; all items are cropped to the first item's ratio (items differing by more than 0.01 are flagged) | 1 image = Images API, 2..20 = MultiImage |
+| | Instagram | LinkedIn | Facebook (Page) |
+|---|---|---|---|
+| Format | JPEG only | JPG, PNG, GIF | JPG, PNG, GIF |
+| Weight | <= 8 MB | no limit | <= 10 MB (inclusive) |
+| Ratio | 0.8 (4:5) .. 1.91 (compared at two decimals, as the CHECK) | any | any |
+| Size | width 320..1440 | width x height < 36,152,320 px | no limit |
+| Several images | carousel <= 20; all items are cropped to the first item's ratio (items differing by more than 0.01 are flagged) | 1 image = Images API, 2..20 = MultiImage | 1 photo, or 2..20 attached to one post; no ratio rule; none is an issue (`no_images`) |
 
 `evaluateImage(network, {mime, width, height, bytes})` and `evaluateCarousel(network, images)` return
 `{ ok, needsCrop, needsConversion, issues[] }` (carousel adds `items[]`; issues carry the item `index`).
@@ -90,11 +90,13 @@ Issue codes are stable keys for the client to translate; they carry `actual` / `
   `| { } @ [ ] ( ) < > # \ * _ ~`. Consequence: hashtags and mentions typed by the user are published as plain
   text, not clickable.
 - `instagramCaption`: normalised text (no escaping exists on that API).
+- `facebookMessage`: normalised text (no escaping exists on that API), used as the `message` of a photo post and the `description` of a video.
 - `validateInstagramCaption`: `too_long` over 2,200 characters, `too_many_hashtags` over 30, `too_many_mentions` over 20
   (characters are counted as code points). **These Instagram limits are provisional** (constants
   `INSTAGRAM_CAPTION_MAX`, `INSTAGRAM_MAX_HASHTAGS`, `INSTAGRAM_MAX_MENTIONS`); confirm them in phase 4.
 - `validateLinkedinCommentary`: `too_long` over 3,000 characters, measured on the normalised text; confirm in phase 4
   whether the API counts the escaping backslashes.
+- `validateFacebookMessage`: `too_long` over 63,206 characters (`FACEBOOK_MESSAGE_MAX`), the only Facebook text limit (no hashtag or mention cap).
 - `publicationText(row)`: description of the version with `main === true`, else `description_rich` (same rule as
   `publication_target_payload` and n8n). Returns the raw text; apply one of the functions above.
 
@@ -136,14 +138,13 @@ listed in `.env.example` on purpose (out of scope for phase 3); this document is
 - **Unknown format or weight counts as "needs conversion" for Instagram.** When the browser cannot read the mime type
   (no `Content-Type`, `HEAD` blocked, no known extension) or the weight, and the ratio fits, the JPEG copy is generated
   anyway: Instagram only accepts JPEG up to 8 MB, and an unverified original must not reach it. The cost is that such
-  images are converted even if they were fine. LinkedIn does not do this (it accepts JPG, PNG and GIF with no weight
-  limit, so only a known unsupported format or pixel count triggers a conversion). With the switch off, unknown values
+  images are converted even if they were fine. LinkedIn and Facebook do not do this (they accept JPG, PNG and GIF, LinkedIn with no weight limit and Facebook up to 10 MB, so only a known unsupported format, pixel count or weight triggers a conversion). With the switch off, unknown values
   are skipped (nothing is reported), as before.
 
 ## Image adjuster, per image (S22)
 
 Only with the switch on. Opened with **Ajustar imágenes** in the network's checks panel; the flow is the same on
-Instagram and LinkedIn. Nothing is written until the user presses **Aplicar** for an image.
+Instagram, LinkedIn and Facebook. Nothing is written until the user presses **Aplicar** for an image.
 
 **Left: the images of the publication**, each with a state badge (click, or arrow keys + Enter/Space, to select):
 
@@ -155,11 +156,11 @@ Instagram and LinkedIn. Nothing is written until the user presses **Aplicar** fo
 
 **Right: the editor of the selected image only.**
 
-- Ratio: **1:1, 4:5, 1.91:1, Original, Libre**, the same on both networks. On Instagram **Original** is disabled (with the
+- Ratio: **1:1, 4:5, 1.91:1, Original, Libre**, the same on every network. On Instagram **Original** is disabled (with the
   reason) when the image's own ratio is outside 0.8..1.91; **Libre** is a slider limited to 0.8..1.91 on Instagram
-  (0.5..2.5 on LinkedIn, which is more permissive but offers the same flow).
+  (0.5..2.5 on LinkedIn and Facebook, which are more permissive but offer the same flow; Facebook has no ratio rule, so an adjustment there is optional).
 - Zoom slider and the crop area (drag the image).
-- **Aplicar**: renders the JPEG with the existing rules (Instagram width 320..1440 and <= 8 MB, LinkedIn pixel cap),
+- **Aplicar**: renders the JPEG with the existing rules (Instagram width 320..1440 and <= 8 MB, LinkedIn pixel cap, Facebook only the 8 MB variant cap),
   uploads it and upserts the variant of **this image only** (the previous object of that image is replaced). It shows
   «Aplicando…» and the image becomes «Aplicada». Errors are shown on that image with **Reintentar**.
 - **Volver al original**: deletes this image's variant row and object, so the image returns to its natural state. If the
@@ -171,7 +172,7 @@ del carrusel** above the list (same choices; «Original» there means the first 
 0.8..1.91). The per-image ratio selector is replaced by a note with that ratio. Changing it marks the already applied
 images whose copy has a different ratio as **Pendiente** («la proporción ha cambiado, vuelve a aplicar»); nothing is
 deleted automatically, and every image must be applied again to the new ratio. A single Instagram image and every
-LinkedIn image choose their ratio per image.
+LinkedIn or Facebook image choose their ratio per image.
 
 **Closing.** The dialog has **Cerrar** (no «Guardar ajustes»); closing never writes anything. If the selected image has
 unapplied edits (ratio, crop or zoom changed since the last apply) closing, selecting another image or changing the
