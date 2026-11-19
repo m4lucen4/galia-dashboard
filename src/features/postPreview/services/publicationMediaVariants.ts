@@ -1,6 +1,6 @@
 import { supabase } from "@/helpers/supabase";
 import type { SocialNetwork } from "../helpers/socialMediaRules";
-import type { VariantCrop } from "../helpers/imageVariants";
+import type { ImageAdjustments, VariantCrop } from "../helpers/imageVariants";
 
 // Contract: odd/tasks/social-publishing-migration.md S20 and
 // supabase/migrations/20261118000600_publication_media_variants.sql.
@@ -20,6 +20,8 @@ export interface PublicationMediaVariant {
   height: number;
   bytes: number;
   crop: VariantCrop | null;
+  /** Tone/straighten/perspective values baked into the JPEG (to restore the sliders); null: none. */
+  adjustments: ImageAdjustments | null;
 }
 
 export type PublicationMediaVariantStep = "list" | "upload" | "save" | "remove";
@@ -43,10 +45,11 @@ export interface SavePublicationMediaVariantInput {
   height: number;
   bytes: number;
   crop: VariantCrop;
+  adjustments?: ImageAdjustments | null;
 }
 
 const COLUMNS =
-  "id, preview_id, network, source_url, position, storage_path, public_url, width, height, bytes, crop";
+  "id, preview_id, network, source_url, position, storage_path, public_url, width, height, bytes, crop, adjustments";
 
 /** Every variant of a publication (all networks), in publication order. */
 export async function listPublicationMediaVariants(
@@ -106,6 +109,7 @@ export async function savePublicationMediaVariant(
         height: input.height,
         bytes: input.bytes,
         crop: input.crop,
+        adjustments: input.adjustments ?? null,
       },
       { onConflict: "preview_id,network,source_url" },
     )
