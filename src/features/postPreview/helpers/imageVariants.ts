@@ -6,6 +6,19 @@ import {
   type CropAspectKey,
   type SocialNetwork,
 } from "./socialMediaRules";
+import {
+  adjustmentValue,
+  applyTone,
+  correctedCanvas,
+  normalizeAdjustments,
+  rotatedCanvas,
+  type ImageAdjustments,
+} from "./imageAdjustments";
+
+export type { ImageAdjustments } from "./imageAdjustments";
+
+/** Longest side of the working copy when the image is straightened or its perspective corrected. */
+export const TRANSFORM_MAX_SIDE = 4096;
 
 /** Crop rectangle in pixels of the original image. */
 export interface CropArea {
@@ -26,6 +39,8 @@ export interface RenderedVariant {
   height: number;
   bytes: number;
   crop: VariantCrop;
+  /** Normalized adjustments baked into the blob; null: none. */
+  adjustments: ImageAdjustments | null;
 }
 
 const JPEG_QUALITIES = [0.9, 0.8, 0.7, 0.6, 0.5];
@@ -95,25 +110,67 @@ function canvasToJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob>
  * Renders the cropped area of an original as a JPEG derivative: quality 0.9, transparency
  * flattened on white, scaled into the network limits (Instagram width 320-1440, LinkedIn pixels
  * under the limit, Facebook as is) and re-encoded at lower quality (then smaller) while it weighs more than 8 MB.
+ *
+ * Adjustments (image-adjustments S2): the vertical correction and the rotation transform the whole
+ * image first (working copy of at most TRANSFORM_MAX_SIDE px); `area` is in pixels of the rotated
+ * bounding box of the original natural size, as the cropper reports it. Tone is applied last, on
+ * the output pixels.
  */
 export async function renderVariant(
   image: HTMLImageElement,
   network: SocialNetwork,
   area: CropArea,
   aspect: number,
+  adjustments: ImageAdjustments | null = null,
 ): Promise<RenderedVariant> {
+  const normalized = normalizeAdjustments(adjustments);
+  const vertical = adjustmentValue(normalized, "vertical");
+  const rotation = adjustmentValue(normalized, "rotation");
+  // Stage: what the crop area refers to, and its scale from the original natural size.
+  let stage: CanvasImageSource = image;
+  let stageWidth = image.naturalWidth;
+  let stageHeight = image.naturalHeight;
+  let stageScale = 1;
+  if (vertical !== 0 || rotation !== 0) {
+    const corrected = correctedCanvas(image, vertical, TRANSFORM_MAX_SIDE);
+    const rotated = rotatedCanvas(corrected.canvas, rotation);
+    stage = rotated;
+    stageWidth = rotated.width;
+    stageHeight = rotated.height;
+    stageScale = corrected.scale;
+  }
+
+  const scaled: CropArea = {
+    x: area.x * stageScale,
+    y: area.y * stageScale,
+    width: area.width * stageScale,
+    height: area.height * stageScale,
+  };
   const source: CropArea = {
-    x: Math.max(0, Math.min(area.x, image.naturalWidth - 1)),
-    y: Math.max(0, Math.min(area.y, image.naturalHeight - 1)),
+    x: Math.max(0, Math.min(scaled.x, stageWidth - 1)),
+    y: Math.max(0, Math.min(scaled.y, stageHeight - 1)),
     width: 0,
     height: 0,
   };
-  source.width = Math.max(1, Math.min(area.width, image.naturalWidth - source.x));
-  source.height = Math.max(1, Math.min(area.height, image.naturalHeight - source.y));
+  source.width = Math.max(1, Math.min(scaled.width, stageWidth - source.x));
+  source.height = Math.max(1, Math.min(scaled.height, stageHeight - source.y));
+  // The stored crop stays in pixels of the original natural size (rotated box), as the cropper reports it.
+  const storedCrop: CropArea =
+    stageScale === 1
+      ? source
+      : {
+          x: source.x / stageScale,
+          y: source.y / stageScale,
+          width: source.width / stageScale,
+          height: source.height / stageScale,
+        };
+  // Output size from the crop in original pixels: a reduced working copy does not shrink the plan.
+  const planWidth = storedCrop.width;
+  const planHeight = storedCrop.height;
 
   let scale = 1;
   for (let round = 0; round < MAX_SCALE_ROUNDS; round += 1) {
-    const { width, height } = planOutputSize(network, source.width, source.height, scale);
+    const { width, height } = planOutputSize(network, planWidth, planHeight, scale);
 
     const canvas = document.createElement("canvas");
     canvas.width = width;
@@ -123,7 +180,8 @@ export async function renderVariant(
     context.fillStyle = "#ffffff";
     context.fillRect(0, 0, width, height);
     context.imageSmoothingQuality = "high";
-    context.drawImage(image, source.x, source.y, source.width, source.height, 0, 0, width, height);
+    context.drawImage(stage, source.x, source.y, source.width, source.height, 0, 0, width, height);
+    applyTone(canvas, normalized);
 
     for (const quality of JPEG_QUALITIES) {
       const blob = await canvasToJpeg(canvas, quality);
@@ -133,7 +191,8 @@ export async function renderVariant(
           width,
           height,
           bytes: blob.size,
-          crop: { ...source, aspect: aspectKeyFor(aspect) },
+          crop: { ...storedCrop, aspect: aspectKeyFor(aspect) },
+          adjustments: normalized,
         };
       }
     }
