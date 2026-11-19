@@ -24,7 +24,7 @@ export interface PublicationNoticeRecipient {
 type Reason =
   | "connection" | "page" | "permission" | "restricted" | "images" | "text" | "unknown_outcome"
   | "network_busy" | "rejected" | "video_missing" | "video_limits" | "processing_timeout" | "format"
-  | "generic";
+  | "story_image" | "generic";
 
 const REASON_BY_CODE: Record<string, Reason> = {
   token_invalid: "connection", not_connected: "connection", connection_expired: "connection",
@@ -41,6 +41,7 @@ const REASON_BY_CODE: Record<string, Reason> = {
   // Video formats (docs/social-publishing.md, "Formats and video").
   video_missing: "video_missing", video_required: "video_missing", video_limits: "video_limits",
   media_processing_timeout: "processing_timeout", format_unsupported: "format",
+  story_image_missing: "story_image", story_image_invalid: "story_image",
 };
 
 export function reasonFor(errorCode: string | null | undefined): Reason {
@@ -84,6 +85,7 @@ const texts: Record<Language, Texts> = {
       video_limits: ["El vídeo no cumple los límites del formato elegido.", "Elige un vídeo más corto o más ligero, o publica con fotos."],
       processing_timeout: ["La red tardó demasiado en procesar el vídeo.", "Vuelve a intentarlo."],
       format: ["La red social no admite el formato elegido.", "Vuelve a programar la publicación con otro formato."],
+      story_image: ["La imagen elegida para la historia ya no está disponible en la publicación.", "Elige otra imagen para la historia y vuelve a programar la publicación."],
       generic: ["No hemos podido completar la publicación.", "Reintenta desde Mocklab. Si se repite, contacta con soporte."],
     },
     cta: "Ver mi publicación",
@@ -114,6 +116,7 @@ const texts: Record<Language, Texts> = {
       video_limits: ["The video does not meet the limits of the chosen format.", "Choose a shorter or lighter video, or publish with photos."],
       processing_timeout: ["The network took too long to process the video.", "Please try again."],
       format: ["The network does not support the chosen format.", "Schedule the post again with another format."],
+      story_image: ["The image chosen for the story is no longer available in the post.", "Choose another image for the story and schedule the post again."],
       generic: ["We could not complete the post.", "Retry from Mocklab. If it happens again, contact support."],
     },
     cta: "View my post",
@@ -144,6 +147,7 @@ const texts: Record<Language, Texts> = {
       video_limits: ["El vídeo no compleix els límits del format escollit.", "Tria un vídeo més curt o més lleuger, o publica amb fotos."],
       processing_timeout: ["La xarxa ha trigat massa a processar el vídeo.", "Torna-ho a provar."],
       format: ["La xarxa social no admet el format escollit.", "Torna a programar la publicació amb un altre format."],
+      story_image: ["La imatge escollida per a la història ja no està disponible a la publicació.", "Tria una altra imatge per a la història i torna a programar la publicació."],
       generic: ["No hem pogut completar la publicació.", "Reintenta des de Mocklab. Si es repeteix, contacta amb suport."],
     },
     cta: "Veure la meva publicació",
