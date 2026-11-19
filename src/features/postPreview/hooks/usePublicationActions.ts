@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
   PreviewProjectDataProps,
+  PublicationNetwork,
   PublicationTarget,
   SocialNetworksCheck,
 } from "@/types";
@@ -30,7 +31,7 @@ export interface PublicationNotice {
 
 export interface PendingAcknowledgement {
   /** Networks whose earlier publication may exist; empty when unknown. */
-  networks: Array<"instagram" | "linkedin">;
+  networks: PublicationNetwork[];
   onConfirm: () => void;
 }
 

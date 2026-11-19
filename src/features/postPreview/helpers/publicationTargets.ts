@@ -106,9 +106,9 @@ export const isRetryable = (target: PublicationTarget): boolean =>
 export const isRunning = (target: PublicationTarget): boolean =>
   target.status === "running";
 
-const NETWORK_ORDER = { instagram: 0, linkedin: 1 } as const;
+const NETWORK_ORDER = { instagram: 0, linkedin: 1, facebook: 2 } as const;
 
-/** Current targets worth showing (not cancelled), Instagram first. */
+/** Current targets worth showing (not cancelled), Instagram, LinkedIn, then Facebook. */
 export const visibleTargets = (targets?: PublicationTarget[]): PublicationTarget[] =>
   (targets ?? [])
     .filter((target) => target.status !== "cancelled")

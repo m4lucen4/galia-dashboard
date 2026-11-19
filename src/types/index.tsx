@@ -122,10 +122,22 @@ export type InstagramPageInfo = {
   facebookPageName?: string;
 };
 
+// Facebook Page selected to publish on (id = Facebook Page id; never carries tokens).
+export type FacebookPageInfo = {
+  id: string;
+  name: string;
+  type: "PAGE";
+};
+
 export type SocialNetworksCheck = {
   linkedln?: boolean | LinkedInPageInfo;
   instagram?: boolean | InstagramPageInfo;
+  // Only used with the Edge pipeline (publication_targets); legacy n8n never receives it.
+  facebook?: boolean | FacebookPageInfo;
 };
+
+/** public.publication_targets.network */
+export type PublicationNetwork = "instagram" | "linkedin" | "facebook";
 
 // Per-network publication target (public.publication_targets), as the publish-publication Edge
 // Function returns it and the dashboard reads it (S23). Never carries tokens.
@@ -145,11 +157,12 @@ export type PublicationTargetErrorKind =
 export type PublicationTargetAccountKind =
   | "instagram_business"
   | "linkedin_person"
-  | "linkedin_organization";
+  | "linkedin_organization"
+  | "facebook_page";
 
 /**
  * public.publication_targets.format; Instagram: image, reel, story_image, story_video,
- * carousel_video (photos plus the publication video in one carousel); LinkedIn: image, video.
+ * carousel_video (photos plus the publication video in one carousel); LinkedIn and Facebook: image, video.
  */
 export type PublicationFormat =
   | "image"
@@ -162,7 +175,7 @@ export type PublicationFormat =
 export type PublicationTarget = {
   id: string;
   previewId: string;
-  network: "instagram" | "linkedin";
+  network: PublicationNetwork;
   status: PublicationTargetStatus;
   /** Real instant (ISO) of the scheduled run, or of the next automatic attempt. */
   runAt: string;

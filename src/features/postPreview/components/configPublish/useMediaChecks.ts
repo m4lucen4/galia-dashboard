@@ -32,7 +32,7 @@ import {
   type PublicationMediaVariant,
 } from "../../services/publicationMediaVariants";
 
-export const MEDIA_NETWORKS: SocialNetwork[] = ["instagram", "linkedin"];
+export const MEDIA_NETWORKS: SocialNetwork[] = ["instagram", "linkedin", "facebook"];
 
 const CROP_CODES = new Set(["ratio_too_narrow", "ratio_too_wide", "ratio_mismatch"]);
 const COLLECTION_CODES = new Set(["too_many_items", "no_images"]);
@@ -446,7 +446,11 @@ export function useMediaChecks(
         blocker: enabled && active[network] ? blockerFor(rows, collectionIssues, variantsState) : null,
       };
     };
-    return { instagram: build("instagram"), linkedin: build("linkedin") };
+    return {
+      instagram: build("instagram"),
+      linkedin: build("linkedin"),
+      facebook: build("facebook"),
+    };
   }, [
     images,
     measures,

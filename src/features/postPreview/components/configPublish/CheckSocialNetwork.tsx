@@ -1,8 +1,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { InstagramIcon, LinkedInIcon } from "../../../../components/icons";
-import { SocialConnectionStatus } from "../../../../types";
+import { NETWORK_ICONS } from "../networkIcons";
+import { PublicationNetwork, SocialConnectionStatus } from "../../../../types";
 import {
   formatMadridDate,
   isBrokenConnection,
@@ -12,7 +12,7 @@ import { madridWallClockToInstant } from "../../../../helpers/publishDate";
 
 interface CheckSocialNetworkProps {
   id: string;
-  network: "instagram" | "linkedin";
+  network: PublicationNetwork;
   isConnected: boolean;
   isChecked: boolean;
   isDateValid: boolean;
@@ -21,8 +21,22 @@ interface CheckSocialNetworkProps {
   status?: SocialConnectionStatus;
   statusReason?: string | null;
   expiresAt?: string;
+  /** Replaces the generic "no connection" text (Facebook: reconnect Meta, no Pages...). */
+  unavailableHint?: string;
   onChange: (checked: boolean) => void;
 }
+
+const NETWORK_LABELS: Record<PublicationNetwork, string> = {
+  instagram: "Instagram",
+  linkedin: "LinkedIn",
+  facebook: "Facebook",
+};
+
+const NO_CONNECTION_KEYS: Record<PublicationNetwork, string> = {
+  instagram: "noInstagramConnection",
+  linkedin: "noLinkedlnConnection",
+  facebook: "noFacebookConnection",
+};
 
 export const CheckSocialNetwork: React.FC<CheckSocialNetworkProps> = ({
   id,
@@ -35,14 +49,14 @@ export const CheckSocialNetwork: React.FC<CheckSocialNetworkProps> = ({
   status,
   statusReason,
   expiresAt,
+  unavailableHint,
   onChange,
 }) => {
   const { t } = useTranslation();
 
-  const NetworkIcon = network === "instagram" ? InstagramIcon : LinkedInIcon;
-  const networkName = network === "instagram" ? "Instagram" : "LinkedIn";
-  const connectionKey =
-    network === "instagram" ? "noInstagramConnection" : "noLinkedlnConnection";
+  const NetworkIcon = NETWORK_ICONS[network];
+  const networkName = NETWORK_LABELS[network];
+  const connectionKey = NO_CONNECTION_KEYS[network];
 
   const isBroken = isBrokenConnection(status);
 
@@ -95,7 +109,7 @@ export const CheckSocialNetwork: React.FC<CheckSocialNetworkProps> = ({
             ? t("previewProjects.connectionProblem", {
                 reason: t(reasonTranslationKey(statusReason)),
               })
-            : t(`previewProjects.${connectionKey}`)}{" "}
+            : (unavailableHint ?? t(`previewProjects.${connectionKey}`))}{" "}
           <Link to="/settings" className="font-medium underline">
             {t("previewProjects.goToSettings")}
           </Link>

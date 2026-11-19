@@ -11,12 +11,14 @@ import { BLOCKED_TEXTS, PANEL_TEXTS } from "../../helpers/socialVideoTexts";
 import {
   INSTAGRAM_MEDIA,
   LINKEDIN_MEDIA,
+  maxImageBytes,
   ratioLabel,
   type ImageIssue,
   type SocialNetwork,
   type VideoIssue,
 } from "../../helpers/socialMediaRules";
 import {
+  FACEBOOK_MESSAGE_MAX,
   INSTAGRAM_CAPTION_MAX,
   INSTAGRAM_MAX_HASHTAGS,
   INSTAGRAM_MAX_MENTIONS,
@@ -59,8 +61,9 @@ function issueMessage(
       });
     case "too_heavy":
       return t(`${issues}.tooHeavy`, {
+        network: t(`${PREFIX}.networks.${network}`),
         size: formatBytes(issue.actual ?? 0, locale),
-        limit: formatBytes(INSTAGRAM_MEDIA.maxBytes, locale),
+        limit: formatBytes(maxImageBytes(network) ?? INSTAGRAM_MEDIA.maxBytes, locale),
       });
     case "width_too_small":
       return t(`${issues}.widthTooSmall`, {
@@ -257,7 +260,12 @@ export const NetworkMediaPanel: React.FC<NetworkMediaPanelProps> = ({
   const measured = rows.every((row) => row.state === "ok");
   const clean =
     !videoOnly && measured && rows.length > 0 && lines.every((line) => line.tone === "ok");
-  const limit = isInstagram ? INSTAGRAM_CAPTION_MAX : LINKEDIN_COMMENTARY_MAX;
+  const limit =
+    network === "instagram"
+      ? INSTAGRAM_CAPTION_MAX
+      : network === "facebook"
+        ? FACEBOOK_MESSAGE_MAX
+        : LINKEDIN_COMMENTARY_MAX;
   const format = (value: number) => new Intl.NumberFormat(locale).format(value);
 
   const counter = (label: string, used: number, max: number) => (

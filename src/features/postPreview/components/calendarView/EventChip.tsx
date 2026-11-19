@@ -2,7 +2,8 @@ import { useTranslation } from "react-i18next";
 import { PreviewProjectDataProps, PublicationTarget } from "../../../../types";
 import { getProjectStateInfo, truncateText } from "../../../../helpers";
 import { SOCIAL_PUBLISHING_EDGE_ENABLED } from "../../../../helpers/publishDate";
-import { InstagramIcon, LinkedInIcon } from "../../../../components/icons";
+import { FacebookIcon, InstagramIcon, LinkedInIcon } from "../../../../components/icons";
+import { NETWORK_ICONS } from "../networkIcons";
 import { formatTimeOnly } from "./calendarHelpers";
 import { targetPhase, visibleTargets } from "../../helpers/publicationTargets";
 import { PHASE_STYLES } from "../../helpers/targetPhaseStyles";
@@ -49,7 +50,7 @@ export const EventChip: React.FC<EventChipProps> = ({
     >
       {statuses.length > 0
         ? statuses.map(({ target, phase, text }) => {
-            const NetworkIcon = target.network === "instagram" ? InstagramIcon : LinkedInIcon;
+            const NetworkIcon = NETWORK_ICONS[target.network];
             return (
               <span key={target.id} className="relative shrink-0" role="img" aria-label={text}>
                 <NetworkIcon className="h-3 w-3" />
@@ -67,6 +68,9 @@ export const EventChip: React.FC<EventChipProps> = ({
             )}
             {project.checkSocialNetworks?.linkedln && (
               <LinkedInIcon className="h-3 w-3 shrink-0" />
+            )}
+            {project.checkSocialNetworks?.facebook && (
+              <FacebookIcon className="h-3 w-3 shrink-0" />
             )}
           </>
         )}

@@ -72,7 +72,8 @@ export function planOutputSize(
   }
   let width = cropWidth * scale;
   let height = cropHeight * scale;
-  if (width * height >= LINKEDIN_MEDIA.pixelsLimit) {
+  // Facebook has no pixel rule: only the weight is lowered (scale) when needed.
+  if (network === "linkedin" && width * height >= LINKEDIN_MEDIA.pixelsLimit) {
     const reduce = Math.sqrt((LINKEDIN_MEDIA.pixelsLimit - 1) / (width * height)) * 0.99;
     width *= reduce;
     height *= reduce;
@@ -93,7 +94,7 @@ function canvasToJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob>
 /**
  * Renders the cropped area of an original as a JPEG derivative: quality 0.9, transparency
  * flattened on white, scaled into the network limits (Instagram width 320-1440, LinkedIn pixels
- * under the limit) and re-encoded at lower quality (then smaller) while it weighs more than 8 MB.
+ * under the limit, Facebook as is) and re-encoded at lower quality (then smaller) while it weighs more than 8 MB.
  */
 export async function renderVariant(
   image: HTMLImageElement,

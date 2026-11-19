@@ -1,8 +1,10 @@
 import { supabase } from "@/helpers/supabase";
 import type {
+  FacebookPageInfo,
   InstagramPageInfo,
   LinkedInPageInfo,
   PublicationFormat,
+  PublicationNetwork,
   PublicationTarget,
   PublicationTargetAccountKind,
   PublicationTargetErrorKind,
@@ -76,7 +78,7 @@ export type PublicationPublishingError = {
 };
 
 export type PublicationTargetRequest = {
-  network: "instagram" | "linkedin";
+  network: PublicationNetwork;
   accountKind: PublicationTargetAccountKind;
   accountExternalId: string;
   accountName: string;
@@ -127,7 +129,7 @@ export function buildPublicationTargets(
   videoPosition?: number | null,
 ): PublicationTargetRequest[] {
   const targets: PublicationTargetRequest[] = [];
-  const { instagram, linkedln } = networks;
+  const { instagram, linkedln, facebook } = networks;
   if (instagram) {
     const page = instagram as InstagramPageInfo | true;
     if (page === true || !externalId.test(String(page.id ?? ""))) {
@@ -161,6 +163,19 @@ export function buildPublicationTargets(
       ...(formats?.linkedin ? { format: formats.linkedin } : {}),
     });
   }
+  if (facebook) {
+    const page = facebook as FacebookPageInfo | true;
+    if (page === true || !externalId.test(String(page.id ?? ""))) {
+      throw failure("account_missing", false);
+    }
+    targets.push({
+      network: "facebook",
+      accountKind: "facebook_page",
+      accountExternalId: String(page.id),
+      accountName: String(page.name ?? "").slice(0, 200),
+      ...(formats?.facebook ? { format: formats.facebook } : {}),
+    });
+  }
   return targets;
 }
 
@@ -181,6 +196,7 @@ const accountKinds = new Set<PublicationTargetAccountKind>([
   "instagram_business",
   "linkedin_person",
   "linkedin_organization",
+  "facebook_page",
 ]);
 
 const targetFormats = new Set<PublicationFormat>([
@@ -214,7 +230,7 @@ function parseTarget(
   if (
     !id ||
     !preview ||
-    (network !== "instagram" && network !== "linkedin") ||
+    (network !== "instagram" && network !== "linkedin" && network !== "facebook") ||
     typeof status !== "string" ||
     !statuses.has(status as PublicationTargetStatus) ||
     !runAt ||

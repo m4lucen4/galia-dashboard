@@ -36,10 +36,11 @@ const DIALOG = `${PREFIX}.dialog`;
 type RatioChoice = "1:1" | "4:5" | "1.91:1" | "original" | "free";
 const CHOICES: RatioChoice[] = ["1:1", "4:5", "1.91:1", "original", "free"];
 
-/** Range of the "Libre" slider: Instagram's accepted range; LinkedIn is more permissive. */
+/** Range of the "Libre" slider: Instagram's accepted range; LinkedIn and Facebook are more permissive. */
 const FREE_RANGE: Record<SocialNetwork, { min: number; max: number }> = {
   instagram: { min: INSTAGRAM_MEDIA.minRatio, max: INSTAGRAM_MEDIA.maxRatio },
   linkedin: { min: 0.5, max: 2.5 },
+  facebook: { min: 0.5, max: 2.5 },
 };
 
 type ErrorKey = "load" | "render" | "save" | "remove";

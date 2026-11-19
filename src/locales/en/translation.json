@@ -651,7 +651,8 @@
       "title": "Checks for {{network}}",
       "networks": {
         "instagram": "Instagram",
-        "linkedin": "LinkedIn"
+        "linkedin": "LinkedIn",
+        "facebook": "Facebook"
       },
       "imageLabel": "Image {{index}}",
       "measuring": "checking…",
@@ -666,9 +667,10 @@
       "issues": {
         "unsupportedFormat": {
           "instagram": "it is {{format}}; it will be converted to JPEG when publishing",
-          "linkedin": "it is {{format}} and LinkedIn only accepts JPG, PNG and GIF; it will be converted to JPEG when publishing"
+          "linkedin": "it is {{format}} and LinkedIn only accepts JPG, PNG and GIF; it will be converted to JPEG when publishing",
+          "facebook": "it is {{format}} and Facebook only accepts JPG, PNG and GIF; it will be converted to JPEG when publishing"
         },
-        "tooHeavy": "it weighs {{size}} and Instagram accepts up to {{limit}}; it will be compressed when publishing",
+        "tooHeavy": "it weighs {{size}} and {{network}} accepts up to {{limit}}; it will be compressed when publishing",
         "widthTooSmall": "it is {{width}} px wide and Instagram requires at least {{min}} px; it will be enlarged when publishing",
         "widthTooLarge": "it is {{width}} px wide and Instagram accepts up to {{max}} px; it will be reduced when publishing",
         "tooManyPixels": "it has {{pixels}} pixels and LinkedIn requires fewer than {{limit}}; it will be reduced when publishing",
@@ -680,9 +682,10 @@
       "issuesReport": {
         "unsupportedFormat": {
           "instagram": "Instagram only accepts JPEG (this one is {{format}})",
-          "linkedin": "LinkedIn only accepts JPG, PNG and GIF (this one is {{format}})"
+          "linkedin": "LinkedIn only accepts JPG, PNG and GIF (this one is {{format}})",
+          "facebook": "Facebook only accepts JPG, PNG and GIF (this one is {{format}})"
         },
-        "tooHeavy": "it weighs {{size}} and Instagram accepts up to {{limit}}",
+        "tooHeavy": "it weighs {{size}} and {{network}} accepts up to {{limit}}",
         "widthTooSmall": "it is {{width}} px wide and Instagram requires at least {{min}} px",
         "widthTooLarge": "it is {{width}} px wide and Instagram accepts up to {{max}} px",
         "tooManyPixels": "it has {{pixels}} pixels and LinkedIn requires fewer than {{limit}}"
@@ -695,7 +698,8 @@
       "mentions": "{{used}} of {{limit}} mentions",
       "textTooLong": {
         "instagram": "The text exceeds Instagram's {{limit}} character limit.",
-        "linkedin": "The text exceeds the {{limit}} characters LinkedIn accepts."
+        "linkedin": "The text exceeds the {{limit}} characters LinkedIn accepts.",
+        "facebook": "The text exceeds the {{limit}} characters Facebook accepts."
       },
       "instagramLimitsProvisional": "Instagram text limits are indicative and will be confirmed before publishing.",
       "blocked": {
@@ -713,7 +717,8 @@
         "title": "Adjust images for {{network}}",
         "description": {
           "instagram": "Pick an image, set its zoom and framing and press “Apply”: a JPEG copy of that image alone is saved. In a carousel every image uses the same ratio. The original does not change.",
-          "linkedin": "Pick an image, set its ratio, zoom and framing and press “Apply”: a JPEG copy of that image alone is saved. The original does not change."
+          "linkedin": "Pick an image, set its ratio, zoom and framing and press “Apply”: a JPEG copy of that image alone is saved. The original does not change.",
+          "facebook": "Pick an image, set its ratio, zoom and framing and press “Apply”: a JPEG copy of that image alone is saved. The original does not change."
         },
         "images": "Images",
         "ratio": "Aspect ratio",
@@ -764,7 +769,8 @@
       "networks": {
         "instagram": "Instagram",
         "linkedin": "LinkedIn",
-        "generic": "the social network"
+        "generic": "the social network",
+        "facebook": "Facebook"
       },
       "status": {
         "scheduled": "Scheduled · {{date}}",
@@ -847,7 +853,7 @@
           "fix": "Shorten the publication text and schedule it again."
         },
         "commentary_too_long": {
-          "reason": "The text is over LinkedIn's 3,000 character limit.",
+          "reason": "The text is over the {{network}} character limit (LinkedIn: 3,000; Facebook: 63,206).",
           "fix": "Shorten the publication text and schedule it again."
         },
         "too_many_hashtags": {
@@ -935,7 +941,7 @@
           "fix": "Select or upload the image again and schedule the publication again."
         },
         "media_too_large": {
-          "reason": "An image is too heavy (over 30 MB).",
+          "reason": "An image is too heavy for {{network}} (up to 30 MB on LinkedIn and 10 MB on Facebook).",
           "fix": "Use a lighter image and schedule the publication again."
         },
         "media_unreadable": {
@@ -947,7 +953,12 @@
           "fix": "Press Retry; if it happens again, contact support."
         }
       }
-    }
+    },
+    "facebookPreview": "Facebook preview",
+    "noFacebookConnection": "No Facebook connection",
+    "noFacebookPages": "No Facebook Pages available to publish on. Check that you manage a Page.",
+    "facebookReconnect": "Reconnect your Meta account to also publish to your Facebook Pages.",
+    "selectFacebookPage": "Select the Facebook Page to publish on"
   },
   "profile": {
     "sections": {

@@ -6,8 +6,9 @@
 // blocked, no extension); an unknown value is skipped instead of reported.
 
 import { SOCIAL_PUBLISHING_EDGE_ENABLED } from "@/helpers/publishDate";
+import type { PublicationNetwork } from "@/types";
 
-export type SocialNetwork = "instagram" | "linkedin";
+export type SocialNetwork = PublicationNetwork;
 
 /**
  * Switch for the cropper, the automatic conversion and the blocking rule (S18). Off by default.
@@ -33,6 +34,15 @@ export const LINKEDIN_MEDIA = {
   mimeTypes: ["image/jpeg", "image/png", "image/gif"],
   pixelsLimit: 36_152_320, // exclusive: width * height must be < this
   multiImageMin: 2,
+  multiImageMax: 20,
+} as const;
+
+// Facebook Page feed photos: up to 10 MB each, 1-20 photos in one post (several are published
+// unpublished first and attached to one feed post). No ratio or pixel rules.
+export const FACEBOOK_MEDIA = {
+  mimeTypes: ["image/jpeg", "image/png", "image/gif"],
+  maxBytes: 10 * 1024 * 1024, // 10 MB, inclusive
+  multiImageMin: 1,
   multiImageMax: 20,
 } as const;
 
@@ -164,6 +174,16 @@ export function evaluateImage(network: SocialNetwork, image: ImageFacts): ImageE
     return finalize(issues);
   }
 
+  if (network === "facebook") {
+    if (mime !== null && !(FACEBOOK_MEDIA.mimeTypes as readonly string[]).includes(mime)) {
+      issues.push({ code: "unsupported_format" });
+    }
+    if (image.bytes !== null && image.bytes > FACEBOOK_MEDIA.maxBytes) {
+      issues.push({ code: "too_heavy", actual: image.bytes, limit: FACEBOOK_MEDIA.maxBytes });
+    }
+    return finalize(issues);
+  }
+
   if (mime !== null && !(LINKEDIN_MEDIA.mimeTypes as readonly string[]).includes(mime)) {
     issues.push({ code: "unsupported_format" });
   }
@@ -174,11 +194,27 @@ export function evaluateImage(network: SocialNetwork, image: ImageFacts): ImageE
   return finalize(issues);
 }
 
+/** Most photos one post of the network can carry. */
+export const maxImages = (network: SocialNetwork): number =>
+  network === "instagram"
+    ? INSTAGRAM_MEDIA.carouselMax
+    : network === "facebook"
+      ? FACEBOOK_MEDIA.multiImageMax
+      : LINKEDIN_MEDIA.multiImageMax;
+
+/** Weight limit (bytes) of one photo for the network; null when the network has none here. */
+export const maxImageBytes = (network: SocialNetwork): number | null =>
+  network === "instagram"
+    ? INSTAGRAM_MEDIA.maxBytes
+    : network === "facebook"
+      ? FACEBOOK_MEDIA.maxBytes
+      : null;
+
 /**
  * Evaluates the images of one publication for one network, in publication order. A null entry is
  * an image that could not be measured: it is skipped. Instagram: more than 20 items is an issue
  * and every item whose ratio differs from the first by more than 0.01 needs a crop. LinkedIn:
- * more than 20 is an issue.
+ * more than 20 is an issue. Facebook: more than 20 or none is an issue.
  *
  * `options.referenceRatio` (Instagram, 2+ images) replaces the first image's ratio as the common
  * ratio of the carousel (the one the user chose in the adjuster): then every item is compared
@@ -195,9 +231,11 @@ export function evaluateCarousel(
     for (const issue of item.issues) issues.push({ ...issue, index });
   });
 
-  const max = network === "instagram" ? INSTAGRAM_MEDIA.carouselMax : LINKEDIN_MEDIA.multiImageMax;
+  const max = maxImages(network);
   if (images.length > max) issues.push({ code: "too_many_items", actual: images.length, limit: max });
-  if (network === "instagram" && images.length === 0) issues.push({ code: "no_images" });
+  if ((network === "instagram" || network === "facebook") && images.length === 0) {
+    issues.push({ code: "no_images" });
+  }
 
   const first = images[0];
   const reference =
@@ -330,7 +368,8 @@ export function evaluateVideo(
       });
     }
   }
-  // Instagram downloads the file itself and needs the moov atom first; LinkedIn uploads it in parts.
+  // Instagram downloads the file itself and needs the moov atom first; LinkedIn uploads it in parts and
+  // Facebook takes the file from its URL with the project limits only.
   if (network === "instagram" && !facts.faststart) issues.push({ code: "not_faststart" });
   if (
     (format === "reel" || format === "story_video") &&
