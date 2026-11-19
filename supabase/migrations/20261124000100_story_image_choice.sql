@@ -301,5 +301,21 @@ begin
 end;
 $$;
 
+-- The schedule / retry answers list the targets through this summary; it now also carries the
+-- story image so the browser keeps showing the chosen photo right after scheduling. Body copied
+-- from 20261118000100 (unchanged since) plus 'storyImageUrl'; create or replace keeps owner and ACL.
+create or replace function private.publication_targets_summary(p_preview bigint)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+      'id', t.id, 'network', t.network, 'format', t.format, 'status', t.status,
+      'runAt', t.run_at, 'attempts', t.attempts, 'maxAttempts', t.max_attempts,
+      'errorCode', t.error_code, 'errorKind', t.error_kind,
+      'accountKind', t.account_kind, 'accountName', t.account_name,
+      'externalPostId', t.external_post_id, 'permalink', t.permalink,
+      'publishedAt', t.published_at, 'storyImageUrl', t.story_image_url) order by t.network), '[]'::jsonb)
+  from public.publication_targets t
+  where t.preview_id = p_preview and t.archived_at is null;
+$$;
+
 notify pgrst, 'reload schema';
 commit;
