@@ -6,8 +6,8 @@ import { SocialError } from "./social-errors.ts";
 import { asNumber, asRecord, asString, type Fetcher, requiredEnv, socialFetch } from "./social-http.ts";
 import { createSocialStore, type Environment, type StoredCredential } from "./social-store.ts";
 import {
-  failed, LeaseLostError, type PublishAccountKind, type PublishCredentials, type PublishImage,
-  type PublishNetwork, type PublishPayload, type PublishResult, type PublishTarget,
+  failed, LeaseLostError, type PublishAccountKind, type PublishCredentials, type PublishFormat, type PublishImage,
+  type PublishNetwork, type PublishPayload, type PublishResult, type PublishTarget, type PublishVideo,
 } from "./social-publisher.ts";
 
 export type { Environment };
@@ -41,6 +41,10 @@ export type CredentialsResolution =
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 const NETWORKS: readonly PublishNetwork[] = ["instagram", "linkedin"];
+const FORMATS_BY_NETWORK: Record<PublishNetwork, readonly PublishFormat[]> = {
+  instagram: ["image", "reel", "story_image", "story_video"],
+  linkedin: ["image", "video"],
+};
 const ACCOUNT_KINDS: readonly PublishAccountKind[] = ["instagram_business", "linkedin_person", "linkedin_organization"];
 const FINISH_STATUSES = ["published", "pending", "needs_action", "failed"] as const;
 
@@ -50,6 +54,7 @@ function parseTarget(value: unknown): ClaimedTarget {
   const leaseToken = asString(row?.leaseToken);
   const ownerId = asString(row?.ownerId);
   const network = asString(row?.network) as PublishNetwork | null;
+  const format = asString(row?.format) as PublishFormat | null;
   const accountKind = asString(row?.accountKind) as PublishAccountKind | null;
   const accountExternalId = asString(row?.accountExternalId);
   const previewId = asNumber(row?.previewId);
@@ -57,12 +62,12 @@ function parseTarget(value: unknown): ClaimedTarget {
   const leaseExpiresAt = Date.parse(asString(row?.leaseExpiresAt) ?? "");
   if (
     !row || !targetId || !UUID.test(targetId) || !leaseToken || !UUID.test(leaseToken) ||
-    !ownerId || !UUID.test(ownerId) || !network || !NETWORKS.includes(network) || row.format !== "image" ||
+    !ownerId || !UUID.test(ownerId) || !network || !NETWORKS.includes(network) || !format || !FORMATS_BY_NETWORK[network].includes(format) ||
     !accountKind || !ACCOUNT_KINDS.includes(accountKind) || !accountExternalId ||
     previewId === null || attempt === null || Number.isNaN(leaseExpiresAt)
   ) throw new SocialError("internal_error");
   return {
-    targetId, leaseToken, previewId, ownerId, network, format: "image", accountKind, accountExternalId, attempt,
+    targetId, leaseToken, previewId, ownerId, network, format, accountKind, accountExternalId, attempt,
     step: asString(row.step), stepState: asRecord(row.stepState) ?? {}, leaseExpiresAt,
   };
 }
@@ -75,7 +80,35 @@ function parseImage(value: unknown): PublishImage {
   return { url, sourceUrl, isVariant: image.isVariant, width: asNumber(image.width), height: asNumber(image.height) };
 }
 
-function parsePayload(value: unknown): PublishPayload {
+// Public URL of an object of the public bucket project-videos, built from SUPABASE_URL (the database does not
+// know the public host). Each path segment is encoded; the worker still validates the final URL.
+function projectVideoUrl(base: string, path: string): string {
+  return `${base}/storage/v1/object/public/project-videos/${path.split("/").map(encodeURIComponent).join("/")}`;
+}
+
+// The video of a video-format target: {storagePath, posterPath, bytes, durationMs, width, height, faststart}
+// from publication_target_payload, or null (other formats, or the video was deleted after scheduling).
+function parseVideo(value: unknown, base: string): PublishVideo | null {
+  if (value === null || value === undefined) return null;
+  const row = asRecord(value);
+  const storagePath = asString(row?.storagePath);
+  const bytes = asNumber(row?.bytes);
+  const durationMs = asNumber(row?.durationMs);
+  const width = asNumber(row?.width);
+  const height = asNumber(row?.height);
+  const posterPath = row?.posterPath === null || row?.posterPath === undefined ? null : asString(row.posterPath);
+  if (
+    !row || !storagePath || bytes === null || durationMs === null || width === null || height === null ||
+    typeof row.faststart !== "boolean" || (row.posterPath != null && posterPath === null)
+  ) throw new SocialError("internal_error");
+  return {
+    url: projectVideoUrl(base, storagePath),
+    posterUrl: posterPath ? projectVideoUrl(base, posterPath) : null,
+    bytes, durationMs, width, height, faststart: row.faststart,
+  };
+}
+
+function parsePayload(value: unknown, base: string): PublishPayload {
   const row = asRecord(value);
   if (!row || !Array.isArray(row.images)) throw new SocialError("internal_error");
   return {
@@ -83,6 +116,7 @@ function parsePayload(value: unknown): PublishPayload {
     title: asString(row.title),
     weblink: asString(row.weblink),
     images: row.images.map(parseImage),
+    video: parseVideo(row.video, base),
   };
 }
 
@@ -140,7 +174,7 @@ export function createPublicationStore(env: Environment, fetcher: Fetcher = fetc
     async payload(target: PublishTarget): Promise<PublishPayload> {
       return parsePayload(await rpc("publication_target_payload", {
         p_target: target.targetId, p_lease: target.leaseToken,
-      }));
+      }), url);
     },
 
     /** Saves progress, extends the lease and returns its new end (epoch ms). Throws LeaseLostError. */

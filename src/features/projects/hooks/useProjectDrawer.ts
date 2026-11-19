@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { useAppDispatch } from "../../../redux/hooks";
 import {
   addProject,
+  MAX_PROJECT_IMAGES,
   type CreateProjectProps,
   updateProject,
 } from "../../../redux/actions/ProjectActions";
@@ -93,7 +94,7 @@ export const useProjectDrawer = ({
       .sort((a, b) =>
         a.rating === "heroica" ? -1 : b.rating === "heroica" ? 1 : 0,
       )
-      .slice(0, 10)
+      .slice(0, MAX_PROJECT_IMAGES)
       .map((fotoTag) => ({
         url: fotoTag.supabase_url!,
         status: "pending" as const,

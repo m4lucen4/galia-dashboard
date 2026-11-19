@@ -1,10 +1,21 @@
 // Contract between the publication worker (process-publication-targets) and the
 // per-network publishers (social-publish-instagram.ts, social-publish-linkedin.ts).
 // Pure types plus small helpers: no Deno APIs, so it can be type-checked and run in Node.
+import type { UploadStateStore } from "./social-upload-state.ts";
 
 export type PublishNetwork = "instagram" | "linkedin";
 export type PublishAccountKind = "instagram_business" | "linkedin_person" | "linkedin_organization";
 export type PublishErrorKind = "transient" | "action_required" | "permanent";
+/**
+ * Instagram: image, reel, story_image, story_video. LinkedIn: image, video. `image` is the original
+ * behaviour (one or many images). Video formats carry PublishPayload.video.
+ */
+export type PublishFormat = "image" | "reel" | "story_image" | "story_video" | "video";
+
+/** True for the formats that publish PublishPayload.video (reel, story_video, video). */
+export function isVideoFormat(format: PublishFormat): boolean {
+  return format === "reel" || format === "story_video" || format === "video";
+}
 
 /** One leased target, as returned by public.publication_targets_claim. */
 export interface PublishTarget {
@@ -13,7 +24,7 @@ export interface PublishTarget {
   previewId: number;
   ownerId: string;
   network: PublishNetwork;
-  format: "image";
+  format: PublishFormat;
   accountKind: PublishAccountKind;
   accountExternalId: string;
   attempt: number;
@@ -35,6 +46,21 @@ export interface PublishImage {
   height: number | null;
 }
 
+/**
+ * The publication's video (public URLs of bucket project-videos, built by the store from SUPABASE_URL).
+ * Only for the video formats; the poster is optional.
+ */
+export interface PublishVideo {
+  url: string;
+  posterUrl: string | null;
+  bytes: number;
+  durationMs: number;
+  width: number;
+  height: number;
+  /** moov atom before mdat. */
+  faststart: boolean;
+}
+
 /** Content at publish time, from public.publication_target_payload. */
 export interface PublishPayload {
   /** Raw publication text (main version, else description_rich). Publishers prepare it per network. */
@@ -42,6 +68,12 @@ export interface PublishPayload {
   title: string | null;
   weblink: string | null;
   images: PublishImage[];
+  /**
+   * For reel, story_video and video; null for the other formats, and for a video format whose video was
+   * deleted after scheduling (the publisher then answers video_missing before any network call).
+   * For story_image, images[0] is the ORIGINAL first published image (never a feed-cropped variant).
+   */
+  video: PublishVideo | null;
 }
 
 /** Server-side credentials of the publication owner for this target's network. Never logged. */
@@ -60,6 +92,12 @@ export interface PublishContext {
    * Throws when the lease was lost: the publisher must stop without calling the network again.
    */
   checkpoint(step: string, stepState: Record<string, unknown>, sideEffectPending: boolean): Promise<void>;
+  /**
+   * Resumable upload progress across runs (public.publication_target_uploads, service_role only), for
+   * uploads that do not fit in step_state (LinkedIn video: upload token, instructions, ETags). Contains
+   * signed URLs: never log it. Removed by the database when the target is published.
+   */
+  uploads: UploadStateStore;
   /** Network fetch with timeout and redirect: "error". */
   fetch(url: string, init?: RequestInit & { timeoutMs?: number }): Promise<Response>;
   /** Epoch milliseconds after which the publisher must stop and return a transient retry. */
@@ -75,7 +113,11 @@ export type PublishResult =
       /** [a-z_]{1,60}, shown to the user through i18n (see docs/social-publishing.md). */
       errorCode: string;
       errorKind: PublishErrorKind;
-      /** Provider hint for transient errors (rate limit, still processing). */
+      /**
+       * Provider hint for transient errors (rate limit, still processing). For the non-image formats a
+       * transient `processing` failure ("the network is still processing the media", retry 60) is not an
+       * attempt and gives up after 60 minutes (media_processing_timeout); for `image` it counts as before.
+       */
       retryAfterSeconds?: number;
       /** At most 2 KB, no tokens, no publication text. */
       diagnostics: Record<string, unknown>;

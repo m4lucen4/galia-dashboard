@@ -8,6 +8,7 @@ import { corsHeaders, jsonResponse } from "./publication-generation-errors.ts";
 import type { Environment } from "./publication-generation-store.ts";
 import { SocialError } from "./social-errors.ts";
 import { asRecord, asString, type Fetcher, requiredEnv, socialFetch } from "./social-http.ts";
+import type { PublishFormat } from "./social-publisher.ts";
 import { createSocialStore } from "./social-store.ts";
 
 export { corsHeaders, jsonResponse };
@@ -28,6 +29,8 @@ export const entryFailures = {
   run_at_out_of_range: [422, "La fecha de publicación debe estar entre ahora y un año como máximo.", false],
   in_progress: [409, "La publicación se está enviando ahora mismo. Inténtalo de nuevo en unos minutos.", true],
   already_published: [409, "Esta publicación ya se ha publicado. Vuelve a programarla para publicarla otra vez.", false],
+  video_required: [422, "Elige un vídeo de la publicación antes de programarla en este formato.", false],
+  video_limits: [422, "El vídeo no cumple los límites de este formato (las historias admiten hasta 60 s y 100 MB).", false],
   not_retryable: [409, "Esta red social no se puede reintentar en su estado actual.", false],
   confirmation_required: [409, "Comprueba en la red social que no se publicó antes de reintentar y confirma.", false],
   account_not_connected: [409, "La cuenta de la red social no está conectada. Vuelve a conectarla en Ajustes.", false],
@@ -75,6 +78,8 @@ export interface RequestedTarget {
   accountKind: AccountKind;
   accountExternalId: string;
   accountName: string | null;
+  /** Defaults to "image" when the request does not say (the client sends only image until T4). */
+  format: PublishFormat;
 }
 
 export type EntryRequest =
@@ -89,6 +94,12 @@ const EXTERNAL_ID = /^[A-Za-z0-9:_-]{1,100}$/u;
 const KINDS_BY_NETWORK: Record<Network, readonly AccountKind[]> = {
   instagram: ["instagram_business"],
   linkedin: ["linkedin_person", "linkedin_organization"],
+};
+
+// Allowed formats per network (the database enforces the same pairs).
+const FORMATS_BY_NETWORK: Record<Network, readonly PublishFormat[]> = {
+  instagram: ["image", "reel", "story_image", "story_video"],
+  linkedin: ["image", "video"],
 };
 
 const invalid = () => new EntryError("invalid_request");
@@ -142,7 +153,7 @@ function parseTargets(value: unknown): RequestedTarget[] {
   return value.map((item) => {
     const row = asRecord(item);
     if (!row) throw invalid();
-    exactKeys(row, ["network", "accountKind", "accountExternalId", "accountName"]);
+    exactKeys(row, ["network", "accountKind", "accountExternalId", "accountName", "format"]);
     const network = row.network;
     if (network !== "instagram" && network !== "linkedin") throw invalid();
     const kind = row.accountKind as AccountKind;
@@ -154,7 +165,12 @@ function parseTargets(value: unknown): RequestedTarget[] {
       if (typeof row.accountName !== "string" || row.accountName.length > 200) throw invalid();
       accountName = row.accountName.trim() || null;
     }
-    return { network, accountKind: kind, accountExternalId: row.accountExternalId, accountName };
+    let format: PublishFormat = "image";
+    if (row.format !== undefined && row.format !== null) {
+      if (typeof row.format !== "string" || !FORMATS_BY_NETWORK[network].includes(row.format as PublishFormat)) throw invalid();
+      format = row.format as PublishFormat;
+    }
+    return { network, accountKind: kind, accountExternalId: row.accountExternalId, accountName, format };
   });
 }
 
@@ -256,6 +272,7 @@ export interface ValidatedTarget {
   accountKind: AccountKind;
   accountExternalId: string;
   accountName: string | null;
+  format: PublishFormat;
 }
 
 const cleanName = (value: string | null) => value ? value.slice(0, 200) : null;
@@ -289,7 +306,7 @@ export function validateTargets(
     }
     return {
       network: target.network, accountKind: target.accountKind, accountExternalId: id,
-      accountName: cleanName(name) ?? target.accountName,
+      accountName: cleanName(name) ?? target.accountName, format: target.format,
     };
   });
 }

@@ -27,6 +27,22 @@ export const LINKEDIN_MEDIA = {
   multiImageMax: 20,
 } as const;
 
+// Video limits (task odd/tasks/social-video-publishing.md, contract T3). The project limits are also the
+// table checks of project_videos and the bucket limit; the database enforces the story limits at schedule time.
+export const VIDEO_MEDIA = {
+  projectMinBytes: 75_000,
+  projectMaxBytes: 100_000_000,
+  projectMinDurationMs: 3_000,
+  projectMaxDurationMs: 300_000,
+  // Instagram video Stories (story_video).
+  storyMaxBytes: 100_000_000,
+  storyMaxDurationMs: 60_000,
+  // LinkedIn upload part size (initializeUpload returns instructions in parts of this size).
+  linkedinPartBytes: 4_194_304,
+  // Time the network may keep processing the media before the target gives up.
+  processingMaxMs: 60 * 60_000,
+} as const;
+
 export interface ImageFacts {
   mime: string;
   width: number;

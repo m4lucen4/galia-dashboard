@@ -2,6 +2,8 @@
 
 Publishing a publication (`projectsPreview` row) to the social networks the user connected is moving from n8n to Supabase. This document describes the new pipeline. The migration plan and its status live in `odd/tasks/social-publishing-migration.md`.
 
+> **Video:** Instagram Reels and Stories and LinkedIn video (formats, `video_id`, processing polls, upload progress) are described in "Formats and video"; the migration `20261122000100` is prepared and not applied.
+>
 > **Status:** phase 1 (database foundation), phase 4 (publishers, worker) and phase 5 server (entry function, browser read access, failure emails). n8n still publishes in production until the cutover phase. The phase 1 migration is applied; the worker `process-publication-targets` is deployed and **not scheduled until the cutover** (no cron). The phase 5 migrations are split: `20261119000100` (read access, realtime, notices) is applied **before the client ships**; `20261119000200` (cron) and `20261119000300` (publishDate conversion) are **prepared and applied only at the cutover** (see "Phase 5: entry function, read access, notices and cutover").
 
 ## Model
@@ -12,6 +14,7 @@ One publication has **one target per selected network**. Each target is publishe
 |---|---|
 | `publication_targets` | One row per publication and network. Only one current row per pair (`archived_at is null`); archived rows are history. |
 | `publication_target_attempts` | Content-free log of each attempt: outcome, error code and kind, bounded diagnostics. |
+| `publication_target_uploads` | Resumable upload progress of a target across worker runs (see "Formats and video"). service_role only. |
 
 Writes are service_role only. Since `20261119000100` the people who may read the publication can also `select` **some columns of `publication_targets`** through RLS (see "Browser read access"); `publication_target_attempts` and `anon` have no browser access. They never store tokens or credentials.
 
@@ -63,7 +66,7 @@ Called by an Edge Function after it resolves the actor through Supabase Auth. Au
 
 | RPC | Purpose |
 |---|---|
-| `publication_targets_schedule(actor, preview, request, run_at, targets, acknowledge_unknown_outcome default false)` | Schedule (`run_at` in the future) or publish now (`run_at` = now). `targets` is `[{network, accountKind, accountExternalId, accountName?, format?}]`, one per network. Idempotent per `(actor, request)`: a replay returns the current targets, even after a reset (send a new request id for a new action). Replaces current unpublished targets; `confirmation_required` over an `outcome_unknown` target unless acknowledged. |
+| `publication_targets_schedule(actor, preview, request, run_at, targets, acknowledge_unknown_outcome default false)` | Schedule (`run_at` in the future) or publish now (`run_at` = now). `targets` is `[{network, accountKind, accountExternalId, accountName?, format?}]`, one per network; `format` defaults to `image` and must be allowed for the network, and video formats need the publication's video (see "Formats and video"). Idempotent per `(actor, request)`: a replay returns the current targets, even after a reset (send a new request id for a new action). Replaces current unpublished targets; `confirmation_required` over an `outcome_unknown` target unless acknowledged. |
 | `publication_target_retry(actor, target, acknowledge_unknown_outcome)` | Retry one `failed` or `needs_action` target now. Resets its attempts. |
 | `publication_targets_reset(actor, preview, acknowledge_unknown_outcome default false)` | Unschedule, or prepare to publish again. Archives current targets and clears the legacy columns; `confirmation_required` over an `outcome_unknown` target unless acknowledged. |
 
@@ -76,9 +79,9 @@ Every write is fenced by the `leaseToken` returned by `claim`; a stale worker ge
 | RPC | Purpose |
 |---|---|
 | `publication_targets_claim(limit, lease_seconds)` | First recovers expired leases (see "Never publish twice"), then leases up to `limit` (1–20) due `pending` targets. |
-| `publication_target_payload(target, lease)` | Content at publish time (see "Payload"): text = main version, else `description_rich`; images = `image_data` entries whose status is not `not_selected`, in order, each with its per-network variant when one exists. Stable read; `lease_lost` when the lease is not ours. |
+| `publication_target_payload(target, lease)` | Content at publish time (see "Payload"): text = main version, else `description_rich`; images = `image_data` entries whose status is not `not_selected`, in order, each with its per-network variant when one exists (the originals for `story_image`); `video` for the video formats. Stable read; `lease_lost` when the lease is not ours. |
 | `publication_target_checkpoint(target, lease, step, step_state, side_effect_pending, lease_seconds)` | Saves publisher progress (container ids, upload URNs; never secrets, max 4 KB) and extends the lease. |
-| `publication_target_finish(target, lease, outcome, external_post_id, permalink, error_code, error_kind, retry_after_seconds, diagnostics, not_published default false)` | Records the attempt result. `outcome` is `published` or `failed`. `not_published = true` (definitive provider rejection of the irreversible call, see "Never publish twice") keeps a transient failure retryable and resets `step` to `'processing'`. |
+| `publication_target_finish(target, lease, outcome, external_post_id, permalink, error_code, error_kind, retry_after_seconds, diagnostics, not_published default false)` | Records the attempt result. `outcome` is `published` or `failed`. `not_published = true` (definitive provider rejection of the irreversible call, see "Never publish twice") keeps a transient failure retryable and resets `step` to `'processing'`. A transient `processing` failure of a non-`image` target is a processing poll, not an attempt (see "Processing polls"). |
 
 ### Payload
 
@@ -95,19 +98,75 @@ Every write is fenced by the `leaseToken` returned by `claim`; a stale worker ge
     { "url": "https://…/original2.jpg", "sourceUrl": "https://…/original2.jpg",
       "isVariant": false, "width": null, "height": null }
   ],
+  "video": null,
   "step": null, "stepState": {}
 }
 ```
 
+- `video` is `null` for `image` and `story_image`, and for a video format whose video no longer exists (see "Formats and video"). For `reel`, `story_video` and `video` it is `{"storagePath": "<project_id>/<id>.mp4", "posterPath": "<project_id>/<id>.jpg" | null, "bytes", "durationMs", "width", "height", "faststart"}`. The database does not know the public host: the worker builds the public URLs of bucket `project-videos` from `SUPABASE_URL` (see `PublishVideo` below).
 - `images` keeps the order of `image_data` and skips entries with status `not_selected`, without url, or that are not objects.
-- For each entry the function looks for a `publication_media_variants` row with the **same preview, the same network and `source_url` = the entry url** (phase 3, `docs/social-media-variants.md`). When there is one, `url` is its `public_url`, `isVariant` is `true` and `width`/`height` come from the row. A variant is used only for its own network: the other network receives the original. Without a variant, `url` = `sourceUrl`, `isVariant` is `false` and `width`/`height` are `null` (originals are never measured on the server; the publishers let the network judge them).
+- For each entry the function looks for a `publication_media_variants` row with the **same preview, the same network and `source_url` = the entry url** (phase 3, `docs/social-media-variants.md`). When there is one, `url` is its `public_url`, `isVariant` is `true` and `width`/`height` come from the row. A variant is used only for its own network: the other network receives the original. `story_image` never uses variants: stories are 9:16, so its `images` are the originals (`isVariant` false, `width`/`height` null) and the publisher takes the first one. Without a variant, `url` = `sourceUrl`, `isVariant` is `false` and `width`/`height` are `null` (originals are never measured on the server; the publishers let the network judge them).
 - `ownerId`, `network` and `accountExternalId` are what the worker needs to fetch the owner's credentials (see below). The payload never contains tokens.
 - The migration reads `publication_media_variants` at run time only (created by `20261118000600`, applied before this one in production); it is `SECURITY DEFINER`, `stable`, `service_role` only.
 
 ### Error codes raised
 
 
-`invalid_request`, `forbidden`, `conflict`, `invalid_project`, `run_at_out_of_range`, `in_progress`, `already_published`, `not_retryable`, `confirmation_required` (retry, schedule and reset over an unknown outcome), `lease_lost`. The entry function maps the first ten to its own closed codes (see below).
+`invalid_request`, `forbidden`, `conflict`, `invalid_project`, `run_at_out_of_range`, `in_progress`, `already_published`, `not_retryable`, `confirmation_required` (retry, schedule and reset over an unknown outcome), `video_required` and `video_limits` (schedule, see "Formats and video"), `lease_lost`. The entry function maps all of them except `lease_lost` to its own closed codes (see below).
+
+## Formats and video
+
+Migration `20261122000100_video_publication_targets.sql` (task `odd/tasks/social-video-publishing.md`, T3; apply after `20261120000100` and `20261121000100`). The publishers are `_shared/social-publish-instagram.ts` and `_shared/social-publish-linkedin.ts`; the client sends only `image` until T4.
+
+### Formats
+
+`publication_targets.format` is one of `image`, `reel`, `story_image`, `story_video`, `video`. A table check (so even `service_role` cannot store another pair) allows:
+
+| Network | Formats |
+|---|---|
+| Instagram | `image` (post or carousel), `reel`, `story_image`, `story_video` |
+| LinkedIn | `image`, `video` |
+
+`publication_targets_schedule` raises `invalid_request` for any other pair (and for a `format` that is not a string). A missing or `null` format is `image`, validated and published exactly as before. The entry function (`publish-publication`) accepts an optional `format` per target and refuses the same pairs with `invalid_request` before calling the database.
+
+`publication_target_payload` for `story_image` returns the original images (first published image first); stories carry no caption.
+
+### Video reference (`video_id`)
+
+`publication_targets.video_id uuid null references project_videos(id) on delete set null`, only for `reel`, `story_video` and `video` (table check). Scheduling such a target copies `projectsPreview.video_id` into it, provided that video still belongs to the publication's own project. Schedule-time checks, all before anything is written:
+
+| Error | When |
+|---|---|
+| `video_required` | A video format and the publication has no video (or the video is not of its project). |
+| `video_limits` | `story_video`: duration over 60000 ms or size over 100000000 bytes. `reel` and `video`: outside the project limits (3 s - 5 min, 75000 - 100000000 bytes). |
+
+Deleting the video afterwards (or its project) sets `video_id` to null: the target keeps its format, the payload carries `video: null`, and the publisher answers `video_missing` (`action_required`, diagnostics `{step: "validate", format}`) before any network call. Image targets never reference a video, even when the publication has one.
+
+### Types (`_shared/social-publisher.ts`)
+
+```ts
+type PublishFormat = "image" | "reel" | "story_image" | "story_video" | "video";
+interface PublishTarget { /* ... */ format: PublishFormat }
+interface PublishVideo { url: string; posterUrl: string | null; bytes: number; durationMs: number; width: number; height: number; faststart: boolean }
+interface PublishPayload { /* text, title, weblink, images */ video: PublishVideo | null }
+interface PublishContext { /* ... */ uploads: UploadStateStore }   // see "Upload progress"
+```
+
+`PublishVideo.url` and `posterUrl` are public URLs of bucket `project-videos` (`<SUPABASE_URL>/storage/v1/object/public/project-videos/<path>`), built by `social-publication-store.ts` from the payload paths. The worker refuses any other URL (see "Image and video URLs").
+
+### Processing polls
+
+A publisher of a non-`image` format whose network is still processing the media (Instagram container `IN_PROGRESS`, LinkedIn video not yet `AVAILABLE`, or a multi-part upload still in progress across runs) returns `failed("processing", "transient", {step, ...}, <seconds>)` after checkpointing its ids. `publication_target_finish` treats that as a **poll**, not an attempt:
+
+- The claim counted the run; the poll gives it back (`attempts` is decremented, never below 0), so any number of polls fit in a target's life. The next run is due after the publisher's hint (at least 10 s, 60 s by default).
+- `publication_targets.processing_started_at` records the first poll of a continuous phase. When a poll arrives 60 minutes or more after it, the target fails instead: `media_processing_timeout`, `permanent` (`failed`). Nothing was published, so the user may retry (a retry clears the clock and attempts). Any other outcome (a different failure, a publish) also closes the phase; the next phase gets a fresh 60 minutes.
+- A transient failure reported after the irreversible-step guard is still turned into `outcome_unknown` (never a poll).
+- Each poll is logged in `publication_target_attempts` as `retry_scheduled` with code `processing`.
+- **Targets of format `image` keep their old behaviour**: `processing` counts as an attempt (up to `max_attempts`) and the 30 s retry floor applies. Publishers must therefore not rely on the exemption for `image`.
+
+### Upload progress (`publication_target_uploads`)
+
+`(target_id uuid primary key references publication_targets(id) on delete cascade, state jsonb not null, updated_at timestamptz)`: progress that does not fit the 4 KB `step_state` (LinkedIn upload token, video URN, instructions, ETags in order). `state` is a JSON object of at most 256 KB; `updated_at` is set on every update. RLS is on, there are no policies and `anon` and `authenticated` have no grants, so only `service_role` reads or writes it. The state contains signed upload URLs: never log it. It is deleted when the target is published (inside `publication_target_finish`) and with the target; it is kept on failures so a retry can resume. The publishers reach it through `PublishContext.uploads` (`load`, `save`, `remove`, from `_shared/social-upload-state.ts`).
 
 ## Legacy projection
 
@@ -134,7 +193,7 @@ Edge Function `supabase/functions/process-publication-targets/index.ts` (`verify
 
 `POST` only (`OPTIONS` answers CORS, anything else 405), no body. Header `X-Social-Worker-Secret`: 64 hex characters, compared in constant time with the environment variable `SOCIAL_WORKER_SECRET` (same worker secret as `social-credentials-check`); missing or wrong → 401 `{code: "unauthorized"}`. A `{targetId}` body is not supported: the worker only claims.
 
-Environment: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SOCIAL_WORKER_SECRET`. The publishers need no other variable (tokens come from `social_credentials`); `SUPABASE_URL` also defines which image URLs are accepted (see "Image URLs").
+Environment: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SOCIAL_WORKER_SECRET`. The publishers need no other variable (tokens come from `social_credentials`); `SUPABASE_URL` also defines which image URLs are accepted (see "Image and video URLs").
 
 ### Loop
 
@@ -143,8 +202,8 @@ Environment: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SOCIAL_WORKER_SECRET`
 3. For each claimed target, one at a time:
    1. `publication_target_payload`, then credentials (below).
    2. If less than 15 s of budget or lease remain the target is handed back instead of started: `failed`, `lease_expired`, `transient`, retry after 30 s, diagnostics `{reason: "worker_budget"}` (it costs one attempt).
-   3. Image URLs are validated (see "Image URLs"); an invalid one finishes the target as `media_url_invalid` without resolving credentials or running the publisher.
-   4. The publisher runs with a `PublishContext`: `checkpoint(step, stepState, sideEffectPending)` → `publication_target_checkpoint` with a 300 s lease (the lease end the database returns is tracked); `fetch` = `socialFetch` of `social-http.ts` (timeout, default 10 s and never beyond the deadline, `redirect: "error"`; a failure throws `SocialError`); `deadline` = `min(budget end, lease end − 20 s)`, re-evaluated after every checkpoint; `now`, `sleep`.
+   3. Image URLs are validated (see "Image and video URLs"); an invalid one finishes the target as `media_url_invalid` without resolving credentials or running the publisher.
+   4. The publisher runs with a `PublishContext`: `uploads` (upload progress, see "Upload progress"); `checkpoint(step, stepState, sideEffectPending)` → `publication_target_checkpoint` with a 300 s lease (the lease end the database returns is tracked); `fetch` = `socialFetch` of `social-http.ts` (timeout, default 10 s and never beyond the deadline, `redirect: "error"`; a failure throws `SocialError`); `deadline` = `min(budget end, lease end − 20 s)`, re-evaluated after every checkpoint; `now`, `sleep`.
    5. The result goes to `publication_target_finish`: `published` → external id and permalink; `failed` → code, kind, retry-after and diagnostics. The worker sanitises first: code must match `^[a-z_]{1,60}$` (else `internal_error`), kind in the closed set (else `transient`), retry-after 1–86400, permalink https ≤ 500 characters, diagnostics cleaned (no NUL or lone surrogates, depth ≤ 4, at most 30 keys, 20 items, strings ≤ 500 characters, the access token redacted) and cut to ≤ 1800 bytes of jsonb text (the SQL limit is 2048). A `published` result whose id cannot be stored becomes `outcome_unknown` / `action_required` (a post may exist).
 4. If the finish call fails for an infrastructure reason it is retried once with the same value; if that fails too the target is counted `unfinished` and lease recovery takes it (it becomes `outcome_unknown` when the publisher had set the guard, otherwise a transient retry).
 
@@ -157,9 +216,11 @@ Environment: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SOCIAL_WORKER_SECRET`
 | Unexpected exception after `side_effect_pending` | `finish` failed `outcome_unknown`, `action_required` (the SQL enforces the same for any transient failure after the guard). A checkpoint with `sideEffectPending = true` counts as set even if its own answer was lost. |
 | No credentials | `finish` failed with the credential code below; the publisher does not run. |
 
-### Image URLs
+### Image and video URLs
 
 The worker validates `payload.images[].url` before running any publisher (LinkedIn downloads it, Instagram makes Meta fetch it): `https`, host equal to the host of `SUPABASE_URL`, default port only, no userinfo, and a normalised path starting with `/storage/v1/object/public/` (any bucket: user-media, projects-images, publication-variants). Anything else (other hosts, `http`, `@` tricks, signed or authenticated paths, `..` segments) finishes the target as `media_url_invalid` / `action_required` with diagnostics `{reason: "url_not_allowed", index}` (the URL is never stored).
+
+The same guard runs on `payload.video.url` and `payload.video.posterUrl`, with one more rule: the path must start with `/storage/v1/object/public/project-videos/` (`isProjectVideoPublicUrl`). Anything else finishes the target as `media_url_invalid` / `action_required` with diagnostics `{reason: "url_not_allowed", field: "video" | "poster"}`, before credentials are resolved.
 
 The LinkedIn publisher then downloads each image with these rules: content-type must be `image/jpeg`, `image/png` or `image/gif` (else `media_format`) and the first bytes must match it (else `media_unreadable`); the body is streamed with a hard cap of 30 MB and the read is cancelled as soon as the cap is exceeded (`media_too_large`), never buffered whole first; a declared `Content-Length` over the cap is refused without reading.
 
@@ -204,7 +265,9 @@ After each `publication_target_finish` that answers `needs_action` or `failed`, 
 | `too_many_hashtags` | action_required | Instagram: more than 30 hashtags. |
 | `too_many_mentions` | action_required | Instagram: more than 20 mentions. |
 | `rate_limited` | transient | Provider rate or publishing quota; retried with the provider's hint. |
-| `processing` | transient | The network is still processing the media (retried after about 60 s), or too little time was left to publish safely (retried after 30 s). |
+| `processing` | transient | The network is still processing the media (retried after about 60 s), or too little time was left to publish safely (retried after 30 s). For non-`image` formats it is a poll, not an attempt (see "Processing polls"). |
+| `media_processing_timeout` | permanent | The network was still processing the media (or the upload still in progress) after 60 minutes. Nothing was published; retry. |
+| `video_missing` | action_required | The publication's video was deleted after scheduling; pick one again and reschedule. |
 | `container_expired` | transient | Instagram container expired or was lost; created again on the next attempt. |
 | `token_invalid` | action_required | Expired or invalid token (HTTP 401 / Graph code 190): reconnect. |
 | `permission_missing` | action_required | A required permission was not granted or was removed (Graph 10 / 200-299 / HTTP 403, LinkedIn 403). |
@@ -234,7 +297,7 @@ Server side of the new client (behind `VITE_SOCIAL_PUBLISHING_EDGE`, S23). Every
 
 | `action` | Body | Effect |
 |---|---|---|
-| `schedule` | `previewId` (bigint as string, number accepted), `requestId` (uuid), `runAt` (strict ISO 8601 instant **with** `Z` or an offset `±hh:mm`; a wall-clock without offset, and impossible dates or times such as `2026-02-30`, `T24:00` or `T10:60`, are refused), `targets` (1-2 of `{network, accountKind, accountExternalId, accountName?}`), `acknowledgeUnknownOutcome?` | `publication_targets_schedule` with `runAt` normalised to UTC; the database enforces the range (5 minutes in the past to 366 days ahead). |
+| `schedule` | `previewId` (bigint as string, number accepted), `requestId` (uuid), `runAt` (strict ISO 8601 instant **with** `Z` or an offset `±hh:mm`; a wall-clock without offset, and impossible dates or times such as `2026-02-30`, `T24:00` or `T10:60`, are refused), `targets` (1-2 of `{network, accountKind, accountExternalId, accountName?, format?}`; `format` is one of the formats of the network, default `image`, otherwise `invalid_request`), `acknowledgeUnknownOutcome?` | `publication_targets_schedule` with `runAt` normalised to UTC; the database enforces the range (5 minutes in the past to 366 days ahead). |
 | `publishNow` | Same without `runAt` | `runAt` = now, then wakes the worker. |
 | `retry` | `targetId` (uuid), `acknowledgeUnknownOutcome?` | `publication_target_retry`, then wakes the worker. |
 | `reset` | `previewId`, `acknowledgeUnknownOutcome?` | `publication_targets_reset` (unschedule / publish again). |
@@ -257,6 +320,8 @@ Server side of the new client (behind `VITE_SOCIAL_PUBLISHING_EDGE`, S23). Every
 | `run_at_out_of_range` | 422 | no | `runAt` outside the allowed window. |
 | `in_progress` | 409 | yes | A target is running right now. |
 | `already_published` | 409 | no | Scheduling over a published target (reset first). |
+| `video_required` | 422 | no | A video format and the publication has no video of its project. |
+| `video_limits` | 422 | no | The video exceeds the limits of the format (stories: 60 s and 100 MB). |
 | `not_retryable` | 409 | no | The target is not `failed`/`needs_action`, or is archived. |
 | `confirmation_required` | 409 | no | An `outcome_unknown` target needs `acknowledgeUnknownOutcome`. |
 | `account_not_connected` | 409 | no | The owner has no usable connection for that network. |

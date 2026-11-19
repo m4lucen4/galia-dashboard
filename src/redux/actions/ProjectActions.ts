@@ -6,6 +6,9 @@ import { invokeGeneration, safeGenerationIssue } from "@/features/projects/servi
 import type { GenerationRequest } from "@/features/projects/types/publicationGeneration";
 import { removeAllProjectVideoObjects } from "@/features/projects/videos/projectVideosService";
 
+// Maximum number of images a project can hold (task odd/tasks/social-video-publishing.md, S11).
+export const MAX_PROJECT_IMAGES = 20;
+
 const PROJECT_LANGUAGE_SUMMARY = `translation_settings:project_translation_settings(
   original_language, translations:project_translations(language)
 )`;
@@ -66,7 +69,7 @@ export const addProject = createAsyncThunk(
         projectData.images.length > 0 &&
         newProject.id
       ) {
-        const imagesToUpload = projectData.images.slice(0, 10);
+        const imagesToUpload = projectData.images.slice(0, MAX_PROJECT_IMAGES);
 
         for (const [index, image] of imagesToUpload.entries()) {
           const fileExt = image.name.split(".").pop();
@@ -176,7 +179,7 @@ export const updateProject = createAsyncThunk(
       if (projectData.images && projectData.images.length > 0) {
         const imagesToUpload = projectData.images.slice(
           0,
-          10 - imageData.length,
+          MAX_PROJECT_IMAGES - imageData.length,
         );
 
         for (const [index, image] of imagesToUpload.entries()) {

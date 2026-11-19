@@ -8,7 +8,7 @@ import {
   projectLegacyControlsClassName,
 } from "./projectFormStyles";
 import { ProjectDataProps, UserDataProps } from "../../../types";
-import { CreateProjectProps } from "../../../redux/actions/ProjectActions";
+import { CreateProjectProps, MAX_PROJECT_IMAGES } from "../../../redux/actions/ProjectActions";
 import { KeywordInput } from "../../../components/shared/ui/KeywordInput";
 import { Collaborators } from "../../../components/shared/ui/Collaborators";
 import { SelectField } from "../../../components/shared/ui/SelectField";
@@ -165,13 +165,13 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
             <div className="min-w-0 space-y-5">
               <p className="text-sm font-medium">
                 {t("projects.projectImages")}{" "}
-                <span className="font-mono">({totalImagesCount}/10)</span>
+                <span className="font-mono">({totalImagesCount}/{MAX_PROJECT_IMAGES})</span>
               </p>
               <div className="mt-1">
                 <button
                   type="button"
                   onClick={() => setShowGallerySelector(true)}
-                  disabled={allImages.length >= 10}
+                  disabled={allImages.length >= MAX_PROJECT_IMAGES}
                   className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-[#010000] px-5 py-3 text-sm font-medium hover:bg-[#010000]/5 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-[#010000] focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                 >
                   <PhotoIcon className="h-5 w-5 mr-2" />
@@ -190,7 +190,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
                   images={allImages}
                   onReorder={handleReorderImages}
                   onRemove={handleRemoveImage}
-                  maxImages={10}
+                  maxImages={MAX_PROJECT_IMAGES}
                 />
               </div>
             </div>
@@ -274,7 +274,7 @@ export const ProjectsForm: React.FC<ProjectsFormProps> = ({
         isOpen={showGallerySelector}
         onClose={() => setShowGallerySelector(false)}
         onSelect={handleGallerySelect}
-        maxSelection={10}
+        maxSelection={MAX_PROJECT_IMAGES}
         currentSelectionCount={allImages.length}
       />
 

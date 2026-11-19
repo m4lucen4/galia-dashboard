@@ -48,7 +48,7 @@ const toUserError = (error: Error): ProjectVideoError => {
     );
   }
   if (status === 413) {
-    return new ProjectVideoError("El vídeo supera el límite de 300 MB.");
+    return new ProjectVideoError("El vídeo supera el límite de 100 MB.");
   }
   if (status === 409) {
     return new ProjectVideoError(

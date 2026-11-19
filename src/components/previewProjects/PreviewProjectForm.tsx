@@ -41,7 +41,7 @@ type PreviewProjectFormProps = {
   readOnly?: boolean;
 };
 
-const MAX_IMAGES = 10;
+const MAX_IMAGES = 20;
 const actionClassName =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#010000]/30 px-5 py-2 text-sm font-medium transition-colors hover:bg-[#010000]/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#010000] disabled:cursor-not-allowed disabled:opacity-40";
 const sharedButtonClassName =

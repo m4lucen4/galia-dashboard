@@ -67,7 +67,7 @@ export const ProjectVideosSection = ({ projectId }: ProjectVideosSectionProps) =
       ) : (
         <div className="min-w-0 space-y-5">
           <p className="text-sm text-[#010000]/65">
-            Solo MP4, hasta 300 MB y entre 3 segundos y 15 minutos.
+            Solo MP4, hasta 100 MB y entre 3 segundos y 5 minutos.
           </p>
 
           <input

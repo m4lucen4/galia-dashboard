@@ -2,7 +2,7 @@
 
 Videos are project media: they are uploaded in a project, selected when publications are generated, and published to Instagram (Reels, Stories) and LinkedIn by the existing Edge Function pipeline. They live in their own table and bucket and never inside `projects.image_data`.
 
-Task document: [`odd/tasks/social-video-publishing.md`](../odd/tasks/social-video-publishing.md) (T1, specs S3, S4, S9; T2, specs S2, S5, S10). Migrations: `supabase/migrations/20261120000100_project_videos.sql` (videos), `supabase/migrations/20261121000100_preview_video.sql` (publication reference).
+Task document: [`odd/tasks/social-video-publishing.md`](../odd/tasks/social-video-publishing.md) (T1, specs S3, S4, S9; T2, specs S2, S5, S10). Migrations: `supabase/migrations/20261120000100_project_videos.sql` (videos), `supabase/migrations/20261121000100_preview_video.sql` (publication reference). Limits 100 MB / 5 min (T5, S4): `supabase/migrations/20261121000200_project_video_limits.sql` (replaces the table checks and the bucket limit created as 300 MB / 15 min by `20261120000100`; do not re-run that one afterwards). Images per project and per publication are up to 20 (S11).
 
 ## Data model: `public.project_videos`
 
@@ -13,8 +13,8 @@ Task document: [`odd/tasks/social-video-publishing.md`](../odd/tasks/social-vide
 | `storage_path` | `text` unique | `<project_id>/<id>.mp4`; must start with `<project_id>/` |
 | `poster_path` | `text` null | `<project_id>/<id>.jpg`; when set, must start with `<project_id>/` |
 | `original_name` | `text` | 1 to 255 characters |
-| `bytes` | `bigint` | 75000 to 300000000 |
-| `duration_ms` | `integer` | 3000 to 900000 (3 s to 15 min) |
+| `bytes` | `bigint` | 75000 to 100000000 |
+| `duration_ms` | `integer` | 3000 to 300000 (3 s to 5 min) |
 | `width`, `height` | `integer` | `> 0` |
 | `faststart` | `boolean` | `moov` atom before `mdat`; Instagram may reject videos without it |
 | `position` | `integer` | default 0; index `(project_id, position)` |
@@ -26,8 +26,8 @@ Size is stored per video so a per-plan quota can be added later (no quota today)
 ## Limits
 
 - Format: MP4 only (`video/mp4`, `.mp4`).
-- Size: 300 MB (300000000 bytes) per video, also the bucket `file_size_limit`.
-- Duration: 3 s to 15 min.
+- Size: 100 MB (100000000 bytes) per video, also the bucket `file_size_limit`.
+- Duration: 3 s to 5 min.
 - Bucket `allowed_mime_types`: `video/mp4` and `image/jpeg` (the poster).
 
 The browser validates before uploading; the table checks and the bucket are the server-side backstop.

@@ -24,7 +24,7 @@ export const validateVideoFileBasics = (file: File): void => {
   }
   if (file.size > MAX_VIDEO_BYTES) {
     throw new ProjectVideoError(
-      "El vídeo supera el límite de 300 MB. Reduce su tamaño o comprímelo y vuelve a intentarlo.",
+      "El vídeo supera el límite de 100 MB. Reduce su tamaño o comprímelo y vuelve a intentarlo.",
     );
   }
   if (file.size < MIN_VIDEO_BYTES) {
@@ -65,7 +65,7 @@ export const validateVideoFile = async (file: File): Promise<VideoMetadata> => {
     throw new ProjectVideoError("El vídeo es demasiado corto: debe durar al menos 3 segundos.");
   }
   if (metadata.durationMs > MAX_VIDEO_DURATION_MS) {
-    throw new ProjectVideoError("El vídeo es demasiado largo: la duración máxima es de 15 minutos.");
+    throw new ProjectVideoError("El vídeo es demasiado largo: la duración máxima es de 5 minutos.");
   }
   return metadata;
 };
