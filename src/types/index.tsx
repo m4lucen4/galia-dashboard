@@ -147,13 +147,17 @@ export type PublicationTargetAccountKind =
   | "linkedin_person"
   | "linkedin_organization";
 
-/** public.publication_targets.format; Instagram: image, reel, story_image, story_video; LinkedIn: image, video. */
+/**
+ * public.publication_targets.format; Instagram: image, reel, story_image, story_video,
+ * carousel_video (photos plus the publication video in one carousel); LinkedIn: image, video.
+ */
 export type PublicationFormat =
   | "image"
   | "reel"
   | "story_image"
   | "story_video"
-  | "video";
+  | "video"
+  | "carousel_video";
 
 export type PublicationTarget = {
   id: string;
@@ -182,6 +186,12 @@ export type PublicationTarget = {
    * carries it; null/absent otherwise.
    */
   storyImageUrl?: string | null;
+  /**
+   * 0-based position of the video among the items of a `carousel_video` target
+   * (public.publication_targets.video_position; null means last). Only known with VITE_SOCIAL_VIDEO
+   * on and when the read or the function answer carries it; absent otherwise.
+   */
+  videoPosition?: number | null;
 };
 
 export type PublishVersions = {

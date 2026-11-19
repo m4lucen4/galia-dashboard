@@ -14,6 +14,10 @@ import {
   UserDataProps,
 } from "../../../types";
 import { usePreviewImages } from "../helpers/usePreviewImages";
+import { clampInstagramRatio } from "../helpers/imageVariants";
+import { resolveVideoPosition } from "../helpers/videoPosition";
+import { PREVIEW_TEXTS } from "../helpers/socialVideoTexts";
+import { VideoPreviewFrame } from "./VideoPreviewFrame";
 import { publishedText } from "../helpers/socialText";
 import { SOCIAL_VIDEO_ENABLED } from "../helpers/socialVideo";
 import { usePublicationVideo } from "../hooks/usePublicationVideo";
@@ -27,13 +31,19 @@ interface IProjectInstagramPostProps {
   initialFormat?: PublicationFormat;
   /** Only with VITE_SOCIAL_VIDEO on: photo stored in the scheduled "Historia (imagen)" target. */
   scheduledStoryImageUrl?: string | null;
+  /** Only with VITE_SOCIAL_VIDEO on: video position stored in the scheduled "Carrusel con vídeo" target. */
+  scheduledVideoPosition?: number | null;
 }
+
+/** One item of the carousel: a photo (with its position among the photos) or the video. */
+type CarouselSlide = { kind: "image"; url: string; index: number } | { kind: "video" };
 
 export default function InstagramPost({
   project,
   user,
   initialFormat,
   scheduledStoryImageUrl = null,
+  scheduledVideoPosition = null,
 }: IProjectInstagramPostProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   // Video formats (VITE_SOCIAL_VIDEO): Reel and Stories are previewed in a 9:16 frame.
@@ -42,23 +52,43 @@ export default function InstagramPost({
   // Same images and text as the publish payload: what you see is what gets published,
   // including the Instagram-adjusted copies when the adjuster is on.
   const pendingImages = usePreviewImages(project, "instagram");
-  // Instagram shows every carousel item with the first image's ratio.
-  const first = pendingImages[0];
-  const frameRatio = first?.width && first?.height ? `${first.width} / ${first.height}` : "1 / 1";
   const text = useMemo(() => publishedText(project), [project]);
 
-  const hasMultipleImages = pendingImages.length > 1;
+  // "Carrusel con vídeo": the photos in their order plus the video at its position (the scheduled
+  // one, else last; the preview has no picker, the choice is made in the publish configuration).
+  const mixed = SOCIAL_VIDEO_ENABLED && format === "carousel_video" && pendingImages.length > 0;
+  const slides = useMemo<CarouselSlide[]>(() => {
+    const photos = pendingImages.map(
+      (image, index): CarouselSlide => ({ kind: "image", url: image.url, index }),
+    );
+    if (!mixed) return photos;
+    const position = resolveVideoPosition(photos.length, null, scheduledVideoPosition);
+    return [...photos.slice(0, position), { kind: "video" }, ...photos.slice(position)];
+  }, [pendingImages, mixed, scheduledVideoPosition]);
+
+  // Instagram shows every carousel item with the first item's ratio (a video first: the video's).
+  const first = pendingImages[0];
+  const firstSlide = slides[0];
+  const frameRatio =
+    firstSlide?.kind === "video"
+      ? video.status === "ready" && video.video.width > 0 && video.video.height > 0
+        ? String(clampInstagramRatio(video.video.width / video.video.height))
+        : "1 / 1"
+      : first?.width && first?.height
+        ? `${first.width} / ${first.height}`
+        : "1 / 1";
+
+  const hasMultipleImages = slides.length > 1;
+  // The format may change under the carousel (tabs): never point past the last item.
+  const activeIndex = Math.min(currentImageIndex, Math.max(0, slides.length - 1));
+  const activeSlide: CarouselSlide | undefined = slides[activeIndex];
 
   const goToNextImage = () => {
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === pendingImages.length - 1 ? 0 : prevIndex + 1
-    );
+    setCurrentImageIndex(activeIndex === slides.length - 1 ? 0 : activeIndex + 1);
   };
 
   const goToPreviousImage = () => {
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === 0 ? pendingImages.length - 1 : prevIndex - 1
-    );
+    setCurrentImageIndex(activeIndex === 0 ? slides.length - 1 : activeIndex - 1);
   };
 
   const tabs = SOCIAL_VIDEO_ENABLED ? (
@@ -71,7 +101,12 @@ export default function InstagramPost({
     />
   ) : null;
 
-  if (SOCIAL_VIDEO_ENABLED && format !== "image" && format !== "video") {
+  if (
+    SOCIAL_VIDEO_ENABLED &&
+    format !== "image" &&
+    format !== "video" &&
+    format !== "carousel_video"
+  ) {
     return (
       <>
         {tabs}
@@ -115,14 +150,27 @@ export default function InstagramPost({
 
       <div className="relative" style={{ aspectRatio: frameRatio }}>
         <div className="w-full h-full relative">
-          <img
-            src={
-              pendingImages[currentImageIndex]?.url ||
-              "https://via.placeholder.com/500"
-            }
-            alt={`Imagen ${currentImageIndex + 1} de ${project.title}`}
-            className="w-full h-full object-cover"
-          />
+          {activeSlide?.kind === "video" ? (
+            video.status === "ready" ? (
+              <VideoPreviewFrame
+                key="carousel-video"
+                videoUrl={video.videoUrl}
+                posterUrl={video.posterUrl}
+                aspectRatio={frameRatio}
+                className="h-full"
+              />
+            ) : (
+              <p className="flex h-full items-center justify-center bg-gray-50 p-6 text-center text-sm text-gray-500">
+                {video.status === "loading" ? "Cargando vídeo…" : PREVIEW_TEXTS.videoUnavailable}
+              </p>
+            )
+          ) : (
+            <img
+              src={activeSlide?.url || "https://via.placeholder.com/500"}
+              alt={`Imagen ${(activeSlide?.index ?? 0) + 1} de ${project.title}`}
+              className="w-full h-full object-cover"
+            />
+          )}
 
           {hasMultipleImages && (
             <>
@@ -140,11 +188,11 @@ export default function InstagramPost({
               </button>
 
               <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
-                {pendingImages.map((_, index) => (
+                {slides.map((_, index) => (
                   <div
                     key={index}
                     className={`h-1.5 rounded-full transition-all ${
-                      index === currentImageIndex
+                      index === activeIndex
                         ? "w-6 bg-gray-500"
                         : "w-1.5 bg-white/70"
                     }`}

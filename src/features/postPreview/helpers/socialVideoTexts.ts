@@ -22,6 +22,8 @@ export const formatLabel = (network: SocialNetwork, format: PublicationFormat): 
       return "Historia (vídeo)";
     case "video":
       return "Vídeo";
+    case "carousel_video":
+      return "Carrusel con vídeo";
   }
 };
 
@@ -52,6 +54,10 @@ export const PANEL_TEXTS = {
   storyImageInfo: "La historia usa la imagen elegida, original y sin recorte.",
   storyImageNotJpeg: (format: string) =>
     `Instagram solo garantiza imágenes JPEG en historias; esta es ${format}.`,
+  carouselFirstCrop: (video: string, photo: string) =>
+    `El vídeo es ${video} y la primera foto ${photo}. Instagram recorta todos los elementos del carrusel a la proporción del primero.`,
+  carouselInfo: (photos: number, total: number) =>
+    `El carrusel lleva ${photos} ${photos === 1 ? "foto" : "fotos"} y el vídeo (${total} de 20 elementos).`,
   linkedinVideoInfo: "LinkedIn publica el vídeo con el texto de la publicación.",
 };
 
@@ -63,6 +69,14 @@ export const STORY_TEXTS = {
   videoNoPoster: "Sin miniatura",
 };
 
+export const POSITION_TEXTS = {
+  legend: "Posición del vídeo",
+  hint: "Las fotos mantienen su orden; el vídeo se inserta en la posición elegida.",
+  option: (position: number, total: number) =>
+    `${position}${position === 1 ? " (primero)" : position === total ? " (último)" : ""}`,
+  summary: (position: number, total: number) => `El vídeo será el elemento ${position} de ${total}.`,
+};
+
 export const BLOCKED_TEXTS = {
   videoLoading: "Cargando la información del vídeo…",
   videoError: (network: string) =>
@@ -70,6 +84,8 @@ export const BLOCKED_TEXTS = {
   videoMissing: (network: string) =>
     `El vídeo de esta publicación ya no existe, así que no se puede publicar en ${network}. Elige otro vídeo o publica con fotos.`,
   storyVideoLimits: "Las historias de Instagram admiten vídeos de hasta 60 s y 100 MB.",
+  carouselTooMany: (photos: number) =>
+    `Un carrusel de Instagram admite como máximo 20 elementos y este tendría ${photos + 1} (${photos} fotos y el vídeo). Desmarca fotos en la publicación o elige otro formato.`,
 };
 
 export const PREVIEW_TEXTS = {
@@ -115,6 +131,11 @@ export const VIDEO_TARGET_ERROR_TEXTS: Record<string, ErrorText> = {
     reason: "La imagen elegida para la historia ya no está entre las fotos seleccionadas.",
     fix: "Elige otra y vuelve a programar la historia.",
   },
+  // Carrusel con vídeo (T6): the chosen position of the video is out of range.
+  video_position_invalid: {
+    reason: "La posición del vídeo en el carrusel no es válida.",
+    fix: "Vuelve a elegirla.",
+  },
 };
 
 /** Messages of the publish request errors added with the video formats. */
@@ -124,4 +145,5 @@ export const VIDEO_REQUEST_ERROR_TEXTS: Record<string, string> = {
     "El vídeo no cumple los límites de este formato (las historias admiten hasta 60 s y 100 MB).",
   story_image_invalid:
     "La imagen elegida para la historia ya no está entre las fotos seleccionadas. Elige otra.",
+  video_position_invalid: "La posición del vídeo en el carrusel no es válida. Vuelve a elegirla.",
 };

@@ -267,7 +267,13 @@ export const INSTAGRAM_STORY_VIDEO = { maxDurationMs: 60_000, maxBytes: 100_000_
 export const VERTICAL_RATIO = 9 / 16;
 export const VERTICAL_RATIO_TOLERANCE = 0.02;
 
-export type VideoIssueCode = "story_too_long" | "story_too_heavy" | "not_faststart" | "not_vertical";
+export type VideoIssueCode =
+  | "story_too_long"
+  | "story_too_heavy"
+  | "not_faststart"
+  | "not_vertical"
+  // carousel_video: the video is the first item and its ratio differs from the first photo's.
+  | "carousel_first_crop";
 
 export interface VideoIssue {
   code: VideoIssueCode;
@@ -284,18 +290,28 @@ export interface VideoFacts {
   faststart: boolean;
 }
 
-/** The video formats of the publication targets. */
+/** The video-only formats of the publication targets (`carousel_video` also has photos). */
 export const isVideoFormat = (format: string | null | undefined): boolean =>
   format === "reel" || format === "story_video" || format === "video";
+
+/** What the carousel check needs to know about the photos and the chosen video position. */
+export interface CarouselVideoContext {
+  /** The video is the first item of the carousel. */
+  videoFirst: boolean;
+  /** Ratio (width / height) of the first photo as the network would receive it; null if unknown. */
+  firstPhotoRatio: number | null;
+}
 
 /**
  * Issues of the video for one network and format. All of them are warnings except the story limits,
  * which the server refuses (`video_limits`) and the format selector therefore disables.
+ * `carousel` is only used by `carousel_video`.
  */
 export function evaluateVideo(
   network: SocialNetwork,
-  format: "reel" | "story_video" | "video",
+  format: "reel" | "story_video" | "video" | "carousel_video",
   facts: VideoFacts,
+  carousel?: CarouselVideoContext,
 ): VideoIssue[] {
   const issues: VideoIssue[] = [];
   if (format === "story_video") {
@@ -323,6 +339,27 @@ export function evaluateVideo(
     Math.abs(facts.width / facts.height - VERTICAL_RATIO) > VERTICAL_RATIO_TOLERANCE
   ) {
     issues.push({ code: "not_vertical", actual: Number((facts.width / facts.height).toFixed(4)) });
+  }
+  // Instagram crops every item of a carousel to the ratio of the first one (L37): only a video in
+  // first place that does not match the first photo changes how the photos look.
+  if (
+    format === "carousel_video" &&
+    carousel?.videoFirst &&
+    carousel.firstPhotoRatio !== null &&
+    facts.width > 0 &&
+    facts.height > 0
+  ) {
+    const videoRatio = facts.width / facts.height;
+    if (
+      Math.abs(videoRatio - carousel.firstPhotoRatio) >
+      INSTAGRAM_MEDIA.carouselRatioTolerance + 1e-9
+    ) {
+      issues.push({
+        code: "carousel_first_crop",
+        actual: Number(videoRatio.toFixed(4)),
+        limit: Number(carousel.firstPhotoRatio.toFixed(4)),
+      });
+    }
   }
   return issues;
 }

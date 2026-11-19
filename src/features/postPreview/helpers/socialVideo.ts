@@ -50,9 +50,17 @@ export interface FormatOption {
   disabledReason: string | null;
 }
 
-const FORMATS: Record<SocialNetwork, { photo: PublicationFormat[]; video: PublicationFormat[] }> = {
-  instagram: { photo: ["image", "story_image"], video: ["reel", "story_video"] },
-  linkedin: { photo: ["image"], video: ["video"] },
+const FORMATS: Record<
+  SocialNetwork,
+  { photo: PublicationFormat[]; mixed: PublicationFormat[]; video: PublicationFormat[] }
+> = {
+  // `mixed` formats need both selected photos and the publication video (Instagram carousel, S14).
+  instagram: {
+    photo: ["image", "story_image"],
+    mixed: ["carousel_video"],
+    video: ["reel", "story_video"],
+  },
+  linkedin: { photo: ["image"], mixed: [], video: ["video"] },
 };
 
 export const formatContextOf = (
@@ -91,7 +99,8 @@ const videoDisabledReason = (
 /**
  * Formats the network offers for this publication. Photo formats are always listed (disabled
  * without photos); video formats only when the publication has a video, disabled while it cannot
- * work (loading, unreadable, over the story limits).
+ * work (loading, unreadable, over the story limits); mixed formats ("Carrusel con vídeo") only when
+ * the publication has selected photos and a video, disabled while the video cannot load.
  */
 export function formatOptions(network: SocialNetwork, context: FormatContext): FormatOption[] {
   const options: FormatOption[] = FORMATS[network].photo.map((format) => ({
@@ -99,6 +108,15 @@ export function formatOptions(network: SocialNetwork, context: FormatContext): F
     label: formatLabel(network, format),
     disabledReason: context.photos > 0 ? null : SELECTOR_TEXTS.noPhotos,
   }));
+  if (context.hasVideo && context.photos > 0) {
+    for (const format of FORMATS[network].mixed) {
+      options.push({
+        format,
+        label: formatLabel(network, format),
+        disabledReason: videoDisabledReason(format, context),
+      });
+    }
+  }
   if (context.hasVideo) {
     for (const format of FORMATS[network].video) {
       options.push({

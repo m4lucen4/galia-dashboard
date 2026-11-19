@@ -6,7 +6,7 @@ import { PREVIEW_TEXTS } from "../helpers/socialVideoTexts";
 import { VideoPreviewFrame } from "./VideoPreviewFrame";
 
 interface InstagramVerticalPreviewProps {
-  format: Exclude<PublicationFormat, "image" | "video">;
+  format: Exclude<PublicationFormat, "image" | "video" | "carousel_video">;
   project: PreviewProjectDataProps;
   user: UserDataProps;
   video: PublicationVideoState;
