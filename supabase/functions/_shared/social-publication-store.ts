@@ -42,7 +42,7 @@ export type CredentialsResolution =
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 const NETWORKS: readonly PublishNetwork[] = ["instagram", "linkedin"];
 const FORMATS_BY_NETWORK: Record<PublishNetwork, readonly PublishFormat[]> = {
-  instagram: ["image", "reel", "story_image", "story_video"],
+  instagram: ["image", "reel", "story_image", "story_video", "carousel_video"],
   linkedin: ["image", "video"],
 };
 const ACCOUNT_KINDS: readonly PublishAccountKind[] = ["instagram_business", "linkedin_person", "linkedin_organization"];
@@ -108,6 +108,13 @@ function parseVideo(value: unknown, base: string): PublishVideo | null {
   };
 }
 
+// carousel_video: the resolved 0-based position of the video among the items; null for the other formats.
+function parseVideoPosition(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 19) throw new SocialError("internal_error");
+  return value;
+}
+
 function parsePayload(value: unknown, base: string): PublishPayload {
   const row = asRecord(value);
   if (!row || !Array.isArray(row.images)) throw new SocialError("internal_error");
@@ -117,6 +124,7 @@ function parsePayload(value: unknown, base: string): PublishPayload {
     weblink: asString(row.weblink),
     images: row.images.map(parseImage),
     video: parseVideo(row.video, base),
+    videoPosition: parseVideoPosition(row.videoPosition),
   };
 }
 

@@ -31,6 +31,7 @@ export const entryFailures = {
   already_published: [409, "Esta publicación ya se ha publicado. Vuelve a programarla para publicarla otra vez.", false],
   video_required: [422, "Elige un vídeo de la publicación antes de programarla en este formato.", false],
   video_limits: [422, "El vídeo no cumple los límites de este formato (las historias admiten hasta 60 s y 100 MB).", false],
+  video_position_invalid: [422, "La posición elegida para el vídeo no es válida. Elige una posición dentro del carrusel.", false],
   story_image_invalid: [422, "La imagen elegida para la historia no es válida. Elige una de las fotos seleccionadas de la publicación.", false],
   not_retryable: [409, "Esta red social no se puede reintentar en su estado actual.", false],
   confirmation_required: [409, "Comprueba en la red social que no se publicó antes de reintentar y confirma.", false],
@@ -86,6 +87,11 @@ export interface RequestedTarget {
    * publication; the database checks that. Absent = the first published photo. Only with format story_image.
    */
   storyImageUrl?: string;
+  /**
+   * carousel_video only: 0-based index of the video among the carousel items (0..number of published photos; the
+   * database checks the upper bound). Absent = last. Any other format: 422 video_position_invalid.
+   */
+  videoPosition?: number;
 }
 
 export type EntryRequest =
@@ -98,6 +104,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 const PREVIEW_ID = /^[1-9]\d{0,18}$/u;
 const EXTERNAL_ID = /^[A-Za-z0-9:_-]{1,100}$/u;
 export const MAX_STORY_IMAGE_URL_LENGTH = 2000;
+// Instagram carousels hold 20 items: at most 19 photos before the video.
+export const MAX_VIDEO_POSITION = 19;
 const KINDS_BY_NETWORK: Record<Network, readonly AccountKind[]> = {
   instagram: ["instagram_business"],
   linkedin: ["linkedin_person", "linkedin_organization"],
@@ -105,7 +113,7 @@ const KINDS_BY_NETWORK: Record<Network, readonly AccountKind[]> = {
 
 // Allowed formats per network (the database enforces the same pairs).
 const FORMATS_BY_NETWORK: Record<Network, readonly PublishFormat[]> = {
-  instagram: ["image", "reel", "story_image", "story_video"],
+  instagram: ["image", "reel", "story_image", "story_video", "carousel_video"],
   linkedin: ["image", "video"],
 };
 
@@ -168,13 +176,21 @@ function parseStoryImageUrl(value: unknown): string {
   return value;
 }
 
+// A non-negative integer (JSON number) within the largest possible carousel; the database checks the exact range.
+function parseVideoPosition(value: unknown): number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0 || value > MAX_VIDEO_POSITION) {
+    throw new EntryError("video_position_invalid");
+  }
+  return value;
+}
+
 function parseTargets(value: unknown): RequestedTarget[] {
   if (!Array.isArray(value) || value.length < 1 || value.length > 2) throw invalid();
   const seen = new Set<string>();
   return value.map((item) => {
     const row = asRecord(item);
     if (!row) throw invalid();
-    exactKeys(row, ["network", "accountKind", "accountExternalId", "accountName", "format", "storyImageUrl"]);
+    exactKeys(row, ["network", "accountKind", "accountExternalId", "accountName", "format", "storyImageUrl", "videoPosition"]);
     const network = row.network;
     if (network !== "instagram" && network !== "linkedin") throw invalid();
     const kind = row.accountKind as AccountKind;
@@ -196,6 +212,11 @@ function parseTargets(value: unknown): RequestedTarget[] {
     if (row.storyImageUrl !== undefined && row.storyImageUrl !== null) {
       if (format !== "story_image") throw new EntryError("story_image_invalid");
       target.storyImageUrl = parseStoryImageUrl(row.storyImageUrl);
+    }
+    // Same for the video position: only a carousel_video can place its video; null counts as absent.
+    if (row.videoPosition !== undefined && row.videoPosition !== null) {
+      if (format !== "carousel_video") throw new EntryError("video_position_invalid");
+      target.videoPosition = parseVideoPosition(row.videoPosition);
     }
     return target;
   });
@@ -302,6 +323,8 @@ export interface ValidatedTarget {
   format: PublishFormat;
   /** Only present for a story_image target that chose its photo (kept out of the body otherwise). */
   storyImageUrl?: string;
+  /** Only present for a carousel_video target that chose the position of its video. */
+  videoPosition?: number;
 }
 
 const cleanName = (value: string | null) => value ? value.slice(0, 200) : null;
@@ -337,6 +360,7 @@ export function validateTargets(
       network: target.network, accountKind: target.accountKind, accountExternalId: id,
       accountName: cleanName(name) ?? target.accountName, format: target.format,
       ...(target.storyImageUrl !== undefined ? { storyImageUrl: target.storyImageUrl } : {}),
+      ...(target.videoPosition !== undefined ? { videoPosition: target.videoPosition } : {}),
     };
   });
 }
