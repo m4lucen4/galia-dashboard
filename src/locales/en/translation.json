@@ -719,9 +719,9 @@
       "dialog": {
         "title": "Adjust images for {{network}}",
         "description": {
-          "instagram": "Pick an image, set its zoom and framing and press “Apply”: a JPEG copy of that image alone is saved. In a carousel every image uses the same ratio. The original does not change.",
-          "linkedin": "Pick an image, set its ratio, zoom and framing and press “Apply”: a JPEG copy of that image alone is saved. The original does not change.",
-          "facebook": "Pick an image, set its ratio, zoom and framing and press “Apply”: a JPEG copy of that image alone is saved. The original does not change."
+          "instagram": "Pick an image, set its zoom, framing, tone and verticals and press “Apply”: a JPEG copy of that image alone is saved. In a carousel every image uses the same ratio. The original does not change.",
+          "linkedin": "Pick an image, set its ratio, zoom, framing, tone and verticals and press “Apply”: a JPEG copy of that image alone is saved. The original does not change.",
+          "facebook": "Pick an image, set its ratio, zoom, framing, tone and verticals and press “Apply”: a JPEG copy of that image alone is saved. The original does not change."
         },
         "images": "Images",
         "ratio": "Aspect ratio",
@@ -744,6 +744,21 @@
           "willConvert": "will be converted to JPEG automatically"
         },
         "zoom": "Zoom",
+        "adjustments": {
+          "title": "Image adjustments",
+          "tone": "Tone",
+          "geometry": "Geometry",
+          "brightness": "Brightness",
+          "contrast": "Contrast",
+          "saturation": "Saturation",
+          "warmth": "Warmth",
+          "rotation": "Straighten",
+          "vertical": "Vertical correction",
+          "verticalHint": "To the right widens the top (verticals converging upwards); to the left, the bottom.",
+          "preparing": "Preparing the preview…",
+          "reset": "Reset adjustments",
+          "resetOne": "Reset {{label}}"
+        },
         "apply": "Apply",
         "applying": "Applying…",
         "revert": "Back to the original",

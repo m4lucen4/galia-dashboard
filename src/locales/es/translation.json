@@ -722,9 +722,9 @@
       "dialog": {
         "title": "Ajustar imágenes para {{network}}",
         "description": {
-          "instagram": "Elige una imagen, ajusta su zoom y encuadre y pulsa «Aplicar»: queda guardada una copia JPEG solo de esa imagen. En un carrusel todas usan la misma proporción. El original no cambia.",
-          "linkedin": "Elige una imagen, ajusta su proporción, zoom y encuadre y pulsa «Aplicar»: queda guardada una copia JPEG solo de esa imagen. El original no cambia.",
-          "facebook": "Elige una imagen, ajusta su proporción, zoom y encuadre y pulsa «Aplicar»: queda guardada una copia JPEG solo de esa imagen. El original no cambia."
+          "instagram": "Elige una imagen, ajusta su zoom, encuadre, tono y verticales y pulsa «Aplicar»: queda guardada una copia JPEG solo de esa imagen. En un carrusel todas usan la misma proporción. El original no cambia.",
+          "linkedin": "Elige una imagen, ajusta su proporción, zoom, encuadre, tono y verticales y pulsa «Aplicar»: queda guardada una copia JPEG solo de esa imagen. El original no cambia.",
+          "facebook": "Elige una imagen, ajusta su proporción, zoom, encuadre, tono y verticales y pulsa «Aplicar»: queda guardada una copia JPEG solo de esa imagen. El original no cambia."
         },
         "images": "Imágenes",
         "ratio": "Proporción",
@@ -747,6 +747,21 @@
           "willConvert": "se convertirá a JPEG automáticamente"
         },
         "zoom": "Zoom",
+        "adjustments": {
+          "title": "Ajustes de imagen",
+          "tone": "Tono",
+          "geometry": "Geometría",
+          "brightness": "Luminosidad",
+          "contrast": "Contraste",
+          "saturation": "Saturación",
+          "warmth": "Calidez",
+          "rotation": "Enderezar",
+          "vertical": "Corrección de verticales",
+          "verticalHint": "Hacia la derecha abre la parte superior (verticales que convergen hacia arriba); hacia la izquierda, la inferior.",
+          "preparing": "Preparando la vista previa…",
+          "reset": "Restablecer ajustes",
+          "resetOne": "Restablecer {{label}}"
+        },
         "apply": "Aplicar",
         "applying": "Aplicando…",
         "revert": "Volver al original",

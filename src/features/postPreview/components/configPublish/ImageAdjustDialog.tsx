@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import Cropper, { type Area, type Point } from "react-easy-crop";
@@ -15,6 +15,20 @@ import {
   clampRatio,
   renderVariant,
 } from "../../helpers/imageVariants";
+import {
+  ADJUSTMENT_RANGES,
+  adjustmentValue,
+  colorMatrix,
+  correctedCanvas,
+  hasTone,
+  normalizeAdjustments,
+  rotatedSize,
+  sameAdjustments,
+  svgMatrixValues,
+  TONE_KEYS,
+  type AdjustmentKey,
+  type ImageAdjustments,
+} from "../../helpers/imageAdjustments";
 import { loadCorsImage } from "../../helpers/publicationImages";
 import {
   aspectKeyFor,
@@ -31,6 +45,7 @@ import { imageStatus, type MediaRow } from "./useMediaChecks";
 
 const PREFIX = "previewProjects.mediaChecks";
 const DIALOG = `${PREFIX}.dialog`;
+const ADJUST = `${DIALOG}.adjustments`;
 
 // S22: the same five choices on every network.
 type RatioChoice = "1:1" | "4:5" | "1.91:1" | "original" | "free";
@@ -42,6 +57,10 @@ const FREE_RANGE: Record<SocialNetwork, { min: number; max: number }> = {
   linkedin: { min: 0.5, max: 2.5 },
   facebook: { min: 0.5, max: 2.5 },
 };
+
+/** Longest side of the perspective-corrected copy shown in the cropper. */
+const PREVIEW_MAX_SIDE = 1600;
+const GEOMETRY_KEYS: AdjustmentKey[] = ["rotation", "vertical"];
 
 type ErrorKey = "load" | "render" | "save" | "remove";
 type Action = "apply" | "revert";
@@ -70,9 +89,24 @@ interface Editor {
   area: Area | null;
   /** Applied crop to restore when the editor opens on an image that already has a variant. */
   initialArea: Area | undefined;
+  /** Tone, straighten and vertical correction (image-adjustments S2). */
+  adjustments: ImageAdjustments;
   /** What was last applied (or the initial state): edits are measured against it. */
-  baseline: { choice: RatioChoice; freeRatio: number; area: Area | null };
+  baseline: { choice: RatioChoice; freeRatio: number; area: Area | null; adjustments: ImageAdjustments };
 }
+
+/** Perspective-corrected copy of the selected image shown in the cropper (vertical != 0). */
+interface PreviewSource {
+  url: string;
+  vertical: number;
+  /** Size of the copy relative to the original natural size. */
+  scale: number;
+}
+
+const scaleArea = (area: Area, factor: number): Area =>
+  factor === 1
+    ? area
+    : { x: area.x * factor, y: area.y * factor, width: area.width * factor, height: area.height * factor };
 
 let editorSeq = 0;
 
@@ -113,6 +147,7 @@ function initialEditor(
   let freeRatio = clampRatio(natural, range.min, range.max);
   let choice: RatioChoice;
   const stored = useVariant ? (row?.variant?.crop ?? null) : null;
+  const adjustments = (useVariant ? normalizeAdjustments(row?.variant?.adjustments) : null) ?? {};
   if (stored) {
     const storedRatio = stored.width / stored.height;
     if (stored.aspect !== "original") {
@@ -145,7 +180,8 @@ function initialEditor(
     zoom: 1,
     area: null,
     initialArea: restore,
-    baseline: { choice, freeRatio, area: restore ?? null },
+    adjustments,
+    baseline: { choice, freeRatio, area: restore ?? null, adjustments },
   };
 }
 
@@ -246,6 +282,62 @@ const RatioPicker: React.FC<RatioPickerProps> = ({
   );
 };
 
+interface AdjustmentSliderProps {
+  id: AdjustmentKey;
+  label: string;
+  value: number;
+  disabled: boolean;
+  locale: string;
+  resetLabel: string;
+  onChange: (value: number) => void;
+}
+
+/** One adjustment: label, signed value and a range; double click (or Enter on the value) resets it. */
+const AdjustmentSlider: React.FC<AdjustmentSliderProps> = ({
+  id,
+  label,
+  value,
+  disabled,
+  locale,
+  resetLabel,
+  onChange,
+}) => {
+  const range = ADJUSTMENT_RANGES[id];
+  const formatted = new Intl.NumberFormat(locale, {
+    maximumFractionDigits: id === "rotation" ? 1 : 0,
+    signDisplay: "exceptZero",
+  }).format(value);
+  return (
+    <label className="block space-y-1 text-xs">
+      <span className="flex items-center justify-between gap-2">
+        <span className="font-medium">{label}</span>
+        <button
+          type="button"
+          disabled={disabled || value === 0}
+          aria-label={resetLabel}
+          title={resetLabel}
+          onClick={() => onChange(0)}
+          className="rounded-full px-2 tabular-nums text-[#010000]/75 hover:bg-[#010000]/10 disabled:hover:bg-transparent"
+        >
+          {id === "rotation" ? `${formatted}°` : formatted}
+        </button>
+      </span>
+      <input
+        type="range"
+        min={range.min}
+        max={range.max}
+        step={range.step}
+        value={value}
+        disabled={disabled}
+        aria-label={label}
+        onChange={(event) => onChange(Number(event.target.value))}
+        onDoubleClick={() => onChange(0)}
+        className="w-full accent-[#010000]"
+      />
+    </label>
+  );
+};
+
 export const ImageAdjustDialog: React.FC<ImageAdjustDialogProps> = ({
   network,
   previewId,
@@ -273,6 +365,9 @@ export const ImageAdjustDialog: React.FC<ImageAdjustDialogProps> = ({
   const [errors, setErrors] = useState<Record<string, { action: Action; key: ErrorKey }>>({});
   const [announcement, setAnnouncement] = useState("");
   const [pending, setPending] = useState<{ run: () => void; cancel?: () => void } | null>(null);
+  const [preview, setPreview] = useState<(PreviewSource & { source: string }) | null>(null);
+  const [previewFailed, setPreviewFailed] = useState<string | null>(null);
+  const filterId = `adjust-tone-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const bannerRef = useRef<HTMLDivElement | null>(null);
@@ -284,6 +379,18 @@ export const ImageAdjustDialog: React.FC<ImageAdjustDialogProps> = ({
   const range = FREE_RANGE[network];
   const working = busy !== null;
   const corsBlocked = !!active && !active.source?.corsOk;
+  const rotation = adjustmentValue(editor.adjustments, "rotation");
+  const vertical = adjustmentValue(editor.adjustments, "vertical");
+  const tone = hasTone(editor.adjustments);
+  const anyAdjustment = normalizeAdjustments(editor.adjustments) !== null;
+  // The cropper shows the original, or the perspective-corrected copy once it is ready for this value.
+  const previewKey = active ? `${active.url}|${vertical}` : "";
+  const previewReady =
+    vertical !== 0 && preview && preview.source === active?.url && preview.vertical === vertical
+      ? preview
+      : null;
+  const cropperImage = vertical === 0 ? (active?.url ?? null) : (previewReady?.url ?? null);
+  const cropperScale = previewReady?.scale ?? 1;
 
   // Unapplied edits of the selected image: ratio, crop or zoom moved since the last apply.
   const dirty =
@@ -292,7 +399,38 @@ export const ImageAdjustDialog: React.FC<ImageAdjustDialogProps> = ({
       (editor.choice !== editor.baseline.choice ||
         (editor.choice === "free" &&
           Math.abs(editor.freeRatio - editor.baseline.freeRatio) > 0.005))) ||
-      areaDiffers(editor.area, editor.baseline.area));
+      areaDiffers(editor.area, editor.baseline.area) ||
+      !sameAdjustments(editor.adjustments, editor.baseline.adjustments));
+
+  // Perspective-corrected copy for the cropper, rebuilt (debounced) when the image or the value changes.
+  const activeUrl = active?.url;
+  useEffect(() => {
+    if (!activeUrl || vertical === 0 || corsBlocked) return;
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const image = await loadCorsImage(activeUrl);
+        const { canvas, scale } = correctedCanvas(image, vertical, PREVIEW_MAX_SIDE);
+        const blob = await new Promise<Blob>((resolve, reject) =>
+          canvas.toBlob((result) => (result ? resolve(result) : reject(new Error("encode"))), "image/jpeg", 0.9),
+        );
+        if (cancelled) return;
+        setPreview({ source: activeUrl, vertical, scale, url: URL.createObjectURL(blob) });
+      } catch {
+        if (!cancelled) setPreviewFailed(`${activeUrl}|${vertical}`);
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [activeUrl, vertical, corsBlocked]);
+
+  // Each replaced (or the last) corrected copy releases its object URL.
+  useEffect(() => {
+    if (!preview) return;
+    return () => URL.revokeObjectURL(preview.url);
+  }, [preview]);
 
   useEffect(() => {
     if (pending) bannerRef.current?.querySelector("button")?.focus();
@@ -342,6 +480,23 @@ export const ImageAdjustDialog: React.FC<ImageAdjustDialogProps> = ({
 
   const patchEditor = (patch: Partial<Editor>) => setEditor((previous) => ({ ...previous, ...patch }));
 
+  /** A new vertical value changes the geometry: the framing starts again (centred, zoom 1). */
+  const geometryReset = { crop: { x: 0, y: 0 }, zoom: 1, area: null, initialArea: undefined };
+
+  const setAdjustment = (key: AdjustmentKey, value: number) =>
+    setEditor((previous) => ({
+      ...previous,
+      adjustments: { ...previous.adjustments, [key]: value },
+      ...(key === "vertical" ? geometryReset : {}),
+    }));
+
+  const resetAdjustments = () =>
+    setEditor((previous) => ({
+      ...previous,
+      adjustments: {},
+      ...(adjustmentValue(previous.adjustments, "vertical") !== 0 ? geometryReset : {}),
+    }));
+
   const chooseRatio = (choice: RatioChoice) => {
     if (choice === editor.choice) return;
     editorSeq += 1;
@@ -374,19 +529,24 @@ export const ImageAdjustDialog: React.FC<ImageAdjustDialogProps> = ({
   const apply = async () => {
     if (!active || working) return;
     const row = active;
-    const { choice, freeRatio, area } = editor;
+    const { choice, freeRatio, area, adjustments } = editor;
     setBusy({ url: row.url, kind: "apply" });
     clearError(row.url);
     try {
       const image = await loadCorsImage(row.url).catch(() => {
         throw new Error("load");
       });
-      // An area reported for another ratio is ignored: start from the centred crop.
+      // An area reported for another ratio is ignored: start from the centred crop (of the rotated box).
+      const box = rotatedSize(
+        image.naturalWidth,
+        image.naturalHeight,
+        adjustmentValue(adjustments, "rotation"),
+      );
       const usable =
         area && Math.abs(area.width / area.height - aspect) < 0.02
           ? area
-          : centeredCrop(image.naturalWidth, image.naturalHeight, aspect);
-      const rendered = await renderVariant(image, network, usable, aspect).catch(() => {
+          : centeredCrop(Math.round(box.width), Math.round(box.height), aspect);
+      const rendered = await renderVariant(image, network, usable, aspect, adjustments).catch(() => {
         throw new Error("render");
       });
       const saved = await savePublicationMediaVariant({
@@ -397,7 +557,7 @@ export const ImageAdjustDialog: React.FC<ImageAdjustDialogProps> = ({
         ...rendered,
       });
       onSaved(saved);
-      setEditor((previous) => ({ ...previous, baseline: { choice, freeRatio, area } }));
+      setEditor((previous) => ({ ...previous, baseline: { choice, freeRatio, area, adjustments } }));
       setAnnouncement(t(`${DIALOG}.appliedMessage`, { index: row.index + 1 }));
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
@@ -658,26 +818,45 @@ export const ImageAdjustDialog: React.FC<ImageAdjustDialogProps> = ({
                       />
                     )}
 
+                    <svg aria-hidden="true" width="0" height="0" className="absolute">
+                      <filter id={filterId} colorInterpolationFilters="sRGB">
+                        <feColorMatrix type="matrix" values={svgMatrixValues(colorMatrix(editor.adjustments))} />
+                      </filter>
+                    </svg>
                     <div className="relative h-72 overflow-hidden rounded-2xl bg-[#010000] sm:h-80">
-                      <Cropper
-                        key={`${active.url}|${editor.key}`}
-                        image={active.url}
-                        crop={editor.crop}
-                        zoom={editor.zoom}
-                        aspect={aspect}
-                        initialCroppedAreaPixels={editor.initialArea}
-                        onCropChange={(crop) => patchEditor({ crop })}
-                        onZoomChange={(zoom) => patchEditor({ zoom })}
-                        onCropAreaChange={(_percent, pixels) =>
-                          setEditor((previous) => ({
-                            ...previous,
-                            area: pixels,
-                            baseline: previous.baseline.area
-                              ? previous.baseline
-                              : { ...previous.baseline, area: pixels },
-                          }))
-                        }
-                      />
+                      {cropperImage ? (
+                        <Cropper
+                          key={`${cropperImage}|${editor.key}`}
+                          image={cropperImage}
+                          crop={editor.crop}
+                          zoom={editor.zoom}
+                          rotation={rotation}
+                          aspect={aspect}
+                          // The editor keeps areas in pixels of the original; the corrected copy is smaller.
+                          initialCroppedAreaPixels={
+                            editor.initialArea ? scaleArea(editor.initialArea, cropperScale) : undefined
+                          }
+                          style={{ mediaStyle: tone ? { filter: `url(#${filterId})` } : undefined }}
+                          onCropChange={(crop) => patchEditor({ crop })}
+                          onZoomChange={(zoom) => patchEditor({ zoom })}
+                          onCropAreaChange={(_percent, pixels) => {
+                            const area = scaleArea(pixels, 1 / cropperScale);
+                            setEditor((previous) => ({
+                              ...previous,
+                              area,
+                              baseline: previous.baseline.area
+                                ? previous.baseline
+                                : { ...previous.baseline, area },
+                            }));
+                          }}
+                        />
+                      ) : (
+                        <p role="status" className="flex h-full items-center justify-center p-4 text-center text-xs text-[#d8e4d6]">
+                          {previewFailed === previewKey
+                            ? t(`${DIALOG}.errors.load`)
+                            : t(`${ADJUST}.preparing`)}
+                        </p>
+                      )}
                     </div>
 
                     <label className="block space-y-1 text-xs">
@@ -693,6 +872,57 @@ export const ImageAdjustDialog: React.FC<ImageAdjustDialogProps> = ({
                         className="w-full accent-[#010000]"
                       />
                     </label>
+
+                    <section
+                      aria-labelledby="adjust-image-heading"
+                      className="space-y-3 rounded-2xl bg-white/40 p-4"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <h5 id="adjust-image-heading" className="text-sm font-medium">
+                          {t(`${ADJUST}.title`)}
+                        </h5>
+                        <button
+                          type="button"
+                          disabled={working || !anyAdjustment}
+                          onClick={resetAdjustments}
+                          className="text-xs underline disabled:cursor-not-allowed disabled:no-underline disabled:opacity-40"
+                        >
+                          {t(`${ADJUST}.reset`)}
+                        </button>
+                      </div>
+                      <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+                        {[
+                          { legend: "tone", keys: TONE_KEYS },
+                          { legend: "geometry", keys: GEOMETRY_KEYS },
+                        ].map((group) => (
+                          <fieldset key={group.legend} className="space-y-3" disabled={working || corsBlocked}>
+                            <legend className="mb-1 text-xs font-medium tracking-wide text-[#010000]/65 uppercase">
+                              {t(`${ADJUST}.${group.legend}`)}
+                            </legend>
+                            {group.keys.map((key) => {
+                              const label = t(`${ADJUST}.${key}`);
+                              return (
+                                <AdjustmentSlider
+                                  key={key}
+                                  id={key}
+                                  label={label}
+                                  value={adjustmentValue(editor.adjustments, key)}
+                                  disabled={working || corsBlocked}
+                                  locale={locale}
+                                  resetLabel={t(`${ADJUST}.resetOne`, { label })}
+                                  onChange={(value) => setAdjustment(key, value)}
+                                />
+                              );
+                            })}
+                            {group.legend === "geometry" && (
+                              <p className="text-xs leading-snug text-[#010000]/65">
+                                {t(`${ADJUST}.verticalHint`)}
+                              </p>
+                            )}
+                          </fieldset>
+                        ))}
+                      </div>
+                    </section>
 
                     {corsBlocked && (
                       <p role="alert" className="text-xs text-amber-800">
