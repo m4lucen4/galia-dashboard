@@ -15,6 +15,10 @@ export const INSTAGRAM_MAX_MENTIONS = 20;
 // LinkedIn Posts API commentary limit.
 export const LINKEDIN_COMMENTARY_MAX = 3000;
 
+// Facebook Page post message limit (Graph API: 63,206 characters). Facebook has no hashtag or mention cap and
+// no escaping: the message is the normalised text.
+export const FACEBOOK_MESSAGE_MAX = 63_206;
+
 export type TextIssueCode = "too_long" | "too_many_hashtags" | "too_many_mentions";
 
 export interface TextIssue {
@@ -96,6 +100,11 @@ export function instagramCaption(text: string | null | undefined): string {
   return normalizeText(text);
 }
 
+/** Facebook Page message / video description: plain text, only normalised (no escaping exists on that API). */
+export function facebookMessage(text: string | null | undefined): string {
+  return normalizeText(text);
+}
+
 function characterCount(text: string): number {
   return Array.from(text).length;
 }
@@ -138,6 +147,14 @@ export function validateLinkedinCommentary(text: string | null | undefined): Tex
   const length = characterCount(normalizeText(text));
   return length > LINKEDIN_COMMENTARY_MAX
     ? [{ code: "too_long", limit: LINKEDIN_COMMENTARY_MAX, actual: length }]
+    : [];
+}
+
+/** Facebook message issues: only the length is limited. */
+export function validateFacebookMessage(text: string | null | undefined): TextIssue[] {
+  const length = characterCount(facebookMessage(text));
+  return length > FACEBOOK_MESSAGE_MAX
+    ? [{ code: "too_long", limit: FACEBOOK_MESSAGE_MAX, actual: length }]
     : [];
 }
 

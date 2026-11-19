@@ -13,6 +13,7 @@ import { workerAuthorized } from "../_shared/publication-generation-store.ts";
 import { corsHeaders, jsonResponse, logSocialError, SocialError, socialFailure } from "../_shared/social-errors.ts";
 import { type Fetcher, socialFetch } from "../_shared/social-http.ts";
 import { isProjectVideoPublicUrl, isSupabasePublicStorageUrl } from "../_shared/social-publish-errors.ts";
+import { publishFacebook } from "../_shared/social-publish-facebook.ts";
 import { publishInstagram } from "../_shared/social-publish-instagram.ts";
 import { publishLinkedin } from "../_shared/social-publish-linkedin.ts";
 import { type NoticeSendResult, sendPublicationNotice } from "../_shared/social-publication-notice.ts";
@@ -340,7 +341,7 @@ async function processTarget(run: Run, target: ClaimedTarget): Promise<Settled> 
 export function createHandler(env: Environment, fetcher: Fetcher = fetch, options: WorkerOptions = {}) {
   const clock = options.clock ?? Date.now;
   const sleep = options.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
-  const publishers = options.publishers ?? { instagram: publishInstagram, linkedin: publishLinkedin };
+  const publishers = options.publishers ?? { instagram: publishInstagram, linkedin: publishLinkedin, facebook: publishFacebook };
   const sendNotice = options.sendNotice ?? ((notice: TargetNotice) => sendPublicationNotice(env, fetcher, notice));
 
   return async (request: Request): Promise<Response> => {

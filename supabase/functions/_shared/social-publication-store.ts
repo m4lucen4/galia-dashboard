@@ -40,12 +40,15 @@ export type CredentialsResolution =
   | { ok: false; result: PublishResult };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
-const NETWORKS: readonly PublishNetwork[] = ["instagram", "linkedin"];
+const NETWORKS: readonly PublishNetwork[] = ["instagram", "linkedin", "facebook"];
 const FORMATS_BY_NETWORK: Record<PublishNetwork, readonly PublishFormat[]> = {
   instagram: ["image", "reel", "story_image", "story_video", "carousel_video"],
   linkedin: ["image", "video"],
+  facebook: ["image", "video"],
 };
-const ACCOUNT_KINDS: readonly PublishAccountKind[] = ["instagram_business", "linkedin_person", "linkedin_organization"];
+const ACCOUNT_KINDS: readonly PublishAccountKind[] = [
+  "instagram_business", "linkedin_person", "linkedin_organization", "facebook_page",
+];
 const FINISH_STATUSES = ["published", "pending", "needs_action", "failed"] as const;
 
 function parseTarget(value: unknown): ClaimedTarget {
@@ -243,7 +246,8 @@ export function createPublicationStore(env: Environment, fetcher: Fetcher = fetc
      * as is (the user reconnects, then retries):
      *   not_connected        no connection, disconnected, or no usable credential stored
      *   connection_expired   expired, revoked or errored connection
-     *   page_not_authorized  Instagram: no page token for the selected business account
+     *   page_not_authorized  Instagram: no page token for the selected business account; Facebook: no page token
+     *                        for the selected Page
      */
     async credentials(target: PublishTarget): Promise<CredentialsResolution> {
       const connection = await social.forUser(target.ownerId, target.network);
@@ -265,6 +269,13 @@ export function createPublicationStore(env: Environment, fetcher: Fetcher = fetc
         return page?.token
           ? { ok: true, credentials: { accessToken: page.token } }
           : { ok: false, result: failed("page_not_authorized", "action_required", { network: "instagram" }) };
+      }
+      if (target.network === "facebook") {
+        // The Page token of the facebook connection (externalId = Facebook Page id).
+        const page = stored.find((c) => c.kind === "page_access" && c.externalId === target.accountExternalId);
+        return page?.token
+          ? { ok: true, credentials: { accessToken: page.token } }
+          : { ok: false, result: failed("page_not_authorized", "action_required", { network: "facebook" }) };
       }
       const member = stored.find((c) => c.kind === "user_access");
       return member?.token

@@ -1,4 +1,4 @@
-// Shared pieces of the Instagram and LinkedIn publishers (S1, S4, S11, S21):
+// Shared pieces of the Instagram, LinkedIn and Facebook publishers (S1, S4, S11, S21):
 //  - provider replies classified into PublishResult failures (Graph API and LinkedIn REST)
 //  - the validation that runs before any network call (images and text rules)
 //  - small helpers (fingerprint, safe provider call, outcome_unknown)
@@ -9,7 +9,7 @@
 // are ever copied. Provider message text, URLs, tokens and publication text are never stored.
 
 import { failed, type PublishImage, type PublishNetwork, type PublishResult } from "./social-publisher.ts";
-import { evaluateCarousel, type ImageIssue, INSTAGRAM_MEDIA, LINKEDIN_MEDIA } from "./social-media-rules.ts";
+import { evaluateCarousel, FACEBOOK_MEDIA, type ImageIssue, INSTAGRAM_MEDIA, LINKEDIN_MEDIA } from "./social-media-rules.ts";
 import type { TextIssue } from "./social-text.ts";
 
 export interface ProviderReply {
@@ -202,7 +202,7 @@ const ACCOUNT_RESTRICTED_MESSAGE =
   /\bPPA\b|publishing authorization|two[- ]factor|\b2FA\b|temporarily blocked|account.{0,24}(restricted|blocked|suspended|disabled)|restricted from/iu;
 
 /**
- * Graph API (Instagram) error -> PublishResult.
+ * Graph API (Instagram and Facebook Pages) error -> PublishResult.
  *  190 (any subcode)               token_invalid        action_required
  *  4, 17, 32, 613, 9 or HTTP 429   rate_limited         transient (header hint, else 900 s)
  *  2207042 (daily publish limit)   rate_limited         transient
@@ -343,7 +343,8 @@ function compactIssues(issues: Array<ImageIssue | TextIssue>): Array<Record<stri
  */
 export function validateImages(network: PublishNetwork, images: PublishImage[]): ValidationFailure | null {
   if (images.length === 0) return { code: "no_images", diagnostics: { network } };
-  const max = network === "instagram" ? INSTAGRAM_MEDIA.carouselMax : LINKEDIN_MEDIA.multiImageMax;
+  const max = network === "instagram" ? INSTAGRAM_MEDIA.carouselMax
+    : network === "facebook" ? FACEBOOK_MEDIA.multiImageMax : LINKEDIN_MEDIA.multiImageMax;
   if (images.length > max) {
     return { code: "too_many_images", diagnostics: { network, actual: images.length, limit: max } };
   }
@@ -372,7 +373,10 @@ export function validateImages(network: PublishNetwork, images: PublishImage[]):
   };
 }
 
-/** Text issues -> specific code: caption_too_long / commentary_too_long, too_many_hashtags, too_many_mentions. */
+/**
+ * Text issues -> specific code: caption_too_long (Instagram) / commentary_too_long (LinkedIn and Facebook),
+ * too_many_hashtags, too_many_mentions.
+ */
 export function textValidationFailure(network: PublishNetwork, issues: TextIssue[]): ValidationFailure | null {
   const first = issues[0];
   if (!first) return null;
