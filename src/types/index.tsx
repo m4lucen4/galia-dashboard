@@ -176,6 +176,12 @@ export type PublicationTarget = {
    * carries it (VITE_SOCIAL_VIDEO on); absent otherwise.
    */
   format?: PublicationFormat;
+  /**
+   * Original photo (image_data url) chosen for a `story_image` target (public.publication_targets.
+   * story_image_url). Only known with VITE_SOCIAL_VIDEO on and when the read or the function answer
+   * carries it; null/absent otherwise.
+   */
+  storyImageUrl?: string | null;
 };
 
 export type PublishVersions = {

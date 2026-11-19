@@ -41,6 +41,8 @@ const errorCodes = new Set([
   // sends no format, so they only appear with VITE_SOCIAL_VIDEO on.
   "video_required",
   "video_limits",
+  // Historia (imagen): storyImageUrl is not among the selected photos (422, T7).
+  "story_image_invalid",
 ]);
 
 export type PublicationPublishingErrorCode =
@@ -59,6 +61,7 @@ export type PublicationPublishingErrorCode =
   | "unauthorized"
   | "video_required"
   | "video_limits"
+  | "story_image_invalid"
   // Client-side only: the account selected in the form cannot be turned into a target.
   | "account_missing"
   // Client-side only: the outcome is unknown (network failure, timeout, gateway error).
@@ -76,6 +79,11 @@ export type PublicationTargetRequest = {
   accountName: string;
   /** Only with VITE_SOCIAL_VIDEO on; absent otherwise (the server then publishes `image`). */
   format?: PublicationFormat;
+  /**
+   * Only with VITE_SOCIAL_VIDEO on and only for the Instagram format `story_image`: the original
+   * photo (image_data url) the story publishes. The server rejects it for any other format.
+   */
+  storyImageUrl?: string;
 };
 
 const failure = (
@@ -106,6 +114,7 @@ export const newPublishRequestId = () => crypto.randomUUID();
 export function buildPublicationTargets(
   networks: SocialNetworksCheck,
   formats?: NetworkFormats,
+  storyImageUrl?: string | null,
 ): PublicationTargetRequest[] {
   const targets: PublicationTargetRequest[] = [];
   const { instagram, linkedln } = networks;
@@ -120,6 +129,7 @@ export function buildPublicationTargets(
       accountExternalId: String(page.id),
       accountName: String(page.name ?? "").slice(0, 200),
       ...(formats?.instagram ? { format: formats.instagram } : {}),
+      ...(formats?.instagram === "story_image" && storyImageUrl ? { storyImageUrl } : {}),
     });
   }
   if (linkedln) {
@@ -201,6 +211,8 @@ function parseTarget(
   }
   const errorKind = pick("errorKind", "error_kind");
   const format = row.format;
+  // Absent when the column is not read; null/string when it is (function answer: camelCase).
+  const storyImage = "storyImageUrl" in row ? row.storyImageUrl : row.story_image_url;
   return {
     id,
     previewId: preview,
@@ -221,6 +233,9 @@ function parseTarget(
     publishedAt: text(pick("publishedAt", "published_at")),
     ...(typeof format === "string" && targetFormats.has(format as PublicationFormat)
       ? { format: format as PublicationFormat }
+      : {}),
+    ...(typeof storyImage === "string" || storyImage === null
+      ? { storyImageUrl: storyImage }
       : {}),
   };
 }
@@ -378,6 +393,14 @@ const TARGET_COLUMNS =
 // the column the read falls back to TARGET_COLUMNS for the rest of the session. With the switch off
 // the query is exactly TARGET_COLUMNS.
 let formatReadable = SOCIAL_VIDEO_ENABLED;
+// Same for `story_image_url` (T7, only read with the switch on). It is dropped first, so a database
+// that grants `format` but not yet `story_image_url` keeps the format.
+let storyImageReadable = SOCIAL_VIDEO_ENABLED;
+
+const targetColumns = () =>
+  TARGET_COLUMNS +
+  (formatReadable ? ", format" : "") +
+  (storyImageReadable ? ", story_image_url" : "");
 
 /** Current targets (archived_at is null) of the given publications. One query for a normal page. */
 export async function listPublicationTargets(
@@ -393,10 +416,11 @@ export async function listPublicationTargets(
         .select(columns)
         .in("preview_id", chunk)
         .is("archived_at", null);
-    let { data, error } = await read(formatReadable ? `${TARGET_COLUMNS}, format` : TARGET_COLUMNS);
-    if (error && formatReadable) {
-      formatReadable = false;
-      ({ data, error } = await read(TARGET_COLUMNS));
+    let { data, error } = await read(targetColumns());
+    while (error && (storyImageReadable || formatReadable)) {
+      if (storyImageReadable) storyImageReadable = false;
+      else formatReadable = false;
+      ({ data, error } = await read(targetColumns()));
     }
     if (error) throw new Error("publication_targets_read_failed");
     for (const row of (data ?? []) as unknown[]) {

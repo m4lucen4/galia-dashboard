@@ -125,6 +125,8 @@ export interface VideoMediaOptions {
   /** Format that will be published per network. */
   formats: NetworkFormats;
   video: PublicationVideoState;
+  /** Photo "Historia (imagen)" publishes (original url); null/absent: the first selected photo. */
+  storyImageUrl?: string | null;
 }
 
 export interface NetworkMedia {
@@ -179,6 +181,7 @@ export function useMediaChecks(
 ) {
   const formats = videoOptions?.formats;
   const video = videoOptions?.video;
+  const storyImageUrl = videoOptions?.storyImageUrl ?? null;
   const enabled = SOCIAL_MEDIA_VARIANTS_ENABLED;
   const previewId = project ? String(project.id) : null;
   const images = useMemo(() => publishedImages(project), [project]);
@@ -292,9 +295,13 @@ export function useMediaChecks(
           blocker: active[network] ? videoBlockerFor(format, video) : null,
         };
       }
-      // Historia (imagen): the first original image, no feed ratio rules, no variant, no conversion.
+      // Historia (imagen): the chosen original image (else the first), no feed ratio rules, no
+      // variant, no conversion. Its row keeps the position of the photo in the publication.
       const story = format === "story_image";
-      const rows: MediaRow[] = (story ? images.slice(0, 1) : images).map((image, index) => {
+      const storyIndex = story ? Math.max(0, urls.indexOf(storyImageUrl ?? "")) : 0;
+      const storyImages = story ? images.slice(storyIndex, storyIndex + 1) : images;
+      const rows: MediaRow[] = storyImages.map((image, rowIndex) => {
+        const index = story ? storyIndex : rowIndex;
         const measured = measures[image.url];
         const source = measured?.status === "ok" ? measured.measurement : null;
         const variant =
@@ -389,6 +396,8 @@ export function useMediaChecks(
     chosenRatio,
     formats,
     video,
+    urls,
+    storyImageUrl,
   ]);
 
   // Automatic conversion (S19): the ratio fits but format / weight / pixels / width do not.

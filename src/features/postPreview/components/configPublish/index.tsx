@@ -16,6 +16,7 @@ import { LinkedlnSelectPage } from "./LinkedlnSelectPage";
 import { InstagramSelectPage } from "./InstagramSelectPage";
 import { NetworkMediaPanel } from "./NetworkMediaPanel";
 import { NetworkFormatSelector } from "./NetworkFormatSelector";
+import { StoryMediaPicker } from "./StoryMediaPicker";
 import { ImageAdjustDialog } from "./ImageAdjustDialog";
 import { MEDIA_NETWORKS, useMediaChecks, type MediaBlocker } from "./useMediaChecks";
 import type { SocialNetwork } from "../../helpers/socialMediaRules";
@@ -27,6 +28,8 @@ import {
   type NetworkFormats,
 } from "../../helpers/socialVideo";
 import { BLOCKED_TEXTS, NETWORK_NAMES } from "../../helpers/socialVideoTexts";
+import { resolveStoryImage } from "../../helpers/storyImage";
+import { publishedImages } from "../../helpers/publicationImages";
 import { usePublicationVideo } from "../../hooks/usePublicationVideo";
 import {
   SOCIAL_PUBLISHING_EDGE_ENABLED,
@@ -56,6 +59,13 @@ interface ConfigPublishProps {
    * choice, else the default), reported whenever it changes.
    */
   onFormatsChange?: (formats: NetworkFormats) => void;
+  /**
+   * Only with VITE_SOCIAL_VIDEO on: the original photo "Historia (imagen)" publishes (the user's
+   * choice, else the one of the scheduled story, else the first selected photo); null without photos.
+   */
+  onStoryImageChange?: (url: string | null) => void;
+  /** Only with VITE_SOCIAL_VIDEO on: photo stored in the publication's scheduled story target. */
+  scheduledStoryImageUrl?: string | null;
 }
 
 // The target never carries a token: a DB trigger fills it server-side for n8n.
@@ -77,6 +87,8 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   onPublishNowChange,
   onMediaBlockChange,
   onFormatsChange,
+  onStoryImageChange,
+  scheduledStoryImageUrl = null,
 }) => {
   const { t } = useTranslation();
   const { linkedin, isFetchingLinkedinPages, isCheckingConnection: isCheckingLinkedin } =
@@ -305,9 +317,21 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   useEffect(() => {
     if (formats) onFormatsChange?.(formats);
   }, [formats, onFormatsChange]);
+  // Historia (imagen): the photo of the story (S13). The choice never touches the carousel order.
+  const photoUrls = useMemo(
+    () => (SOCIAL_VIDEO_ENABLED ? publishedImages(project).map((image) => image.url) : []),
+    [project],
+  );
+  const [chosenStoryImage, setChosenStoryImage] = useState<string | null>(null);
+  const storyImageUrl = SOCIAL_VIDEO_ENABLED
+    ? resolveStoryImage(photoUrls, chosenStoryImage, scheduledStoryImageUrl)
+    : null;
+  useEffect(() => {
+    if (SOCIAL_VIDEO_ENABLED) onStoryImageChange?.(storyImageUrl);
+  }, [storyImageUrl, onStoryImageChange]);
   const videoOptions = useMemo(
-    () => (formats ? { formats, video } : undefined),
-    [formats, video],
+    () => (formats ? { formats, video, storyImageUrl } : undefined),
+    [formats, video, storyImageUrl],
   );
   const media = useMediaChecks(project, mediaActive, videoOptions);
   const [adjusting, setAdjusting] = useState<SocialNetwork | null>(null);
@@ -358,6 +382,22 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
         onChange={(format) => setChosenFormats((previous) => ({ ...previous, [network]: format }))}
       />
     ) : null;
+
+  const renderStoryMedia = () => {
+    const format = formats?.instagram;
+    if (!SOCIAL_VIDEO_ENABLED || !project || (format !== "story_image" && format !== "story_video")) {
+      return null;
+    }
+    return (
+      <StoryMediaPicker
+        format={format}
+        photoUrls={photoUrls}
+        selectedUrl={storyImageUrl}
+        onSelect={setChosenStoryImage}
+        video={video}
+      />
+    );
+  };
 
   const renderMediaPanel = (network: SocialNetwork) => (
     <NetworkMediaPanel
@@ -432,6 +472,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
             />
           )}
           {mediaActive.instagram && renderFormatSelector("instagram")}
+          {mediaActive.instagram && renderStoryMedia()}
           {project && mediaActive.instagram && renderMediaPanel("instagram")}
           <CheckSocialNetwork
             id="linkedln"

@@ -1,5 +1,6 @@
 import type { PreviewProjectDataProps, PublicationFormat, UserDataProps } from "@/types";
 import { publishedImages } from "../helpers/publicationImages";
+import { resolveStoryImage } from "../helpers/storyImage";
 import type { PublicationVideoState } from "../helpers/socialVideo";
 import { PREVIEW_TEXTS } from "../helpers/socialVideoTexts";
 import { VideoPreviewFrame } from "./VideoPreviewFrame";
@@ -10,12 +11,14 @@ interface InstagramVerticalPreviewProps {
   user: UserDataProps;
   video: PublicationVideoState;
   text: string;
+  /** Photo stored in the scheduled "Historia (imagen)" target, when known. */
+  scheduledStoryImageUrl?: string | null;
 }
 
 /**
  * Instagram Reel and Stories in a 9:16 frame. Reels show the caption; Stories show none. A video
- * format plays on demand; "Historia (imagen)" shows the original first image, uncropped by the feed
- * ratio rules.
+ * format plays on demand; "Historia (imagen)" shows the photo that will be published (the one of the
+ * scheduled target, else the first selected photo), original and uncropped by the feed ratio rules.
  */
 export function InstagramVerticalPreview({
   format,
@@ -23,17 +26,20 @@ export function InstagramVerticalPreview({
   user,
   video,
   text,
+  scheduledStoryImageUrl = null,
 }: InstagramVerticalPreviewProps) {
   const isStory = format !== "reel";
-  const firstImage = publishedImages(project)[0]?.url ?? null;
+  const photoUrls = publishedImages(project).map((image) => image.url);
+  const storyImage = resolveStoryImage(photoUrls, null, scheduledStoryImageUrl);
+  const storyImagePosition = storyImage ? photoUrls.indexOf(storyImage) + 1 : 0;
 
   const frame = () => {
     if (format === "story_image") {
-      return firstImage ? (
+      return storyImage ? (
         <div className="relative w-full overflow-hidden bg-[#010000]" style={{ aspectRatio: "9 / 16" }}>
           <img
-            src={firstImage}
-            alt={`Imagen 1 de ${project.title}`}
+            src={storyImage}
+            alt={PREVIEW_TEXTS.storyImageAlt(storyImagePosition, project.title)}
             className="h-full w-full object-cover"
           />
         </div>
