@@ -652,7 +652,7 @@ export const ImageAdjustDialog: React.FC<ImageAdjustDialogProps> = ({
       <DialogBackdrop className="fixed inset-0 bg-[#010000]/55" />
       <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
-          <DialogPanel className="relative w-full max-w-5xl rounded-[28px] border border-[#010000]/15 bg-[#d8e4d6] p-6 shadow-xl sm:p-8">
+          <DialogPanel className="relative w-full max-w-7xl rounded-[28px] border border-[#010000]/15 bg-[#d8e4d6] p-6 shadow-xl sm:p-8">
             <DialogTitle as="h3" className="text-2xl leading-tight font-medium tracking-[-0.03em]">
               {t(`${DIALOG}.title`, { network: networkName })}
             </DialogTitle>
@@ -823,113 +823,118 @@ export const ImageAdjustDialog: React.FC<ImageAdjustDialogProps> = ({
                       />
                     )}
 
-                    <svg aria-hidden="true" width="0" height="0" className="absolute">
-                      <filter id={filterId} colorInterpolationFilters="sRGB">
-                        <feColorMatrix type="matrix" values={svgMatrixValues(colorMatrix(editor.adjustments))} />
-                      </filter>
-                    </svg>
-                    <div className="relative h-72 overflow-hidden rounded-2xl bg-[#010000] sm:h-80">
-                      {cropperImage ? (
-                        <Cropper
-                          key={`${cropperImage}|${editor.key}`}
-                          image={cropperImage}
-                          crop={editor.crop}
-                          zoom={editor.zoom}
-                          rotation={rotation}
-                          aspect={aspect}
-                          // The editor keeps areas in pixels of the original; the corrected copy is smaller.
-                          initialCroppedAreaPixels={
-                            editor.initialArea ? scaleArea(editor.initialArea, cropperScale) : undefined
-                          }
-                          style={{ mediaStyle: tone ? { filter: `url(#${filterId})` } : undefined }}
-                          onCropChange={(crop) => patchEditor({ crop })}
-                          onZoomChange={(zoom) => patchEditor({ zoom })}
-                          onCropAreaChange={(_percent, pixels) => {
-                            const area = scaleArea(pixels, 1 / cropperScale);
-                            setEditor((previous) => ({
-                              ...previous,
-                              area,
-                              baseline: previous.baseline.area
-                                ? previous.baseline
-                                : { ...previous.baseline, area },
-                            }));
-                          }}
-                        />
-                      ) : (
-                        <p role="status" className="flex h-full items-center justify-center p-4 text-center text-xs text-[#d8e4d6]">
-                          {corsBlocked
-                            ? t(`${PREFIX}.corsBlocked`)
-                            : previewFailed === previewKey
-                              ? t(`${DIALOG}.errors.load`)
-                              : t(`${ADJUST}.preparing`)}
-                        </p>
-                      )}
+                    {/* Wide screens: image (cropper and zoom) and its adjustments side by side. */}
+                    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_16rem]">
+                      <div className="min-w-0 space-y-4">
+                        <svg aria-hidden="true" width="0" height="0" className="absolute">
+                          <filter id={filterId} colorInterpolationFilters="sRGB">
+                            <feColorMatrix type="matrix" values={svgMatrixValues(colorMatrix(editor.adjustments))} />
+                          </filter>
+                        </svg>
+                        <div className="relative h-72 overflow-hidden rounded-2xl bg-[#010000] sm:h-80 lg:h-[26rem]">
+                          {cropperImage ? (
+                            <Cropper
+                              key={`${cropperImage}|${editor.key}`}
+                              image={cropperImage}
+                              crop={editor.crop}
+                              zoom={editor.zoom}
+                              rotation={rotation}
+                              aspect={aspect}
+                              // The editor keeps areas in pixels of the original; the corrected copy is smaller.
+                              initialCroppedAreaPixels={
+                                editor.initialArea ? scaleArea(editor.initialArea, cropperScale) : undefined
+                              }
+                              style={{ mediaStyle: tone ? { filter: `url(#${filterId})` } : undefined }}
+                              onCropChange={(crop) => patchEditor({ crop })}
+                              onZoomChange={(zoom) => patchEditor({ zoom })}
+                              onCropAreaChange={(_percent, pixels) => {
+                                const area = scaleArea(pixels, 1 / cropperScale);
+                                setEditor((previous) => ({
+                                  ...previous,
+                                  area,
+                                  baseline: previous.baseline.area
+                                    ? previous.baseline
+                                    : { ...previous.baseline, area },
+                                }));
+                              }}
+                            />
+                          ) : (
+                            <p role="status" className="flex h-full items-center justify-center p-4 text-center text-xs text-[#d8e4d6]">
+                              {corsBlocked
+                                ? t(`${PREFIX}.corsBlocked`)
+                                : previewFailed === previewKey
+                                  ? t(`${DIALOG}.errors.load`)
+                                  : t(`${ADJUST}.preparing`)}
+                            </p>
+                          )}
+                        </div>
+
+                        <label className="block space-y-1 text-xs">
+                          <span className="font-medium">{t(`${DIALOG}.zoom`)}</span>
+                          <input
+                            type="range"
+                            min={1}
+                            max={3}
+                            step={0.01}
+                            value={editor.zoom}
+                            disabled={working}
+                            onChange={(event) => patchEditor({ zoom: Number(event.target.value) })}
+                            className="w-full accent-[#010000]"
+                          />
+                        </label>
+                      </div>
+
+                      <section
+                        aria-labelledby="adjust-image-heading"
+                        className="space-y-3 rounded-2xl bg-white/40 p-4"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <h5 id="adjust-image-heading" className="text-sm font-medium">
+                            {t(`${ADJUST}.title`)}
+                          </h5>
+                          <button
+                            type="button"
+                            disabled={working || !anyAdjustment}
+                            onClick={resetAdjustments}
+                            className="text-xs underline disabled:cursor-not-allowed disabled:no-underline disabled:opacity-40"
+                          >
+                            {t(`${ADJUST}.reset`)}
+                          </button>
+                        </div>
+                        <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-1">
+                          {[
+                            { legend: "tone", keys: TONE_KEYS },
+                            { legend: "geometry", keys: GEOMETRY_KEYS },
+                          ].map((group) => (
+                            <fieldset key={group.legend} className="space-y-3" disabled={working || corsBlocked}>
+                              <legend className="mb-1 text-xs font-medium tracking-wide text-[#010000]/65 uppercase">
+                                {t(`${ADJUST}.${group.legend}`)}
+                              </legend>
+                              {group.keys.map((key) => {
+                                const label = t(`${ADJUST}.${key}`);
+                                return (
+                                  <AdjustmentSlider
+                                    key={key}
+                                    id={key}
+                                    label={label}
+                                    value={adjustmentValue(editor.adjustments, key)}
+                                    disabled={working || corsBlocked}
+                                    locale={locale}
+                                    resetLabel={t(`${ADJUST}.resetOne`, { label })}
+                                    onChange={(value) => setAdjustment(key, value)}
+                                  />
+                                );
+                              })}
+                              {group.legend === "geometry" && (
+                                <p className="text-xs leading-snug text-[#010000]/65">
+                                  {t(`${ADJUST}.verticalHint`)}
+                                </p>
+                              )}
+                            </fieldset>
+                          ))}
+                        </div>
+                      </section>
                     </div>
-
-                    <label className="block space-y-1 text-xs">
-                      <span className="font-medium">{t(`${DIALOG}.zoom`)}</span>
-                      <input
-                        type="range"
-                        min={1}
-                        max={3}
-                        step={0.01}
-                        value={editor.zoom}
-                        disabled={working}
-                        onChange={(event) => patchEditor({ zoom: Number(event.target.value) })}
-                        className="w-full accent-[#010000]"
-                      />
-                    </label>
-
-                    <section
-                      aria-labelledby="adjust-image-heading"
-                      className="space-y-3 rounded-2xl bg-white/40 p-4"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <h5 id="adjust-image-heading" className="text-sm font-medium">
-                          {t(`${ADJUST}.title`)}
-                        </h5>
-                        <button
-                          type="button"
-                          disabled={working || !anyAdjustment}
-                          onClick={resetAdjustments}
-                          className="text-xs underline disabled:cursor-not-allowed disabled:no-underline disabled:opacity-40"
-                        >
-                          {t(`${ADJUST}.reset`)}
-                        </button>
-                      </div>
-                      <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-                        {[
-                          { legend: "tone", keys: TONE_KEYS },
-                          { legend: "geometry", keys: GEOMETRY_KEYS },
-                        ].map((group) => (
-                          <fieldset key={group.legend} className="space-y-3" disabled={working || corsBlocked}>
-                            <legend className="mb-1 text-xs font-medium tracking-wide text-[#010000]/65 uppercase">
-                              {t(`${ADJUST}.${group.legend}`)}
-                            </legend>
-                            {group.keys.map((key) => {
-                              const label = t(`${ADJUST}.${key}`);
-                              return (
-                                <AdjustmentSlider
-                                  key={key}
-                                  id={key}
-                                  label={label}
-                                  value={adjustmentValue(editor.adjustments, key)}
-                                  disabled={working || corsBlocked}
-                                  locale={locale}
-                                  resetLabel={t(`${ADJUST}.resetOne`, { label })}
-                                  onChange={(value) => setAdjustment(key, value)}
-                                />
-                              );
-                            })}
-                            {group.legend === "geometry" && (
-                              <p className="text-xs leading-snug text-[#010000]/65">
-                                {t(`${ADJUST}.verticalHint`)}
-                              </p>
-                            )}
-                          </fieldset>
-                        ))}
-                      </div>
-                    </section>
 
                     {corsBlocked && (
                       <p role="alert" className="text-xs text-amber-800">
