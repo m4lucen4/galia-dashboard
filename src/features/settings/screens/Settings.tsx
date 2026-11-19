@@ -19,6 +19,7 @@ import { LinkedInConnect } from "../components/LinkedInConnect";
 import { LinkedInPages } from "../components/LinkedInPages";
 import { InstagramConnect } from "../components/InstagramConnect";
 import { InstagramPages } from "../components/InstagramPages";
+import { FacebookPages } from "../components/FacebookPages";
 import { SubscriptionInfo } from "../components/SubscriptionInfo";
 import { WebIcon } from "../../../components/icons/WebIcon";
 import { useNavigate } from "react-router-dom";
@@ -35,6 +36,7 @@ export const Settings = () => {
     disconnectLinkedInRequest,
     fetchLinkedInPagesRequest,
     instagram,
+    facebook,
     checkInstagramRequest,
     disconnectInstagramInRequest,
     fetchInstagramPagesRequest,
@@ -45,6 +47,8 @@ export const Settings = () => {
     useState(false);
   const [showPagesSection, setShowPagesSection] = useState(false);
   const [showInstagramPagesSection, setShowInstagramPagesSection] =
+    useState(false);
+  const [showFacebookPagesSection, setShowFacebookPagesSection] =
     useState(false);
 
   // Health and pages come from social_connections; no tokens are handled here.
@@ -148,6 +152,7 @@ export const Settings = () => {
             {/* Instagram */}
             <InstagramConnect
               instagram={instagram}
+              facebook={facebook}
               checkInstagramRequest={checkInstagramRequest}
               disconnectInstagramInRequest={disconnectInstagramInRequest}
               onConnect={handleConnectInstagram}
@@ -182,6 +187,19 @@ export const Settings = () => {
               fetchRequest={fetchInstagramPagesRequest}
               showPagesSection={showInstagramPagesSection}
               onToggleSection={handleToggleInstagramPagesSection}
+              onRefresh={handleRefreshInstagramPages}
+            />
+          )}
+
+          {/* Facebook Pages Section (same Meta login and refresh as Instagram) */}
+          {instagram.isConnected && facebook.isConnected && (
+            <FacebookPages
+              pages={facebook.pages}
+              fetchRequest={fetchInstagramPagesRequest}
+              showPagesSection={showFacebookPagesSection}
+              onToggleSection={() =>
+                setShowFacebookPagesSection(!showFacebookPagesSection)
+              }
               onRefresh={handleRefreshInstagramPages}
             />
           )}

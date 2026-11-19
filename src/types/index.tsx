@@ -261,7 +261,7 @@ export type SupabaseError = {
   status?: number;
 };
 
-export type SocialConnectionNetwork = "linkedin" | "instagram";
+export type SocialConnectionNetwork = "linkedin" | "instagram" | "facebook";
 
 export type SocialConnectionStatus =
   | "connected"
@@ -280,6 +280,8 @@ export type SocialConnectionPage = {
   username?: string;
   facebookPageId?: string;
   facebookPageName?: string;
+  instagramId?: string;
+  instagramUsername?: string;
 };
 
 // Connection health read from social_connections or returned by social-connect-* functions.
@@ -291,6 +293,7 @@ export type SocialConnection = {
   accountId: string | null;
   accountName: string | null;
   pages: SocialConnectionPage[];
+  scopes: string[];
   expiresAt: string | null;
   accessExpiresAt: string | null;
   refreshExpiresAt: string | null;
@@ -343,6 +346,25 @@ export type InstagramData = {
   expiresAt?: string;
   businessPages?: InstagramBusinessPage[];
   pagesFetchedAt?: string;
+};
+
+// Facebook Page as stored in the facebook social_connections.pages (never contains tokens).
+export type FacebookPage = {
+  id: string;
+  name: string;
+  type: "PAGE";
+  instagramId?: string;
+  instagramUsername?: string;
+};
+
+export type FacebookData = {
+  isConnected: boolean;
+  status?: SocialConnectionStatus;
+  statusReason?: string | null;
+  userName?: string;
+  expiresAt?: string;
+  scopes?: string[];
+  pages?: FacebookPage[];
 };
 
 export type PromptsProps = {

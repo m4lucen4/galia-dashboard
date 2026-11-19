@@ -10,11 +10,13 @@ import {
   processInstagramCallback,
   fetchInstagramPages,
   isConnectionActive,
+  toFacebookPages,
   toInstagramPages,
   toLinkedInPages,
 } from "../actions/SocialNetworksActions";
 
 import {
+  FacebookData,
   InstagramData,
   IRequest,
   LinkedInData,
@@ -30,6 +32,8 @@ interface SocialNetworksState {
   fetchLinkedInPagesRequest: IRequest;
   selectedPublishTarget?: LinkedInPage;
   instagram: InstagramData;
+  // Facebook Pages come from the Meta login (same card/requests as Instagram).
+  facebook: FacebookData;
   checkInstagramRequest: IRequest;
   processInstagramCallbackRequest: IRequest;
   disconnectInstagramInRequest: IRequest;
@@ -73,6 +77,12 @@ const disconnectedInstagram = (): InstagramData => ({
   status: "disconnected",
 });
 
+const disconnectedFacebook = (): FacebookData => ({
+  isConnected: false,
+  status: "disconnected",
+  scopes: [],
+});
+
 // Health fields come from the connection even when it is not usable (expired/revoked/error),
 // so the UI can explain why and offer to reconnect.
 const linkedInFromConnection = (
@@ -109,6 +119,33 @@ const instagramFromConnection = (
   };
 };
 
+const facebookFromConnection = (
+  connection: SocialConnection | null
+): FacebookData => {
+  if (!connection || connection.status === "disconnected") {
+    return disconnectedFacebook();
+  }
+  return {
+    isConnected: isConnectionActive(connection),
+    status: connection.status,
+    statusReason: connection.statusReason,
+    userName: connection.accountName ?? undefined,
+    expiresAt: connection.expiresAt ?? undefined,
+    scopes: connection.scopes,
+    pages: toFacebookPages(connection),
+  };
+};
+
+// undefined = the Facebook row could not be read: keep the current state.
+const applyFacebook = (
+  state: SocialNetworksState,
+  facebook: SocialConnection | null | undefined
+) => {
+  if (facebook !== undefined) {
+    state.facebook = facebookFromConnection(facebook);
+  }
+};
+
 const initialState: SocialNetworksState = {
   linkedin: { isConnected: false },
   checkLinkedInRequest: idleRequest(),
@@ -117,6 +154,7 @@ const initialState: SocialNetworksState = {
   fetchLinkedInPagesRequest: idleRequest(),
   selectedPublishTarget: undefined,
   instagram: { isConnected: false },
+  facebook: { isConnected: false },
   checkInstagramRequest: idleRequest(),
   processInstagramCallbackRequest: idleRequest(),
   disconnectInstagramInRequest: idleRequest(),
@@ -205,9 +243,10 @@ const socialNetworksSlice = createSlice({
       .addCase(checkInstagramConnection.fulfilled, (state, action) => {
         const pagesFetchedAt = state.instagram.pagesFetchedAt;
         state.instagram = {
-          ...instagramFromConnection(action.payload),
+          ...instagramFromConnection(action.payload.connection),
           pagesFetchedAt,
         };
+        applyFacebook(state, action.payload.facebook);
         state.checkInstagramRequest = doneRequest();
       })
       .addCase(checkInstagramConnection.rejected, (state, action) => {
@@ -219,6 +258,7 @@ const socialNetworksSlice = createSlice({
       })
       .addCase(disconnectInstagram.fulfilled, (state) => {
         state.instagram = disconnectedInstagram();
+        state.facebook = disconnectedFacebook();
         state.disconnectInstagramInRequest = doneRequest(
           i18n.t("socialConnections.messages.instagramDisconnected")
         );
@@ -231,7 +271,8 @@ const socialNetworksSlice = createSlice({
         state.processInstagramCallbackRequest = pendingRequest();
       })
       .addCase(processInstagramCallback.fulfilled, (state, action) => {
-        state.instagram = instagramFromConnection(action.payload);
+        state.instagram = instagramFromConnection(action.payload.connection);
+        applyFacebook(state, action.payload.facebook);
         state.processInstagramCallbackRequest = doneRequest(
           i18n.t("socialConnections.messages.instagramConnected")
         );
@@ -245,9 +286,10 @@ const socialNetworksSlice = createSlice({
       })
       .addCase(fetchInstagramPages.fulfilled, (state, action) => {
         state.instagram = {
-          ...instagramFromConnection(action.payload),
+          ...instagramFromConnection(action.payload.connection),
           pagesFetchedAt: new Date().toISOString(),
         };
+        applyFacebook(state, action.payload.facebook);
         state.fetchInstagramPagesRequest = doneRequest(
           i18n.t("socialConnections.messages.pagesRefreshed")
         );
