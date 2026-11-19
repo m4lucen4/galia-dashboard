@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { InstagramIcon, AddIcon, CancelIcon } from "../../../components/icons";
+import { InstagramIcon, FacebookIcon, AddIcon, CancelIcon } from "../../../components/icons";
 import { truncateText } from "../../../helpers";
 import { FacebookData, InstagramData } from "../../../types";
 import { SocialConnectionStatusBadge } from "./SocialConnectionStatusBadge";
@@ -40,19 +40,27 @@ export const InstagramConnect: React.FC<InstagramConnectProps> = ({
     needsFacebookReconnect(instagram, facebook);
   const showReconnectButton =
     !checkInstagramRequest.inProgress && needsReconnect(instagram.status);
+  const facebookPageCount = facebook.isConnected ? (facebook.pages ?? []).length : 0;
 
   return (
     <div className="flex min-w-0 flex-col items-center rounded-3xl border border-[#010000]/15 p-5 text-center">
       <div className="relative">
         {/* Instagram icon and status */}
         <div
-          className="p-4 rounded-full bg-[#010000]/5"
+          className="flex items-center gap-3 p-4 rounded-full bg-[#010000]/5"
         >
           <InstagramIcon
             className={`w-8 h-8 ${
               instagram.isConnected ? "text-[#010000]" : "text-[#010000]/65"
             }`}
           />
+          {facebookEnabled && (
+            <FacebookIcon
+              className={`w-8 h-8 ${
+                facebook.isConnected ? "text-[#010000]" : "text-[#010000]/65"
+              }`}
+            />
+          )}
         </div>
         {checkInstagramRequest.inProgress ? (
           <div className="absolute -bottom-2 -right-3 bg-[#010000]/15 rounded-full p-1 w-6 h-6 flex items-center justify-center">
@@ -89,11 +97,41 @@ export const InstagramConnect: React.FC<InstagramConnectProps> = ({
           </button>
         )}
       </div>
-      <p className="mt-4 text-base font-medium">Instagram</p>
+      <p className="mt-4 text-base font-medium">
+        {facebookEnabled ? "Meta" : "Instagram"}
+      </p>
+      {facebookEnabled && (
+        <p className="text-xs text-[#010000]/60">{t("settings.metaConnectionHint")}</p>
+      )}
       {checkInstagramRequest.inProgress ? (
         <p className="text-xs text-[#010000]/60">
           {t("settings.checkingConnection")}
         </p>
+      ) : facebookEnabled ? (
+        // One Meta login, two connections: each network shows its own status (S3).
+        <dl className="mt-2 grid grid-cols-[auto_auto] items-baseline gap-x-2 gap-y-1 text-left">
+          <dt className="text-xs font-medium">Instagram</dt>
+          <dd>
+            <SocialConnectionStatusBadge
+              status={instagram.status}
+              statusReason={instagram.statusReason}
+              expiresAt={instagram.expiresAt}
+            />
+          </dd>
+          <dt className="text-xs font-medium">Facebook</dt>
+          <dd className="flex items-baseline gap-1">
+            <SocialConnectionStatusBadge
+              status={facebook.status}
+              statusReason={facebook.statusReason}
+              expiresAt={facebook.expiresAt}
+            />
+            {facebookPageCount > 0 && (
+              <span className="text-xs text-[#010000]/65">
+                · {t("settings.facebookPagesCount", { count: facebookPageCount })}
+              </span>
+            )}
+          </dd>
+        </dl>
       ) : (
         <SocialConnectionStatusBadge
           status={instagram.status}
