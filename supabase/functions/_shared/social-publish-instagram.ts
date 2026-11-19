@@ -7,6 +7,11 @@
 //               image_url of the first image, which is the photo the user chose: the payload carries only that
 //               one, and without it the target fails story_image_missing before any network call). Stories
 //               carry no caption.
+//   carousel_video (T6, S14) is a mixed carousel: the child containers of the published photos in their order
+//               plus ONE video child (media_type=VIDEO, video_url, is_carousel_item=true) inserted at the
+//               resolved payload.videoPosition (default last), then the CAROUSEL container. Children ids are
+//               checkpointed in final order; the video child is polled across runs (processing, not an
+//               attempt) before the CAROUSEL container is created; the CAROUSEL container is polled the same way.
 //   processing  poll status_code every 3 s (5 s for video) until FINISHED. A video can take minutes:
 //               when it is still IN_PROGRESS and the in-run window (or the deadline) is over, the target
 //               is handed back as transient "processing" (60 s) and the next run resumes at this step
@@ -34,6 +39,7 @@ import {
   validateImages,
   validationResult,
 } from "./social-publish-errors.ts";
+import { INSTAGRAM_MEDIA } from "./social-media-rules.ts";
 
 const GRAPH = "https://graph.facebook.com/v27.0";
 const POLL_INTERVAL_MS = 3000;
@@ -229,8 +235,10 @@ async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
   // 1. Validation, before any network call.
   const format = target.format;
   const isVideoFormat = format === "reel" || format === "story_video";
+  // Photos and the video in one carousel: several containers, slow video children (polled across runs).
+  const isMixed = format === "carousel_video";
   const isStory = format === "story_image" || format === "story_video";
-  if (isVideoFormat && !payload.video) {
+  if ((isVideoFormat || isMixed) && !payload.video) {
     return failed("video_missing", "action_required", { step: "validate", format });
   }
   // Stories carry no caption.
@@ -249,6 +257,25 @@ async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
     if (!videoUrl) return failed("media_url_invalid", "action_required", { step: "validate" });
     // The cover is optional: an unusable poster URL only means Instagram picks its own frame.
     coverUrl = format === "reel" && video.posterUrl ? asciiHttpsUrl(video.posterUrl) : null;
+  } else if (isMixed) {
+    const imageFailure = validateImages("instagram", payload.images);
+    if (imageFailure) return validationResult(imageFailure, "validate");
+    // The photos plus the video are the items of the carousel.
+    if (payload.images.length + 1 > INSTAGRAM_MEDIA.carouselMax) {
+      return validationResult({
+        code: "too_many_images",
+        diagnostics: { network: "instagram", actual: payload.images.length + 1, limit: INSTAGRAM_MEDIA.carouselMax },
+      }, "validate");
+    }
+    const textFailure = textValidationFailure("instagram", validateInstagramCaption(payload.text));
+    if (textFailure) return validationResult(textFailure, "validate");
+    for (const image of payload.images) {
+      const url = asciiHttpsUrl(image.url);
+      if (!url) return failed("media_url_invalid", "action_required", { step: "validate" });
+      urls.push(url);
+    }
+    videoUrl = asciiHttpsUrl(payload.video!.url);
+    if (!videoUrl) return failed("media_url_invalid", "action_required", { step: "validate" });
   } else if (format === "story_image") {
     // The story is the first image; the feed ratio rules of validateImages do not apply to 9:16.
     // The payload carries exactly the chosen photo; none means it was removed or deselected after scheduling.
@@ -269,8 +296,14 @@ async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
     }
   }
 
-  // The image fingerprint stays exactly as before so in-flight image states remain valid.
-  const fp = format === "image" ? fingerprint([caption, ...urls]) : fingerprint([format, caption, ...urls, videoUrl ?? "", coverUrl ?? ""]);
+  // Index of the video among the carousel items (the database already resolved it; default and clamp: last).
+  const videoPosition = isMixed ? Math.min(Math.max(payload.videoPosition ?? urls.length, 0), urls.length) : -1;
+
+  // The image fingerprint stays exactly as before so in-flight image states remain valid. carousel_video also
+  // depends on the position of its video: a changed position makes the checkpointed children obsolete.
+  const fp = format === "image"
+    ? fingerprint([caption, ...urls])
+    : fingerprint([format, caption, ...urls, videoUrl ?? "", coverUrl ?? "", ...(isMixed ? [String(videoPosition)] : [])]);
   const state = readState(target.stepState, fp);
   const resumeProcessing = target.step === "processing" && state.container !== null;
 
@@ -281,7 +314,7 @@ async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
       if (limited) return limited;
     }
 
-    if (format !== "image" || urls.length === 1) {
+    if (!isMixed && (format !== "image" || urls.length === 1)) {
       if (state.container === null) {
         if (ctx.now() >= ctx.deadline) return transientProcessing("containers", isVideoFormat);
         const params: Record<string, string> = format === "reel"
@@ -303,21 +336,24 @@ async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
         await ctx.checkpoint("processing", toRecord(state), false);
       }
     } else {
-      while (state.children.length < urls.length) {
-        if (ctx.now() >= ctx.deadline) return transientProcessing("containers");
-        const created = await createContainer(ctx, ig, {
-          image_url: urls[state.children.length],
-          is_carousel_item: "true",
-        });
+      // Carousel items in their final order: the photos, plus the video at videoPosition for carousel_video.
+      const items: Array<{ video: boolean; url: string }> = urls.map((url) => ({ video: false, url }));
+      if (isMixed) items.splice(videoPosition, 0, { video: true, url: videoUrl as string });
+      while (state.children.length < items.length) {
+        if (ctx.now() >= ctx.deadline) return transientProcessing("containers", isMixed);
+        const item = items[state.children.length];
+        const created = await createContainer(ctx, ig, item.video
+          ? { media_type: "VIDEO", video_url: item.url, is_carousel_item: "true" }
+          : { image_url: item.url, is_carousel_item: "true" });
         if ("result" in created) return created.result;
         state.children.push(created.id);
         await ctx.checkpoint("containers", toRecord(state), false);
       }
       // The CAROUSEL container needs every child to be ready.
-      const childrenReady = await awaitFinished(ctx, "containers", state.children);
+      const childrenReady = await awaitFinished(ctx, "containers", state.children, { video: isMixed });
       if (childrenReady) return childrenReady;
       if (state.container === null) {
-        if (ctx.now() >= ctx.deadline) return transientProcessing("containers");
+        if (ctx.now() >= ctx.deadline) return transientProcessing("containers", isMixed);
         const created = await createContainer(ctx, ig, {
           media_type: "CAROUSEL",
           children: state.children.join(","),
@@ -332,7 +368,7 @@ async function run(ctx: PublishContext, flag: Flag): Promise<PublishResult> {
 
   // 3. Processing.
   const container = state.container as string;
-  const processed = await awaitFinished(ctx, "processing", [container], { video: isVideoFormat });
+  const processed = await awaitFinished(ctx, "processing", [container], { video: isVideoFormat || isMixed });
   if (processed) return processed;
 
   // 4. Publishing: the irreversible call. It needs its whole timeout: otherwise hand the target back

@@ -76,6 +76,8 @@ export const KNOWN_TARGET_ERROR_CODES = new Set([
   // Historia (imagen) (T7): the chosen photo is no longer a selected photo.
   "story_image_invalid",
   "story_image_missing",
+  // Carrusel con vídeo (T6): the chosen video position is out of range.
+  "video_position_invalid",
 ]);
 
 /** Errors solved by reconnecting the network in Settings (the fix text links there). */
@@ -115,12 +117,18 @@ export const visibleTargets = (targets?: PublicationTarget[]): PublicationTarget
 export type TargetsByPreview = Record<string, PublicationTarget[]>;
 
 /** What a table read or a realtime row may not carry until the browser can read the column. */
-type KnownTargetFields = Pick<PublicationTarget, "format" | "storyImageUrl">;
+type KnownTargetFields = Pick<PublicationTarget, "format" | "storyImageUrl" | "videoPosition">;
+
+const knownFieldsOf = (target: PublicationTarget): KnownTargetFields => ({
+  format: target.format,
+  storyImageUrl: target.storyImageUrl,
+  videoPosition: target.videoPosition,
+});
 
 /**
- * A table read or a realtime row may not carry `format` or `story_image_url` (the browser cannot
- * read a column until it is granted); the function answer does. Keep what is already known for the
- * same target.
+ * A table read or a realtime row may not carry `format`, `story_image_url` or `video_position` (the
+ * browser cannot read a column until it is granted); the function answer does. Keep what is already
+ * known for the same target.
  */
 function keepKnown(
   target: PublicationTarget,
@@ -130,11 +138,13 @@ function keepKnown(
   if (!before) return target;
   const keepFormat = target.format === undefined && before.format !== undefined;
   const keepStoryImage = target.storyImageUrl === undefined && before.storyImageUrl !== undefined;
-  if (!keepFormat && !keepStoryImage) return target;
+  const keepVideoPosition = target.videoPosition === undefined && before.videoPosition !== undefined;
+  if (!keepFormat && !keepStoryImage && !keepVideoPosition) return target;
   return {
     ...target,
     ...(keepFormat ? { format: before.format } : {}),
     ...(keepStoryImage ? { storyImageUrl: before.storyImageUrl } : {}),
+    ...(keepVideoPosition ? { videoPosition: before.videoPosition } : {}),
   };
 }
 
@@ -148,7 +158,7 @@ export function replaceTargets(
   const known = new Map<string, KnownTargetFields>();
   for (const id of previewIds) {
     for (const target of current[id] ?? []) {
-      known.set(target.id, { format: target.format, storyImageUrl: target.storyImageUrl });
+      known.set(target.id, knownFieldsOf(target));
     }
     delete next[id];
   }
@@ -178,10 +188,7 @@ export function applyTargetEvent(
   const { target } = event;
   const previous = current[target.previewId] ?? [];
   const known = new Map(
-    previous.map(
-      (existing) =>
-        [existing.id, { format: existing.format, storyImageUrl: existing.storyImageUrl }] as const,
-    ),
+    previous.map((existing) => [existing.id, knownFieldsOf(existing)] as const),
   );
   const list = previous.filter((existing) => existing.id !== target.id);
   return { ...current, [target.previewId]: [...list, keepKnown(target, known)] };

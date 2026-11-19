@@ -7,7 +7,7 @@ import {
   formatVideoDuration,
   formatVideoSize,
 } from "@/features/projects/videos/videoFormat";
-import { PANEL_TEXTS } from "../../helpers/socialVideoTexts";
+import { BLOCKED_TEXTS, PANEL_TEXTS } from "../../helpers/socialVideoTexts";
 import {
   INSTAGRAM_MEDIA,
   LINKEDIN_MEDIA,
@@ -100,6 +100,11 @@ function videoIssueMessage(locale: string, issue: VideoIssue): string {
       return PANEL_TEXTS.faststart;
     case "not_vertical":
       return PANEL_TEXTS.notVertical(ratioLabel(issue.actual ?? 0, locale));
+    case "carousel_first_crop":
+      return PANEL_TEXTS.carouselFirstCrop(
+        ratioLabel(issue.actual ?? 0, locale),
+        ratioLabel(issue.limit ?? 0, locale),
+      );
   }
 }
 
@@ -126,6 +131,9 @@ export const NetworkMediaPanel: React.FC<NetworkMediaPanelProps> = ({
   // Video formats (VITE_SOCIAL_VIDEO): the checks are about the video, not about images.
   const videoCheck = media.video;
   const story = media.format === "story_image" || media.format === "story_video";
+  // Carrusel con vídeo: the photos are checked as in a Post and the video information is added.
+  const mixed = media.format === "carousel_video";
+  const videoOnly = !!videoCheck && !mixed;
 
   const lines: { key: string; tone: "warn" | "info" | "ok"; text: string; retryUrl?: string }[] =
     [];
@@ -182,7 +190,15 @@ export const NetworkMediaPanel: React.FC<NetworkMediaPanelProps> = ({
     });
   }
   collectionIssues.forEach((issue) => {
-    lines.push({ key: issue.code, tone: "warn", text: collectionMessage(t, network, issue) });
+    lines.push({
+      key: issue.code,
+      tone: "warn",
+      // The video counts as one more item of the carousel: say so instead of "N imágenes".
+      text:
+        mixed && issue.code === "too_many_items"
+          ? BLOCKED_TEXTS.carouselTooMany(rows.length)
+          : collectionMessage(t, network, issue),
+    });
   });
 
   if (videoCheck) {
@@ -198,6 +214,13 @@ export const NetworkMediaPanel: React.FC<NetworkMediaPanelProps> = ({
         lines.push({ key: "video-missing", tone: "warn", text: PANEL_TEXTS.videoMissing });
         break;
       case "ready":
+        if (mixed) {
+          lines.push({
+            key: "carousel-info",
+            tone: "info",
+            text: PANEL_TEXTS.carouselInfo(rows.length, rows.length + 1),
+          });
+        }
         if (videoCheck.facts) {
           lines.push({
             key: "video-info",
@@ -233,7 +256,7 @@ export const NetworkMediaPanel: React.FC<NetworkMediaPanelProps> = ({
 
   const measured = rows.every((row) => row.state === "ok");
   const clean =
-    !videoCheck && measured && rows.length > 0 && lines.every((line) => line.tone === "ok");
+    !videoOnly && measured && rows.length > 0 && lines.every((line) => line.tone === "ok");
   const limit = isInstagram ? INSTAGRAM_CAPTION_MAX : LINKEDIN_COMMENTARY_MAX;
   const format = (value: number) => new Intl.NumberFormat(locale).format(value);
 
@@ -255,7 +278,7 @@ export const NetworkMediaPanel: React.FC<NetworkMediaPanelProps> = ({
         <p className="font-medium text-[#010000]">
           {t(`${PREFIX}.title`, { network: t(`${PREFIX}.networks.${network}`) })}
         </p>
-        {variantsEnabled && !videoCheck && !story && (
+        {variantsEnabled && !videoOnly && !story && (
           <PillButton
             variant="outline"
             className="min-h-9 px-4 py-2 text-xs"

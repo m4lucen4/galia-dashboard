@@ -7,14 +7,15 @@ export type PublishNetwork = "instagram" | "linkedin";
 export type PublishAccountKind = "instagram_business" | "linkedin_person" | "linkedin_organization";
 export type PublishErrorKind = "transient" | "action_required" | "permanent";
 /**
- * Instagram: image, reel, story_image, story_video. LinkedIn: image, video. `image` is the original
- * behaviour (one or many images). Video formats carry PublishPayload.video.
+ * Instagram: image, reel, story_image, story_video, carousel_video. LinkedIn: image, video. `image` is the original
+ * behaviour (one or many images). Video formats carry PublishPayload.video; carousel_video (Instagram only) carries
+ * the photos AND the video in one carousel (PublishPayload.images + video + videoPosition).
  */
-export type PublishFormat = "image" | "reel" | "story_image" | "story_video" | "video";
+export type PublishFormat = "image" | "reel" | "story_image" | "story_video" | "video" | "carousel_video";
 
-/** True for the formats that publish PublishPayload.video (reel, story_video, video). */
+/** True for the formats that carry PublishPayload.video (reel, story_video, video, carousel_video). */
 export function isVideoFormat(format: PublishFormat): boolean {
-  return format === "reel" || format === "story_video" || format === "video";
+  return format === "reel" || format === "story_video" || format === "video" || format === "carousel_video";
 }
 
 /** One leased target, as returned by public.publication_targets_claim. */
@@ -69,13 +70,19 @@ export interface PublishPayload {
   weblink: string | null;
   images: PublishImage[];
   /**
-   * For reel, story_video and video; null for the other formats, and for a video format whose video was
+   * For reel, story_video, video and carousel_video; null for the other formats, and for a video format whose video was
    * deleted after scheduling (the publisher then answers video_missing before any network call).
    * For story_image, images holds one ORIGINAL photo (never a feed-cropped variant): the chosen
    * story_image_url while it is still published, empty when it is not; legacy targets without a
    * choice get the first published photo.
    */
   video: PublishVideo | null;
+  /**
+   * carousel_video only: 0-based index of the video among the carousel items (the photos in `images` order,
+   * the video inserted at this index), already resolved by the database (not set or beyond the photos = last =
+   * images.length). null for every other format.
+   */
+  videoPosition: number | null;
 }
 
 /** Server-side credentials of the publication owner for this target's network. Never logged. */

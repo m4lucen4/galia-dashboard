@@ -58,6 +58,8 @@ export interface PublishParams {
   formats?: NetworkFormats;
   /** Photo of "Historia (imagen)"; only used with VITE_SOCIAL_VIDEO on and the story_image format. */
   storyImageUrl?: string | null;
+  /** 0-based video position of "Carrusel con vídeo"; only used with VITE_SOCIAL_VIDEO on and that format. */
+  videoPosition?: number | null;
 }
 
 /**
@@ -156,6 +158,7 @@ export function usePublicationActions({ targetsFor, applyTargets, onRefresh }: O
           params.socialNetworks,
           SOCIAL_VIDEO_ENABLED ? params.formats : undefined,
           SOCIAL_VIDEO_ENABLED ? params.storyImageUrl : undefined,
+          SOCIAL_VIDEO_ENABLED ? params.videoPosition : undefined,
         );
       } catch (error) {
         handlers.onError(errorMessage(error));

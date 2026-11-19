@@ -17,6 +17,7 @@ import { InstagramSelectPage } from "./InstagramSelectPage";
 import { NetworkMediaPanel } from "./NetworkMediaPanel";
 import { NetworkFormatSelector } from "./NetworkFormatSelector";
 import { StoryMediaPicker } from "./StoryMediaPicker";
+import { VideoPositionPicker } from "./VideoPositionPicker";
 import { ImageAdjustDialog } from "./ImageAdjustDialog";
 import { MEDIA_NETWORKS, useMediaChecks, type MediaBlocker } from "./useMediaChecks";
 import type { SocialNetwork } from "../../helpers/socialMediaRules";
@@ -29,6 +30,7 @@ import {
 } from "../../helpers/socialVideo";
 import { BLOCKED_TEXTS, NETWORK_NAMES } from "../../helpers/socialVideoTexts";
 import { resolveStoryImage } from "../../helpers/storyImage";
+import { resolveVideoPosition } from "../../helpers/videoPosition";
 import { publishedImages } from "../../helpers/publicationImages";
 import { usePublicationVideo } from "../../hooks/usePublicationVideo";
 import {
@@ -66,6 +68,13 @@ interface ConfigPublishProps {
   onStoryImageChange?: (url: string | null) => void;
   /** Only with VITE_SOCIAL_VIDEO on: photo stored in the publication's scheduled story target. */
   scheduledStoryImageUrl?: string | null;
+  /**
+   * Only with VITE_SOCIAL_VIDEO on: 0-based position of the video in "Carrusel con vídeo" (the
+   * user's choice, else the one of the scheduled carousel target, else last).
+   */
+  onVideoPositionChange?: (position: number) => void;
+  /** Only with VITE_SOCIAL_VIDEO on: video position stored in the publication's scheduled carousel_video target. */
+  scheduledVideoPosition?: number | null;
 }
 
 // The target never carries a token: a DB trigger fills it server-side for n8n.
@@ -89,6 +98,8 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   onFormatsChange,
   onStoryImageChange,
   scheduledStoryImageUrl = null,
+  onVideoPositionChange,
+  scheduledVideoPosition = null,
 }) => {
   const { t } = useTranslation();
   const { linkedin, isFetchingLinkedinPages, isCheckingConnection: isCheckingLinkedin } =
@@ -329,9 +340,17 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
   useEffect(() => {
     if (SOCIAL_VIDEO_ENABLED) onStoryImageChange?.(storyImageUrl);
   }, [storyImageUrl, onStoryImageChange]);
+  // Carrusel con vídeo: position of the video among the photos (S14), default last.
+  const [chosenVideoPosition, setChosenVideoPosition] = useState<number | null>(null);
+  const videoPosition = SOCIAL_VIDEO_ENABLED
+    ? resolveVideoPosition(photoUrls.length, chosenVideoPosition, scheduledVideoPosition)
+    : null;
+  useEffect(() => {
+    if (videoPosition !== null) onVideoPositionChange?.(videoPosition);
+  }, [videoPosition, onVideoPositionChange]);
   const videoOptions = useMemo(
-    () => (formats ? { formats, video, storyImageUrl } : undefined),
-    [formats, video, storyImageUrl],
+    () => (formats ? { formats, video, storyImageUrl, videoPosition } : undefined),
+    [formats, video, storyImageUrl, videoPosition],
   );
   const media = useMediaChecks(project, mediaActive, videoOptions);
   const [adjusting, setAdjusting] = useState<SocialNetwork | null>(null);
@@ -357,6 +376,8 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
             return BLOCKED_TEXTS.videoMissing(NETWORK_NAMES[network]);
           case "storyVideoLimits":
             return BLOCKED_TEXTS.storyVideoLimits;
+          case "carouselTooMany":
+            return BLOCKED_TEXTS.carouselTooMany(blocker.count ?? 0);
         }
         return t(`previewProjects.mediaChecks.blocked.${blocker.code}`, {
           network: t(`previewProjects.mediaChecks.networks.${network}`),
@@ -395,6 +416,18 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
         selectedUrl={storyImageUrl}
         onSelect={setChosenStoryImage}
         video={video}
+      />
+    );
+  };
+
+  const renderVideoPosition = () => {
+    if (!SOCIAL_VIDEO_ENABLED || !project || formats?.instagram !== "carousel_video") return null;
+    if (videoPosition === null) return null;
+    return (
+      <VideoPositionPicker
+        photoCount={photoUrls.length}
+        value={videoPosition}
+        onChange={setChosenVideoPosition}
       />
     );
   };
@@ -473,6 +506,7 @@ export const ConfigPublish: React.FC<ConfigPublishProps> = ({
           )}
           {mediaActive.instagram && renderFormatSelector("instagram")}
           {mediaActive.instagram && renderStoryMedia()}
+          {mediaActive.instagram && renderVideoPosition()}
           {project && mediaActive.instagram && renderMediaPanel("instagram")}
           <CheckSocialNetwork
             id="linkedln"

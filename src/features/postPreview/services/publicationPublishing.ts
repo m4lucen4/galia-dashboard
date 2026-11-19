@@ -43,6 +43,8 @@ const errorCodes = new Set([
   "video_limits",
   // Historia (imagen): storyImageUrl is not among the selected photos (422, T7).
   "story_image_invalid",
+  // Carrusel con vídeo: videoPosition is out of range or sent with another format (422, T6).
+  "video_position_invalid",
 ]);
 
 export type PublicationPublishingErrorCode =
@@ -62,6 +64,7 @@ export type PublicationPublishingErrorCode =
   | "video_required"
   | "video_limits"
   | "story_image_invalid"
+  | "video_position_invalid"
   // Client-side only: the account selected in the form cannot be turned into a target.
   | "account_missing"
   // Client-side only: the outcome is unknown (network failure, timeout, gateway error).
@@ -84,6 +87,12 @@ export type PublicationTargetRequest = {
    * photo (image_data url) the story publishes. The server rejects it for any other format.
    */
   storyImageUrl?: string;
+  /**
+   * Only with VITE_SOCIAL_VIDEO on and only for the Instagram format `carousel_video`: 0-based
+   * position of the video among the carousel items (0..number of selected photos). The server
+   * rejects it for any other format.
+   */
+  videoPosition?: number;
 };
 
 const failure = (
@@ -115,6 +124,7 @@ export function buildPublicationTargets(
   networks: SocialNetworksCheck,
   formats?: NetworkFormats,
   storyImageUrl?: string | null,
+  videoPosition?: number | null,
 ): PublicationTargetRequest[] {
   const targets: PublicationTargetRequest[] = [];
   const { instagram, linkedln } = networks;
@@ -130,6 +140,9 @@ export function buildPublicationTargets(
       accountName: String(page.name ?? "").slice(0, 200),
       ...(formats?.instagram ? { format: formats.instagram } : {}),
       ...(formats?.instagram === "story_image" && storyImageUrl ? { storyImageUrl } : {}),
+      ...(formats?.instagram === "carousel_video" && typeof videoPosition === "number"
+        ? { videoPosition }
+        : {}),
     });
   }
   if (linkedln) {
@@ -176,6 +189,7 @@ const targetFormats = new Set<PublicationFormat>([
   "story_image",
   "story_video",
   "video",
+  "carousel_video",
 ]);
 
 const text = (value: unknown): string | null =>
@@ -213,6 +227,8 @@ function parseTarget(
   const format = row.format;
   // Absent when the column is not read; null/string when it is (function answer: camelCase).
   const storyImage = "storyImageUrl" in row ? row.storyImageUrl : row.story_image_url;
+  // Same for the video position of a carousel_video target (T6; 0-based, null means last).
+  const videoPosition = "videoPosition" in row ? row.videoPosition : row.video_position;
   return {
     id,
     previewId: preview,
@@ -236,6 +252,10 @@ function parseTarget(
       : {}),
     ...(typeof storyImage === "string" || storyImage === null
       ? { storyImageUrl: storyImage }
+      : {}),
+    ...(videoPosition === null ||
+    (typeof videoPosition === "number" && Number.isInteger(videoPosition) && videoPosition >= 0)
+      ? { videoPosition }
       : {}),
   };
 }
@@ -396,11 +416,15 @@ let formatReadable = SOCIAL_VIDEO_ENABLED;
 // Same for `story_image_url` (T7, only read with the switch on). It is dropped first, so a database
 // that grants `format` but not yet `story_image_url` keeps the format.
 let storyImageReadable = SOCIAL_VIDEO_ENABLED;
+// And for `video_position` (T6, only read with the switch on). It is dropped before story_image_url
+// and format: the older columns stay when a database does not grant the newest one yet.
+let videoPositionReadable = SOCIAL_VIDEO_ENABLED;
 
 const targetColumns = () =>
   TARGET_COLUMNS +
   (formatReadable ? ", format" : "") +
-  (storyImageReadable ? ", story_image_url" : "");
+  (storyImageReadable ? ", story_image_url" : "") +
+  (videoPositionReadable ? ", video_position" : "");
 
 /** Current targets (archived_at is null) of the given publications. One query for a normal page. */
 export async function listPublicationTargets(
@@ -417,8 +441,9 @@ export async function listPublicationTargets(
         .in("preview_id", chunk)
         .is("archived_at", null);
     let { data, error } = await read(targetColumns());
-    while (error && (storyImageReadable || formatReadable)) {
-      if (storyImageReadable) storyImageReadable = false;
+    while (error && (videoPositionReadable || storyImageReadable || formatReadable)) {
+      if (videoPositionReadable) videoPositionReadable = false;
+      else if (storyImageReadable) storyImageReadable = false;
       else formatReadable = false;
       ({ data, error } = await read(targetColumns()));
     }

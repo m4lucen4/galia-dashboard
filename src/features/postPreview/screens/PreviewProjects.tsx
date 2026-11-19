@@ -53,6 +53,7 @@ import {
   type NetworkFormats,
 } from "../helpers/socialVideo";
 import { scheduledStoryImageUrl } from "../helpers/storyImage";
+import { scheduledVideoPosition } from "../helpers/videoPosition";
 
 export const PreviewProjects = () => {
   const dispatch = useAppDispatch();
@@ -75,6 +76,8 @@ export const PreviewProjects = () => {
   const [formats, setFormats] = useState<NetworkFormats>({});
   // Only set with VITE_SOCIAL_VIDEO on: the photo "Historia (imagen)" publishes.
   const [storyImageUrl, setStoryImageUrl] = useState<string | null>(null);
+  // Only set with VITE_SOCIAL_VIDEO on: the 0-based position of the video in "Carrusel con vídeo".
+  const [videoPosition, setVideoPosition] = useState<number | null>(null);
   // Edge pipeline only: message of the last failed confirm, shown inside the configuration dialog.
   const [publishError, setPublishError] = useState<string | null>(null);
   const [socialNetworks, setSocialNetworks] = useState<SocialNetworksCheck>({
@@ -353,6 +356,7 @@ export const PreviewProjects = () => {
           socialNetworks,
           formats: SOCIAL_VIDEO_ENABLED ? formats : undefined,
           storyImageUrl: SOCIAL_VIDEO_ENABLED ? storyImageUrl : undefined,
+          videoPosition: SOCIAL_VIDEO_ENABLED ? videoPosition : undefined,
         },
         { onSuccess: closeAlert, onError: setPublishError },
       );
@@ -485,6 +489,9 @@ export const PreviewProjects = () => {
             scheduledStoryImageUrl={
               SOCIAL_VIDEO_ENABLED ? scheduledStoryImageUrl(targetsFor(String(project.id))) : null
             }
+            scheduledVideoPosition={
+              SOCIAL_VIDEO_ENABLED ? scheduledVideoPosition(targetsFor(String(project.id))) : null
+            }
           />
         )}
         {seeLinkedln && project && userData && (
@@ -592,6 +599,12 @@ export const PreviewProjects = () => {
             scheduledStoryImageUrl={
               SOCIAL_VIDEO_ENABLED
                 ? scheduledStoryImageUrl(targetsFor(String(getSelectedProject()?.id)))
+                : null
+            }
+            onVideoPositionChange={setVideoPosition}
+            scheduledVideoPosition={
+              SOCIAL_VIDEO_ENABLED
+                ? scheduledVideoPosition(targetsFor(String(getSelectedProject()?.id)))
                 : null
             }
           />

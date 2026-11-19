@@ -13,6 +13,7 @@ import { clampInstagramRatio, renderVariant } from "../../helpers/imageVariants"
 import {
   evaluateCarousel,
   evaluateVideo,
+  INSTAGRAM_MEDIA,
   INSTAGRAM_STORY_VIDEO,
   isVideoFormat,
   SOCIAL_MEDIA_VARIANTS_ENABLED,
@@ -77,7 +78,10 @@ export type MediaBlockerCode =
   | "videoLoading"
   | "videoError"
   | "videoMissing"
-  | "storyVideoLimits";
+  | "storyVideoLimits"
+  // carousel_video: the photos plus the video go over the 20 items of an Instagram carousel
+  // (count = the number of photos).
+  | "carouselTooMany";
 
 export interface MediaBlocker {
   code: MediaBlockerCode;
@@ -127,13 +131,18 @@ export interface VideoMediaOptions {
   video: PublicationVideoState;
   /** Photo "Historia (imagen)" publishes (original url); null/absent: the first selected photo. */
   storyImageUrl?: string | null;
+  /** 0-based position of the video in "Carrusel con vídeo"; null/absent: last. */
+  videoPosition?: number | null;
 }
 
 export interface NetworkMedia {
   network: SocialNetwork;
   /** Format the checks are for ("image" with VITE_SOCIAL_VIDEO off). */
   format: PublicationFormat;
-  /** Video checks; null for the photo formats. */
+  /**
+   * Video checks; null for the photo formats. With "carousel_video" the photo `rows` are checked
+   * too: this only holds the video part.
+   */
   video: VideoCheck | null;
   rows: MediaRow[];
   /**
@@ -182,6 +191,7 @@ export function useMediaChecks(
   const formats = videoOptions?.formats;
   const video = videoOptions?.video;
   const storyImageUrl = videoOptions?.storyImageUrl ?? null;
+  const videoPosition = videoOptions?.videoPosition ?? null;
   const enabled = SOCIAL_MEDIA_VARIANTS_ENABLED;
   const previewId = project ? String(project.id) : null;
   const images = useMemo(() => publishedImages(project), [project]);
@@ -295,6 +305,7 @@ export function useMediaChecks(
           blocker: active[network] ? videoBlockerFor(format, video) : null,
         };
       }
+      const mixed = format === "carousel_video" && !!video;
       // Historia (imagen): the chosen original image (else the first), no feed ratio rules, no
       // variant, no conversion. Its row keeps the position of the photo in the publication.
       const story = format === "story_image";
@@ -371,7 +382,59 @@ export function useMediaChecks(
         row.needsConversion =
           enabled && !row.variant && row.source !== null && (isConvertOnly(row.issues) || row.unknownFacts);
       }
-      const collectionIssues = evaluation.issues.filter((issue) => COLLECTION_CODES.has(issue.code));
+      let collectionIssues = evaluation.issues.filter((issue) => COLLECTION_CODES.has(issue.code));
+
+      if (mixed && video) {
+        // Carrusel con vídeo: the video is one more item, so photos + 1 must fit the 20 of Instagram.
+        const total = rows.length + 1;
+        collectionIssues = collectionIssues.filter((issue) => issue.code !== "too_many_items");
+        if (total > INSTAGRAM_MEDIA.carouselMax) {
+          collectionIssues.push({
+            code: "too_many_items",
+            actual: total,
+            limit: INSTAGRAM_MEDIA.carouselMax,
+          });
+        }
+        const facts: VideoFacts | null =
+          video.status === "ready"
+            ? {
+                durationMs: video.video.duration_ms,
+                bytes: video.video.bytes,
+                width: video.video.width,
+                height: video.video.height,
+                faststart: video.video.faststart,
+              }
+            : null;
+        // The first photo as the network would receive it (its variant when there is one).
+        const first = firstFacts && firstFacts.height > 0 ? firstFacts.width / firstFacts.height : null;
+        const lastPosition = rows.length;
+        const blocker = active[network]
+          ? (videoBlockerFor(format, video) ??
+            (total > INSTAGRAM_MEDIA.carouselMax
+              ? ({ code: "carouselTooMany", count: rows.length } as const)
+              : enabled
+                ? blockerFor(rows, collectionIssues, variantsState)
+                : null))
+          : null;
+        return {
+          network,
+          format,
+          video: {
+            state: video.status,
+            facts,
+            issues: facts
+              ? evaluateVideo(network, format, facts, {
+                  videoFirst: (videoPosition ?? lastPosition) === 0,
+                  firstPhotoRatio: first,
+                })
+              : [],
+          },
+          rows,
+          commonRatio,
+          collectionIssues,
+          blocker,
+        };
+      }
 
       return {
         network,
@@ -398,6 +461,7 @@ export function useMediaChecks(
     video,
     urls,
     storyImageUrl,
+    videoPosition,
   ]);
 
   // Automatic conversion (S19): the ratio fits but format / weight / pixels / width do not.
@@ -497,7 +561,7 @@ function blockerFor(
 
 /** Why a network cannot publish the video yet; null when it can. */
 function videoBlockerFor(
-  format: "reel" | "story_video" | "video",
+  format: "reel" | "story_video" | "video" | "carousel_video",
   video: PublicationVideoState,
 ): MediaBlocker | null {
   switch (video.status) {

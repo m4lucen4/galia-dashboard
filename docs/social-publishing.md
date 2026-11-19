@@ -66,7 +66,7 @@ Called by an Edge Function after it resolves the actor through Supabase Auth. Au
 
 | RPC | Purpose |
 |---|---|
-| `publication_targets_schedule(actor, preview, request, run_at, targets, acknowledge_unknown_outcome default false)` | Schedule (`run_at` in the future) or publish now (`run_at` = now). `targets` is `[{network, accountKind, accountExternalId, accountName?, format?, storyImageUrl?}]`, one per network; `format` defaults to `image` and must be allowed for the network, video formats need the publication's video, and `storyImageUrl` (only with `story_image`) chooses the story photo (see "Formats and video"). Idempotent per `(actor, request)`: a replay returns the current targets, even after a reset (send a new request id for a new action). Replaces current unpublished targets; `confirmation_required` over an `outcome_unknown` target unless acknowledged. |
+| `publication_targets_schedule(actor, preview, request, run_at, targets, acknowledge_unknown_outcome default false)` | Schedule (`run_at` in the future) or publish now (`run_at` = now). `targets` is `[{network, accountKind, accountExternalId, accountName?, format?, storyImageUrl?, videoPosition?}]`, one per network; `format` defaults to `image` and must be allowed for the network, video formats need the publication's video, `storyImageUrl` (only with `story_image`) chooses the story photo and `videoPosition` (only with `carousel_video`) places the video in the carousel (see "Formats and video"). Idempotent per `(actor, request)`: a replay returns the current targets, even after a reset (send a new request id for a new action). Replaces current unpublished targets; `confirmation_required` over an `outcome_unknown` target unless acknowledged. |
 | `publication_target_retry(actor, target, acknowledge_unknown_outcome)` | Retry one `failed` or `needs_action` target now. Resets its attempts. |
 | `publication_targets_reset(actor, preview, acknowledge_unknown_outcome default false)` | Unschedule, or prepare to publish again. Archives current targets and clears the legacy columns; `confirmation_required` over an `outcome_unknown` target unless acknowledged. |
 
@@ -79,7 +79,7 @@ Every write is fenced by the `leaseToken` returned by `claim`; a stale worker ge
 | RPC | Purpose |
 |---|---|
 | `publication_targets_claim(limit, lease_seconds)` | First recovers expired leases (see "Never publish twice"), then leases up to `limit` (1–20) due `pending` targets. |
-| `publication_target_payload(target, lease)` | Content at publish time (see "Payload"): text = main version, else `description_rich`; images = `image_data` entries whose status is not `not_selected`, in order, each with its per-network variant when one exists (for `story_image` exactly one original: the chosen photo); `video` for the video formats. Stable read; `lease_lost` when the lease is not ours. |
+| `publication_target_payload(target, lease)` | Content at publish time (see "Payload"): text = main version, else `description_rich`; images = `image_data` entries whose status is not `not_selected`, in order, each with its per-network variant when one exists (for `story_image` exactly one original: the chosen photo); `video` for the video formats and `videoPosition` for `carousel_video` (see "Mixed carousel"). Stable read; `lease_lost` when the lease is not ours. |
 | `publication_target_checkpoint(target, lease, step, step_state, side_effect_pending, lease_seconds)` | Saves publisher progress (container ids, upload URNs; never secrets, max 4 KB) and extends the lease. |
 | `publication_target_finish(target, lease, outcome, external_post_id, permalink, error_code, error_kind, retry_after_seconds, diagnostics, not_published default false)` | Records the attempt result. `outcome` is `published` or `failed`. `not_published = true` (definitive provider rejection of the irreversible call, see "Never publish twice") keeps a transient failure retryable and resets `step` to `'processing'`. A transient `processing` failure of a non-`image` target is a processing poll, not an attempt (see "Processing polls"). |
 
@@ -98,12 +98,13 @@ Every write is fenced by the `leaseToken` returned by `claim`; a stale worker ge
     { "url": "https://…/original2.jpg", "sourceUrl": "https://…/original2.jpg",
       "isVariant": false, "width": null, "height": null }
   ],
-  "video": null,
+  "video": null, "videoPosition": null,
   "step": null, "stepState": {}
 }
 ```
 
-- `video` is `null` for `image` and `story_image`, and for a video format whose video no longer exists (see "Formats and video"). For `reel`, `story_video` and `video` it is `{"storagePath": "<project_id>/<id>.mp4", "posterPath": "<project_id>/<id>.jpg" | null, "bytes", "durationMs", "width", "height", "faststart"}`. The database does not know the public host: the worker builds the public URLs of bucket `project-videos` from `SUPABASE_URL` (see `PublishVideo` below).
+- `video` is `null` for `image` and `story_image`, and for a video format whose video no longer exists (see "Formats and video"). For `reel`, `story_video`, `video` and `carousel_video` it is `{"storagePath": "<project_id>/<id>.mp4", "posterPath": "<project_id>/<id>.jpg" | null, "bytes", "durationMs", "width", "height", "faststart"}`. The database does not know the public host: the worker builds the public URLs of bucket `project-videos` from `SUPABASE_URL` (see `PublishVideo` below).
+- `videoPosition` is `null` for every format except `carousel_video`, where it is the resolved 0-based index of the video among the carousel items (see "Mixed carousel").
 - `images` keeps the order of `image_data` and skips entries with status `not_selected`, without url, or that are not objects.
 - For each entry the function looks for a `publication_media_variants` row with the **same preview, the same network and `source_url` = the entry url** (phase 3, `docs/social-media-variants.md`). When there is one, `url` is its `public_url`, `isVariant` is `true` and `width`/`height` come from the row. A variant is used only for its own network: the other network receives the original. `story_image` never uses variants: stories are 9:16, so its `images` is the one original the user chose (`isVariant` false, `width`/`height` null; see "Story image choice") and the publisher takes `images[0]`. Without a variant, `url` = `sourceUrl`, `isVariant` is `false` and `width`/`height` are `null` (originals are never measured on the server; the publishers let the network judge them).
 - `ownerId`, `network` and `accountExternalId` are what the worker needs to fetch the owner's credentials (see below). The payload never contains tokens.
@@ -112,7 +113,7 @@ Every write is fenced by the `leaseToken` returned by `claim`; a stale worker ge
 ### Error codes raised
 
 
-`invalid_request`, `forbidden`, `conflict`, `invalid_project`, `run_at_out_of_range`, `in_progress`, `already_published`, `not_retryable`, `confirmation_required` (retry, schedule and reset over an unknown outcome), `video_required`, `video_limits` and `story_image_invalid` (schedule, see "Formats and video"), `lease_lost`. The entry function maps all of them except `lease_lost` to its own closed codes (see below).
+`invalid_request`, `forbidden`, `conflict`, `invalid_project`, `run_at_out_of_range`, `in_progress`, `already_published`, `not_retryable`, `confirmation_required` (retry, schedule and reset over an unknown outcome), `video_required`, `video_limits`, `story_image_invalid` and `video_position_invalid` (schedule, see "Formats and video"), `lease_lost`. The entry function maps all of them except `lease_lost` to its own closed codes (see below).
 
 ## Formats and video
 
@@ -120,12 +121,14 @@ Migration `20261122000100_video_publication_targets.sql` (task `odd/tasks/social
 
 ### Formats
 
-`publication_targets.format` is one of `image`, `reel`, `story_image`, `story_video`, `video`. A table check (so even `service_role` cannot store another pair) allows:
+`publication_targets.format` is one of `image`, `reel`, `story_image`, `story_video`, `video`, `carousel_video`. A table check (so even `service_role` cannot store another pair) allows:
 
 | Network | Formats |
 |---|---|
-| Instagram | `image` (post or carousel), `reel`, `story_image`, `story_video` |
+| Instagram | `image` (post or carousel), `reel`, `story_image`, `story_video`, `carousel_video` |
 | LinkedIn | `image`, `video` |
+
+`isVideoFormat(format)` (same file) is true for the formats that carry a video: `reel`, `story_video`, `video` and `carousel_video`.
 
 `publication_targets_schedule` raises `invalid_request` for any other pair (and for a `format` that is not a string). A missing or `null` format is `image`, validated and published exactly as before. The entry function (`publish-publication`) accepts an optional `format` per target and refuses the same pairs with `invalid_request` before calling the database.
 
@@ -149,24 +152,46 @@ Migration `20261124000100_story_image_choice.sql` (task `odd/tasks/social-video-
 - `publication_target_payload` for `story_image`: `images` is exactly one element, the original of `story_image_url` (never a variant: `url` = `sourceUrl`, `isVariant` false) while it is still a published photo of the publication. If the user deselected or removed that photo after scheduling, `images` is `[]` (the choice is not silently replaced by another photo) and the Instagram publisher answers `story_image_missing`. A `story_image` target without a stored choice (scheduled before this migration) keeps its old meaning: the first published photo, as the only element.
 - Instagram publisher: a `story_image` payload without images returns `failed("story_image_missing", "action_required", {step: "validate", format})` before any network call (it was the generic `no_images` before). A non-https url keeps `media_url_invalid`.
 
+### Mixed carousel (`carousel_video`, `video_position`)
+
+Migration `20261125000100_instagram_mixed_carousel.sql` (task `odd/tasks/social-video-publishing.md`, T6, specs S12 and S14, server half; apply after `20261124000100`). Instagram only: the published photos of the publication in their order **plus the publication video in one carousel post** (Instagram carousels hold up to 20 items, images, videos or a mix). `image` stays photos only and LinkedIn is unchanged (`carousel_video` on LinkedIn is refused by the table check and by `invalid_request`). Additive and idempotent.
+
+- Table: the format check gains `carousel_video`, the network/format check allows it for Instagram only, and `video_id` may be set for it (copied from the publication like `reel`). `publication_targets.video_position integer null`: only for `carousel_video` (table check, `0..19`), the 0-based index of the video among the carousel items; null means last. `authenticated` can read the column (column-level `SELECT`, like `format` and `story_image_url`); `private.publication_targets_summary` returns it as `videoPosition` (the stored value, null = last; the key is present, null, for every other format).
+- `publication_targets_schedule` (same signature, copy of the live body of `20261124000100` plus the blocks below):
+
+| Case | Result |
+|---|---|
+| `carousel_video` and the publication has no video (or it is not of its project) | `video_required`. |
+| Video outside the project limits (3 s - 5 min, 75000 - 100000000 bytes; Instagram documents no stricter carousel video limit, to confirm in the real test) | `video_limits`. |
+| No published photo, or published photos + the video over 20 items | `invalid_request` (the editor never sends it). |
+| `videoPosition` an integer in `0..published photos` | Stored as `video_position`. |
+| No `videoPosition` (or JSON `null`) | `video_position` stays null: last. |
+| `videoPosition` not a JSON integer, negative, over the number of published photos, or sent with another format | `video_position_invalid` (nothing is written). |
+
+  The number of published photos uses the payload filter (`status` not `not_selected`, with url). Rescheduling archives the old rows and inserts new ones with `format`, `video_id` and `video_position` like any other column, so switching format clears the position.
+- `publication_target_payload` for `carousel_video`: `images` exactly as for `image` (published photos with the Instagram variants), `video` as for `reel`, and `videoPosition` resolved against the photos still published: null or beyond the images = last (the number of images), so deselecting a photo after scheduling never leaves it out of range. A deleted video gives `video: null` (the publisher answers `video_missing`) and no photos give `images: []` (`no_images`).
+- `publication_target_finish` is unchanged: the processing-poll exemption of `20261122000100` is keyed on `format <> 'image'`, so `carousel_video` polls are not attempts and give up after 60 minutes (`media_processing_timeout`).
+- Instagram publisher (`_shared/social-publish-instagram.ts`): validation before any network call (`video_missing`, `no_images`, `too_many_images` over 20 items counting the video, `media_needs_crop`/`media_format` on the photos, `caption_too_long`, `media_url_invalid`), then one child container per item **in final order** (photo: `image_url`, `is_carousel_item=true`, exactly as the image carousel; video: `media_type=VIDEO`, `video_url`, `is_carousel_item=true`), each id checkpointed (`containers`); every child is polled until `FINISHED` (5 s interval, 30 s in-run window like the video formats, then `failed("processing", "transient", {step: "containers", reason: "media_processing"}, 60)` and the next run resumes with the checkpointed ids); a child in `ERROR` is `media_rejected` / `action_required` with the item `index`; then the `CAROUSEL` container (`children`, caption), polled the same way (step `processing`), then the single `media_publish` with the existing never-publish-twice rules (checkpoint with `side_effect_pending` first; only an allow-listed definitive rejection is `notPublished`; anything else is `outcome_unknown`, and a resume after the checkpoint never publishes or creates anything). The fingerprint of the checkpointed state includes the format, caption, photo urls, video url and the video position, so a changed position, video or caption never reuses stale children; `image`, `reel` and story paths and the image fingerprint are unchanged. Instagram crops every carousel item to the ratio of the first one (a video first with photos of another ratio is a client-side warning).
+- `video_position_invalid` can only come from the schedule (entry 422); it never reaches a target, so it has no failure-email text.
+
 ### Video reference (`video_id`)
 
-`publication_targets.video_id uuid null references project_videos(id) on delete set null`, only for `reel`, `story_video` and `video` (table check). Scheduling such a target copies `projectsPreview.video_id` into it, provided that video still belongs to the publication's own project. Schedule-time checks, all before anything is written:
+`publication_targets.video_id uuid null references project_videos(id) on delete set null`, only for `reel`, `story_video`, `video` and `carousel_video` (table check). Scheduling such a target copies `projectsPreview.video_id` into it, provided that video still belongs to the publication's own project. Schedule-time checks, all before anything is written:
 
 | Error | When |
 |---|---|
 | `video_required` | A video format and the publication has no video (or the video is not of its project). |
-| `video_limits` | `story_video`: duration over 60000 ms or size over 100000000 bytes. `reel` and `video`: outside the project limits (3 s - 5 min, 75000 - 100000000 bytes). |
+| `video_limits` | `story_video`: duration over 60000 ms or size over 100000000 bytes. `reel`, `video` and `carousel_video`: outside the project limits (3 s - 5 min, 75000 - 100000000 bytes). |
 
 Deleting the video afterwards (or its project) sets `video_id` to null: the target keeps its format, the payload carries `video: null`, and the publisher answers `video_missing` (`action_required`, diagnostics `{step: "validate", format}`) before any network call. Image targets never reference a video, even when the publication has one.
 
 ### Types (`_shared/social-publisher.ts`)
 
 ```ts
-type PublishFormat = "image" | "reel" | "story_image" | "story_video" | "video";
+type PublishFormat = "image" | "reel" | "story_image" | "story_video" | "video" | "carousel_video";
 interface PublishTarget { /* ... */ format: PublishFormat }
 interface PublishVideo { url: string; posterUrl: string | null; bytes: number; durationMs: number; width: number; height: number; faststart: boolean }
-interface PublishPayload { /* text, title, weblink, images */ video: PublishVideo | null }
+interface PublishPayload { /* text, title, weblink, images */ video: PublishVideo | null; videoPosition: number | null }  // videoPosition: carousel_video only, resolved
 interface PublishContext { /* ... */ uploads: UploadStateStore }   // see "Upload progress"
 ```
 
@@ -317,7 +342,7 @@ Server side of the new client (behind `VITE_SOCIAL_PUBLISHING_EDGE`, S23). Every
 
 | `action` | Body | Effect |
 |---|---|---|
-| `schedule` | `previewId` (bigint as string, number accepted), `requestId` (uuid), `runAt` (strict ISO 8601 instant **with** `Z` or an offset `±hh:mm`; a wall-clock without offset, and impossible dates or times such as `2026-02-30`, `T24:00` or `T10:60`, are refused), `targets` (1-2 of `{network, accountKind, accountExternalId, accountName?, format?, storyImageUrl?}`; `format` is one of the formats of the network, default `image`, otherwise `invalid_request`; `storyImageUrl` is only accepted with `story_image` and must be a plain `https` url of at most 2000 characters without whitespace, otherwise `story_image_invalid`; `null` counts as absent; the url is forwarded unchanged and the database checks it against the publication's published photos), `acknowledgeUnknownOutcome?` | `publication_targets_schedule` with `runAt` normalised to UTC; the database enforces the range (5 minutes in the past to 366 days ahead). |
+| `schedule` | `previewId` (bigint as string, number accepted), `requestId` (uuid), `runAt` (strict ISO 8601 instant **with** `Z` or an offset `±hh:mm`; a wall-clock without offset, and impossible dates or times such as `2026-02-30`, `T24:00` or `T10:60`, are refused), `targets` (1-2 of `{network, accountKind, accountExternalId, accountName?, format?, storyImageUrl?, videoPosition?}`; `format` is one of the formats of the network, default `image`, otherwise `invalid_request`; `storyImageUrl` is only accepted with `story_image` and must be a plain `https` url of at most 2000 characters without whitespace, otherwise `story_image_invalid`; `videoPosition` is only accepted with `carousel_video` and must be a JSON integer `0..19`, otherwise `video_position_invalid`; `null` counts as absent for both; the url is forwarded unchanged and the database checks it against the publication's published photos, and checks the position against their number), `acknowledgeUnknownOutcome?` | `publication_targets_schedule` with `runAt` normalised to UTC; the database enforces the range (5 minutes in the past to 366 days ahead). |
 | `publishNow` | Same without `runAt` | `runAt` = now, then wakes the worker. |
 | `retry` | `targetId` (uuid), `acknowledgeUnknownOutcome?` | `publication_target_retry`, then wakes the worker. |
 | `reset` | `previewId`, `acknowledgeUnknownOutcome?` | `publication_targets_reset` (unschedule / publish again). |
@@ -328,7 +353,7 @@ Server side of the new client (behind `VITE_SOCIAL_PUBLISHING_EDGE`, S23). Every
 
 **Worker wake.** After a successful `publishNow` or `retry` the function posts to `<SUPABASE_URL>/functions/v1/process-publication-targets` with `X-Social-Worker-Secret` = `SOCIAL_WORKER_SECRET` (64 hex), fire and forget (`EdgeRuntime.waitUntil` when available, 145 s timeout like the generation wake, https only). A missing secret, a transport error or a slow worker never changes the answer; the persisted target and the cron job are the recovery path.
 
-**Answer.** `200 {"targets": [...]}` (the `private.publication_targets_summary` shape: `id, network, format, status, runAt, attempts, maxAttempts, errorCode, errorKind, accountKind, accountName, externalPostId, permalink, publishedAt`) or `{code, message, retryable}` with a Spanish message. Provider and database text never cross the boundary; logs carry the code and the error class only, never a token.
+**Answer.** `200 {"targets": [...]}` (the `private.publication_targets_summary` shape: `id, network, format, status, runAt, attempts, maxAttempts, errorCode, errorKind, accountKind, accountName, externalPostId, permalink, publishedAt, storyImageUrl, videoPosition`) or `{code, message, retryable}` with a Spanish message. Provider and database text never cross the boundary; logs carry the code and the error class only, never a token.
 
 | Code | HTTP | Retryable | When |
 |---|---|---|---|
@@ -343,6 +368,7 @@ Server side of the new client (behind `VITE_SOCIAL_PUBLISHING_EDGE`, S23). Every
 | `video_required` | 422 | no | A video format and the publication has no video of its project. |
 | `video_limits` | 422 | no | The video exceeds the limits of the format (stories: 60 s and 100 MB). |
 | `story_image_invalid` | 422 | no | `storyImageUrl` malformed, sent with a format other than `story_image`, or not a published photo of the publication. |
+| `video_position_invalid` | 422 | no | `videoPosition` is not an integer, is sent with a format other than `carousel_video`, or is beyond the number of published photos. |
 | `not_retryable` | 409 | no | The target is not `failed`/`needs_action`, or is archived. |
 | `confirmation_required` | 409 | no | An `outcome_unknown` target needs `acknowledgeUnknownOutcome`. |
 | `account_not_connected` | 409 | no | The owner has no usable connection for that network. |
@@ -356,7 +382,7 @@ Environment: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY` (A
 Migration `20261119000100_publication_targets_read_and_notices.sql` (apply **before the client ships**; it changes nothing n8n reads or writes).
 
 - `authenticated` gets `select` on `publication_targets` **by column** (the table-level privilege is revoked) under an RLS policy that reuses the `projectsPreview` rule: `private.preview_access_allowed(owner, project)` evaluated on the target's preview (admin, publication owner, project owner or assigned editor; `coalesce(..., false)`, so no NULL leaks). Strangers, users without a session and `anon` read nothing; every write stays service_role only.
-- Readable columns: `id, preview_id, network, status, run_at, attempts, max_attempts, error_code, error_kind, account_kind, account_name, external_post_id, permalink, published_at, archived_at, updated_at`. Everything else (`lease_token`, `lease_expires_at`, `step`, `step_state`, `diagnostics`, `owner_id`, `requested_by`, `schedule_request`, the notice columns) is **not readable** from the browser, so the client must list its columns: `select *` is refused (`permission denied for table publication_targets`). Filter `archived_at is null` for the current targets. With `VITE_SOCIAL_VIDEO=true` the client also asks for `format` (to show it after a reload); while the column is not granted to `authenticated` the database refuses that read, and the client falls back to the columns above for the rest of the session and keeps the format it learned from the function answers (which do carry `format`). Migration `20261123000100` grants `format` to `authenticated` (so the format survives a reload) and `20261124000100` grants `story_image_url` (the photo chosen for a `story_image` target, see "Story image choice"); until the latter is applied a read that lists `story_image_url` is refused like any ungranted column.
+- Readable columns: `id, preview_id, network, status, run_at, attempts, max_attempts, error_code, error_kind, account_kind, account_name, external_post_id, permalink, published_at, archived_at, updated_at`. Everything else (`lease_token`, `lease_expires_at`, `step`, `step_state`, `diagnostics`, `owner_id`, `requested_by`, `schedule_request`, the notice columns) is **not readable** from the browser, so the client must list its columns: `select *` is refused (`permission denied for table publication_targets`). Filter `archived_at is null` for the current targets. With `VITE_SOCIAL_VIDEO=true` the client also asks for `format` (to show it after a reload); while the column is not granted to `authenticated` the database refuses that read, and the client falls back to the columns above for the rest of the session and keeps the format it learned from the function answers (which do carry `format`). Migration `20261123000100` grants `format` to `authenticated` (so the format survives a reload), `20261124000100` grants `story_image_url` (the photo chosen for a `story_image` target, see "Story image choice") and `20261125000100` grants `video_position` (the position of the video of a `carousel_video` target, see "Mixed carousel"); until the corresponding migration is applied a read that lists `story_image_url` is refused like any ungranted column.
 - `publication_target_attempts` has **no** browser privilege (the client never reads it): the RLS policy and its helper stay in place, but without a grant they are inert. A future screen must grant specific columns first.
 - The RPC `publication_targets_owner(actor, preview)` (service_role only, used by the entry function) authorizes the actor with the same rule as the other actor RPCs and returns the publication owner: `forbidden` for unknown or foreign publications, `invalid_project` without owner.
 
